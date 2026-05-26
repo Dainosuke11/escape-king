@@ -447,7 +447,7 @@ const JOB_DATA = {
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, dagger: 10 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
-    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 } 
+    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1, great_fireball: 1 }, hp: 30, ap: 2 } 
 };
 
 // ============================================================
@@ -1126,8 +1126,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
     if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
-    if (mode === 'great_fireball') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
-    if (mode === 'skill_mage') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
+    if (mode === 'great_fireball') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
     if (mode === 'rock_throw') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
     if (mode === 'sword' || mode === 'punch' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
@@ -1487,7 +1486,6 @@ function executeSkill(se) {
         return true; 
     }
     if (se.type === 'knight') { msg("騎士の突進のターゲット方向(直線5マス以内)を選んでください"); actionMode = 'skill_knight'; render(); return false; }
-    if (se.type === 'mage') { msg("大火球魔法！ターゲット(半径5マス以内の敵)を選んでください"); actionMode = 'skill_mage'; render(); return false; }
     
     if (se.type === 'assassin') { 
         se.stealth = true; se.stealthTimer = 3; 
@@ -1511,15 +1509,6 @@ function executeSkill(se) {
 }
 
 function executeRushSkill(se, targetR, targetC, mode) {
-    if (mode === 'skill_mage') {
-        let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team);
-        if (target) {
-            if (!target.invin) { target.hp -= 5; target.ap--; knockback(target, 1, se); }
-            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え、吹き飛ばし行動力を奪った！");
-        }
-        se.skillUsed = true;
-        return;
-    }
     let stepR = Math.sign(targetR - se.r);
     let stepC = Math.sign(targetC - se.c);
     let dist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
@@ -1672,20 +1661,15 @@ function cpuLogic() {
                         let targetR = p.r - stepR, targetC = p.c - stepC;
                         if (targetR !== cpu.r || targetC !== cpu.c) {
                             executeRushSkill(cpu, targetR, targetC, `skill_${cpu.type}`);
-                            cpu.ap--;
                             attacked = true; 
                         }
                     }
                 } else if (cpu.type === 'king') {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
+                    executeSkill(cpu); attacked = true;
                 } else if (cpu.type === 'assassin') {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
+                    executeSkill(cpu); attacked = true;
                 } else if (cpu.type === 'infantry' && turn >= 5) {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
-                } else if (cpu.type === 'mage' && dist <= 5) {
-                    executeRushSkill(cpu, p.r, p.c, 'skill_mage');
-                    cpu.ap--;
-                    attacked = true;
+                    executeSkill(cpu); attacked = true;
                 }
             }
 
@@ -1699,6 +1683,12 @@ function cpuLogic() {
                 }
             }
 
+            if (!attacked && cpu.abilities.great_fireball > 0 && dist <= 3) {
+                cpu.abilities.great_fireball--;
+                if (!p.invin) { p.hp -= 5; p.ap--; knockback(p, 1, cpu); msg(`敵の大火球魔法！${p.name}に5ダメージと吹き飛ばし！`); }
+                else { msg(`敵の大火球魔法！しかし${p.name}は無敵で防いだ！`); }
+                attacked = true; cpu.ap--;
+            }
 
             if (!attacked && dist <= 1) {
                 if (cpu.abilities.smash_slash > 0) {
@@ -2007,7 +1997,7 @@ function updateUI() {
         list.appendChild(cb);
     }
 
-    if (!selectedEntity.skillUsed && !['slime','golem','wolf'].includes(selectedEntity.type)) {
+    if (!selectedEntity.skillUsed && !['slime','golem','wolf'].includes(selectedEntity.type) && selectedEntity.type !== 'mage') {
         let sb = document.createElement('button');
         sb.className = 'ability-btn';
         sb.style.background = '#d35400'; sb.style.color = '#fff';
