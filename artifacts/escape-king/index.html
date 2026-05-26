@@ -524,10 +524,8 @@ function handleWsMessage(event) {
         myPlayerIndex = data.playerIndex;
         isOnlineMode = true;
         document.getElementById('online-lobby').style.display = 'none';
-        
-        const settings = data.settings;
 
-        // Both players get the same seed → same board
+        const settings = data.settings;
         const seed = settings.seed;
         const job = myPlayerIndex === 0 ? settings.p1job : settings.p2job;
         const cpuJob = myPlayerIndex === 0 ? settings.p2job : settings.p1job;
@@ -545,15 +543,11 @@ function handleWsMessage(event) {
         updateOnlineInfo();
         render();
 
-        if (canIAct()) {
+        if (isPlayerTurn) {
             if (myPlayerIndex === 0) {
                 startTurn('player');
             } else {
-                // P2 goes first — just enable interaction on cpu turn
-                render();
-                document.getElementById('turn-indicator').textContent = "あなたのターン (cpu)";
-                msg("あなたのターンです！");
-                updateOnlineInfo();
+                startTurn('cpu', true);
             }
         } else {
             msg("相手のターン中...");
@@ -584,21 +578,14 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'turnEnd') {
-        // Received from opponent — they ended their turn
         applyGameState(data.state);
         render();
-        // P1 runs NPC logic then starts player turn; P2 starts cpu turn
+        updateOnlineInfo();
+
         if (myPlayerIndex === 0) {
-            // P2 ended cpu turn → P1 runs NPC → then player turn
-            entities.forEach(e => { if (e.team === 'npc') processTurnStartEffects(e); });
-            setTimeout(npcLogic, 500);
+            startTurn('npc');
         } else {
-            // P1 ended player turn → P2 now has cpu turn
-            // Effects are already applied by P1 in startTurn('cpu') — don't reapply
-            render();
-            document.getElementById('turn-indicator').textContent = "あなたのターン (cpu)";
-            msg("あなたのターンです！");
-            updateOnlineInfo();
+            startTurn('cpu', true);
         }
         return;
     }
@@ -972,13 +959,12 @@ function processTurnStartEffects(e) {
     }
 }
 
-function startTurn(team) {
+function startTurn(team, skipEffects = false) {
     isPlayerTurn = (team === 'player');
-    
-    // Reset cannon cooldowns on player turn start
+
     if (team === 'player') {
-        for (let r=0; r<SIZE; r++) {
-            for (let c=0; c<SIZE; c++) {
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
                 if (board[r][c] === 'cannon_cd_1') board[r][c] = 'cannon';
                 else if (board[r][c] === 'cannon_cd_2') board[r][c] = 'cannon_cd_1';
             }
@@ -994,11 +980,14 @@ function startTurn(team) {
                 let candidates = entities.filter(e => e.hp > 0 && e.team !== 'npc');
                 if (candidates.length > 0) {
                     let t = candidates[Math.floor(Math.random() * candidates.length)];
-                    sandwormTarget = {r: t.r, c: t.c};
+                    sandwormTarget = { r: t.r, c: t.c };
                     sandwormWarning = true;
                     msg("⚠️ 次のターン、サンドワームの気配！(半径1マス)");
                 }
-            } else { sandwormWarning = false; }
+            } else {
+                sandwormWarning = false;
+            }
+
             if (duneTimer % 4 === 0 && duneTimer > 0) {
                 sandwormWarning = false;
                 sandwormActive = true;
@@ -1011,30 +1000,37 @@ function startTurn(team) {
                     });
                 }
                 checkWin();
-            } else { sandwormActive = false; }
+            } else {
+                sandwormActive = false;
+            }
             duneTimer++;
         }
 
         if (activeStage === 'forest' && turn % 3 === 0) {
             let emptyForest = [];
-            for (let r=0; r<SIZE; r++) {
-                for (let c=0; c<SIZE; c++) {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
                     if ((board[r][c] === 'forest' || board[r][c] === 'plains') && !isNoRockZone(r, c)) {
-                        if (!entities.some(e => e.r===r && e.c===c && e.hp>0)) emptyForest.push({r,c});
+                        if (!entities.some(e => e.r === r && e.c === c && e.hp > 0)) emptyForest.push({ r, c });
                     }
                 }
             }
             if (emptyForest.length > 0) {
-                let loc = emptyForest[Math.floor(Math.random()*emptyForest.length)];
-                entities.push({ id: 'npc'+Date.now(), type: 'wolf', name: 'オオカミ', team: 'npc', r: loc.r, c: loc.c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { sword: 999 }, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0 });
+                let loc = emptyForest[Math.floor(Math.random() * emptyForest.length)];
+                entities.push({
+                    id: 'npc' + Date.now(), type: 'wolf', name: 'オオカミ', team: 'npc',
+                    r: loc.r, c: loc.c, hp: 2, maxHp: 2, ap: 3, maxAp: 3,
+                    abilities: { sword: 999 }, skillUsed: false, stealth: false, stealthTimer: 0,
+                    invin: false, invinTimer: 0, poisonTimer: 0
+                });
                 msg("🐺 森の奥からお邪魔モンスターが現れた！", true);
             }
         }
-        
+
         if (turn % magicCircleTimer === 0) {
             let spawnedSmall = false;
-            for (let r=0; r<SIZE; r++) {
-                for (let c=0; c<SIZE; c++) {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
                     if (board[r][c] === 'magic_circle') {
                         if (spawnMonster(r, c) === 'small') spawnedSmall = true;
                     }
@@ -1054,13 +1050,11 @@ function startTurn(team) {
         render();
 
         if (isOnlineMode) {
-            // P1 just started their turn — sync to P2
             if (myPlayerIndex === 0) {
                 document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 syncState('stateSync');
                 msg("あなたのターンです！");
             } else {
-                // P2 received P1's turn start (via stateSync handler)
                 document.getElementById('turn-indicator').textContent = "相手のターン中...";
             }
         } else {
@@ -1068,23 +1062,39 @@ function startTurn(team) {
         }
 
     } else if (team === 'cpu') {
-        entities.forEach(e => { if (e.team === 'cpu') processTurnStartEffects(e); });
-        
+        if (!skipEffects) {
+            entities.forEach(e => {
+                if (e.team === 'cpu') processTurnStartEffects(e);
+            });
+        }
+
         if (isOnlineMode) {
-            // Online: P2 controls cpu team
             render();
             if (myPlayerIndex === 0) {
-                // P1 sends state to P2 so P2 can act
                 syncState('turnEnd');
                 document.getElementById('turn-indicator').textContent = "相手のターン中...";
                 msg("相手のターン中...");
+            } else {
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                msg("あなたのターンです！");
+                updateOnlineInfo();
             }
         } else {
-            // Offline: run CPU AI
             setTimeout(cpuLogic, 1000);
         }
+
     } else { // npc
-        entities.forEach(e => { if (e.team === 'npc') processTurnStartEffects(e); });
+        entities.forEach(e => {
+            if (e.team === 'npc') processTurnStartEffects(e);
+        });
+
+        render();
+
+        if (isOnlineMode && myPlayerIndex === 0) {
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+            msg("相手のターン中...");
+        }
+
         setTimeout(npcLogic, isOnlineMode ? 200 : 1000);
     }
 }

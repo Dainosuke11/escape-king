@@ -1,0 +1,226 @@
+function handleWsMessage(event) {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'roomCreated') {
+        onlineRoomCode = data.roomCode;
+        document.getElementById('ol-room-code').textContent = data.roomCode;
+        document.getElementById('create-waiting').style.display = 'block';
+        document.getElementById('btn-create-room').style.display = 'none';
+        return;
+    }
+
+    if (data.type === 'gameStart') {
+        myPlayerIndex = data.playerIndex;
+        isOnlineMode = true;
+        document.getElementById('online-lobby').style.display = 'none';
+
+        const settings = data.settings;
+        const seed = settings.seed;
+        const job = myPlayerIndex === 0 ? settings.p1job : settings.p2job;
+        const cpuJob = myPlayerIndex === 0 ? settings.p2job : settings.p1job;
+
+        withSeededRandom(seed, () => {
+            initBoard(settings.stage);
+            initEntitiesOnline(job, cpuJob, settings.difficulty);
+        });
+
+        turn = 1;
+        isPlayerTurn = settings.p1First;
+        activeStage = settings.stage;
+
+        document.getElementById('game-screen').style.display = 'flex';
+        updateOnlineInfo();
+        render();
+
+        if (isPlayerTurn) {
+            if (myPlayerIndex === 0) {
+                startTurn('player');
+            } else {
+                startTurn('cpu', true);
+            }
+        } else {
+            msg("相手のターン中...");
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+        }
+        return;
+    }
+
+    if (data.type === 'error') {
+        document.getElementById('join-error').textContent = data.message || 'エラーが発生しました';
+        document.getElementById('join-waiting').style.display = 'none';
+        document.getElementById('btn-join-room').disabled = false;
+        return;
+    }
+
+    if (data.type === 'stateSync') {
+        applyGameState(data.state);
+        render();
+        updateOnlineInfo();
+        if (canIAct()) {
+            const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
+            document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
+            msg("あなたのターンです！");
+        } else {
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+        }
+        return;
+    }
+
+    if (data.type === 'turnEnd') {
+        applyGameState(data.state);
+        render();
+        updateOnlineInfo();
+
+        if (myPlayerIndex === 0) {
+            startTurn('npc');
+        } else {
+            startTurn('cpu', true);
+        }
+        return;
+    }
+
+    if (data.type === 'opponentLeft') {
+        msg("⚠️ 相手が接続を切りました。");
+        alert("相手が接続を切りました。");
+    }
+}
+
+function startTurn(team, skipEffects = false) {
+    isPlayerTurn = (team === 'player');
+
+    if (team === 'player') {
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                if (board[r][c] === 'cannon_cd_1') board[r][c] = 'cannon';
+                else if (board[r][c] === 'cannon_cd_2') board[r][c] = 'cannon_cd_1';
+            }
+        }
+    }
+
+    usedAbilities = {};
+    actionMode = 'move';
+
+    if (team === 'player') {
+        if (activeStage === 'desert') {
+            if (duneTimer % 4 === 3) {
+                let candidates = entities.filter(e => e.hp > 0 && e.team !== 'npc');
+                if (candidates.length > 0) {
+                    let t = candidates[Math.floor(Math.random() * candidates.length)];
+                    sandwormTarget = { r: t.r, c: t.c };
+                    sandwormWarning = true;
+                    msg("⚠️ 次のターン、サンドワームの気配！(半径1マス)");
+                }
+            } else {
+                sandwormWarning = false;
+            }
+
+            if (duneTimer % 4 === 0 && duneTimer > 0) {
+                sandwormWarning = false;
+                sandwormActive = true;
+                msg("🪱 サンドワーム出現！範囲内のコマに5ダメージ！");
+                if (sandwormTarget) {
+                    entities.forEach(e => {
+                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= 1) {
+                            if (!e.invin) e.hp -= 5;
+                        }
+                    });
+                }
+                checkWin();
+            } else {
+                sandwormActive = false;
+            }
+            duneTimer++;
+        }
+
+        if (activeStage === 'forest' && turn % 3 === 0) {
+            let emptyForest = [];
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if ((board[r][c] === 'forest' || board[r][c] === 'plains') && !isNoRockZone(r, c)) {
+                        if (!entities.some(e => e.r === r && e.c === c && e.hp > 0)) emptyForest.push({ r, c });
+                    }
+                }
+            }
+            if (emptyForest.length > 0) {
+                let loc = emptyForest[Math.floor(Math.random() * emptyForest.length)];
+                entities.push({
+                    id: 'npc' + Date.now(), type: 'wolf', name: 'オオカミ', team: 'npc',
+                    r: loc.r, c: loc.c, hp: 2, maxHp: 2, ap: 3, maxAp: 3,
+                    abilities: { sword: 999 }, skillUsed: false, stealth: false, stealthTimer: 0,
+                    invin: false, invinTimer: 0, poisonTimer: 0
+                });
+                msg("🐺 森の奥からお邪魔モンスターが現れた！", true);
+            }
+        }
+
+        if (turn % magicCircleTimer === 0) {
+            let spawnedSmall = false;
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (board[r][c] === 'magic_circle') {
+                        if (spawnMonster(r, c) === 'small') spawnedSmall = true;
+                    }
+                }
+            }
+            if (spawnedSmall) msg("🔯 魔法陣からモンスターが出現！小鬼が潜伏状態に入った！(4ターン)", true);
+            else msg("🔯 魔法陣からモンスターが出現！", true);
+        }
+
+        entities.forEach(e => {
+            if (e.team === 'player') {
+                processTurnStartEffects(e);
+                if (e.type === 'slime') applySlimeHeal(e);
+            }
+        });
+
+        render();
+
+        if (isOnlineMode) {
+            if (myPlayerIndex === 0) {
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                syncState('stateSync');
+                msg("あなたのターンです！");
+            } else {
+                document.getElementById('turn-indicator').textContent = "相手のターン中...";
+            }
+        } else {
+            document.getElementById('turn-indicator').textContent = `Player's Turn (Turn: ${turn})`;
+        }
+
+    } else if (team === 'cpu') {
+        if (!skipEffects) {
+            entities.forEach(e => {
+                if (e.team === 'cpu') processTurnStartEffects(e);
+            });
+        }
+
+        if (isOnlineMode) {
+            render();
+            if (myPlayerIndex === 0) {
+                syncState('turnEnd');
+                document.getElementById('turn-indicator').textContent = "相手のターン中...";
+                msg("相手のターン中...");
+            } else {
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                msg("あなたのターンです！");
+                updateOnlineInfo();
+            }
+        } else {
+            setTimeout(cpuLogic, 1000);
+        }
+
+    } else { // npc
+        entities.forEach(e => {
+            if (e.team === 'npc') processTurnStartEffects(e);
+        });
+
+        render();
+
+        if (isOnlineMode && myPlayerIndex === 0) {
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+            msg("相手のターン中...");
+        }
+
+        setTimeout(npcLogic, isOnlineMode ? 200 : 1000);
+    }
+}
