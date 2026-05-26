@@ -123,26 +123,6 @@
         .camel_tile::after { content: "🐪"; font-size: calc(var(--tile-size) * 0.45); }
         .trap { background: #8d6e63; }
         .trap::after { content: "🕸️"; font-size: calc(var(--tile-size) * 0.45); }
-        /* Castle stage */
-        .castle_tile { background: #8d8d8d; }
-        .bridge_ns { background: #8B6914; }
-        .bridge_ew { background: #7a5c10; }
-        .bridge_up { background: #2980b9; }
-        .bridge_switch { background: #5d3d1e; }
-        .bridge_switch::after { content: "🔘"; font-size: calc(var(--tile-size)*0.45); }
-        /* Big River stage */
-        .whirlpool { background: #1a5276; }
-        .whirlpool::after { content: "🌀"; font-size: calc(var(--tile-size)*0.4); }
-        /* Mountain stage */
-        .mountain_tile { background: #795548; }
-        .snow { background: #e8f4f8; }
-        .avalanche_tile { background: #bbdefb; }
-        .avalanche_tile::after { content: "❄"; font-size: calc(var(--tile-size)*0.4); color: #1565c0; }
-        .summit { background: #90a4ae; }
-        .cable_tile { background: #546e7a; }
-        .cable_tile::after { content: "🚡"; font-size: calc(var(--tile-size)*0.38); }
-        /* Demon stage plains override */
-        .demon-stage .plains { background: #ce93d8; }
         
         .entity { 
             position: absolute; width: 85%; height: 85%; border-radius: 6px; 
@@ -256,9 +236,6 @@
             <option value="forest">森林 (森だらけの迷彩戦)</option>
             <option value="desert">砂漠 (サンドワームとラクダ)</option>
             <option value="demon">魔界 (魔法陣だらけ)</option>
-            <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
-            <option value="bigriver">大河 (渡河と船上戦)</option>
-            <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
         </select>
     </div>
     <div class="select-group">
@@ -308,9 +285,6 @@
                 <option value="forest">森林 (森だらけの迷彩戦)</option>
                 <option value="desert">砂漠 (サンドワームとラクダ)</option>
                 <option value="demon">魔界 (魔法陣だらけ)</option>
-                <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
-                <option value="bigriver">大河 (渡河と船上戦)</option>
-                <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
             </select>
         </div>
         <div class="select-group">
@@ -404,21 +378,7 @@ let sandwormTarget = null;
 let sandwormWarning = false;
 let sandwormActive = false;
 let magicCircleTimer = 5; 
-let usedAbilities = {};
-// Castle stage
-let bridgeStates = { north: true, south: true, east: true, west: true };
-let bridgeSwitchMap = {};
-const BRIDGE_TILE_MAP = {
-    north: [{r:6,c:9},{r:6,c:10}],
-    south: [{r:14,c:9},{r:14,c:10}],
-    west:  [{r:9,c:5},{r:10,c:5}],
-    east:  [{r:9,c:15},{r:10,c:15}]
-};
-// Big River stage
-let stageKrakenSpawned = false;
-// Mountain stage
-let avalanchesTriggered = new Set();
-let cableCarMovesLeft = 4;
+let usedAbilities = {}; 
 
 // ============================================================
 //  ONLINE MODE STATE
@@ -480,8 +440,7 @@ const ABILITY_NAMES = {
     poison_bow: '毒弓矢', dagger: '短剣刺し', poison_dagger: '毒剣刺し',
     spin_slash: '回転斬り', smash_slash: '粉砕斬り',
     great_fireball: '大火球魔法', summon_magic: '召喚獣魔法', rock_throw: '岩投げ',
-    summon_archer: '弓兵召喚(5T~)', summon_lancer: '槍兵召喚(5T~)', spear: '槍攻撃',
-    roll_rock: '岩転がし(直線∞)'
+    summon_archer: '弓兵召喚(5T~)', summon_lancer: '槍兵召喚(5T~)', spear: '槍攻撃'
 };
 
 const JOB_DATA = {
@@ -761,16 +720,11 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
     if (r<0 || r>=SIZE || c<0 || c>=SIZE) return false;
     if (!board[r]) return false;
     let t = board[r][c];
-    // Boat entities make river tiles passable
-    if (!ignoreRiver && (t === 'river' || t === 'whirlpool')) {
-        let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
-        if (boatHere) ignoreRiver = true;
-    }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool'].includes(t);
-    if (ignoreRiver && (t === 'river' || t === 'whirlpool')) blockedByTerrain = false;
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine'].includes(t);
+    if (ignoreRiver && t === 'river') blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
-    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar')) return false;
+    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r === r && e.c === c)) return false;
     return true;
 }
 
@@ -848,99 +802,6 @@ function initBoard(stageType) {
     if (stageType === 'demon') {
         placeRandom('magic_circle', 5, 1, 8, true);
         placeRandom('magic_circle', 5, 12, 19, true);
-    } else if (stageType === 'castle') {
-        // === CASTLE STAGE ===
-        // Clear base row-10 river setup
-        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river' || board[10][c2]==='bridge') board[10][c2]='plains';
-        for (let c2=0; c2<SIZE; c2++) if (board[8][c2]==='cannon' || board[12][c2]==='cannon') board[8][c2]=board[12][c2]='plains';
-        // Castle courtyard (gray)
-        for (let r2=7; r2<=13; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='castle_tile';
-        // Moat
-        for (let c2=5; c2<=15; c2++) { board[6][c2]='river'; board[14][c2]='river'; }
-        for (let r2=7; r2<=13; r2++) { board[r2][5]='river'; board[r2][15]='river'; }
-        // Bridges (N/S/E/W – start open)
-        board[6][9]='bridge_ns'; board[6][10]='bridge_ns';
-        board[14][9]='bridge_ns'; board[14][10]='bridge_ns';
-        board[9][5]='bridge_ew'; board[10][5]='bridge_ew';
-        board[9][15]='bridge_ew'; board[10][15]='bridge_ew';
-        // Bridge switches inside castle
-        bridgeSwitchMap = {};
-        board[8][10]='bridge_switch'; bridgeSwitchMap['8,10']='north';
-        board[12][10]='bridge_switch'; bridgeSwitchMap['12,10']='south';
-        board[10][7]='bridge_switch'; bridgeSwitchMap['10,7']='west';
-        board[10][13]='bridge_switch'; bridgeSwitchMap['10,13']='east';
-        bridgeStates = { north: true, south: true, east: true, west: true };
-        // 4 cannons inside castle
-        board[8][8]='cannon'; board[8][12]='cannon';
-        board[12][8]='cannon'; board[12][12]='cannon';
-        // Outer terrain
-        placeRandom('mine', 2, 1, 5, true);
-        placeRandom('mine', 2, 15, 19, true);
-        placeRandom('volcano', 2, 1, 5, true);
-        placeRandom('volcano', 2, 15, 19, true);
-        placeRandom('magic_circle', 2, 1, 5, true);
-        placeRandom('magic_circle', 2, 15, 19, true);
-    } else if (stageType === 'bigriver') {
-        // === BIG RIVER STAGE ===
-        // Clear base row-10 river
-        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
-        for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
-        // Big river rows 7-13
-        for (let r2=7; r2<=13; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='river';
-        // Center bridge (2 wide, full river height)
-        for (let r2=7; r2<=13; r2++) { board[r2][10]='bridge'; board[r2][11]='bridge'; }
-        // Whirlpools in river
-        let wCount=0, wA=0;
-        while (wCount<5 && wA<200) {
-            let wr=7+Math.floor(Math.random()*7), wc=Math.floor(Math.random()*SIZE);
-            if (board[wr][wc]==='river' && wc!==10 && wc!==11) { board[wr][wc]='whirlpool'; wCount++; }
-            wA++;
-        }
-        // Player side (bottom)
-        placeRandom('mine', 2, 14, 19, true);
-        placeRandom('volcano', 2, 14, 19, true);
-        placeRandom('magic_circle', 1, 15, 19, true);
-        placeRandom('mine', 1, 1, 6, true);
-        placeRandom('volcano', 1, 1, 6, true);
-        placeRandom('magic_circle', 1, 1, 6, true);
-        board[15][4]='cannon'; board[5][4]='cannon'; board[15][16]='cannon'; board[5][16]='cannon';
-        stageKrakenSpawned = false;
-    } else if (stageType === 'mountain') {
-        // === MOUNTAIN STAGE ===
-        // Clear base river row-10
-        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
-        for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
-        // Summit (rows 1-4)
-        for (let r2=1; r2<=4; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='summit';
-        // Snow zone (rows 5-8)
-        for (let r2=5; r2<=8; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='snow';
-        // Mountain tiles (rows 9-15)
-        for (let r2=9; r2<=15; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='mountain_tile';
-        // Valley (rows 16-20) stays plains
-        // Rocks on summit/snow
-        for (let i=0; i<18; i++) {
-            let rr=1+Math.floor(Math.random()*8), cc=1+Math.floor(Math.random()*(SIZE-2));
-            if (['summit','snow'].includes(board[rr][cc]) && !isNoRockZone(rr,cc) && !entities.some(e=>e.r===rr&&e.c===cc)) board[rr][cc]='rock';
-        }
-        // 3 avalanche triggers in snow zone
-        avalanchesTriggered = new Set();
-        let avCount=0, avA=0;
-        while (avCount<3 && avA<200) {
-            let ar=5+Math.floor(Math.random()*4), ac=2+Math.floor(Math.random()*(SIZE-4));
-            if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
-            avA++;
-        }
-        // Cable car columns (col 0 and col 20)
-        for (let r2=2; r2<=18; r2++) { board[r2][0]='cable_tile'; board[r2][SIZE-1]='cable_tile'; }
-        board[0][0]='summit'; board[0][SIZE-1]='summit'; board[1][0]='summit'; board[1][SIZE-1]='summit';
-        // Extras
-        placeRandom('mine', 2, 16, 19, true);
-        placeRandom('volcano', 2, 14, 17, true);
-        placeRandom('magic_circle', 1, 16, 19, true);
-        placeRandom('mine', 1, 1, 4, true);
-        placeRandom('magic_circle', 1, 1, 4, true);
-        board[14][6]='cannon'; board[14][14]='cannon'; board[7][6]='cannon'; board[7][14]='cannon';
-        cableCarMovesLeft = 4;
     } else {
         let placed = false;
         while (!placed) {
@@ -982,18 +843,6 @@ function initEntities(pJob, difficulty = "1") {
     scatterRocks(16, 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
-    // Stage-specific entities
-    if (activeStage === 'bigriver') {
-        let boatPos = [{r:7,c:4},{r:7,c:16},{r:13,c:4},{r:13,c:16}];
-        boatPos.forEach((p,i) => {
-            entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'npc', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        });
-        entities.push({id:'warship', type:'warship', name:'大型船', team:'npc', r:10, c:3, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        stageKrakenSpawned = false;
-    } else if (activeStage === 'mountain') {
-        let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
-        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
-    }
 }
 
 function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
@@ -1094,13 +943,7 @@ function scatterRocks(tr, tc, count) {
 
 function processTurnStartEffects(e) {
     if (e.hp <= 0) return;
-    // Frozen yeti does not act
-    if (e.type === 'yeti' && e.invin && e.frozenUntilTurn && turn < e.frozenUntilTurn) { e.ap = 0; return; }
     e.ap = e.maxAp;
-    // Summit altitude damage (mountain stage)
-    if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin) {
-        e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
-    }
     if (e.name === '分隊' && e.turnBorn !== undefined && turn - e.turnBorn >= 5 && e.skillUsed) {
         e.skillUsed = false;
         msg("✨ 分隊が5ターン生存！固有スキルが解放された！", true);
@@ -1202,31 +1045,6 @@ function startTurn(team, skipEffects = false) {
             else msg("🔯 魔法陣からモンスターが出現！", true);
         }
 
-        // Big River: Kraken spawns at turn 5
-        if (activeStage === 'bigriver' && turn === 5 && !stageKrakenSpawned) {
-            stageKrakenSpawned = true;
-            let kc = 2 + Math.floor(Math.random() * (SIZE - 4));
-            entities.push({
-                id:'kraken', type:'kraken', name:'クラーケン', team:'npc',
-                r: 10, c: kc, hp: 3, maxHp: 3, ap: 2, maxAp: 2,
-                abilities:{tentacle:999}, skillUsed:true, stealth:false, stealthTimer:0,
-                invin:false, invinTimer:0, poisonTimer:0
-            });
-            msg("🐙 クラーケンが大河に出現！あらゆる者を攻撃する！", true);
-        }
-        // Mountain: Yeti awakens at turn 6; reset cable car moves
-        if (activeStage === 'mountain') {
-            cableCarMovesLeft = 4;
-            if (turn === 6) {
-                let yeti = entities.find(e => e.type === 'yeti' && e.hp > 0 && e.invin && turn >= e.frozenUntilTurn);
-                if (yeti) {
-                    yeti.invin = false;
-                    yeti.ap = yeti.maxAp;
-                    msg("❄️ イエティが目覚めた！猛烈に向かってくる！", true);
-                }
-            }
-        }
-
         entities.forEach(e => {
             if (e.team === 'player') {
                 processTurnStartEffects(e);
@@ -1324,15 +1142,12 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
     if (mode === 'spin_slash') return true; 
     if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
-    if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
     return false;
 }
 
 function render() {
     const b = document.getElementById('board');
-    b.innerHTML = '';
-    // Demon stage: change plains to light purple via CSS class
-    b.classList.toggle('demon-stage', activeStage === 'demon');
+    b.innerHTML = ''; 
     
     for (let vr=0; vr<SIZE; vr++) {
         let ar = actualRowFor(vr); // actual board row
@@ -1458,60 +1273,8 @@ function checkTileEffects(entity) {
         board[r][c] = 'plains';
         entity.hasCamel = true;
         eventMsg = "ラクダを獲得！砂漠を無視して進める！";
-    } else if (board[r] && board[r][c] === 'bridge_switch') {
-        let key = `${r},${c}`;
-        let side = bridgeSwitchMap[key];
-        if (side) toggleBridge(side);
-    } else if (board[r] && (board[r][c] === 'whirlpool')) {
-        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
-        eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
-    } else if (board[r] && board[r][c] === 'avalanche_tile') {
-        triggerAvalanche(r, c, entity);
-    } else if (board[r] && board[r][c] === 'summit' && activeStage === 'mountain') {
-        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
-        eventMsg = "高山の過酷な環境！HP-1、AP-1！";
-    }
-    // Board onto a boat
-    let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
-    if (boatHere && !entity.onBoat) {
-        entity.onBoat = boatHere.id;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + `${boatHere.name}に乗った！川を渡れる！`;
     }
     return eventMsg;
-}
-
-function toggleBridge(side) {
-    let tiles = BRIDGE_TILE_MAP[side];
-    let isOpen = bridgeStates[side];
-    bridgeStates[side] = !isOpen;
-    tiles.forEach(t => {
-        board[t.r][t.c] = isOpen ? 'bridge_up' : (side === 'north' || side === 'south' ? 'bridge_ns' : 'bridge_ew');
-    });
-    let sideNames = { north:'北', south:'南', west:'西', east:'東' };
-    msg(`🏰 城の${sideNames[side]}の跳ね橋が${isOpen ? '上がった🔒' : '下りた🔓'}！`);
-}
-
-function triggerAvalanche(triggerR, triggerC, entity) {
-    let key = `${triggerR},${triggerC}`;
-    if (avalanchesTriggered.has(key)) return;
-    avalanchesTriggered.add(key);
-    board[triggerR][triggerC] = 'snow';
-    let width = Math.floor(Math.random() * 3) + 3;
-    let startC = Math.max(0, triggerC - Math.floor(width / 2));
-    let endC = Math.min(SIZE - 1, startC + width - 1);
-    let affected = [];
-    entities.forEach(e => {
-        if (e.hp > 0 && e.c >= startC && e.c <= endC && e.r >= triggerR) {
-            if (!e.invin) {
-                e.hp -= 2;
-                let newR = Math.min(SIZE - 1, e.r + 6);
-                while (newR > e.r && !isWalkable(newR, e.c, true, true)) newR--;
-                e.r = newR;
-                affected.push(e.name);
-            }
-        }
-    });
-    msg(`⛰️ 雪崩発生！幅${endC - startC + 1}マスが崩落！${affected.length > 0 ? affected.join(',') + 'に2ダメージと吹き飛ばし！' : ''}`);
 }
 
 function handleTileClick(vr, c) {
@@ -1521,62 +1284,12 @@ function handleTileClick(vr, c) {
     if (actionMode === 'move') {
         if (Math.abs(selectedEntity.r - r) + Math.abs(selectedEntity.c - c) === 1) {
             let cost = 1;
-            let isInvinKing = selectedEntity.type === 'king' && selectedEntity.invin;
-            // Cable car free movement (mountain stage only, along col 0 or col 20)
-            let onCable = activeStage === 'mountain' && (c === 0 || c === SIZE-1) &&
-                board[r]?.[c] === 'cable_tile' && c === selectedEntity.c && cableCarMovesLeft > 0;
-            if (onCable) cost = 0;
-            // Determine if destination is reachable
-            let canMove = isWalkable(r, c);
-            // Boat riding: player on boat can row through river
-            let onBoatEntity = selectedEntity.onBoat ? entities.find(e => e.id === selectedEntity.onBoat && e.hp > 0) : null;
-            if (onBoatEntity && !canMove) {
-                let t = board[r]?.[c];
-                if ((t === 'river' || t === 'whirlpool') && !entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship')) {
-                    canMove = true;
-                }
-            }
-            // King invincibility: can pass through rocks and entities
-            if (!canMove && isInvinKing && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
-                let t = board[r]?.[c];
-                if (['rock', 'mine', 'volcano'].includes(t)) canMove = true;
-                else if (!['river', 'whirlpool', 'bridge_up'].includes(t) &&
-                    entities.find(e => e.hp > 0 && e.r === r && e.c === c && e.type !== 'boat' && e.type !== 'warship')) canMove = true;
-            }
-
-            if ((cost === 0 || selectedEntity.ap >= cost) && canMove) {
-                // King invincibility: destroy rocks, damage blockers
-                if (isInvinKing) {
-                    let t = board[r]?.[c];
-                    if (['rock', 'mine', 'volcano'].includes(t)) {
-                        if (t === 'mine') breakMine();
-                        board[r][c] = 'plains';
-                        msg("👑 無敵の王が岩を砕いて突き進んだ！");
-                    } else {
-                        let blocker = entities.find(e => e.hp > 0 && e.r === r && e.c === c && e !== selectedEntity && e.type !== 'boat' && e.type !== 'warship');
-                        if (blocker && !blocker.invin) {
-                            blocker.hp -= 2;
-                            knockback(blocker, 2, selectedEntity);
-                            msg(`👑 無敵の王が${blocker.name}を吹き飛ばした！(2ダメージ)`);
-                        }
-                    }
-                }
-                // Boat follows player through river
-                if (onBoatEntity) {
-                    let t = board[r]?.[c];
-                    if (t === 'river' || t === 'whirlpool') {
-                        onBoatEntity.r = r; onBoatEntity.c = c;
-                    } else {
-                        selectedEntity.onBoat = null; // Stepped ashore
-                    }
-                }
-
+            if (selectedEntity.ap >= cost && isWalkable(r, c)) {
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.ap -= cost;
-                if (onCable) cableCarMovesLeft--;
-
+                
                 let eventMsg = checkTileEffects(selectedEntity);
-
+                
                 if (board[r] && board[r][c] === 'forest') {
                     eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠し、潜伏状態になった！";
                 }
@@ -1590,6 +1303,7 @@ function handleTileClick(vr, c) {
                             msg("砂に足を取られ、行動力が追加で1減少した！");
                         }
                     }
+                    
                     if (board[r] && board[r][c] === 'mine') { board[r][c] = 'plains'; breakMine(); }
                     else if (board[r] && board[r][c] === 'trap') { 
                         board[r][c] = 'plains'; 
@@ -1741,26 +1455,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("槍兵を召喚！(HP5/AP2/直線槍∞)"); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
-    } else if (actionMode === 'roll_rock') {
-        // Roll rock from (r, c) straight downward
-        board[r][c] = 'plains';
-        let rr = r + 1;
-        let stopped = false;
-        while (rr < SIZE && !stopped) {
-            let hit = entities.find(e => e.hp > 0 && e.r === rr && e.c === c);
-            if (hit) {
-                if (!hit.invin) { hit.hp -= 1; hit.ap = Math.max(0, hit.ap - 1); knockback(hit, 1, {r: rr-1, c: c}); }
-                msg(`⛰️ 岩転がし！${hit.name}に1ダメージ、AP-1、吹き飛ばし！`);
-                board[rr][c] = 'rock';
-                stopped = true;
-            } else if (!isWalkable(rr, c, true, true)) {
-                board[rr][c] = 'rock';
-                stopped = true;
-            }
-            rr++;
-        }
-        if (!stopped) msg("⛰️ 岩が山を転がり落ちた！（命中なし）");
-        used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -2179,67 +1873,6 @@ function npcLogic() {
     let npcs = entities.filter(e => e.team === 'npc' && e.hp > 0 && e.ap > 0);
     if (npcs.length > 0) {
         let n = npcs[0];
-
-        // === KRAKEN: attacks all non-npc entities within radius 2 in river ===
-        if (n.type === 'kraken') {
-            let krakenTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && Math.max(Math.abs(n.r-e.r), Math.abs(n.c-e.c)) <= 2);
-            if (krakenTargets.length > 0) {
-                krakenTargets.forEach(t => {
-                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap - 1); }
-                    msg(`🐙 クラーケンの触手！${t.name}に2ダメージ、AP-1！`, true);
-                });
-                n.ap--;
-            } else {
-                // Move within river toward nearest non-npc
-                let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0);
-                if (allTargets.length > 0) {
-                    allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
-                    let t = allTargets[0];
-                    let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                    dirs.sort((a,b) => {
-                        let da = Math.abs(n.r+a[0]-t.r)+Math.abs(n.c+a[1]-t.c);
-                        let db = Math.abs(n.r+b[0]-t.r)+Math.abs(n.c+b[1]-t.c);
-                        return da - db;
-                    });
-                    for (let d of dirs) {
-                        let nr = n.r+d[0], nc = n.c+d[1];
-                        if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && (board[nr]?.[nc]==='river'||board[nr]?.[nc]==='bridge'||board[nr]?.[nc]==='whirlpool') && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==n)) {
-                            n.r=nr; n.c=nc; break;
-                        }
-                    }
-                    n.ap--;
-                } else { n.ap = 0; }
-            }
-            checkWin(); render(); setTimeout(npcLogic, 100);
-            return;
-        }
-
-        // === YETI: frozen until turn 6, then standard melee + ice throw ===
-        if (n.type === 'yeti') {
-            if (n.invin) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
-            let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || board[e.r]?.[e.c]==='forest'));
-            if (allTargets.length > 0) {
-                allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
-                let t = allTargets[0];
-                let d = Math.max(Math.abs(n.r-t.r), Math.abs(n.c-t.c));
-                if (n.abilities.ice_throw && d <= 3) {
-                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap-1); knockback(t, 1, n); }
-                    msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ、AP-1！`, true);
-                    n.ap--;
-                } else if (d <= 1) {
-                    if (!t.invin) { t.hp -= 2; knockback(t, 1, n); }
-                    msg(`❄️ イエティの体当たり！${t.name}に2ダメージ！`, true);
-                    n.ap--;
-                } else {
-                    let path = findPath(n.r, n.c, t.r, t.c);
-                    if (path && path.length > 0 && isWalkable(path[0].r, path[0].c)) { n.r=path[0].r; n.c=path[0].c; }
-                    n.ap--;
-                }
-            } else { n.ap = 0; }
-            checkWin(); render(); setTimeout(npcLogic, 100);
-            return;
-        }
-
         let targets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
         
         if (targets.length > 0) {
@@ -2443,42 +2076,6 @@ function updateUI() {
         if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
         sb.onclick = () => setMode('skill');
         list.appendChild(sb);
-    }
-
-    // Mountain stage: Rock rolling ability (context-sensitive)
-    if (activeStage === 'mountain' && selectedEntity && canIAct()) {
-        let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-        let hasRock = dirs.some(d => {
-            let nr = selectedEntity.r+d[0], nc = selectedEntity.c+d[1];
-            return nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && board[nr]?.[nc]==='rock';
-        });
-        if (hasRock) {
-            let rb = document.createElement('button');
-            rb.className = 'ability-btn';
-            rb.style.background = '#5d4037'; rb.style.color = '#fff';
-            rb.innerText = '⛰️ 岩転がし (近接岩→直線ダメージ無限)';
-            if (actionMode === 'roll_rock') rb.classList.add('active');
-            rb.onclick = () => { actionMode = 'roll_rock'; updateUI(); render(); };
-            list.appendChild(rb);
-        }
-    }
-
-    // Big River: show onBoat status
-    if (activeStage === 'bigriver' && selectedEntity && selectedEntity.onBoat) {
-        let ib = document.createElement('div');
-        ib.style.cssText = 'background:#1a5276;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
-        ib.innerText = '🚤 乗船中 — 川を渡れる！岸に上陸で自動下船';
-        list.appendChild(ib);
-    }
-
-    // Mountain: cable car status
-    if (activeStage === 'mountain' && cableCarMovesLeft > 0 &&
-        (selectedEntity?.c === 0 || selectedEntity?.c === SIZE-1) &&
-        board[selectedEntity?.r]?.[selectedEntity?.c] === 'cable_tile') {
-        let cb2 = document.createElement('div');
-        cb2.style.cssText = 'background:#546e7a;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
-        cb2.innerText = `🚡 ケーブルカー乗車中 — 縦移動AP不要 (残${cableCarMovesLeft}回)`;
-        list.appendChild(cb2);
     }
 }
 </script>
