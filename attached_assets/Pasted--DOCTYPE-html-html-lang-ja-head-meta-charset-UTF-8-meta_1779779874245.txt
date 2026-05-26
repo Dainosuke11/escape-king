@@ -439,13 +439,12 @@ const ABILITY_NAMES = {
     magic_bullet: '魔法弾', wind_magic: '風魔法', ice_magic: '氷魔法',
     poison_bow: '毒弓矢', dagger: '短剣刺し', poison_dagger: '毒剣刺し',
     spin_slash: '回転斬り', smash_slash: '粉砕斬り',
-    great_fireball: '大火球魔法', summon_magic: '召喚獣魔法', rock_throw: '岩投げ',
-    summon_archer: '弓兵召喚(5T~)', summon_lancer: '槍兵召喚(5T~)', spear: '槍攻撃'
+    great_fireball: '大火球魔法', summon_magic: '召喚獣魔法', rock_throw: '岩投げ'
 };
 
 const JOB_DATA = {
-    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1 }, hp: 30, ap: 2 },
-    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1 }, hp: 30, ap: 2 },
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1 }, hp: 30, ap: 2 },
+    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, dagger: 10 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 } 
@@ -944,10 +943,6 @@ function scatterRocks(tr, tc, count) {
 function processTurnStartEffects(e) {
     if (e.hp <= 0) return;
     e.ap = e.maxAp;
-    if (e.name === '分隊' && e.turnBorn !== undefined && turn - e.turnBorn >= 5 && e.skillUsed) {
-        e.skillUsed = false;
-        msg("✨ 分隊が5ターン生存！固有スキルが解放された！", true);
-    }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
         if (!e.invin) e.hp -= 1;
@@ -1134,8 +1129,6 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'great_fireball') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'skill_mage') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'rock_throw') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
-    if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
-    if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
     if (mode === 'sword' || mode === 'punch' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
@@ -1245,8 +1238,7 @@ function setMode(mode) {
     if (selectedEntity.ap <= 0 && mode === 'move') return;
     if (mode === 'drop_rock' && selectedEntity.ap < 1) { msg("行動力(AP)が足りません"); return; }
     if (mode === 'summon_magic' && turn < 5) { msg("召喚獣魔法は開始後5ターン経過しないと使えません"); return; }
-    if ((mode === 'summon_archer' || mode === 'summon_lancer') && turn < 5) { msg("召喚は5ターン経過後に使用可能です"); return; }
-    if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id]?.has(mode)) { 
+    if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id] === mode) { 
         msg("このアビリティは既に今ターン使用済です"); 
         return; 
     }
@@ -1436,23 +1428,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
         msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : "大砲発射！敵に1ダメージと吹き飛ばし！(休2T)");
         board[se.r][se.c] = 'cannon_cd_2';
-    } else if (actionMode === 'spear') {
-        if (se.abilities['spear'] !== 999) se.abilities['spear']--;
-        if (!targetEntity.invin) { targetEntity.hp -= 2; }
-        msg(targetEntity.invin ? "槍攻撃！しかし無敵で防がれた！" : "槍攻撃命中！ダメージ(2)！"); used = true;
-    } else if (actionMode === 'summon_archer') {
-        se.abilities['summon_archer']--;
-        let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-        let placed = false;
-        for (let d of dirs) { if (isWalkable(r, c)) { placed = true; break; } }
-        if (placed) {
-            entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-            msg("弓兵を召喚！(HP3/AP2/直線弓∞)"); used = true;
-        }
-    } else if (actionMode === 'summon_lancer') {
-        se.abilities['summon_lancer']--;
-        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-        msg("槍兵を召喚！(HP5/AP2/直線槍∞)"); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode.startsWith('skill_')) {
@@ -1461,10 +1436,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     }
 
     if (used) {
-        if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
-            if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
-            usedAbilities[se.id].add(actionMode);
-        }
+        if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) usedAbilities[se.id] = actionMode;
         actionMode = 'move';
         checkWin();
         render();
@@ -1506,9 +1478,7 @@ function doSummon(se, r, c) {
 
 function executeSkill(se) {
     if (se.type === 'infantry') {
-        let isSquad = se.name === '分隊';
-        if (isSquad && turn - (se.turnBorn || 0) < 5) { msg("分隊は5ターン生存後に固有スキルが発動可能！"); return false; }
-        if (!isSquad && turn < 5) { msg("この固有スキルは5ターン目から使用可能です！"); return false; }
+        if (turn < 5) { msg("この固有スキルは5ターン目から使用可能です！"); return false; }
     }
 
     if (se.type === 'king') { 
@@ -1529,12 +1499,12 @@ function executeSkill(se) {
     }
     
     if (se.type === 'infantry') {
-        let cl = {...se, id: 'cl'+Date.now(), name: '分隊', hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: {...se.abilities}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
+        let cl = {...se, id: 'cl'+Date.now(), name: '分隊', hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: {...se.abilities}, poisonTimer: 0, skillUsed: true};
         cl.c += 1;
         if (!isWalkable(cl.r, cl.c)) cl.c -= 2;
         if (!isWalkable(cl.r, cl.c)) { cl.c += 1; cl.r += 1; }
         entities.push(cl);
-        msg("歩兵の分隊！別動隊が出現！(HP5/AP2・5ターン生存でスキル解放)");
+        msg("歩兵の分隊！別動隊が出現！(HP3/AP2)");
         return true;
     }
     return false;
@@ -1584,14 +1554,14 @@ function breakMine() {
     let t = treasures.splice(Math.floor(Math.random()*treasures.length), 1)[0];
     
     let msgText = "鉱山破壊！";
-    if (t === 'platinum') msgText += "プラチナ獲得！(全アビリティ回復、このターンAP+1、HP回復)";
+    if (t === 'platinum') msgText += "プラチナ獲得！(全アビリティ回復、AP・HPアップ)";
     if (t === 'gold') msgText += "金獲得！(全アビリティ回復、HP微回復)";
     if (t === 'silver') msgText += "銀獲得！(ランダムなアビリティ3種類回復)";
     if (t === 'copper') msgText += "銅獲得！(岩砕きアビリティ1回復)";
     msg(msgText);
 
     entities.filter(e => e.team === myTeam()).forEach(e => {
-        if (t === 'platinum') { for (let k in e.abilities) if (e.abilities[k]!==999) e.abilities[k]++; e.ap++; e.hp = Math.min(e.maxHp, e.hp+10); }
+        if (t === 'platinum') { for (let k in e.abilities) if (e.abilities[k]!==999) e.abilities[k]++; e.ap++; e.maxAp++; e.hp = Math.min(e.maxHp, e.hp+10); }
         if (t === 'gold') { for (let k in e.abilities) if (e.abilities[k]!==999) e.abilities[k]++; e.hp = Math.min(e.maxHp, e.hp+5); }
         if (t === 'silver') { 
             let ks = Object.keys(e.abilities).filter(k=>e.abilities[k]!==999); 
@@ -1729,32 +1699,6 @@ function cpuLogic() {
                 }
             }
 
-            if (!attacked && cpu.abilities.summon_archer > 0 && turn >= 5) {
-                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                for(let d of dirs) {
-                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
-                    if(isWalkable(nr, nc)) {
-                        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: cpu.team, r: nr, c: nc, hp: 3, maxHp: 3, ap: 0, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-                        cpu.abilities.summon_archer--;
-                        msg("敵が弓兵を召喚した！");
-                        attacked = true; cpu.ap--; break;
-                    }
-                }
-            }
-
-            if (!attacked && cpu.abilities.summon_lancer > 0 && turn >= 5) {
-                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                for(let d of dirs) {
-                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
-                    if(isWalkable(nr, nc)) {
-                        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: cpu.team, r: nr, c: nc, hp: 5, maxHp: 5, ap: 0, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-                        cpu.abilities.summon_lancer--;
-                        msg("敵が槍兵を召喚した！");
-                        attacked = true; cpu.ap--; break;
-                    }
-                }
-            }
-
 
             if (!attacked && dist <= 1) {
                 if (cpu.abilities.smash_slash > 0) {
@@ -1798,13 +1742,8 @@ function cpuLogic() {
                     if (!p.invin) { p.ap--; p.hp -= 2; knockback(p, 1, cpu); p.poisonTimer = 3; msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`); }
                     else { msg(`敵の毒弓矢！しかし${p.name}は無敵で防いだ！`); }
                     attacked = true; cpu.ap--;
-                } else if (cpu.abilities.spear > 0 && dist <= 2 && (cpu.r === p.r || cpu.c === p.c)) {
-                    if (cpu.abilities.spear !== 999) cpu.abilities.spear--;
-                    if (!p.invin) { p.hp -= 2; msg(`敵の槍攻撃！${p.name}に2ダメージ！`); }
-                    else { msg(`敵の槍攻撃！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
                 } else if (cpu.abilities.bow > 0 && dist <= 5 && (cpu.r === p.r || cpu.c === p.c)) {
-                    if (cpu.abilities.bow !== 999) cpu.abilities.bow--;
+                    cpu.abilities.bow--; 
                     if (!p.invin) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の弓撃！${p.name}に1ダメージ！`); }
                     else { msg(`敵の弓撃！しかし${p.name}は無敵で防いだ！`); }
                     attacked = true; cpu.ap--;
@@ -2054,7 +1993,7 @@ function updateUI() {
         let dispName = ABILITY_NAMES[key] || key;
         btn.innerText = count === 999 ? `${dispName} (残: ∞)` : `${dispName} (残: ${count})`;
         
-        if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id]?.has(key)) btn.disabled = true;
+        if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id] === key) btn.disabled = true;
         btn.onclick = () => setMode(key);
         list.appendChild(btn);
     }
