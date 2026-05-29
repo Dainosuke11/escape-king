@@ -279,7 +279,6 @@
             <option value="mage">魔法使い (召喚魔法・大火球)</option>
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
-                <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
         </select>
     </div>
     <div class="select-group">
@@ -347,7 +346,6 @@
                 <option value="mage">魔法使い (召喚魔法・大火球)</option>
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
-                <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -370,7 +368,6 @@
                 <option value="mage">魔法使い (召喚魔法・大火球)</option>
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
-                <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
             </select>
         </div>
         <div class="select-group">
@@ -416,7 +413,6 @@
                 <option value="mage">魔法使い (召喚魔法・大火球)</option>
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
-                <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -484,9 +480,6 @@ let activeStage = '';
 let duneTimer = 1;
 let sandwormTarget = null;
 let sandwormWarning = false;
-let trapOwnerMap = {};          // "r,c" -> team that placed the trap
-let rollRockPending = null;     // {r, c, dir, cols} pending roll_rock action
-let rollRockWarnTiles = [];     // [{r,c}] tiles to show roll-rock warning
 let sandwormActive = false;
 let nighttownCarTimer = 0;
 let carWarnTiles = []; // [{r,c}] tiles shown as warning before car activation
@@ -663,9 +656,7 @@ const ABILITY_NAMES = {
     decoy: 'デコイ人形',
     smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
     wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
-    healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', dig: '地面掘り', hole_move: '穴移動',
-    rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)', monk_summon: '僧侶召喚',
-    staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
+    healing_flute: '癒しの笛(HP+1)', charge_order: '笛・AP+1(2T)', dig: '地面掘り', hole_move: '穴移動',
     fire_breath: '火炎ブレス', peck: 'つつき'
 };
 
@@ -705,13 +696,7 @@ const ABILITY_TIPS = {
     tame: '半径2マスの敵モンスター/召喚獣(ジョブコマ以外)を1体、永久に味方化。開始5T経過後。',
     falcon_summon: 'ハヤブサ(HP3/AP2/つつき∞/飛行)を召喚。開始5T経過後に使用可能。',
     healing_flute: '半径8マス内の味方全員のHPを1回復。回数3回。',
-    charge_order: '追い風の笛を鳴らして半径8マス内の獣使いを除く味方コマ全員のAPを2ターン間+1する。',
-    rock_avalanche: '半径3マス内の敵1体に2ダメージ。命中後、対象周辺半径2マスにランダムで岩を3個降らす。',
-    drop_rock_heavy: '半径2マスの敵1体に2ダメージ＋AP-1＋吹き飛ばし。吹き飛ばした後、敵の隣接マスに岩を1個設置。',
-    monk_summon: 'HP3/AP2の僧侶を呼ぶ。杖で殴る(威1/∞)と治癒(HP+1/∞/半径2)を持つ。開始5T後。',
-    staff_hit: '隣接した相手に杖で攻撃。ダメージ1。回数無限。',
-    heal_ally: '半径2マス内の味方コマのHPを1回復。回数無限。',
-    doping: '3ターン間：AP+1、全攻撃力+1、射程+1、アビリティ使用回数+1。切れたターン：AP-1ペナルティ。',
+    charge_order: '笛を鳴らして半径8マス内の獣使いを除く味方コマ全員のAPを2ターン間+1する。',
     dig: '隣の地面を掘る。敵が通過するとAP-2して穴は消える。掘った穴が2つ以上で味方が穴に止まると穴移動が可能。',
     hole_move: '別の掘った穴へテレポート移動する。',
     fire_breath: '半径2マス内の敵1体に2ダメージ。回数無限。',
@@ -725,8 +710,7 @@ const JOB_DATA = {
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 },
-    macho: { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, punch: 10, monk_summon: 1 }, hp: 30, ap: 2 }
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1432,10 +1416,6 @@ function initBoard(stageType) {
         placeRandom('mine', 1, 0, 1, true);
         placeRandom('magic_circle', 1, 0, 1, true);
         cableCarMovesLeft = 4;
-        // Foothills barrier (rows 11-12 = "上から12段目・13段目"): fill plains with rocks — 2 wide on each side
-        [11, 12].forEach(r2 => {
-            for (let c2=0; c2<SIZE; c2++) { if (board[r2][c2] === 'plains') board[r2][c2] = 'rock'; }
-        });
     } else if (stageType === 'graveyard') {
         // === GRAVEYARD STAGE === keep base river + bridges at row 10
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
@@ -1468,9 +1448,6 @@ function initBoard(stageType) {
         // Goal tiles: player wins → row 0 cols 11-20; cpu wins → row 20 cols 0-9
         for (let c2=11; c2<SIZE; c2++) board[0][c2]='nighttown_goal';
         for (let c2=0; c2<=9; c2++) board[20][c2]='nighttown_goal';
-        // Remove any cannons that land on the cross-river (row 10 or col 10)
-        for (let c2=0; c2<SIZE; c2++) if (['cannon','cannon_cd_1','cannon_cd_2'].includes(board[10][c2])) board[10][c2]='river';
-        for (let r2=0; r2<SIZE; r2++) if (['cannon','cannon_cd_1','cannon_cd_2'].includes(board[r2][10])) board[r2][10]='river';
     } else if (stageType === 'skyfort') {
         // === SKY FORTRESS === expanded void rows 7-13, large floating island cols 0-6
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
@@ -1601,9 +1578,6 @@ function initEntities(pJob, difficulty = "1") {
     scatterRocks(16, 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
-    trapOwnerMap = {};
-    rollRockPending = null;
-    rollRockWarnTiles = [];
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         let boatPos = [{r:6,c:4},{r:6,c:16},{r:14,c:4},{r:14,c:16}];
@@ -1786,21 +1760,6 @@ function processTurnStartEffects(e) {
         e.whistleBuff--;
         if (e.whistleBuff <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
     }
-    if (e.trapHitPenalty > 0) {
-        e.trapHitPenalty--;
-        e.ap = Math.max(0, e.ap - 1);
-    }
-    if ((e.dopingTimer||0) > 0) {
-        e.dopingTimer--;
-        if (e.dopingTimer <= 0) {
-            e.maxAp = Math.max(1, e.maxAp - 1);
-            e.ap = Math.min(e.ap, e.maxAp);
-            e.ap = Math.max(0, e.ap - 1); // expire penalty
-            e.atkBonus = Math.max(0, (e.atkBonus||0) - 1);
-            e.rangeBonus = Math.max(0, (e.rangeBonus||0) - 1);
-            msg(`${e.name}のドーピングが切れた！AP-1ペナルティ！`, true);
-        }
-    }
     if (e.stolenLock) {
         for (let k of Object.keys(e.stolenLock)) { if (e.stolenLock[k] <= turn) delete e.stolenLock[k]; }
     }
@@ -1822,38 +1781,6 @@ function startTurn(team, skipEffects = false) {
 
     usedAbilities = {};
     actionMode = 'move';
-
-    // Execute pending roll_rock from previous turn
-    if (rollRockPending) {
-        let { r: rrR, c: rrC, dir: rrDir, cols: rrCols } = rollRockPending;
-        board[rrR][rrC] = 'plains';
-        let rrNames = [];
-        let rrStopRow = null;
-        let rrRow = rrR + rrDir;
-        while (rrRow >= 0 && rrRow < SIZE) {
-            let blockedHere = false;
-            rrCols.forEach(cc => {
-                let hit = entities.find(e => e.hp > 0 && e.r === rrRow && e.c === cc);
-                if (hit && !hit.invin) {
-                    hit.hp -= 2; hit.ap = Math.max(0, hit.ap - 1);
-                    knockback(hit, 1, {r: rrRow - rrDir, c: cc});
-                    rrNames.push(hit.name);
-                }
-            });
-            if (!isWalkable(rrRow, rrC, true, true)) { blockedHere = true; rrStopRow = rrRow - rrDir; }
-            if (blockedHere) break;
-            rrStopRow = rrRow;
-            rrRow += rrDir;
-        }
-        if (rrStopRow !== null && rrStopRow >= 0 && rrStopRow < SIZE && isWalkable(rrStopRow, rrC) && !entities.some(e=>e.hp>0&&e.r===rrStopRow&&e.c===rrC)) {
-            board[rrStopRow][rrC] = 'rock';
-        }
-        if (rrNames.length > 0) msg(`⛰️ 岩転がし発動！幅3マスで${[...new Set(rrNames)].join(',')}に2ダメージ・AP-1・吹き飛ばし！`, true);
-        else msg("⛰️ 岩転がし発動！（命中なし）", true);
-        rollRockPending = null;
-        rollRockWarnTiles = [];
-        checkWin();
-    }
 
     if (team === 'player') {
         if (activeStage === 'desert' || activeStage === 'chaos') {
@@ -1993,21 +1920,6 @@ function startTurn(team, skipEffects = false) {
             msg(`🔲 リフトが移動した！（rows${skyfortLiftPos}〜${skyfortLiftPos+1}）`, true);
         }
 
-        // Graveyard: bat/vampire/wolf/werewolf every 5 turns, soul+2 each
-        if (activeStage === 'graveyard' && turn >= 5 && turn % 5 === 0) {
-            const gravPool = ['bat', 'vampire', 'wolf', 'werewolf'];
-            let shuffled = [...gravPool].sort(() => Math.random()-0.5);
-            let gSpawned = [];
-            for (let i = 0; i < 2; i++) {
-                let spot = randomEmptyCells(1)[0];
-                if (spot) {
-                    let e = spawnAt(shuffled[i], spot.r, spot.c);
-                    e.soulValue = 2;
-                    gSpawned.push(e.name);
-                }
-            }
-            if (gSpawned.length > 0) msg(`🦇 墓場の魔物 ${gSpawned.join('・')} が出現！倒すと魂+2！`, true);
-        }
         // Graveyard / Chaos: zombies (10% frankenstein) from turn 3, every 3 turns at 4 spots
         if ((activeStage === 'graveyard' || activeStage === 'chaos') && turn >= 3 && turn % 3 === 0) {
             let spots = randomEmptyCells(4);
@@ -2217,11 +2129,6 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spin_slash') return true; 
     if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
     if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
-    if (mode === 'rock_avalanche') { let rb = (se.rangeBonus||0); return maxDist > 0 && maxDist <= 3+rb && target && target.team !== se.team; }
-    if (mode === 'drop_rock_heavy') { let rb = (se.rangeBonus||0); return maxDist > 0 && maxDist <= 2+rb && target && target.team !== se.team; }
-    if (mode === 'monk_summon') return maxDist === 1 && isWalkable(r, c);
-    if (mode === 'staff_hit') return maxDist === 1 && target && target.team !== se.team;
-    if (mode === 'heal_ally') return maxDist <= 2 && target && target.team === se.team;
     if (mode === 'smokescreen') return maxDist === 0;
     if (mode === 'charge_order') return maxDist === 0;
     if (mode === 'healing_flute') return maxDist === 0;
@@ -2251,10 +2158,7 @@ function render() {
         let ar = actualRowFor(vr); // actual board row
         for (let c=0; c<SIZE; c++) {
             let d = document.createElement('div');
-            let tileType = board[ar][c];
-            // Hide enemy-placed traps: render as ground
-            if (tileType === 'trap' && trapOwnerMap[`${ar},${c}`] !== myTeam()) tileType = defaultGround();
-            d.className = `tile ${tileType}`;
+            d.className = `tile ${board[ar][c]}`;
             d.id = `tile-${vr}-${c}`;
             
             if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
@@ -2273,9 +2177,6 @@ function render() {
                 d.classList.add('falling-warn');
             }
             if (activeStage === 'nighttown' && carWarnTiles.some(w => w.r === ar && w.c === c)) {
-                d.classList.add('sandworm-warn');
-            }
-            if (activeStage === 'mountain' && rollRockWarnTiles.some(w => w.r === ar && w.c === c)) {
                 d.classList.add('sandworm-warn');
             }
 
@@ -2634,19 +2535,14 @@ function handleTileClick(vr, c) {
                         }
                     }
                     if (board[r] && board[r][c] === 'mine') { board[r][c] = 'plains'; breakMine(); }
-                    else if (board[r] && board[r][c] === 'trap') {
-                        let tKey = `${r},${c}`;
-                        if (!selectedEntity.flying && trapOwnerMap[tKey] !== selectedEntity.team) {
-                            board[r][c] = 'plains';
-                            delete trapOwnerMap[tKey];
-                            if (!selectedEntity.invin) {
-                                selectedEntity.hp -= 1;
-                                selectedEntity.ap = Math.max(0, selectedEntity.ap - 2);
-                                selectedEntity.trapHitPenalty = 1;
-                                msg("罠を踏んだ！ダメージ(1)・AP-2、次のターン開始にAP-1ペナルティ！");
-                            } else {
-                                msg("罠を踏んだが、無敵状態により無効化！");
-                            }
+                    else if (board[r] && board[r][c] === 'trap') { 
+                        board[r][c] = 'plains'; 
+                        if (!selectedEntity.invin) {
+                            selectedEntity.hp -= 1;
+                            selectedEntity.ap = Math.max(0, selectedEntity.ap - 2);
+                            msg("罠を踏んだ！ダメージ(1)と行動力減少(2)！"); 
+                        } else {
+                            msg("罠を踏んだが、無敵状態により無効化！");
                         }
                     }
                 }
@@ -2728,7 +2624,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("ダッシュで移動！" + (eventMsg ? " " + eventMsg : "")); 
         checkEnemyTerritory(se);
     } else if (actionMode === 'trap') {
-        board[r][c] = 'trap'; se.abilities['trap']--; trapOwnerMap[`${r},${c}`] = se.team; used = true;
+        board[r][c] = 'trap'; se.abilities['trap']--; used = true; msg("罠を設置しました！");
     } else if (actionMode === 'bow') {
         se.abilities['bow']--; 
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; knockback(targetEntity, 1, se); }
@@ -2747,56 +2643,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え行動力を奪い吹き飛ばした！"); used = true;
     } else if (actionMode === 'rock_throw') {
         se.abilities['rock_throw']--;
-        let rkDmg = 2 + (se.atkBonus||0);
-        if (!targetEntity.invin) { targetEntity.hp -= rkDmg; targetEntity.ap = Math.max(0, targetEntity.ap - 1); knockback(targetEntity, 1, se); }
-        msg(targetEntity.invin ? "岩投げ！しかし無敵で防がれた！" : `岩投げ！ダメージ(${rkDmg})・AP-1・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'rock_avalanche') {
-        se.abilities['rock_avalanche']--;
-        let aDmg = 2 + (se.atkBonus||0);
-        if (!targetEntity.invin) { targetEntity.hp -= aDmg; }
-        msg(targetEntity.invin ? "岩雪崩！しかし無敵で防がれた！" : `⛰️ 岩雪崩！${targetEntity.name}に${aDmg}ダメージ！`, true);
-        // Drop 3 rocks in radius 2 around target (random empty tiles)
-        let rockPlaced = 0, attempts = 0;
-        while (rockPlaced < 3 && attempts < 30) {
-            let dr = Math.floor(Math.random()*5)-2, dc = Math.floor(Math.random()*5)-2;
-            let nr = targetEntity.r + dr, nc = targetEntity.c + dc;
-            if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && board[nr][nc]==='plains' && !isNoRockZone(nr,nc) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
-                board[nr][nc]='rock'; rockPlaced++;
-            }
-            attempts++;
-        }
-        if (rockPlaced > 0) msg(`周辺に岩${rockPlaced}個が降り注いだ！`, true);
-        used = true;
-    } else if (actionMode === 'drop_rock_heavy') {
-        se.abilities['drop_rock_heavy']--;
-        let hDmg = 2 + (se.atkBonus||0);
-        if (!targetEntity.invin) {
-            targetEntity.hp -= hDmg;
-            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
-            knockback(targetEntity, 1, se);
-            // Place rock adjacent to enemy (where they were knocked from)
-            let dirR = Math.sign(targetEntity.r - se.r), dirC = Math.sign(targetEntity.c - se.c);
-            let placeR = targetEntity.r - dirR, placeC = targetEntity.c - dirC;
-            if (placeR>=0 && placeR<SIZE && placeC>=0 && placeC<SIZE && (board[placeR][placeC]==='plains'||board[placeR][placeC]==='graveyard_ground'||board[placeR][placeC]==='nighttown_ground'||board[placeR][placeC]==='fortress_floor') && !isNoRockZone(placeR,placeC) && !entities.some(e=>e.hp>0&&e.r===placeR&&e.c===placeC)) {
-                board[placeR][placeC]='rock';
-            }
-        }
-        msg(targetEntity.invin ? "岩落とし強！しかし無敵で防がれた！" : `💪 岩落とし強！${targetEntity.name}に${hDmg}ダメージ・AP-1・吹き飛ばし、岩を設置！`); used = true;
-    } else if (actionMode === 'monk_summon') {
-        if (turn < 5) { msg("僧侶召喚は開始5ターン経過後に使用可能です"); return; }
-        se.abilities['monk_summon']--;
-        entities.push({ id:'monk'+Date.now(), type:'monk', name:'僧侶', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{staff_hit:999, heal_ally:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg("🧙 僧侶召喚！(HP3/AP2・杖で殴る∞・治癒∞)"); used = true;
-    } else if (actionMode === 'staff_hit') {
-        if (se.abilities['staff_hit'] !== 999) se.abilities['staff_hit']--;
-        let sDmg = 1 + (se.atkBonus||0);
-        if (meleeDodged(targetEntity)) { msg("杖で殴る！しかし飛行コマに回避された！"); }
-        else if (!targetEntity.invin) { targetEntity.hp -= sDmg; }
-        msg(targetEntity.invin ? "杖で殴る！しかし無敵で防がれた！" : `杖で殴る！ダメージ(${sDmg})！`); used = true;
-    } else if (actionMode === 'heal_ally') {
-        if (se.abilities['heal_ally'] !== 999) se.abilities['heal_ally']--;
-        targetEntity.hp = Math.min(targetEntity.hp + 1, targetEntity.maxHp);
-        msg(`治癒！${targetEntity.name}のHPを1回復！`); used = true;
+        if (!targetEntity.invin) { targetEntity.hp -= 2; }
+        msg(targetEntity.invin ? "岩投げ！しかし無敵で防がれた！" : "岩投げ！ダメージ(2)を与えた！"); used = true;
     } else if (actionMode === 'summon_magic') {
         doSummon(se, r, c);
         used = true;
@@ -2952,18 +2800,35 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
-        // Delay 1 turn: store pending + show warning tiles
-        let rrDir = r > 10 ? 1 : -1;
-        let rrCols = [c-1, c, c+1].filter(x => x >= 0 && x < SIZE);
-        rollRockPending = { r, c, dir: rrDir, cols: rrCols };
-        rollRockWarnTiles = [];
-        let rrr = r + rrDir;
-        while (rrr >= 0 && rrr < SIZE) {
-            rrCols.forEach(cc => rollRockWarnTiles.push({r: rrr, c: cc}));
-            if (!isWalkable(rrr, c, true, true)) break;
-            rrr += rrDir;
+        // Roll rock from (r, c) straight downhill, 3 columns wide
+        board[r][c] = 'plains';
+        // Determine downhill direction: rocks roll away from center (row 10)
+        let dir = r > 10 ? 1 : -1;
+        let cols = [c-1, c, c+1].filter(x => x >= 0 && x < SIZE);
+        let names = [];
+        let stopRow = null;
+        let rr = r + dir;
+        while (rr >= 0 && rr < SIZE) {
+            let blockedHere = false;
+            cols.forEach(cc => {
+                let hit = entities.find(e => e.hp > 0 && e.r === rr && e.c === cc);
+                if (hit && !hit.invin) {
+                    hit.hp -= 2; hit.ap = Math.max(0, hit.ap - 1);
+                    knockback(hit, 1, {r: rr - dir, c: cc});
+                    names.push(hit.name);
+                }
+            });
+            // Stop when the center column hits an obstacle
+            if (!isWalkable(rr, c, true, true)) { blockedHere = true; stopRow = rr - dir; }
+            if (blockedHere) break;
+            stopRow = rr;
+            rr += dir;
         }
-        msg("⚠️ 岩転がし予告！次のターン岩が幅3マスで転がり落ちてくる！");
+        if (stopRow !== null && stopRow >= 0 && stopRow < SIZE && isWalkable(stopRow, c) && !entities.some(e=>e.hp>0&&e.r===stopRow&&e.c===c)) {
+            board[stopRow][c] = 'rock';
+        }
+        if (names.length > 0) msg(`⛰️ 岩転がし！幅3マスで${[...new Set(names)].join(',')}に2ダメージ・AP-1・吹き飛ばし！`);
+        else msg("⛰️ 岩が山の斜面を転がり落ちた！（命中なし）");
         used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
@@ -3040,20 +2905,6 @@ function executeSkill(se) {
         if (turn < 5) { msg("ドラゴン召喚は開始5ターン経過後に使用可能です"); return false; }
         msg("ドラゴン召喚！設置場所(半径2マス以内)を選んでください"); actionMode = 'skill_dragon'; render(); return false;
     }
-    if (se.type === 'macho') {
-        if (se.dopingTimer > 0) { msg("ドーピング中はスキルを再使用できません！"); return false; }
-        // Doping: 3T buff — AP+1, atkBonus+1, rangeBonus+1, each non-999 ability +1
-        se.maxAp++;
-        se.ap = Math.min(se.ap + 1, se.maxAp);
-        se.atkBonus = (se.atkBonus||0) + 1;
-        se.rangeBonus = (se.rangeBonus||0) + 1;
-        for (let k of Object.keys(se.abilities)) {
-            if (se.abilities[k] !== 999) se.abilities[k]++;
-        }
-        se.dopingTimer = 3;
-        msg("💪 ドーピング！3ターン間AP+1・攻撃力+1・射程+1・アビリティ使用回数+1！");
-        return true;
-    }
     
     if (se.type === 'assassin') { 
         se.stealth = true; se.stealthTimer = 3; 
@@ -3096,9 +2947,9 @@ function executeRushSkill(se, targetR, targetC, mode) {
         return;
     }
     if (mode === 'skill_dragon') {
-        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 8, maxHp: 8, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
         se.skillUsed = true;
-        msg("ドラゴン召喚！(HP5/AP2・火炎ブレス∞/噛みつき∞・飛行)");
+        msg("ドラゴン召喚！(HP8/AP2・火炎ブレス∞/噛みつき∞・飛行)");
         return;
     }
     let stepR = Math.sign(targetR - se.r);
@@ -3580,11 +3431,8 @@ function cpuLogic() {
                 }
                 cpu.ap--;
                 if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
-                    let tKey = `${cpu.r},${cpu.c}`;
-                    if (!cpu.flying && trapOwnerMap[tKey] !== cpu.team) {
-                        board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey];
-                        if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; msg("敵が罠を踏んだ！"); }
-                    }
+                    board[cpu.r][cpu.c] = 'plains'; 
+                    if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); msg("敵が罠を踏んだ！"); }
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
                     board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'item_tile') {
@@ -3601,11 +3449,8 @@ function cpuLogic() {
             if (isWalkable(cpu.r+1, cpu.c)) cpu.r++;
             cpu.ap--;
             if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
-                let tKey2 = `${cpu.r},${cpu.c}`;
-                if (!cpu.flying && trapOwnerMap[tKey2] !== cpu.team) {
-                    board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey2];
-                    if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; }
-                }
+                board[cpu.r][cpu.c] = 'plains'; 
+                if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); }
             } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
                 board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
             } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
@@ -3666,11 +3511,8 @@ function npcLogic() {
             let krakenTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && Math.max(Math.abs(n.r-e.r), Math.abs(n.c-e.c)) <= 2);
             if (krakenTargets.length > 0) {
                 krakenTargets.forEach(t => {
-                    if (!t.invin) {
-                        t.hp -= 1;
-                        if (Math.random() < 0.5) t.ap = Math.max(0, t.ap - 1);
-                    }
-                    msg(`🐙 クラーケンの触手！${t.name}に1ダメージ${t.invin?'(無敵で軽減)':''}！`, true);
+                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap - 1); }
+                    msg(`🐙 クラーケンの触手！${t.name}に2ダメージ、AP-1！`, true);
                 });
                 n.ap--;
             } else {
@@ -3853,11 +3695,7 @@ function npcLogic() {
                 }
                 n.ap--;
                 if (board[n.r] && board[n.r][n.c] === 'trap') {
-                    let nTKey = `${n.r},${n.c}`;
-                    if (!n.flying && trapOwnerMap[nTKey] !== n.team) {
-                        board[n.r][n.c] = 'plains'; delete trapOwnerMap[nTKey];
-                        if (!n.invin) { n.hp -= 1; n.ap = Math.max(0, n.ap - 2); n.trapHitPenalty = 1; }
-                    }
+                    board[n.r][n.c] = 'plains'; n.hp -= 1; n.ap = Math.max(0, n.ap - 2);
                 } else if (board[n.r] && board[n.r][n.c] === 'magic_circle') {
                     board[n.r][n.c] = 'plains';
                 } else if (board[n.r] && board[n.r][n.c] === 'item_tile') {
