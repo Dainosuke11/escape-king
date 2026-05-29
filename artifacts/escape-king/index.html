@@ -526,7 +526,11 @@ let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
 
-// Anonymous identity + rank persistence (localStorage; Firebase unavailable on free tier)
+// Anonymous identity + rank persistence (localStorage + server DB sync)
+function getApiBase() {
+    const proto = location.protocol === 'https:' ? 'https:' : 'http:';
+    return `${proto}//${location.host}/api`;
+}
 function getUserId() {
     let id = localStorage.getItem('ek_userId');
     if (!id) { id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('ek_userId', id); }
@@ -546,13 +550,52 @@ function unlockRanked() {
 function applyRpDelta(delta) {
     let rank = getRank();
     let rp = getRP() + delta;
-    while (rp >= 100) { rp -= 100; rank += 1; }            // rank up, carry over
+    while (rp >= 100) { rp -= 100; rank += 1; }
     while (rp < 0) {
-        if (rank > 1) { rank -= 1; rp = 90; }              // rank down to 90 RP
-        else { rp = 0; break; }                            // floor at rank1/0RP
+        if (rank > 1) { rank -= 1; rp = 90; }
+        else { rp = 0; break; }
     }
     setRank(rank); setRP(rp);
     return { rank, rp };
+}
+// Sync player data to server (fire-and-forget)
+function syncPlayerToServer() {
+    try {
+        const payload = {
+            userId: getUserId(),
+            playerName: localStorage.getItem('etk_player_name') || 'プレイヤー',
+            rank: getRank(),
+            rp: getRP(),
+            spWins: parseInt(localStorage.getItem('ek_spwins') || '0', 10)
+        };
+        fetch(getApiBase() + '/player', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    } catch(e) {}
+}
+// Load player data from server and merge into localStorage (server wins on conflict)
+async function loadPlayerFromServer() {
+    try {
+        const uid = getUserId();
+        const res = await fetch(getApiBase() + '/player/' + encodeURIComponent(uid));
+        if (!res.ok) return;
+        const data = await res.json();
+        // Only overwrite if server has a higher rank or more wins (prevents stale server data from overwriting)
+        const localRank = getRank(), localRp = getRP();
+        const localWins = parseInt(localStorage.getItem('ek_spwins') || '0', 10);
+        const localRankScore = (localRank - 1) * 100 + localRp;
+        const serverRankScore = (data.rank - 1) * 100 + data.rp;
+        if (serverRankScore > localRankScore) { setRank(data.rank); setRP(data.rp); }
+        if (data.spWins > localWins) localStorage.setItem('ek_spwins', String(data.spWins));
+        if (data.playerName && data.playerName !== 'プレイヤー' && !localStorage.getItem('etk_player_name')) {
+            localStorage.setItem('etk_player_name', data.playerName);
+        }
+        refreshRankDisplay();
+        // Push back the merged winner to server
+        syncPlayerToServer();
+    } catch(e) {}
 }
 
 function myTeam() { 
@@ -940,6 +983,7 @@ function handleRankResult(data) {
     } else {
         line = 'フレンドマッチのためRP変動なし';
     }
+    syncPlayerToServer();
     setTimeout(() => {
         alert((data.won ? '🏆 勝利！\n\n' : '敗北...\n\n') + line);
     }, 300);
@@ -1090,6 +1134,7 @@ function savePlayerName() {
     let inp = document.getElementById('player-name-input');
     if (inp && inp.value.trim()) localStorage.setItem('etk_player_name', inp.value.trim());
     refreshRankDisplay();
+    syncPlayerToServer();
 }
 function refreshRankDisplay() {
     const el = document.getElementById('rank-display');
@@ -1117,6 +1162,7 @@ function updateOnlineInfo() {
 //  EVENT LISTENERS
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+    loadPlayerFromServer();
     document.getElementById('btn-start').addEventListener('click', startGame);
     document.getElementById('btn-online').addEventListener('click', showOnlineLobby);
     document.getElementById('btn-move').addEventListener('click', () => setMode('move'));
@@ -3679,6 +3725,7 @@ function checkWin() {
                     unlockRanked();
                     title += '\n🎖️ レベル8到達！ランクマッチが解放されました！';
                 }
+                syncPlayerToServer();
             }
         }
         document.getElementById('result-title').innerText = title;
