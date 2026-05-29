@@ -482,7 +482,6 @@ let sandwormTarget = null;
 let sandwormWarning = false;
 let sandwormActive = false;
 let nighttownCarTimer = 0;
-let carWarnTiles = []; // [{r,c}] tiles shown as warning before car activation
 let skyfortLiftPos = 9; // top row of 2x2 floating lift (cols 13-14)
 let magicCircleTimer = 5; 
 let usedAbilities = {};
@@ -804,10 +803,7 @@ function getGameState() {
         magicCircleTimer,
         treasures: [...treasures],
         digHoles: JSON.parse(JSON.stringify(digHoles)),
-        souls: { player: souls.player, cpu: souls.cpu },
-        nighttownCarTimer,
-        carWarnTiles: JSON.parse(JSON.stringify(carWarnTiles)),
-        itemTileMap: JSON.parse(JSON.stringify(itemTileMap))
+        souls: { player: souls.player, cpu: souls.cpu }
     };
 }
 
@@ -825,9 +821,6 @@ function applyGameState(state) {
     treasures = state.treasures;
     if (state.digHoles) digHoles = state.digHoles;
     if (state.souls) souls = state.souls;
-    if (state.nighttownCarTimer != null) nighttownCarTimer = state.nighttownCarTimer;
-    if (state.carWarnTiles) carWarnTiles = state.carWarnTiles;
-    if (state.itemTileMap) itemTileMap = state.itemTileMap;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -1594,15 +1587,9 @@ function initEntities(pJob, difficulty = "1") {
         // Wyverns on MAIN FLOORS (not island) — vehicle team, rideable
         let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9},{r:3,c:20}];
         wPos.forEach((p,i)=>{
-            entities.push({id:'wyvern'+i, type:'wyvern', name:'🐉', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'vehicle', r:p.r, c:p.c, hp:3, maxHp:3, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
         skyfortLiftPos = 9;
-        // 4 power-up items on floating island (rows 7-13, cols 0-6)
-        const islandItems = ['star','shoes','sword'];
-        [{r:8,c:2},{r:8,c:4},{r:12,c:2},{r:12,c:4}].forEach(p => {
-            board[p.r][p.c] = 'item_tile';
-            itemTileMap[`${p.r},${p.c}`] = islandItems[Math.floor(Math.random()*islandItems.length)];
-        });
     } else if (activeStage === 'chaos') {
         // Yeti spawns at turn 3 via startTurn
     }
@@ -1871,26 +1858,16 @@ function startTurn(team, skipEffects = false) {
                 msg("❄️ イエティが出現！猛烈に向かってくる！", true);
             }
         }
-        // Nighttown: warn 1 turn ahead, then give car NPCs AP every 3 turns
+        // Nighttown: give car NPCs AP every 3 turns
         if (activeStage === 'nighttown') {
             nighttownCarTimer++;
-            if (nighttownCarTimer % 3 === 2) {
-                // Warning turn: predict each car's path and mark tiles
-                carWarnTiles = [];
-                entities.filter(e => e.type === 'car' && e.team === 'npc' && e.hp > 0).forEach(car => {
-                    predictCarPath(car).forEach(t => {
-                        if (!carWarnTiles.some(w => w.r === t.r && w.c === t.c)) carWarnTiles.push(t);
-                    });
-                });
-                if (carWarnTiles.length > 0) msg("🚗 次のターン、車が走り出す予兆！赤マスに注意！", true);
-            } else if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
-                carWarnTiles = [];
+            if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
                 entities.forEach(e => {
-                    if (e.type === 'car' && e.team === 'npc' && e.hp > 0) e.ap = e.maxAp;
+                    if (e.type === 'car' && e.team === 'npc' && e.hp > 0) {
+                        e.ap = e.maxAp;
+                    }
                 });
                 msg("🚗 車が走り出した！逃げろ！", true);
-            } else {
-                carWarnTiles = [];
             }
         }
         // Skyfort: dragon spawns every 3 turns
@@ -2176,9 +2153,6 @@ function render() {
             if (activeStage === 'skyfort' && fallingWarn.some(w => w.r === ar && w.c === c)) {
                 d.classList.add('falling-warn');
             }
-            if (activeStage === 'nighttown' && carWarnTiles.some(w => w.r === ar && w.c === c)) {
-                d.classList.add('sandworm-warn');
-            }
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
                 if (isValidTarget(selectedEntity, ar, c, actionMode)) {
@@ -2191,12 +2165,7 @@ function render() {
         }
     }
 
-    // Render vehicles/NPCs first, then player/cpu on top (z-order: clickable own pieces win)
-    const sortedEntities = [...entities].sort((a, b) => {
-        const priority = e => (e.team === 'player' || e.team === 'cpu') ? 1 : 0;
-        return priority(a) - priority(b);
-    });
-    sortedEntities.forEach(e => {
+    entities.forEach(e => {
         if (e.hp <= 0) return;
         
         let isStealth = e.stealth || (board[e.r] && board[e.r][e.c] === 'forest');
@@ -2217,9 +2186,7 @@ function render() {
         let hpColor = (e.team === 'player') ? '#3498db' : '#f1c40f';
         let poisonIcon = e.poisonTimer > 0 ? '<span style="color:#2ecc71;">☠</span>' : '';
         const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
-        // Wyvern has no HP (maxHp===0 is the flag); skip HP bar for it
-        const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
-        ed.innerHTML = `${isEnemy ? '敵:' : ''}${e.name.substring(0,2)}${poisonIcon}${hpBar}`;
+        ed.innerHTML = `${isEnemy ? '敵:' : ''}${e.name.substring(0,2)}${poisonIcon}<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
         
         let vr = displayR(e.r);
         let targetTile = document.getElementById(`tile-${vr}-${e.c}`);
@@ -2247,13 +2214,6 @@ function render() {
 
 function selectEntity(e) {
     if (!canIAct()) return;
-    
-    // Car NPC: prefer any player/cpu piece on the same tile
-    if (e.type === 'car') {
-        let preferred = entities.find(p => p.hp > 0 && p.r === e.r && p.c === e.c && (p.team === 'player' || p.team === 'cpu'));
-        if (preferred) { e = preferred; }
-        else { showEntityInfo(e); return; }
-    }
     
     // Vehicle entities: select rider if aboard, otherwise show info
     if (e.type === 'boat' || e.type === 'warship') {
@@ -3464,40 +3424,6 @@ function cpuLogic() {
         startTurn('npc');
     }
     render();
-}
-
-// Predict where a car NPC will move over its next 8 AP steps (for warning display)
-function predictCarPath(car) {
-    let tiles = [];
-    let r = car.r, c = car.c;
-    let zigzag = car.carZigzag || 0;
-    const carTargets = entities.filter(e => (e.team === 'player' || e.team === 'cpu') && e.hp > 0);
-    if (carTargets.length === 0) return tiles;
-    carTargets.sort((a,b) => (Math.abs(r-a.r)+Math.abs(c-a.c)) - (Math.abs(r-b.r)+Math.abs(c-b.c)));
-    let target = carTargets[0];
-    const passable = ['nighttown_ground','nighttown_goal','plains','bridge','forest','desert',
-                      'magic_circle','church','streetlight_tile','mine','gravestone','graveyard_ground'];
-    for (let step = 0; step < 8; step++) {
-        zigzag++;
-        let useH = (zigzag % 2 === 0);
-        let dr = 0, dc = 0;
-        if (useH && target.c !== c) dc = Math.sign(target.c - c);
-        else if (!useH && target.r !== r) dr = Math.sign(target.r - r);
-        if (dr === 0 && dc === 0) { dc = Math.sign(target.c - c); if (dc === 0) dr = Math.sign(target.r - r); }
-        let nr = r + dr, nc = c + dc;
-        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && passable.includes(board[nr]?.[nc] || '')) {
-            r = nr; c = nc;
-        } else {
-            let dr2 = dr === 0 ? Math.sign(target.r - r) : 0;
-            let dc2 = dc === 0 ? Math.sign(target.c - c) : 0;
-            let nr2 = r + dr2, nc2 = c + dc2;
-            if (nr2 >= 0 && nr2 < SIZE && nc2 >= 0 && nc2 < SIZE && passable.includes(board[nr2]?.[nc2] || '')) {
-                r = nr2; c = nc2;
-            }
-        }
-        tiles.push({r, c});
-    }
-    return tiles;
 }
 
 function npcLogic() {
