@@ -105,11 +105,6 @@
         .highlight-atk { background-color: rgba(231, 76, 60, 0.6) !important; border: 1px solid #e74c3c; z-index: 5; }
         .sandworm-warn { background-color: rgba(230, 126, 34, 0.6) !important; border: 2px dashed #d35400 !important; z-index: 5;}
         .sandworm-attack { background-color: #d35400 !important; }
-        .nighttown_goal { background: #8B4513; }
-        .car_tile { background: #445; }
-        .car_tile::after { content: "🚗"; font-size: calc(var(--tile-size) * 0.45); }
-        .streetlight_tile { background: #27ae60; }
-        .streetlight_tile::after { content: "💡"; font-size: calc(var(--tile-size) * 0.45); }
 
         .rock::after { content: "🪨"; }
         .volcano::after { content: "🌋"; }
@@ -330,12 +325,6 @@
 
     <div id="ranked-panel">
         <div id="rank-display" style="text-align:center; font-size:18px; font-weight:bold; color:var(--accent); margin:10px 0;"></div>
-        <div class="select-group" style="margin-bottom:10px;">
-            <label>プレイヤー名:</label>
-            <input type="text" id="player-name-input" maxlength="16" placeholder="名前を入力..." 
-                style="width:100%; padding:10px; font-size:16px; background:#1a1a20; color:#fff; border:1px solid #444; border-radius:4px; box-sizing:border-box;"
-                oninput="savePlayerName()">
-        </div>
         <div class="select-group">
             <label>ジョブ選択:</label>
             <select id="ranked-job-select">
@@ -481,9 +470,6 @@ let duneTimer = 1;
 let sandwormTarget = null;
 let sandwormWarning = false;
 let sandwormActive = false;
-let nighttownCarTimer = 0;
-let nighttownCarPaths = []; // [{r,c}] list of warned tiles
-let nighttownCarWarning = false;
 let magicCircleTimer = 5; 
 let usedAbilities = {};
 // Phase B: souls / items / falling floors
@@ -613,7 +599,7 @@ const ABILITY_NAMES = {
     decoy: 'デコイ人形',
     smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
     wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
-    healing_flute: '癒しの笛(HP+1)', charge_order: '笛・AP+1(2T)', dig: '地面掘り', hole_move: '穴移動',
+    great_summon: '大召喚(5T~)', charge_order: '突撃命令', dig: '地面掘り', hole_move: '穴移動',
     fire_breath: '火炎ブレス', peck: 'つつき'
 };
 
@@ -652,11 +638,11 @@ const ABILITY_TIPS = {
     wolf_summon: 'オオカミを召喚する。開始5T経過後に使用可能。',
     tame: '半径2マスの敵モンスター/召喚獣(ジョブコマ以外)を1体、永久に味方化。開始5T経過後。',
     falcon_summon: 'ハヤブサ(HP3/AP2/つつき∞/飛行)を召喚。開始5T経過後に使用可能。',
-    healing_flute: '半径8マス内の味方全員のHPを1回復。回数3回。',
-    charge_order: '笛を鳴らして半径8マス内の獣使いを除く味方コマ全員のAPを2ターン間+1する。',
+    great_summon: 'HP3以上の召喚獣/モンスターからランダムで1体を味方召喚。開始5T経過後。',
+    charge_order: '味方の召喚獣全員のAPを+1する突撃命令。',
     dig: '隣の地面を掘る。敵が通過するとAP-2して穴は消える。掘った穴が2つ以上で味方が穴に止まると穴移動が可能。',
     hole_move: '別の掘った穴へテレポート移動する。',
-    fire_breath: '半径2マス内の敵1体に2ダメージ。回数無限。',
+    fire_breath: '半径2マス内を狙い4マス四方を攻撃力2で範囲攻撃。回数無限。',
     peck: '隣接した敵をつつく。攻撃力1。回数無限。'
 };
 
@@ -667,7 +653,7 @@ const JOB_DATA = {
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 }
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, great_summon: 1, charge_order: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1084,25 +1070,14 @@ function updateTurnTimerDisplay() {
     el.textContent = `⏱ 残り ${Math.max(0, turnTimeLeft)} 秒`;
 }
 
-function getPlayerName() {
-    return localStorage.getItem('etk_player_name') || 'プレイヤー';
-}
-function savePlayerName() {
-    let inp = document.getElementById('player-name-input');
-    if (inp && inp.value.trim()) localStorage.setItem('etk_player_name', inp.value.trim());
-    refreshRankDisplay();
-}
 function refreshRankDisplay() {
     const el = document.getElementById('rank-display');
     if (!el) return;
-    let name = getPlayerName();
-    let inp = document.getElementById('player-name-input');
-    if (inp && !inp.value) inp.value = name;
     if (isRankedUnlocked()) {
-        el.textContent = `${name} — ${getRank()}　(${getRP()} RP)`;
+        el.textContent = `現在のランク: ${getRank()}　(${getRP()} RP)`;
     } else {
         let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10);
-        el.textContent = `${name} — 初心者（シングルプレイ勝利 ${Math.min(wins,8)}/8 でランクマッチ解放）`;
+        el.textContent = `ステータス: 初心者（シングルプレイ勝利 ${Math.min(wins,8)}/8 でランクマッチ解放）`;
     }
 }
 
@@ -1180,11 +1155,11 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile'].includes(t);
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
-    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar' && e.type!=='wyvern')) return false;
+    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar')) return false;
     return true;
 }
 
@@ -1378,45 +1353,36 @@ function initBoard(stageType) {
         board[3][3]='cannon'; board[3][17]='cannon'; board[17][3]='cannon'; board[17][17]='cannon';
         board[5][5]='magic_circle'; board[5][15]='magic_circle'; board[15][5]='magic_circle'; board[15][15]='magic_circle';
     } else if (stageType === 'nighttown') {
-        // === NIGHT TOWN STAGE === cross river (row 10 + col 10) divides 4 quadrants
+        // === NIGHT TOWN STAGE === cross river (row 10 + col 10) divides into 4 quadrants
+        // Horizontal river at row 10
         for (let c2=0; c2<SIZE; c2++) board[10][c2]='river';
+        // Vertical river at col 10
         for (let r2=0; r2<SIZE; r2++) if (board[r2][10]==='plains') board[r2][10]='river';
-        // 4 bridges
-        board[10][4]='bridge'; board[10][16]='bridge';
-        board[4][10]='bridge'; board[16][10]='bridge';
-        // Streetlights (1 per quadrant, HP+1 on step)
-        board[4][4]='streetlight_tile'; board[4][16]='streetlight_tile';
-        board[16][4]='streetlight_tile'; board[16][16]='streetlight_tile';
-        // Magic circles
+        // 4 bridges connecting quadrants
+        board[10][4]='bridge'; board[10][16]='bridge';  // cross horizontal river
+        board[4][10]='bridge'; board[16][10]='bridge';  // cross vertical river
+        // Cannons per quadrant + magic circles
+        board[3][3]='cannon'; board[3][17]='cannon'; board[17][3]='cannon'; board[17][17]='cannon';
         board[6][3]='magic_circle'; board[6][17]='magic_circle';
         board[14][3]='magic_circle'; board[14][17]='magic_circle';
-        // Car tiles (1 per quadrant) — shatterable, periodic attack
-        board[3][3]='car_tile'; board[3][17]='car_tile';
-        board[17][3]='car_tile'; board[17][17]='car_tile';
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='nighttown_ground';
         }
-        // Goal tiles: player wins → row 0 cols 11-20; cpu wins → row 20 cols 0-9
-        for (let c2=11; c2<SIZE; c2++) board[0][c2]='nighttown_goal';
-        for (let c2=0; c2<=9; c2++) board[20][c2]='nighttown_goal';
     } else if (stageType === 'skyfort') {
-        // === SKY FORTRESS === expanded void rows 7-13, large floating island cols 0-6
+        // === SKY FORTRESS === two floors + 2 narrow bridges + floating island on left
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
-            if (r2<=6 || r2>=14) board[r2][c2]='fortress_floor';
+            if (r2<=8 || r2>=12) board[r2][c2]='fortress_floor';
             else board[r2][c2]='sky_void';
         }
-        // Void notches near island (row 6 cols 0-7, row 14 cols 0-7)
-        for (let c2=0; c2<=7; c2++) { board[6][c2]='sky_void'; board[14][c2]='sky_void'; }
-        // Two bridges at col 11 and col 17
-        for (let r2=7; r2<=13; r2++) { board[r2][11]='bridge'; board[r2][17]='bridge'; }
-        // Floating island: rows 7-13, cols 0-6 (7×7 = 49 tiles)
-        for (let r2=7; r2<=13; r2++) for (let c2=0; c2<=6; c2++) board[r2][c2]='fortress_floor';
-        // Island features
+        // Two narrow bridges (1 tile wide each) at col 10 and col 16
+        for (let r2=9; r2<=11; r2++) { board[r2][10]='bridge'; board[r2][16]='bridge'; }
+        // Floating island: rows 9-11, cols 1-5 (in void, accessible only by flying/teleport)
+        for (let r2=9; r2<=11; r2++) for (let c2=1; c2<=5; c2++) board[r2][c2]='fortress_floor';
+        // Island features: cannon, magic circle, mines (set in placeChurchesAndItems)
         board[10][3]='cannon';
-        board[8][1]='magic_circle'; board[12][5]='magic_circle';
-        board[9][5]='mine'; board[11][1]='mine';
+        board[9][2]='magic_circle'; board[11][4]='magic_circle';
     } else if (stageType === 'chaos') {
         // === CHAOS STAGE === all gimmicks mixed. Desert patches + sandworm + floor disappear.
         placeRandom('magic_circle', 3, 1, 8, true);
@@ -1449,7 +1415,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','desert','forest','castle_tile'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -1531,25 +1497,24 @@ function initEntities(pJob, difficulty = "1") {
         entities.push({id:'warship', type:'warship', name:'大型船', team:'vehicle', r:10, c:wsCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         stageKrakenSpawned = false;
     } else if (activeStage === 'mountain') {
-        // Yeti spawns at turn 3 via startTurn
+        let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:3});
     } else if (activeStage === 'skyfort') {
-        // Wyverns on floating island (rows 7-13, cols 0-6) — vehicle team, rideable
-        let wPos = [{r:8,c:2},{r:10,c:4},{r:12,c:2},{r:9,c:6},{r:11,c:0}];
+        // 5 wyverns on floating island and main floors
+        let wPos = [{r:9,c:1},{r:10,c:2},{r:11,c:3},{r:3,c:14},{r:17,c:6}];
         wPos.forEach((p,i)=>{
-            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'vehicle', r:p.r, c:p.c, hp:3, maxHp:3, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'npc', r:p.r, c:p.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
     } else if (activeStage === 'chaos') {
-        // Yeti spawns at turn 3 via startTurn
+        let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:3});
     }
-    // Night town: diagonal corner starts + boats in river
+    // Night town: diagonal starts
     if (activeStage === 'nighttown') {
         let p1 = entities.find(e => e.id === 'p1');
         let c1 = entities.find(e => e.id === 'c1');
-        if (p1) { p1.c = 0; p1.r = 20; }
-        if (c1) { c1.c = 20; c1.r = 0; }
-        entities.push({id:'ntboat0', type:'boat', name:'小舟', team:'vehicle', r:10, c:6, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        entities.push({id:'ntboat1', type:'boat', name:'小舟', team:'vehicle', r:5, c:10, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        nighttownCarTimer = 0; nighttownCarPaths = []; nighttownCarWarning = false;
+        if (p1) p1.c = 0;
+        if (c1) c1.c = 20;
     }
 }
 
@@ -1668,7 +1633,7 @@ function processTurnStartEffects(e) {
         if (e.shoesTimer <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
     }
     // Summit altitude damage (mountain stage) - HP only, AP penalty removed
-    if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin && !e.flying) {
+    if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin) {
         e.hp -= 1;
     }
     if (e.poisonTimer > 0) {
@@ -1686,13 +1651,6 @@ function processTurnStartEffects(e) {
             if (e.type === 'assassin') { e.maxAp = 2; if (e.ap > 2) e.ap = 2; }
             if (e.type === 'small') msg("小鬼の潜伏状態が解除された！", true);
         } 
-    }
-    if (e.whistleBuff > 0) {
-        e.whistleBuff--;
-        if (e.whistleBuff <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
-    }
-    if (e.stolenLock) {
-        for (let k of Object.keys(e.stolenLock)) { if (e.stolenLock[k] <= turn) delete e.stolenLock[k]; }
     }
 }
 
@@ -1793,37 +1751,16 @@ function startTurn(team, skipEffects = false) {
             stageKrakenSpawned = true;
             msg("🐙 クラーケンが大河に出現！あらゆる者を攻撃する！", true);
         }
-        // Mountain / Chaos: Yeti spawns at turn 3; reset cable car moves
+        // Mountain / Chaos: Yeti awakens at turn 6; reset cable car moves
         if (activeStage === 'mountain' || activeStage === 'chaos') {
             cableCarMovesLeft = 4;
-            if (turn === 3 && !entities.find(e => e.type === 'yeti' && e.hp > 0)) {
-                let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
-                entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:2, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-                msg("❄️ イエティが出現！猛烈に向かってくる！", true);
-            }
-        }
-        // Nighttown: car warning and attack every 3 turns
-        if (activeStage === 'nighttown') {
-            nighttownCarTimer++;
-            if (nighttownCarTimer % 3 === 2) {
-                nighttownCarPaths = generateAllCarPaths();
-                nighttownCarWarning = true;
-                if (nighttownCarPaths.length > 0) msg("🚗 車が走り出す予兆！赤いマスに注意！", true);
-            } else if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
-                nighttownCarWarning = false;
-                let hitNames = [];
-                nighttownCarPaths.forEach(({r: cr, c: cc}) => {
-                    entities.forEach(e => {
-                        if (e.hp > 0 && e.r === cr && e.c === cc && !e.invin && e.team !== 'vehicle') {
-                            e.hp -= 3; knockback(e, 2, {r: Math.floor(SIZE/2), c: Math.floor(SIZE/2)});
-                            hitNames.push(e.name);
-                        }
-                    });
-                });
-                if (hitNames.length > 0) msg(`🚗 車が走り抜けた！${hitNames.join('・')}に3ダメージ＋吹き飛ばし！`, true);
-                nighttownCarPaths = [];
-            } else {
-                nighttownCarWarning = false;
+            if (turn === 3) {
+                let yeti = entities.find(e => e.type === 'yeti' && e.hp > 0 && e.invin && turn >= e.frozenUntilTurn);
+                if (yeti) {
+                    yeti.invin = false;
+                    yeti.ap = yeti.maxAp;
+                    msg("❄️ イエティが目覚めた！猛烈に向かってくる！", true);
+                }
             }
         }
 
@@ -1851,54 +1788,6 @@ function startTurn(team, skipEffects = false) {
             }
         }
 
-        // Skyfort: wyverns (vehicle) randomly walk 1 step, dragging any rider
-        if (activeStage === 'skyfort') {
-            entities.filter(e => e.type === 'wyvern' && e.team === 'vehicle' && e.hp > 0).forEach(wyvern => {
-                let dirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}].sort(()=>Math.random()-0.5);
-                for (let {dr, dc} of dirs) {
-                    let nr = wyvern.r + dr, nc = wyvern.c + dc;
-                    if (board[nr]?.[nc] === 'fortress_floor' && !entities.find(e => e.hp>0 && e.r===nr && e.c===nc && e.team!=='vehicle' && !e.onWyvern)) {
-                        wyvern.r = nr; wyvern.c = nc;
-                        entities.forEach(rider => {
-                            if (rider.onWyvern === wyvern.id && rider.hp > 0) { rider.r = nr; rider.c = nc; }
-                        });
-                        break;
-                    }
-                }
-            });
-        }
-        // Desert/Chaos: camel_tile moves 2 steps/turn toward nearest player or cpu entity
-        if (activeStage === 'desert' || activeStage === 'chaos') {
-            for (let r2=0; r2<SIZE; r2++) {
-                for (let c2=0; c2<SIZE; c2++) {
-                    if (board[r2]?.[c2] === 'camel_tile') {
-                        let nearest = null, bestDist = 999;
-                        entities.forEach(e => {
-                            if (e.hp > 0 && (e.team === 'player' || e.team === 'cpu')) {
-                                let d = Math.abs(e.r-r2) + Math.abs(e.c-c2);
-                                if (d < bestDist) { bestDist = d; nearest = e; }
-                            }
-                        });
-                        if (nearest) {
-                            let nr = r2, nc = c2;
-                            for (let step=0; step<2; step++) {
-                                let absDr = Math.abs(nearest.r-nr), absDc = Math.abs(nearest.c-nc);
-                                let stepR = absDr >= absDc ? Math.sign(nearest.r-nr) : 0;
-                                let stepC = absDr < absDc ? Math.sign(nearest.c-nc) : 0;
-                                let tryR = nr+stepR, tryC = nc+stepC;
-                                if (tryR>=0&&tryR<SIZE&&tryC>=0&&tryC<SIZE&&['desert','plains','nighttown_ground'].includes(board[tryR]?.[tryC])) {
-                                    nr = tryR; nc = tryC;
-                                }
-                            }
-                            if (nr !== r2 || nc !== c2) {
-                                board[r2][c2] = 'desert';
-                                if (['desert','plains','nighttown_ground'].includes(board[nr]?.[nc])) board[nr][nc] = 'camel_tile';
-                            }
-                        }
-                    }
-                }
-            }
-        }
         // Chaos: vampire/wolf/werewolf every 3 turns
         if (activeStage === 'chaos' && turn >= 3 && turn % 3 === 0) {
             const pool = ['vampire','wolf','werewolf'];
@@ -1999,27 +1888,11 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        return (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'graveyard_ground' || board[r][c] === 'nighttown_ground' || board[r][c] === 'nighttown_goal' || board[r][c] === 'fortress_floor') && !isNoRockZone(r, c) && !target;
+        return (board[r][c] === 'plains' || board[r][c] === 'desert') && !isNoRockZone(r, c) && !target;
     }
-    // Stolen lock: prevents use for 1 turn after being stolen from
-    if (se.stolenLock && se.stolenLock[mode] > turn) return false;
     if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
-    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]);
-    if (mode === 'dash') {
-        if (se.flying) return dist > 0 && dist <= 2;
-        if (dist === 0 || dist > 2) return false;
-        if (!isWalkable(r, c)) return false;
-        let rawDr = r - se.r, rawDc = c - se.c;
-        if (rawDr !== 0 && rawDc === 0 && Math.abs(rawDr) === 2) {
-            let midT = board[se.r + Math.sign(rawDr)]?.[se.c];
-            if (['river','sky_void','fallen_floor','whirlpool'].includes(midT)) return false;
-        }
-        if (rawDr === 0 && rawDc !== 0 && Math.abs(rawDc) === 2) {
-            let midT = board[se.r]?.[se.c + Math.sign(rawDc)];
-            if (['river','sky_void','fallen_floor','whirlpool'].includes(midT)) return false;
-        }
-        return true;
-    }
+    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano', 'gravestone'].includes(board[r][c]);
+    if (mode === 'dash') return dist > 0 && dist <= 2 && isWalkable(r, c);
     if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
@@ -2037,17 +1910,19 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
     if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
     if (mode === 'smokescreen') return maxDist === 0;
-    if (mode === 'charge_order') return maxDist === 0;
-    if (mode === 'healing_flute') return maxDist === 0;
+    if (mode === 'charge_order') {
+        if (!((se.r === r && se.c !== c) || (se.c === c && se.r !== r))) return false;
+        if (dist < 1 || dist > 5) return false;
+        return entities.some(a => a !== se && a.team === se.team && a.hp > 0 && !isJobPiece(a) && Math.max(Math.abs(a.r - se.r), Math.abs(a.c - se.c)) <= 1);
+    }
     if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
-    if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon') return maxDist === 1 && isWalkable(r, c);
+    if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon' || mode === 'great_summon') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'dig') return maxDist === 1 && (board[r]?.[c] === 'plains' || board[r]?.[c] === 'desert') && !target;
     if (mode === 'hole_move') return board[r]?.[c] === 'hole' && !target && !(se.r === r && se.c === c);
     if (mode === 'tame') return maxDist <= 2 && target && target.team !== se.team && !isJobPiece(target);
     if (mode === 'skill_copy') return maxDist <= 2 && target && target.team !== se.team && isJobPiece(target);
-    if (mode === 'skill_dragon') return maxDist <= 2 && isWalkable(r, c);
-    if (mode === 'fire_breath') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'skill_dragon' || mode === 'fire_breath') return maxDist <= 2 && isWalkable(r, c);
     return false;
 }
 
@@ -2082,9 +1957,6 @@ function render() {
 
             if (activeStage === 'skyfort' && fallingWarn.some(w => w.r === ar && w.c === c)) {
                 d.classList.add('falling-warn');
-            }
-            if (activeStage === 'nighttown' && nighttownCarWarning && nighttownCarPaths.some(p => p.r === ar && p.c === c)) {
-                d.classList.add('sandworm-warn');
             }
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
@@ -2197,7 +2069,7 @@ function setMode(mode) {
     if (mode === 'drop_rock' && selectedEntity.ap < 1) { msg("行動力(AP)が足りません"); return; }
     if (mode === 'summon_magic' && turn < 5) { msg("召喚獣魔法は開始後5ターン経過しないと使えません"); return; }
     if ((mode === 'summon_archer' || mode === 'summon_lancer') && turn < 5) { msg("召喚は5ターン経過後に使用可能です"); return; }
-    if (['miner_call','wolf_summon','falcon_summon','tame'].includes(mode) && turn < 5) { msg("召喚・テイムは開始5ターン経過後に使用可能です"); return; }
+    if (['miner_call','wolf_summon','falcon_summon','great_summon','tame'].includes(mode) && turn < 5) { msg("召喚・テイムは開始5ターン経過後に使用可能です"); return; }
     if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id]?.has(mode)) { 
         msg("このアビリティは既に今ターン使用済です"); 
         return; 
@@ -2222,14 +2094,9 @@ function checkTileEffects(entity) {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
     } else if (board[r] && board[r][c] === 'camel_tile') {
-        board[r][c] = 'desert';
+        board[r][c] = 'plains';
         entity.hasCamel = true;
         eventMsg = "ラクダを獲得！砂漠を無視して進める！";
-    } else if (board[r] && board[r][c] === 'streetlight_tile') {
-        if (!entity.invin) { entity.hp = Math.min(entity.hp + 1, entity.maxHp); }
-        eventMsg = "💡 街灯でHP+1回復！";
-    } else if (board[r] && board[r][c] === 'nighttown_goal' && (entity.team === 'player' || entity.team === 'cpu')) {
-        // Just a goal tile, handled in checkWin
     } else if (board[r] && board[r][c] === 'bridge_switch') {
         let key = `${r},${c}`;
         let side = bridgeSwitchMap[key];
@@ -2261,21 +2128,15 @@ function checkTileEffects(entity) {
             }
         }
     }
-    // Graveyard: crossing a bridge with collected souls summons spirits near enemy entities (radius 2)
+    // Graveyard: crossing a bridge with collected souls summons spirits near the enemy
     if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'chaos')) {
         let team = entity.team;
         if ((team === 'player' || team === 'cpu') && souls[team] > 0) {
             let n = souls[team];
-            let foeTeam = team === 'player' ? 'cpu' : 'player';
-            let foes = entities.filter(e => e.hp > 0 && (e.team === foeTeam || e.team === 'npc'));
+            let foeRows = (team === 'player') ? [0, 8] : [12, 20];
             let cells = [];
-            foes.forEach(foe => {
-                for (let rdr=-2; rdr<=2; rdr++) for (let rdc=-2; rdc<=2; rdc++) {
-                    let rr=foe.r+rdr, cc=foe.c+rdc;
-                    if (rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&isWalkable(rr,cc)&&!entities.some(e=>e.hp>0&&e.r===rr&&e.c===cc))
-                        cells.push({r:rr,c:cc});
-                }
-            });
+            for (let rr=foeRows[0]; rr<=foeRows[1]; rr++) for (let cc=0; cc<SIZE; cc++)
+                if (isWalkable(rr,cc) && !entities.some(e=>e.hp>0&&e.r===rr&&e.c===cc)) cells.push({r:rr,c:cc});
             cells.sort(()=>Math.random()-0.5);
             cells.slice(0, n).forEach(s => spawnAt('spirit', s.r, s.c));
             souls[team] = 0;
@@ -2285,13 +2146,6 @@ function checkTileEffects(entity) {
     // Church: enable purification (handled in updateUI)
     if (board[r] && board[r][c] === 'church') {
         eventMsg = (eventMsg ? eventMsg + " " : "") + "⛪ 教会だ。浄化アビリティで魂を消化できる。";
-    }
-    // Board onto a wyvern (auto-board when stepping on same tile)
-    let wyvernHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type==='wyvern' && e.team==='vehicle');
-    if (wyvernHere && !entity.onWyvern && (entity.team === 'player' || entity.team === 'cpu')) {
-        entity.onWyvern = wyvernHere.id;
-        entity.flying = true;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + "🐉 ワイバーンに乗った！飛行コマになった！";
     }
     // Board onto a boat
     let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
@@ -2414,7 +2268,7 @@ function handleTileClick(vr, c) {
                 if (eventMsg) {
                     msg(eventMsg);
                 } else {
-                    if (board[r] && board[r][c] === 'desert' && selectedEntity.type !== 'infantry' && !selectedEntity.hasCamel && !selectedEntity.flying) {
+                    if (board[r] && board[r][c] === 'desert' && selectedEntity.type !== 'infantry' && !selectedEntity.hasCamel) {
                         if (Math.random() < 0.5) {
                             selectedEntity.ap = Math.max(0, selectedEntity.ap - 1);
                             msg("砂に足を取られ、行動力が追加で1減少した！");
@@ -2452,19 +2306,11 @@ function handleTileClick(vr, c) {
 }
 
 function checkEnemyTerritory(entity) {
-    let pInEnemy, cInEnemy;
-    if (activeStage === 'nighttown') {
-        pInEnemy = entity.team === 'player' && entity.r <= 9 && entity.c >= 11;
-        cInEnemy = entity.team === 'cpu' && entity.r >= 11 && entity.c <= 9;
-    } else {
-        pInEnemy = entity.team === 'player' && entity.r <= 9;
-        cInEnemy = entity.team === 'cpu' && entity.r >= 11;
-    }
-    if (pInEnemy && !entity.crossBonus) {
+    if (entity.team === 'player' && entity.r <= 9 && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
-    } else if (cInEnemy && !entity.crossBonus) {
+    } else if (entity.team === 'cpu' && entity.r >= 11 && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
@@ -2483,11 +2329,9 @@ function handleAbilityTarget(r, c, targetEntity) {
     if (actionMode === 'shatter') {
         if (board[r][c] === 'mine') breakMine();
         if (board[r][c] === 'volcano') breakVolcano();
-        let wasCar = board[r][c] === 'car_tile';
         let wasGravestone = board[r][c] === 'gravestone';
-        board[r][c] = (wasGravestone || wasCar) ? defaultGround() : 'plains';
+        board[r][c] = wasGravestone ? defaultGround() : 'plains';
         if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
-        if (wasCar) msg("🚗 車を破壊した！");
         if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
         if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
         used = true;
@@ -2622,9 +2466,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let k = pool[Math.floor(Math.random()*pool.length)];
             targetEntity.abilities[k]--;
             se.abilities[k] = (se.abilities[k] && se.abilities[k] !== 999 ? se.abilities[k] : 0) + 1;
-            if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
-            targetEntity.stolenLock[k] = turn + 1;
-            msg(`強奪成功！敵から「${ABILITY_NAMES[k]||k}」を1回ぶん奪った！1ターン使用不可！`); used = true;
+            msg(`強奪成功！敵から「${ABILITY_NAMES[k]||k}」を1回ぶん奪った！`); used = true;
         }
     } else if (actionMode === 'miner_call') {
         se.abilities['miner_call']--;
@@ -2646,26 +2488,34 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['falcon_summon']--;
         entities.push({ id: 'falcon'+Date.now(), type: 'falcon', name: 'ハヤ', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { peck: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
         msg("ハヤブサを召喚！(HP3/AP2/つつき∞・飛行)"); used = true;
-    } else if (actionMode === 'healing_flute') {
-        se.abilities['healing_flute']--;
-        let healed = 0;
-        entities.forEach(e => {
-            if (e.team === se.team && e.hp > 0 && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 8) {
-                e.hp = Math.min(e.hp + 1, e.maxHp); healed++;
-            }
-        });
-        msg(`🎵 癒しの笛！半径8マス内の味方${healed}体のHPを1回復！`); used = true;
+    } else if (actionMode === 'great_summon') {
+        se.abilities['great_summon']--;
+        let pool = [
+            { type: 'yeti', name: 'イエティ', hp: 5, ab: { punch: 999, ice_throw: 999 } },
+            { type: 'big', name: '大鬼', hp: 5, ab: { punch: 999 } },
+            { type: 'wolf', name: 'オオカミ', hp: 3, ab: { sword: 999 } }
+        ];
+        let pick = pool[Math.floor(Math.random()*pool.length)];
+        entities.push({ id: pick.type+Date.now(), type: pick.type, name: pick.name, team: se.team, r, c, hp: pick.hp, maxHp: pick.hp, ap: 2, maxAp: 2, abilities: {...pick.ab}, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        msg(`大召喚！${pick.name}を味方として召喚した！(HP${pick.hp})`); used = true;
     } else if (actionMode === 'charge_order') {
         se.abilities['charge_order']--;
-        let buffed = 0;
-        entities.forEach(e => {
-            if (e.team === se.team && e !== se && e.hp > 0 && e.type !== 'beastmaster' && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 8) {
-                if (!(e.whistleBuff > 0)) { e.maxAp++; e.ap = Math.min(e.ap + 1, e.maxAp); }
-                e.whistleBuff = 2;
-                buffed++;
-            }
-        });
-        msg(`🎵 笛を鳴らした！半径8マス内の味方${buffed}体が2ターン間AP+1！`); used = true;
+        // Find ally within radius 1; they charge toward target (r,c)
+        let ally = entities.find(a => a !== se && a.team === se.team && a.hp > 0 && !isJobPiece(a) && Math.max(Math.abs(a.r - se.r), Math.abs(a.c - se.c)) <= 1);
+        if (ally) {
+            let chargeTarget = entities.find(e => e.hp > 0 && e.team !== se.team && e.r === r && e.c === c);
+            if (chargeTarget && !chargeTarget.invin) { chargeTarget.hp -= 5; knockback(chargeTarget, 2, ally); }
+            else if (board[r]?.[c] === 'rock') board[r][c] = 'plains';
+            ally.hp = Math.max(0, ally.hp - 1);
+            let dr = Math.sign(r - ally.r), dc = Math.sign(c - ally.c);
+            if (isWalkable(ally.r + dr, ally.c + dc, true)) { ally.r += dr; ally.c += dc; }
+            msg(`突撃命令！${ally.name}が突進！5ダメージ＋吹き飛ばし（自分1ダメージ）！`);
+        } else {
+            let n = 0;
+            entities.forEach(t => { if (t.hp > 0 && t.team === se.team && t !== se && !isJobPiece(t)) { t.ap += 1; n++; } });
+            msg(`突撃命令！味方${n}体のAPが+1！`);
+        }
+        used = true;
     } else if (actionMode === 'tame') {
         se.abilities['tame']--;
         targetEntity.team = se.team;
@@ -2678,8 +2528,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "つつき！しかし無敵で防がれた！" : "つつき命中！ダメージ(1)！"); used = true;
     } else if (actionMode === 'fire_breath') {
         if (se.abilities['fire_breath'] !== 999) se.abilities['fire_breath']--;
-        if (targetEntity && !targetEntity.invin) targetEntity.hp -= 2;
-        msg(targetEntity?.invin ? "火炎ブレス！しかし無敵で防がれた！" : "火炎ブレス！敵に2ダメージ！"); used = true;
+        let hit = 0;
+        // Cross pattern: center + 4 cardinal directions
+        let breathTargets = [{r:r,c:c},{r:r-1,c:c},{r:r+1,c:c},{r:r,c:c-1},{r:r,c:c+1}];
+        breathTargets.forEach(({r:rr,c:cc}) => {
+            let t = entities.find(e => e.hp > 0 && e.r === rr && e.c === cc && e.team !== se.team);
+            if (t && !t.invin) { t.hp -= 2; hit++; }
+        });
+        msg(`火炎ブレス！十字5マスの敵${hit}体に2ダメージ！`); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
@@ -2957,33 +2813,6 @@ function randomEmptyCells(n) {
 }
 
 // Sky fortress falling floors: resolve last turn's warnings, then warn 2 new cells.
-function generateAllCarPaths() {
-    let paths = [];
-    for (let r2=0; r2<SIZE; r2++) {
-        for (let c2=0; c2<SIZE; c2++) {
-            if (board[r2]?.[c2] === 'car_tile') {
-                let isLeft = c2 < 10, isTop = r2 < 10;
-                if (Math.random() < 0.5) {
-                    // Horizontal sweep across the quadrant row
-                    let startC = isLeft ? 0 : 11, endC = isLeft ? 9 : 20;
-                    for (let tc=startC; tc<=endC; tc++) {
-                        let t = board[r2]?.[tc];
-                        if (t && !['river','sky_void','fallen_floor','rock','car_tile'].includes(t)) paths.push({r:r2, c:tc});
-                    }
-                } else {
-                    // Vertical sweep across the quadrant column
-                    let startR = isTop ? 0 : 11, endR = isTop ? 9 : 20;
-                    for (let tr=startR; tr<=endR; tr++) {
-                        let t = board[tr]?.[c2];
-                        if (t && !['river','sky_void','fallen_floor','rock','car_tile'].includes(t)) paths.push({r:tr, c:c2});
-                    }
-                }
-            }
-        }
-    }
-    return paths;
-}
-
 function resolveFallingFloors() {
     // 1) Cells warned last turn now collapse
     fallingWarn.forEach(({r,c}) => {
@@ -2998,11 +2827,9 @@ function resolveFallingFloors() {
     });
     fallingWarn = [];
     // 2) Pick 2 new cells to warn — prefer empty floor; fall back to piece tiles
-    // In chaos stage, bridges are safe (not collapsible)
     let empty = [], occupied = [];
     for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
-        let isCollapsible = board[r][c] === 'fortress_floor' || (board[r][c] === 'bridge' && activeStage !== 'chaos');
-        if (isCollapsible) {
+        if (board[r][c] === 'fortress_floor' || board[r][c] === 'bridge') {
             if (entities.some(e=>e.hp>0&&e.r===r&&e.c===c)) occupied.push({r,c});
             else empty.push({r,c});
         }
@@ -3550,15 +3377,8 @@ function checkWin() {
     let pTrapped = isTrapped(player);
     let cTrapped = isTrapped(cpu);
 
-    let pWin, cWin;
-    if (activeStage === 'nighttown') {
-        // Nighttown: player wins row 0 cols 11-20; cpu wins row 20 cols 0-9
-        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0 && e.c >= 11) || cTrapped;
-        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1 && e.c <= 9) || pTrapped;
-    } else {
-        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
-        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
-    }
+    let pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
+    let cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
 
     let isEnd = false;
     let title = "";
