@@ -1837,15 +1837,7 @@ function startTurn(team, skipEffects = false) {
             // Remove old lift
             for (let rr=skyfortLiftPos; rr<=skyfortLiftPos+1; rr++) {
                 for (let cc=13; cc<=14; cc++) {
-                    if (board[rr]?.[cc] === 'fortress_floor') {
-                        board[rr][cc] = 'sky_void';
-                        entities.forEach(e => {
-                            if (e.hp > 0 && e.r === rr && e.c === cc && !e.invin) {
-                                e.hp -= 2;
-                                msg(`⬜ リフトが移動！${e.name}が落下！2ダメージ！`, true);
-                            }
-                        });
-                    }
+                    if (board[rr]?.[cc] === 'fortress_floor') board[rr][cc] = 'sky_void';
                 }
             }
             // Toggle: rows 9-10 (center) → rows 12-13 (player side) → rows 7-8 (cpu side)
