@@ -482,7 +482,8 @@ let sandwormTarget = null;
 let sandwormWarning = false;
 let sandwormActive = false;
 let nighttownCarTimer = 0;
-let skyfortLiftPos = 9; // top row of 2x2 floating lift (cols 13-14)
+let nighttownCarPaths = []; // [{r,c}] list of warned tiles
+let nighttownCarWarning = false;
 let magicCircleTimer = 5; 
 let usedAbilities = {};
 // Phase B: souls / items / falling floors
@@ -1389,6 +1390,9 @@ function initBoard(stageType) {
         // Magic circles
         board[6][3]='magic_circle'; board[6][17]='magic_circle';
         board[14][3]='magic_circle'; board[14][17]='magic_circle';
+        // Car tiles (1 per quadrant) — shatterable, periodic attack
+        board[3][3]='car_tile'; board[3][17]='car_tile';
+        board[17][3]='car_tile'; board[17][17]='car_tile';
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='nighttown_ground';
         }
@@ -1407,21 +1411,12 @@ function initBoard(stageType) {
         for (let c2=0; c2<=7; c2++) { board[6][c2]='sky_void'; board[14][c2]='sky_void'; }
         // Two bridges at col 11 and col 17
         for (let r2=7; r2<=13; r2++) { board[r2][11]='bridge'; board[r2][17]='bridge'; }
-        // Floating island: rows 7-13, cols 0-6 (7×7 — no magic circles)
+        // Floating island: rows 7-13, cols 0-6 (7×7 = 49 tiles)
         for (let r2=7; r2<=13; r2++) for (let c2=0; c2<=6; c2++) board[r2][c2]='fortress_floor';
+        // Island features
         board[10][3]='cannon';
+        board[8][1]='magic_circle'; board[12][5]='magic_circle';
         board[9][5]='mine'; board[11][1]='mine';
-        // Main floors — upper (rows 0-6): cannons, volcanoes, magic circles
-        board[2][8]='cannon'; board[2][16]='cannon';
-        board[4][12]='volcano';
-        board[1][5]='magic_circle'; board[1][15]='magic_circle'; board[5][19]='magic_circle';
-        // Main floors — lower (rows 14-20): symmetric features
-        board[18][8]='cannon'; board[18][16]='cannon';
-        board[16][12]='volcano';
-        board[19][5]='magic_circle'; board[19][15]='magic_circle'; board[15][19]='magic_circle';
-        // Floating 2×2 lift between bridges (cols 13-14, rows 9-10 initially)
-        board[9][13]='fortress_floor'; board[9][14]='fortress_floor';
-        board[10][13]='fortress_floor'; board[10][14]='fortress_floor';
     } else if (stageType === 'chaos') {
         // === CHAOS STAGE === all gimmicks mixed. Desert patches + sandworm + floor disappear.
         placeRandom('magic_circle', 3, 1, 8, true);
@@ -1532,18 +1527,17 @@ function initEntities(pJob, difficulty = "1") {
             entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'vehicle', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         });
         // Warship: random shore placement (col 1-4, river row)
-        let wsCol = 1 + Math.floor(Math.random() * 19); // 1-19, random position on river
+        let wsCol = 1 + Math.floor(Math.random() * 4);
         entities.push({id:'warship', type:'warship', name:'大型船', team:'vehicle', r:10, c:wsCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         stageKrakenSpawned = false;
     } else if (activeStage === 'mountain') {
         // Yeti spawns at turn 3 via startTurn
     } else if (activeStage === 'skyfort') {
-        // Wyverns on MAIN FLOORS (not island) — vehicle team, rideable
-        let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9},{r:3,c:20}];
+        // Wyverns on floating island (rows 7-13, cols 0-6) — vehicle team, rideable
+        let wPos = [{r:8,c:2},{r:10,c:4},{r:12,c:2},{r:9,c:6},{r:11,c:0}];
         wPos.forEach((p,i)=>{
             entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'vehicle', r:p.r, c:p.c, hp:3, maxHp:3, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
-        skyfortLiftPos = 9;
     } else if (activeStage === 'chaos') {
         // Yeti spawns at turn 3 via startTurn
     }
@@ -1555,11 +1549,7 @@ function initEntities(pJob, difficulty = "1") {
         if (c1) { c1.c = 20; c1.r = 0; }
         entities.push({id:'ntboat0', type:'boat', name:'小舟', team:'vehicle', r:10, c:6, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         entities.push({id:'ntboat1', type:'boat', name:'小舟', team:'vehicle', r:5, c:10, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        // Car NPCs — 1 per quadrant, pursue player/cpu, activate every 3 turns (8 AP)
-        [{r:3,c:3},{r:3,c:17},{r:17,c:3},{r:17,c:17}].forEach((p,i) => {
-            entities.push({id:'ntcar'+i, type:'car', name:'🚗', team:'npc', r:p.r, c:p.c, hp:1, maxHp:1, ap:0, maxAp:8, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, carZigzag:0});
-        });
-        nighttownCarTimer = 0;
+        nighttownCarTimer = 0; nighttownCarPaths = []; nighttownCarWarning = false;
     }
 }
 
@@ -1812,51 +1802,29 @@ function startTurn(team, skipEffects = false) {
                 msg("❄️ イエティが出現！猛烈に向かってくる！", true);
             }
         }
-        // Nighttown: give car NPCs AP every 3 turns
+        // Nighttown: car warning and attack every 3 turns
         if (activeStage === 'nighttown') {
             nighttownCarTimer++;
-            if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
-                entities.forEach(e => {
-                    if (e.type === 'car' && e.team === 'npc' && e.hp > 0) {
-                        e.ap = e.maxAp;
-                    }
+            if (nighttownCarTimer % 3 === 2) {
+                nighttownCarPaths = generateAllCarPaths();
+                nighttownCarWarning = true;
+                if (nighttownCarPaths.length > 0) msg("🚗 車が走り出す予兆！赤いマスに注意！", true);
+            } else if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
+                nighttownCarWarning = false;
+                let hitNames = [];
+                nighttownCarPaths.forEach(({r: cr, c: cc}) => {
+                    entities.forEach(e => {
+                        if (e.hp > 0 && e.r === cr && e.c === cc && !e.invin && e.team !== 'vehicle') {
+                            e.hp -= 3; knockback(e, 2, {r: Math.floor(SIZE/2), c: Math.floor(SIZE/2)});
+                            hitNames.push(e.name);
+                        }
+                    });
                 });
-                msg("🚗 車が走り出した！逃げろ！", true);
+                if (hitNames.length > 0) msg(`🚗 車が走り抜けた！${hitNames.join('・')}に3ダメージ＋吹き飛ばし！`, true);
+                nighttownCarPaths = [];
+            } else {
+                nighttownCarWarning = false;
             }
-        }
-        // Skyfort: dragon spawns every 3 turns
-        if (activeStage === 'skyfort' && turn >= 3 && turn % 3 === 0) {
-            let dSpot = randomEmptyCells(1)[0];
-            if (dSpot) {
-                entities.push({id:'dragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:dSpot.r, c:dSpot.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
-                msg("🐉 ドラゴンが出現！天空要塞が荒れ狂う！", true);
-            }
-        }
-        // Skyfort: floating lift (2x2 at cols 13-14) moves every 2 turns
-        if (activeStage === 'skyfort' && turn >= 2 && turn % 2 === 0) {
-            // Remove old lift
-            for (let rr=skyfortLiftPos; rr<=skyfortLiftPos+1; rr++) {
-                for (let cc=13; cc<=14; cc++) {
-                    if (board[rr]?.[cc] === 'fortress_floor') {
-                        board[rr][cc] = 'sky_void';
-                        entities.forEach(e => {
-                            if (e.hp > 0 && e.r === rr && e.c === cc && !e.invin) {
-                                e.hp -= 2;
-                                msg(`⬜ リフトが移動！${e.name}が落下！2ダメージ！`, true);
-                            }
-                        });
-                    }
-                }
-            }
-            // Toggle: rows 9-10 (center) → rows 12-13 (player side) → rows 7-8 (cpu side)
-            skyfortLiftPos = skyfortLiftPos <= 9 ? 12 : 7;
-            // Place new lift
-            for (let rr=skyfortLiftPos; rr<=skyfortLiftPos+1; rr++) {
-                for (let cc=13; cc<=14; cc++) {
-                    if (board[rr]?.[cc] === 'sky_void') board[rr][cc] = 'fortress_floor';
-                }
-            }
-            msg(`🔲 リフトが移動した！（rows${skyfortLiftPos}〜${skyfortLiftPos+1}）`, true);
         }
 
         // Graveyard / Chaos: zombies (10% frankenstein) from turn 3, every 3 turns at 4 spots
@@ -2036,7 +2004,7 @@ function isValidTarget(se, r, c, mode) {
     // Stolen lock: prevents use for 1 turn after being stolen from
     if (se.stolenLock && se.stolenLock[mode] > turn) return false;
     if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
-    if (mode === 'shatter') return dist === 1 && (['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]) || (target && target.type === 'car'));
+    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]);
     if (mode === 'dash') {
         if (se.flying) return dist > 0 && dist <= 2;
         if (dist === 0 || dist > 2) return false;
@@ -2114,6 +2082,9 @@ function render() {
 
             if (activeStage === 'skyfort' && fallingWarn.some(w => w.r === ar && w.c === c)) {
                 d.classList.add('falling-warn');
+            }
+            if (activeStage === 'nighttown' && nighttownCarWarning && nighttownCarPaths.some(p => p.r === ar && p.c === c)) {
+                d.classList.add('sandworm-warn');
             }
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
@@ -2326,8 +2297,7 @@ function checkTileEffects(entity) {
     let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
     if (boatHere && !entity.onBoat) {
         entity.onBoat = boatHere.id;
-        entity.ap += 1;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + `${boatHere.name}に乗った！川を渡れる！AP+1！`;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + `${boatHere.name}に乗った！川を渡れる！`;
     }
     return eventMsg;
 }
@@ -2511,25 +2481,16 @@ function handleAbilityTarget(r, c, targetEntity) {
     }
 
     if (actionMode === 'shatter') {
-        // Shatter a car NPC entity
-        if (targetEntity && targetEntity.type === 'car') {
-            targetEntity.hp = 0;
-            if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
-            if (se.type === 'miner') se.atkBonus = (se.atkBonus || 0) + 1;
-            msg("🚗 車を岩砕きで破壊した！", true);
-            used = true;
-        } else {
-            if (board[r][c] === 'mine') breakMine();
-            if (board[r][c] === 'volcano') breakVolcano();
-            let wasCar = board[r][c] === 'car_tile';
-            let wasGravestone = board[r][c] === 'gravestone';
-            board[r][c] = (wasGravestone || wasCar) ? defaultGround() : 'plains';
-            if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
-            if (wasCar) msg("🚗 車を破壊した！");
-            if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
-            if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
-            used = true;
-        }
+        if (board[r][c] === 'mine') breakMine();
+        if (board[r][c] === 'volcano') breakVolcano();
+        let wasCar = board[r][c] === 'car_tile';
+        let wasGravestone = board[r][c] === 'gravestone';
+        board[r][c] = (wasGravestone || wasCar) ? defaultGround() : 'plains';
+        if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
+        if (wasCar) msg("🚗 車を破壊した！");
+        if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
+        if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
+        used = true;
     } else if (actionMode === 'drop_rock') {
         if (targetEntity && targetEntity.team !== se.team && isRockSurrounded(targetEntity.r, targetEntity.c)) {
             if (!targetEntity.invin) targetEntity.hp -= 30;
@@ -3428,52 +3389,6 @@ function npcLogic() {
             return;
         }
 
-        // === CAR: pursues nearest player/cpu with zigzag movement, 8 AP every 3 turns ===
-        if (n.type === 'car') {
-            let carTargets = entities.filter(e => (e.team === 'player' || e.team === 'cpu') && e.hp > 0);
-            if (carTargets.length === 0) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
-            carTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
-            let ct = carTargets[0];
-            // Zigzag: even AP uses horizontal, odd AP uses vertical
-            n.carZigzag = (n.carZigzag||0) + 1;
-            let useH = n.carZigzag % 2 === 0;
-            let dr = 0, dc = 0;
-            if (useH && ct.c !== n.c) dc = Math.sign(ct.c - n.c);
-            else if (!useH && ct.r !== n.r) dr = Math.sign(ct.r - n.r);
-            // Fallback: if chosen axis is already aligned, use the other
-            if (dr === 0 && dc === 0) {
-                dc = Math.sign(ct.c - n.c);
-                if (dc === 0) dr = Math.sign(ct.r - n.r);
-            }
-            let nr = n.r + dr, nc = n.c + dc;
-            let passableTiles = ['nighttown_ground','nighttown_goal','plains','bridge','forest','desert','magic_circle','church','streetlight_tile','mine','gravestone','graveyard_ground'];
-            if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && passableTiles.includes(board[nr]?.[nc] || '')) {
-                let blocker = entities.find(e => e.hp > 0 && e.r === nr && e.c === nc && e.team !== 'npc' && e.team !== 'vehicle');
-                if (blocker && !blocker.invin) {
-                    blocker.hp -= 3;
-                    knockback(blocker, 2, n);
-                    msg(`🚗 車が${blocker.name}に突撃！3ダメージ＋吹き飛ばし！`, true);
-                }
-                n.r = nr; n.c = nc;
-            } else {
-                // Can't move in chosen direction, try the other axis
-                dr = dr === 0 ? Math.sign(ct.r - n.r) : 0;
-                dc = dc === 0 ? Math.sign(ct.c - n.c) : 0;
-                let nr2 = n.r + dr, nc2 = n.c + dc;
-                if (nr2 >= 0 && nr2 < SIZE && nc2 >= 0 && nc2 < SIZE && passableTiles.includes(board[nr2]?.[nc2] || '')) {
-                    let blocker2 = entities.find(e => e.hp > 0 && e.r === nr2 && e.c === nc2 && e.team !== 'npc' && e.team !== 'vehicle');
-                    if (blocker2 && !blocker2.invin) {
-                        blocker2.hp -= 3; knockback(blocker2, 2, n);
-                        msg(`🚗 車が${blocker2.name}に突撃！3ダメージ＋吹き飛ばし！`, true);
-                    }
-                    n.r = nr2; n.c = nc2;
-                }
-            }
-            n.ap--;
-            checkWin(); render(); setTimeout(npcLogic, 100);
-            return;
-        }
-
         // === YETI: frozen until turn 6, then standard melee + ice throw ===
         if (n.type === 'yeti') {
             if (n.invin) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
@@ -3789,20 +3704,20 @@ function updateUI() {
         }
     }
 
-    // Boarding ability (adjacent to a boat on land) — bigriver and nighttown
-    if ((activeStage === 'bigriver' || activeStage === 'nighttown') && selectedEntity && canIAct() && !selectedEntity.onBoat) {
+    // Big River: boarding ability (adjacent to a boat on land)
+    if (activeStage === 'bigriver' && selectedEntity && canIAct() && !selectedEntity.onBoat) {
         let adjBoat = entities.find(e => e.hp>0 && (e.type==='boat'||e.type==='warship') &&
             Math.abs(e.r-selectedEntity.r)+Math.abs(e.c-selectedEntity.c)===1);
-        if (adjBoat) {
+        if (adjBoat && selectedEntity.ap >= 1) {
             let bb = document.createElement('button');
             bb.className = 'ability-btn';
             bb.style.background = '#1a5276'; bb.style.color = '#fff';
-            bb.innerText = '🚤 乗船 (隣の船に乗り込む / AP+1)';
+            bb.innerText = '🚤 乗船 (隣の船に乗り込む / AP-1)';
             bb.onclick = () => {
                 selectedEntity.r = adjBoat.r; selectedEntity.c = adjBoat.c;
                 selectedEntity.onBoat = adjBoat.id;
-                selectedEntity.ap += 1;
-                msg(`🚤 ${selectedEntity.name}が${adjBoat.name}に乗り込んだ！川を渡れる！AP+1！`);
+                selectedEntity.ap -= 1;
+                msg(`🚤 ${selectedEntity.name}が${adjBoat.name}に乗り込んだ！川を渡れる！`);
                 checkWin(); render(); updateUI();
                 if (isOnlineMode) syncState();
             };
@@ -3810,8 +3725,8 @@ function updateUI() {
         }
     }
 
-    // Show onBoat status — bigriver and nighttown
-    if ((activeStage === 'bigriver' || activeStage === 'nighttown') && selectedEntity && selectedEntity.onBoat) {
+    // Big River: show onBoat status
+    if (activeStage === 'bigriver' && selectedEntity && selectedEntity.onBoat) {
         let ib = document.createElement('div');
         ib.style.cssText = 'background:#1a5276;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
         ib.innerText = '🚤 乗船中 — 川を渡れる！岸に上陸で自動下船';
