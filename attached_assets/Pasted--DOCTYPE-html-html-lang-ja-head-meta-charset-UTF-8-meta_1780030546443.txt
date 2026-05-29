@@ -177,11 +177,6 @@
         .player-team { background: #ecf0f1; color: #2c3e50; border-color: #2980b9; }
         .cpu-team { background: #c0392b; color: #fff; border-color: #78281f; }
         .npc-team { background: #8e44ad; color: #fff; border-color: #fff; border-radius: 50%; }
-        .vehicle-team { background: #f39c12; color: #fff; border-color: #d68910; border-radius: 4px; }
-        #entity-info-panel { background:#1a1a2e; border:1px solid #555; border-radius:6px; padding:8px; margin:8px 0; font-size:12px; display:none; }
-        #entity-info-panel .eip-name { font-weight:bold; color:#e74c3c; margin-bottom:4px; }
-        #entity-info-panel .eip-stat { color:#ecf0f1; }
-        #entity-info-panel .eip-ability { color:#95a5a6; font-size:11px; }
         .selected { box-shadow: 0 0 15px 5px #3498db !important; z-index: 15; transform: translate(-50%, -50%) scale(1.15) !important; border-color: #3498db; }
         
         .stealth { opacity: 0.5; border-style: dashed; }
@@ -434,7 +429,6 @@
             <button class="btn" style="margin-bottom:15px; background: #2980b9;" id="btn-move">移動 / 決定 (AP 1)</button>
             <hr style="border: 1px solid #444; margin-bottom: 15px;">
             <div id="ability-list"></div>
-            <div id="entity-info-panel"></div>
             <hr style="border: 1px solid #444; margin-top: 15px; margin-bottom: 15px;">
             <button class="btn" style="background:#c0392b; padding: 15px;" id="btn-end-turn">ターン終了</button>
         </div>
@@ -519,7 +513,7 @@ function getUserId() {
     if (!id) { id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('ek_userId', id); }
     return id;
 }
-function isRankedUnlocked() { return true; }
+function isRankedUnlocked() { return localStorage.getItem('ek_lvl8') === '1'; }
 function getRank() { return parseInt(localStorage.getItem('ek_rank') || '1', 10); }
 function getRP() { return parseInt(localStorage.getItem('ek_rp') || '0', 10); }
 function setRank(r) { localStorage.setItem('ek_rank', String(Math.max(1, r))); }
@@ -1012,6 +1006,10 @@ function joinRoom() {
 
 // ---- Ranked matchmaking ----
 function startRankedSearch() {
+    if (!isRankedUnlocked()) {
+        alert('ランクマッチはシングルプレイのステージ8をクリアすると解放されます。');
+        return;
+    }
     const job = document.getElementById('ranked-job-select').value;
     intentionalClose = false;
     document.getElementById('btn-find-ranked').style.display = 'none';
@@ -1297,47 +1295,48 @@ function initBoard(stageType) {
         board[15][4]='cannon'; board[5][4]='cannon'; board[15][16]='cannon'; board[5][16]='cannon';
         stageKrakenSpawned = false;
     } else if (stageType === 'mountain') {
-        // === MOUNTAIN STAGE (2回り拡大版) ===
+        // === MOUNTAIN STAGE ===
+        // Clear base river row-10
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
-        // Mountain slope ring: rows 2-18, cols 2-18
-        for (let r2=2; r2<=18; r2++) for (let c2=2; c2<=18; c2++) {
+        // Snow mountain: 9x9 square (rows 6-14, cols 6-14)
+        for (let r2=6; r2<=14; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='snow';
+        // Mountain slope ring around the snow square
+        for (let r2=4; r2<=16; r2++) for (let c2=4; c2<=16; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='mountain_tile';
         }
-        // Snow ring: rows 4-16, cols 4-16
-        for (let r2=4; r2<=16; r2++) for (let c2=4; c2<=16; c2++) board[r2][c2]='snow';
-        // Summit: rows 5-14, cols 5-14
-        for (let r2=5; r2<=14; r2++) for (let c2=5; c2<=14; c2++) board[r2][c2]='summit';
+        // Summit: central 6x6 (rows 7-12, cols 7-12) = 36 tiles
+        for (let r2=7; r2<=12; r2++) for (let c2=7; c2<=12; c2++) board[r2][c2]='summit';
         // 4 cannons at summit corners
-        board[5][5]='cannon'; board[5][14]='cannon'; board[14][5]='cannon'; board[14][14]='cannon';
-        // Rolling rocks on summit
+        board[7][7]='cannon'; board[7][12]='cannon'; board[12][7]='cannon'; board[12][12]='cannon';
+        // 8 rolling rocks randomly on the summit
         let mrCount=0, mrA=0;
         while (mrCount<8 && mrA<300) {
-            let rr=5+Math.floor(Math.random()*10), cc=5+Math.floor(Math.random()*10);
+            let rr=7+Math.floor(Math.random()*6), cc=7+Math.floor(Math.random()*6);
             if (board[rr][cc]==='summit') { board[rr][cc]='rock'; mrCount++; }
             mrA++;
         }
-        // Avalanche triggers in snow ring
+        // 3 avalanche triggers in the snow ring (not on summit)
         avalanchesTriggered = new Set();
         let avCount=0, avA=0;
         while (avCount<3 && avA<300) {
-            let ar=4+Math.floor(Math.random()*13), ac=4+Math.floor(Math.random()*13);
+            let ar=6+Math.floor(Math.random()*9), ac=6+Math.floor(Math.random()*9);
             if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
             avA++;
         }
-        // Cable cars (extended routes for bigger mountain)
-        // Enemy side: boarding at (3,3), down col 3 → right to summit at (10,5)
-        board[3][3]='cable_board';
-        [[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[10,4],[10,5]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Player side: boarding at (17,17), up col 17 → left to summit at (10,14)
-        board[17][17]='cable_board';
-        [[16,17],[15,17],[14,17],[13,17],[12,17],[11,17],[10,17],[10,16],[10,15],[10,14]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Extras at board edges
-        placeRandom('mine', 2, 19, 20, true);
-        placeRandom('volcano', 1, 19, 20, true);
-        placeRandom('magic_circle', 1, 19, 20, true);
-        placeRandom('mine', 1, 0, 1, true);
-        placeRandom('magic_circle', 1, 0, 1, true);
+        // Cable cars: boarding spot (1 tile) + L-shaped route to summit, both sides
+        // Enemy side: boarding at (5,5), down then right turn to summit
+        board[5][5]='cable_board';
+        [[6,5],[7,5],[8,5],[9,5],[10,5],[10,6]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Player side: boarding at (15,15), up then left turn to summit
+        board[15][15]='cable_board';
+        [[14,15],[13,15],[12,15],[11,15],[10,15],[10,14],[10,13]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Extras
+        placeRandom('mine', 2, 17, 19, true);
+        placeRandom('volcano', 1, 16, 18, true);
+        placeRandom('magic_circle', 1, 17, 19, true);
+        placeRandom('mine', 1, 1, 3, true);
+        placeRandom('magic_circle', 1, 1, 3, true);
         cableCarMovesLeft = 4;
     } else if (stageType === 'graveyard') {
         // === GRAVEYARD STAGE === keep base river + bridges at row 10
@@ -1349,51 +1348,31 @@ function initBoard(stageType) {
             if (r2 === 10) continue;
             if (board[r2][c2]==='graveyard_ground' && Math.random()<0.55) board[r2][c2]='gravestone';
         }
-        // Cannons and magic circles
-        board[3][3]='cannon'; board[3][17]='cannon'; board[17][3]='cannon'; board[17][17]='cannon';
-        board[5][5]='magic_circle'; board[5][15]='magic_circle'; board[15][5]='magic_circle'; board[15][15]='magic_circle';
     } else if (stageType === 'nighttown') {
-        // === NIGHT TOWN STAGE === cross river (row 10 + col 10) divides into 4 quadrants
-        // Horizontal river at row 10
-        for (let c2=0; c2<SIZE; c2++) board[10][c2]='river';
-        // Vertical river at col 10
-        for (let r2=0; r2<SIZE; r2++) if (board[r2][10]==='plains') board[r2][10]='river';
-        // 4 bridges connecting quadrants
-        board[10][4]='bridge'; board[10][16]='bridge';  // cross horizontal river
-        board[4][10]='bridge'; board[16][10]='bridge';  // cross vertical river
-        // Cannons per quadrant + magic circles
-        board[3][3]='cannon'; board[3][17]='cannon'; board[17][3]='cannon'; board[17][17]='cannon';
-        board[6][3]='magic_circle'; board[6][17]='magic_circle';
-        board[14][3]='magic_circle'; board[14][17]='magic_circle';
+        // === NIGHT TOWN STAGE === central river with exactly 3 bridges
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='bridge') board[10][c2]='river';
+        [4, 10, 16].forEach(c2 => board[10][c2]='bridge');
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='nighttown_ground';
         }
     } else if (stageType === 'skyfort') {
-        // === SKY FORTRESS === two floors + 2 narrow bridges + floating island on left
+        // === SKY FORTRESS === two floating floors joined by a central bridge
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (r2<=8 || r2>=12) board[r2][c2]='fortress_floor';
             else board[r2][c2]='sky_void';
         }
-        // Two narrow bridges (1 tile wide each) at col 10 and col 16
-        for (let r2=9; r2<=11; r2++) { board[r2][10]='bridge'; board[r2][16]='bridge'; }
-        // Floating island: rows 9-11, cols 1-5 (in void, accessible only by flying/teleport)
-        for (let r2=9; r2<=11; r2++) for (let c2=1; c2<=5; c2++) board[r2][c2]='fortress_floor';
-        // Island features: cannon, magic circle, mines (set in placeChurchesAndItems)
-        board[10][3]='cannon';
-        board[9][2]='magic_circle'; board[11][4]='magic_circle';
+        // Central connecting bridge (3 wide) across the void
+        for (let r2=9; r2<=11; r2++) { board[r2][9]='bridge'; board[r2][10]='bridge'; board[r2][11]='bridge'; }
     } else if (stageType === 'chaos') {
-        // === CHAOS STAGE === all gimmicks mixed. Desert patches + sandworm + floor disappear.
+        // === CHAOS STAGE === all gimmicks mixed in. Keep base river + bridges + cannons.
         placeRandom('magic_circle', 3, 1, 8, true);
         placeRandom('magic_circle', 3, 12, 19, true);
-        // Gravestones each side
+        // a few gravestones each side
         for (let i=0;i<8;i++){ let r2=2+Math.floor(Math.random()*7), c2=Math.floor(Math.random()*SIZE); if (board[r2][c2]==='plains') board[r2][c2]='gravestone'; }
         for (let i=0;i<8;i++){ let r2=12+Math.floor(Math.random()*7), c2=Math.floor(Math.random()*SIZE); if (board[r2][c2]==='plains') board[r2][c2]='gravestone'; }
-        // Desert patches (for sandworm)
-        placeRandom('desert', 10, 2, 8, true);
-        placeRandom('desert', 10, 12, 18, true);
-        // Camel tiles for variety
+        // a couple camel tiles + extra cannons for variety
         placeRandom('camel_tile', 1, 14, 19, true);
         placeRandom('camel_tile', 1, 1, 6, true);
     } else {
@@ -1424,17 +1403,6 @@ function placeChurchesAndItems(stageType) {
     if (['graveyard','nighttown','chaos'].includes(stageType)) {
         placeOnRandomGround(2, 7, 'church');   // enemy side
         placeOnRandomGround(13, 18, 'church'); // player side
-    }
-    // Mines for nighttown and skyfort
-    if (stageType === 'nighttown') {
-        placeOnRandomGround(1, 4, 'mine'); placeOnRandomGround(1, 4, 'mine');
-        placeOnRandomGround(16, 19, 'mine'); placeOnRandomGround(16, 19, 'mine');
-    }
-    if (stageType === 'skyfort') {
-        // Mines on the floating island
-        board[9][1]='mine'; board[11][5]='mine'; board[9][4]='mine';
-        // Extra mines on main floors
-        placeOnRandomGround(0, 4, 'mine'); placeOnRandomGround(16, 20, 'mine');
     }
     // Item tiles: 2 random per side on ALL stages (effect hidden until stepped on)
     const items = ['star','shoes','sword'];
@@ -1490,31 +1458,21 @@ function initEntities(pJob, difficulty = "1") {
     if (activeStage === 'bigriver') {
         let boatPos = [{r:6,c:4},{r:6,c:16},{r:14,c:4},{r:14,c:16}];
         boatPos.forEach((p,i) => {
-            entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'vehicle', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+            entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'npc', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         });
-        // Warship: random shore placement (col 1-4, river row)
-        let wsCol = 1 + Math.floor(Math.random() * 4);
-        entities.push({id:'warship', type:'warship', name:'大型船', team:'vehicle', r:10, c:wsCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        entities.push({id:'warship', type:'warship', name:'大型船', team:'npc', r:10, c:3, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         stageKrakenSpawned = false;
     } else if (activeStage === 'mountain') {
         let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
-        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:3});
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
     } else if (activeStage === 'skyfort') {
-        // 5 wyverns on floating island and main floors
-        let wPos = [{r:9,c:1},{r:10,c:2},{r:11,c:3},{r:3,c:14},{r:17,c:6}];
-        wPos.forEach((p,i)=>{
+        // Wyvern flying on each floor; defeat to ride
+        [{r:3,c:6},{r:17,c:14}].forEach((p,i)=>{
             entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'npc', r:p.r, c:p.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
     } else if (activeStage === 'chaos') {
         let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
-        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:3});
-    }
-    // Night town: diagonal starts
-    if (activeStage === 'nighttown') {
-        let p1 = entities.find(e => e.id === 'p1');
-        let c1 = entities.find(e => e.id === 'c1');
-        if (p1) p1.c = 0;
-        if (c1) c1.c = 20;
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
     }
 }
 
@@ -1632,9 +1590,9 @@ function processTurnStartEffects(e) {
         e.shoesTimer--;
         if (e.shoesTimer <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
     }
-    // Summit altitude damage (mountain stage) - HP only, AP penalty removed
+    // Summit altitude damage (mountain stage)
     if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin) {
-        e.hp -= 1;
+        e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
@@ -1672,7 +1630,7 @@ function startTurn(team, skipEffects = false) {
     actionMode = 'move';
 
     if (team === 'player') {
-        if (activeStage === 'desert' || activeStage === 'chaos') {
+        if (activeStage === 'desert') {
             if (duneTimer % 4 === 3) {
                 let candidates = entities.filter(e => e.hp > 0 && e.team !== 'npc');
                 if (candidates.length > 0) {
@@ -1754,7 +1712,7 @@ function startTurn(team, skipEffects = false) {
         // Mountain / Chaos: Yeti awakens at turn 6; reset cable car moves
         if (activeStage === 'mountain' || activeStage === 'chaos') {
             cableCarMovesLeft = 4;
-            if (turn === 3) {
+            if (turn === 6) {
                 let yeti = entities.find(e => e.type === 'yeti' && e.hp > 0 && e.invin && turn >= e.frozenUntilTurn);
                 if (yeti) {
                     yeti.invin = false;
@@ -1775,9 +1733,9 @@ function startTurn(team, skipEffects = false) {
             if (spots.length > 0) msg(`🧟 墓場からゾンビが${spots.length}体出現！${frankCount>0?`(フランケン${frankCount}体)`:''}`, true);
         }
 
-        // Night town: vampire/wolf/werewolf every 3 turns
-        if (activeStage === 'nighttown' && turn >= 3 && turn % 3 === 0) {
-            const pool = ['vampire','wolf','werewolf'];
+        // Night town: a monster every 2 turns from the full bestiary
+        if (activeStage === 'nighttown' && turn % 2 === 0) {
+            const pool = ['bat','wolf','werewolf','vampire','zombie','frankenstein','spirit','great_spirit'];
             let spot = randomEmptyCells(1)[0];
             if (spot) {
                 let t = pool[Math.floor(Math.random()*pool.length)];
@@ -1788,15 +1746,15 @@ function startTurn(team, skipEffects = false) {
             }
         }
 
-        // Chaos: vampire/wolf/werewolf every 3 turns
+        // Chaos: extra special monster every 3 turns
         if (activeStage === 'chaos' && turn >= 3 && turn % 3 === 0) {
-            const pool = ['vampire','wolf','werewolf'];
+            const pool = ['bat','werewolf','vampire','spirit'];
             let spot = randomEmptyCells(1)[0];
             if (spot) { spawnAt(pool[Math.floor(Math.random()*pool.length)], spot.r, spot.c); msg('🌀 混沌の魔物が出現！', true); }
         }
 
-        // Sky fortress + Chaos: falling floors from turn 3
-        if ((activeStage === 'skyfort' || activeStage === 'chaos') && turn >= 3) {
+        // Sky fortress: falling floors from turn 3 (warned the previous turn)
+        if (activeStage === 'skyfort' && turn >= 3) {
             resolveFallingFloors();
         }
 
@@ -1910,11 +1868,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
     if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
     if (mode === 'smokescreen') return maxDist === 0;
-    if (mode === 'charge_order') {
-        if (!((se.r === r && se.c !== c) || (se.c === c && se.r !== r))) return false;
-        if (dist < 1 || dist > 5) return false;
-        return entities.some(a => a !== se && a.team === se.team && a.hp > 0 && !isJobPiece(a) && Math.max(Math.abs(a.r - se.r), Math.abs(a.c - se.c)) <= 1);
-    }
+    if (mode === 'charge_order') return maxDist === 0;
     if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon' || mode === 'great_summon') return maxDist === 1 && isWalkable(r, c);
@@ -1978,8 +1932,7 @@ function render() {
         if (isStealth && e.team === enemyTeam()) return;
 
         let ed = document.createElement('div');
-        let teamClass = (e.type === 'boat' || e.type === 'warship') ? 'vehicle' : e.team;
-        ed.className = `entity ${teamClass}-team`;
+        ed.className = `entity ${e.team}-team`;
         if (e === selectedEntity) ed.classList.add('selected');
         
         if (isStealth && e.team === myTeam()) {
@@ -2020,21 +1973,14 @@ function render() {
 function selectEntity(e) {
     if (!canIAct()) return;
     
-    // Vehicle entities: select rider if aboard, otherwise show info
-    if (e.type === 'boat' || e.type === 'warship') {
-        let rider = entities.find(r => r.onBoat === e.id && r.team === myTeam() && r.hp > 0);
-        if (rider) { selectedEntity = rider; render(); }
-        else showEntityInfo(e);
-        return;
-    }
-    
     if (actionMode === 'move') {
-        if (e.team === myTeam()) {
-            selectedEntity = e;
-            render();
+        if (e.team === myTeam() || e.team === 'npc') {
+            if (e.team === myTeam()) {
+                selectedEntity = e;
+                render();
+            }
         } else {
-            // Clicked NPC or enemy — show info panel + attack if something selected
-            showEntityInfo(e);
+            // Clicked enemy while in move mode — try attack if something selected
             if (selectedEntity && selectedEntity.team === myTeam()) {
                 handleAbilityTarget(e.r, e.c, e);
             }
@@ -2042,17 +1988,6 @@ function selectEntity(e) {
     } else if (selectedEntity && selectedEntity.team === myTeam()) {
         handleAbilityTarget(e.r, e.c, e);
     }
-}
-
-function showEntityInfo(e) {
-    let panel = document.getElementById('entity-info-panel');
-    if (!panel) return;
-    let abilityNames = Object.keys(e.abilities || {})
-        .filter(k => k !== 'shatter' && (e.abilities[k] > 0 || e.abilities[k] === 999))
-        .map(k => `${ABILITY_NAMES[k]||k}${e.abilities[k]===999?'∞':e.abilities[k]}`)
-        .join(' / ');
-    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
-    panel.style.display = 'block';
 }
 
 function setMode(mode) {
@@ -2106,6 +2041,9 @@ function checkTileEffects(entity) {
         eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
     } else if (board[r] && board[r][c] === 'avalanche_tile') {
         triggerAvalanche(r, c, entity);
+    } else if (board[r] && board[r][c] === 'summit' && (activeStage === 'mountain' || activeStage === 'chaos')) {
+        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
+        eventMsg = "高山の過酷な環境！HP-1、AP-1！";
     } else if (board[r] && board[r][c] === 'item_tile') {
         let item = itemTileMap[`${r},${c}`];
         board[r][c] = defaultGround();
@@ -2215,10 +2153,10 @@ function handleTileClick(vr, c) {
                     canMove = true;
                 }
             }
-            // Flying units pass through rocks, water, and other obstacles (not occupied tiles)
+            // Flying units pass through rocks and other obstacles (not occupied tiles)
             if (!canMove && selectedEntity.flying && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
                 let t = board[r]?.[c];
-                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea'].includes(t) &&
+                if (['rock', 'mine', 'volcano', 'gravestone'].includes(t) &&
                     !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) canMove = true;
             }
             // King invincibility: can pass through rocks and entities
@@ -2300,8 +2238,7 @@ function handleTileClick(vr, c) {
             }
         }
     } else {
-        let te = entities.find(e => e.hp > 0 && e.r === r && e.c === c && e !== selectedEntity);
-        handleAbilityTarget(r, c, te || null);
+        handleAbilityTarget(r, c, null);
     }
 }
 
@@ -2408,7 +2345,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'spin_slash') {
         se.abilities['spin_slash']--; 
         entities.forEach(e => {
-            if (e !== se && e.team !== se.team && e.hp > 0 && !e.stealth) {
+            if (e !== se && e.team !== se.team && e.hp > 0) {
                 if (Math.max(Math.abs(se.r - e.r), Math.abs(se.c - e.c)) <= 1) {
                     if (!e.invin) { e.hp -= 2; e.ap--; knockback(e, 1, se); }
                 }
@@ -2491,31 +2428,18 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'great_summon') {
         se.abilities['great_summon']--;
         let pool = [
-            { type: 'yeti', name: 'イエティ', hp: 5, ab: { punch: 999, ice_throw: 999 } },
-            { type: 'big', name: '大鬼', hp: 5, ab: { punch: 999 } },
-            { type: 'wolf', name: 'オオカミ', hp: 3, ab: { sword: 999 } }
+            { type: 'yeti', name: 'イエ', hp: 5, ab: { punch: 999, ice_throw: 999 } },
+            { type: 'golem', name: 'ゴー', hp: 6, ab: { punch: 999 } },
+            { type: 'big', name: '大鬼', hp: 5, ab: { punch: 999 } }
         ];
         let pick = pool[Math.floor(Math.random()*pool.length)];
         entities.push({ id: pick.type+Date.now(), type: pick.type, name: pick.name, team: se.team, r, c, hp: pick.hp, maxHp: pick.hp, ap: 2, maxAp: 2, abilities: {...pick.ab}, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
         msg(`大召喚！${pick.name}を味方として召喚した！(HP${pick.hp})`); used = true;
     } else if (actionMode === 'charge_order') {
         se.abilities['charge_order']--;
-        // Find ally within radius 1; they charge toward target (r,c)
-        let ally = entities.find(a => a !== se && a.team === se.team && a.hp > 0 && !isJobPiece(a) && Math.max(Math.abs(a.r - se.r), Math.abs(a.c - se.c)) <= 1);
-        if (ally) {
-            let chargeTarget = entities.find(e => e.hp > 0 && e.team !== se.team && e.r === r && e.c === c);
-            if (chargeTarget && !chargeTarget.invin) { chargeTarget.hp -= 5; knockback(chargeTarget, 2, ally); }
-            else if (board[r]?.[c] === 'rock') board[r][c] = 'plains';
-            ally.hp = Math.max(0, ally.hp - 1);
-            let dr = Math.sign(r - ally.r), dc = Math.sign(c - ally.c);
-            if (isWalkable(ally.r + dr, ally.c + dc, true)) { ally.r += dr; ally.c += dc; }
-            msg(`突撃命令！${ally.name}が突進！5ダメージ＋吹き飛ばし（自分1ダメージ）！`);
-        } else {
-            let n = 0;
-            entities.forEach(t => { if (t.hp > 0 && t.team === se.team && t !== se && !isJobPiece(t)) { t.ap += 1; n++; } });
-            msg(`突撃命令！味方${n}体のAPが+1！`);
-        }
-        used = true;
+        let n = 0;
+        entities.forEach(t => { if (t.hp > 0 && t.team === se.team && t !== se && !isJobPiece(t)) { t.ap += 1; n++; } });
+        msg(`突撃命令！味方召喚獣${n}体のAPが+1された！`); used = true;
     } else if (actionMode === 'tame') {
         se.abilities['tame']--;
         targetEntity.team = se.team;
@@ -2529,20 +2453,18 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'fire_breath') {
         if (se.abilities['fire_breath'] !== 999) se.abilities['fire_breath']--;
         let hit = 0;
-        // Cross pattern: center + 4 cardinal directions
-        let breathTargets = [{r:r,c:c},{r:r-1,c:c},{r:r+1,c:c},{r:r,c:c-1},{r:r,c:c+1}];
-        breathTargets.forEach(({r:rr,c:cc}) => {
+        for (let rr = r; rr <= r+1; rr++) for (let cc = c; cc <= c+1; cc++) {
             let t = entities.find(e => e.hp > 0 && e.r === rr && e.c === cc && e.team !== se.team);
             if (t && !t.invin) { t.hp -= 2; hit++; }
-        });
-        msg(`火炎ブレス！十字5マスの敵${hit}体に2ダメージ！`); used = true;
+        }
+        msg(`火炎ブレス！4マス範囲の敵${hit}体に2ダメージ！`); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
         // Roll rock from (r, c) straight downhill, 3 columns wide
         board[r][c] = 'plains';
-        // Determine downhill direction: rocks roll away from center (row 10)
-        let dir = r > 10 ? 1 : -1;
+        // Determine downhill direction (away from summit center row 10)
+        let dir = se.r > r ? -1 : 1;
         let cols = [c-1, c, c+1].filter(x => x >= 0 && x < SIZE);
         let names = [];
         let stopRow = null;
@@ -2696,16 +2618,10 @@ function executeRushSkill(se, targetR, targetC, mode) {
     let dist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
     
     let hitTargets = new Set();
-    let finalR = se.r, finalC = se.c;
     for (let i=1; i<=dist; i++) {
         let currR = se.r + stepR * i;
         let currC = se.c + stepC * i;
 
-        // Stop rush at impassable terrain
-        let tileType = board[currR]?.[currC];
-        if (['rock','river','whirlpool','sky_void','bridge_up','mine','volcano'].includes(tileType)) break;
-
-        finalR = currR; finalC = currC;
         entities.forEach(e => {
             if (e !== se && e.team !== se.team && e.hp > 0) {
                 if (Math.max(Math.abs(currR - e.r), Math.abs(currC - e.c)) <= 1) hitTargets.add(e);
@@ -2713,7 +2629,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         });
     }
 
-    se.r = finalR; se.c = finalC;
+    se.r = targetR; se.c = targetC;
     se.skillUsed = true;
     checkEnemyTerritory(se);
     let eventMsg = checkTileEffects(se);
@@ -2960,7 +2876,7 @@ function findPath(sr, sc, tr, tc) {
 
 function cpuLogic() {
     let cpuEntities = entities.filter(e => e.team === 'cpu' && e.hp > 0 && e.ap > 0);
-    let targets = entities.filter(e => e.team !== 'cpu' && e.team !== 'vehicle' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
+    let targets = entities.filter(e => e.team !== 'cpu' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
     
     if (cpuEntities.length > 0) {
         let cpu = cpuEntities[0];
@@ -2998,21 +2914,6 @@ function cpuLogic() {
                     executeRushSkill(cpu, p.r, p.c, 'skill_mage');
                     cpu.ap--;
                     attacked = true;
-                }
-            }
-
-            // Priority: block player pieces that have crossed the center (r≤9)
-            if (!attacked && cpu.ap >= 1 && cpu.abilities.drop_rock > 0) {
-                let crossedPlayers = entities.filter(e => e.team === 'player' && e.hp > 0 && e.r <= 9);
-                outer: for (let cp of crossedPlayers) {
-                    for (let [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]) {
-                        let lr=cp.r+dr, lc=cp.c+dc;
-                        if (lr>=0&&lr<SIZE&&lc>=0&&lc<SIZE && (board[lr]?.[lc]==='plains'||board[lr]?.[lc]==='desert') && !isNoRockZone(lr,lc) && !entities.some(en=>en.r===lr&&en.c===lc&&en.hp>0)) {
-                            board[lr][lc]='rock'; cpu.ap--;
-                            msg("敵が岩落としで中央越えを阻止！");
-                            attacked=true; break outer;
-                        }
-                    }
                 }
             }
 
@@ -3145,12 +3046,6 @@ function cpuLogic() {
                     if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); msg("敵が罠を踏んだ！"); }
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
                     board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
-                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'item_tile') {
-                    let item = itemTileMap[`${cpu.r},${cpu.c}`];
-                    board[cpu.r][cpu.c] = defaultGround();
-                    delete itemTileMap[`${cpu.r},${cpu.c}`];
-                    applyItem(cpu, item);
-                    msg("敵がアイテムを取得！");
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
                     msg("敵が森の中に潜伏し、姿を消した…！");
                 }
@@ -3178,13 +3073,13 @@ function cpuLogic() {
 
 function npcLogic() {
     currentActingTeam = 'npc';
-    let npcs = entities.filter(e => (e.team === 'npc' || e.team === 'vehicle') && e.hp > 0 && e.ap > 0);
+    let npcs = entities.filter(e => e.team === 'npc' && e.hp > 0 && e.ap > 0);
     if (npcs.length > 0) {
         let n = npcs[0];
 
         // === KRAKEN: attacks all non-npc entities within radius 2 in river ===
         if (n.type === 'kraken') {
-            let krakenTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && Math.max(Math.abs(n.r-e.r), Math.abs(n.c-e.c)) <= 2);
+            let krakenTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && Math.max(Math.abs(n.r-e.r), Math.abs(n.c-e.c)) <= 2);
             if (krakenTargets.length > 0) {
                 krakenTargets.forEach(t => {
                     if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap - 1); }
@@ -3193,7 +3088,7 @@ function npcLogic() {
                 n.ap--;
             } else {
                 // Move within river toward nearest non-npc
-                let allTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0);
+                let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0);
                 if (allTargets.length > 0) {
                     allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
                     let t = allTargets[0];
@@ -3219,7 +3114,7 @@ function npcLogic() {
         // === YETI: frozen until turn 6, then standard melee + ice throw ===
         if (n.type === 'yeti') {
             if (n.invin) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
-            let allTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && !(e.stealth || board[e.r]?.[e.c]==='forest'));
+            let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || board[e.r]?.[e.c]==='forest'));
             if (allTargets.length > 0) {
                 allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
                 let t = allTargets[0];
@@ -3242,7 +3137,7 @@ function npcLogic() {
             return;
         }
 
-        let targets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
+        let targets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
         
         if (targets.length > 0) {
             targets.sort((a,b) => (Math.abs(n.r-a.r)+Math.abs(n.c-a.c)) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
@@ -3299,7 +3194,7 @@ function npcLogic() {
                     else { msg(`🧛 ${n.name}の吸血！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
                 } else if (n.abilities.bite && dist <= 1) {
-                    let drainers = ['spirit','great_spirit','bat'];
+                    let drainers = ['zombie','spirit','great_spirit','bat'];
                     let biteDmg = (n.type === 'werewolf') ? 2 : 1;
                     if (!p.invin) {
                         p.hp -= biteDmg;
@@ -3328,12 +3223,6 @@ function npcLogic() {
                     board[n.r][n.c] = 'plains'; n.hp -= 1; n.ap = Math.max(0, n.ap - 2);
                 } else if (board[n.r] && board[n.r][n.c] === 'magic_circle') {
                     board[n.r][n.c] = 'plains';
-                } else if (board[n.r] && board[n.r][n.c] === 'item_tile') {
-                    let item = itemTileMap[`${n.r},${n.c}`];
-                    board[n.r][n.c] = defaultGround();
-                    delete itemTileMap[`${n.r},${n.c}`];
-                    applyItem(n, item);
-                    msg(`${n.name}がアイテムを取得！`);
                 }
             }
         } else {
