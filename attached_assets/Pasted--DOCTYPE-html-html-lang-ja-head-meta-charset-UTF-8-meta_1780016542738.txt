@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Escape the King - Online</title>
+    <style>
+        :root { 
+            --bg: #1e1e24; 
+            --board-base: #9acd32; /* 草原マップの色を若草色に変更 */
+            --ui-bg: #2b2b36; 
+            --text: #f5f5f5; 
+            --accent: #e67e22;
+            --tile-size: 32px; 
+        }
+        body { 
+            margin: 0; padding: 20px; font-family: 'Helvetica Neue', Arial, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+        #root { display: none; }
+
+        /* ===== Home Screen ===== */
+        #home-screen { 
+            background: var(--ui-bg); padding: 40px; border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 650px; text-align: center; 
+            border: 1px solid #444;
+        }
+        #home-screen h2 { margin-top: 0; color: var(--accent); font-size: 28px; }
+        .instructions { 
+            text-align: left; font-size: 14px; background: #1a1a20; padding: 20px; 
+            border-radius: 8px; height: 220px; overflow-y: auto; margin-bottom: 20px; 
+            border: 1px solid #333; line-height: 1.6;
+        }
+
+        /* ===== Online Lobby ===== */
+        #online-lobby {
+            display: none; background: var(--ui-bg); padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 650px; text-align: center;
+            border: 1px solid #444;
+        }
+        #online-lobby h2 { margin-top: 0; color: var(--accent); font-size: 28px; }
+        .lobby-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .lobby-tab { 
+            flex: 1; padding: 12px; border-radius: 6px; cursor: pointer; 
+            background: #34495e; color: #fff; border: 2px solid transparent; 
+            font-size: 16px; font-weight: bold; transition: 0.2s;
+        }
+        .lobby-tab.active { border-color: var(--accent); background: #1a252f; }
+        .lobby-tab:hover { background: #415b76; }
+        #create-panel, #join-panel { text-align: left; }
+        .code-display { 
+            font-size: 48px; font-weight: bold; color: var(--accent); 
+            letter-spacing: 10px; text-align: center; 
+            padding: 20px; background: #1a1a20; border-radius: 8px; margin: 15px 0;
+            border: 2px dashed #555;
+        }
+        .code-input { 
+            width: 100%; padding: 15px; font-size: 32px; background: #1a1a20; color: #fff; 
+            border: 2px solid #444; border-radius: 6px; text-align: center;
+            letter-spacing: 8px; text-transform: uppercase; box-sizing: border-box;
+        }
+        .code-input:focus { border-color: var(--accent); outline: none; }
+        .waiting-indicator { 
+            text-align: center; padding: 20px; color: #aaa; font-size: 14px; 
+        }
+        .dot-anim::after {
+            content: ''; animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        .online-badge {
+            display: inline-block; background: #27ae60; color: #fff; 
+            font-size: 11px; padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+        }
+        #online-game-info {
+            display: none; background: #1a2530; border: 1px solid #2c4a5a; 
+            border-radius: 6px; padding: 8px 14px; font-size: 13px; margin-bottom: 8px;
+            color: #7fb3cc;
+        }
+
+        /* ===== Game Screen ===== */
+        #game-screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+        .panel { 
+            display: flex; justify-content: space-between; width: 100%; 
+            font-size: 20px; font-weight: bold; margin-bottom: 15px; color: var(--accent);
+        }
+        #board-container { display: flex; gap: 30px; align-items: flex-start; justify-content: center; width: 100%; }
+        
+        #board { 
+            display: grid; grid-template-columns: repeat(21, var(--tile-size)); grid-template-rows: repeat(21, var(--tile-size)); 
+            gap: 1px; background: #4a3b2c; border: 4px solid #3a2b1c; border-radius: 4px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.6); 
+        }
+        .tile { width: var(--tile-size); height: var(--tile-size); position: relative; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; font-size: calc(var(--tile-size) * 0.55); box-sizing: border-box; border: 1px solid rgba(0,0,0,0.05); }
+        .plains { background: var(--board-base); }
+        .river { background: #2980b9; }
+        .bridge { background: #8e44ad; } 
+        .no-rock { background-color: rgba(231, 76, 60, 0.4) !important; } 
+        
+        .highlight-atk { background-color: rgba(231, 76, 60, 0.6) !important; border: 1px solid #e74c3c; z-index: 5; }
+        .sandworm-warn { background-color: rgba(230, 126, 34, 0.6) !important; border: 2px dashed #d35400 !important; z-index: 5;}
+        .sandworm-attack { background-color: #d35400 !important; }
+
+        .rock::after { content: "🪨"; }
+        .volcano::after { content: "🌋"; }
+        .cannon { background: rgba(50, 50, 50, 0.8); }
+        .cannon::after { content: "砲"; font-size: calc(var(--tile-size) * 0.5); color: #fff; font-weight: bold; }
+        .cannon_cd_1, .cannon_cd_2 { background: rgba(80, 80, 80, 0.8); }
+        .cannon_cd_1::after { content: "休1"; font-size: calc(var(--tile-size) * 0.4); color: #aaa; font-weight: bold; }
+        .cannon_cd_2::after { content: "休2"; font-size: calc(var(--tile-size) * 0.4); color: #aaa; font-weight: bold; }
+        
+        .mine::after { content: "💎"; }
+        .desert { background: #e1b12c; }
+        .forest { background: #27ae60; }
+        .magic_circle { background: #8e44ad; }
+        .magic_circle::after { content: "🔯"; font-size: calc(var(--tile-size) * 0.45); }
+        .camel_tile { background: #f39c12; }
+        .camel_tile::after { content: "🐪"; font-size: calc(var(--tile-size) * 0.45); }
+        .trap { background: #8d6e63; }
+        .trap::after { content: "🕸️"; font-size: calc(var(--tile-size) * 0.45); }
+        /* Castle stage */
+        .castle_tile { background: #8d8d8d; }
+        .bridge_ns { background: #8B6914; }
+        .bridge_ew { background: #7a5c10; }
+        .bridge_up { background: #2980b9; }
+        .bridge_switch { background: #5d3d1e; }
+        .bridge_switch::after { content: "🔘"; font-size: calc(var(--tile-size)*0.45); }
+        /* Big River stage */
+        .whirlpool { background: #1a5276; }
+        .whirlpool::after { content: "🌀"; font-size: calc(var(--tile-size)*0.4); }
+        /* Mountain stage */
+        .mountain_tile { background: #795548; }
+        .snow { background: #e8f4f8; }
+        .avalanche_tile { background: #bbdefb; }
+        .avalanche_tile::after { content: "❄"; font-size: calc(var(--tile-size)*0.4); color: #1565c0; }
+        .summit { background: #90a4ae; }
+        .cable_tile { background: #546e7a; }
+        .cable_tile::after { content: "🚡"; font-size: calc(var(--tile-size)*0.38); }
+        /* Demon stage plains override */
+        .demon-stage .plains { background: #ce93d8; }
+        
+        .entity { 
+            position: absolute; width: 85%; height: 85%; border-radius: 6px; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: calc(var(--tile-size) * 0.35); font-weight: bold; z-index: 10; border: 2px solid; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            white-space: nowrap; overflow: hidden; line-height: 1.1; box-sizing: border-box;
+        }
+        .hp-bar { font-size: calc(var(--tile-size) * 0.28); font-weight: bold; margin-top: -2px; }
+
+        .player-team { background: #ecf0f1; color: #2c3e50; border-color: #2980b9; }
+        .cpu-team { background: #c0392b; color: #fff; border-color: #78281f; }
+        .npc-team { background: #8e44ad; color: #fff; border-color: #fff; border-radius: 50%; }
+        .selected { box-shadow: 0 0 15px 5px #3498db !important; z-index: 15; transform: translate(-50%, -50%) scale(1.15) !important; border-color: #3498db; }
+        
+        .stealth { opacity: 0.5; border-style: dashed; }
+        .forest-stealth { box-shadow: 0 0 12px 4px #2ecc71 !important; border-color: #27ae60 !important; opacity: 0.7; }
+        .invin { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+        .mine-team { background: #ecf0f1; color: #2c3e50; border-color: #27ae60; }
+
+        #ui-panel { 
+            background: var(--ui-bg); border: 1px solid #444; padding: 20px; 
+            border-radius: 10px; width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+            height: calc(21 * var(--tile-size)); overflow-y: auto; box-sizing: border-box;
+        }
+        #ui-panel h3 { margin-top: 0; color: var(--accent); border-bottom: 2px solid #444; padding-bottom: 10px; }
+        .status-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 16px; font-weight: bold; }
+        
+        .btn { 
+            background: #34495e; color: #fff; border: 1px solid #2c3e50; padding: 12px 20px; 
+            font-size: 16px; cursor: pointer; border-radius: 6px; margin: 5px 0; font-weight: bold;
+            transition: 0.2s; width: 100%; box-sizing: border-box;
+        }
+        .btn:hover { background: #415b76; }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; border-color: #444; }
+        
+        .ability-btn { display: block; width: 100%; margin: 8px 0; background: #2c3e50; color: #ecf0f1; border: 1px solid #1a252f; padding: 10px; cursor: pointer; text-align: left; border-radius: 4px; font-weight: bold; transition: 0.2s; font-size: 13px; box-sizing: border-box; }
+        .ability-btn:hover:not(:disabled) { background: #34495e; }
+        .ability-btn.active { background: var(--accent); color: #fff; border-color: #d35400; box-shadow: 0 0 8px rgba(230, 126, 34, 0.6); }
+        .ability-btn:disabled { background: #333; color: #666; cursor: not-allowed; border-color: #222; }
+        
+        .select-group { margin: 20px 0; text-align: left; }
+        .select-group label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
+        .select-group select { width: 100%; padding: 10px; font-size: 16px; background: #1a1a20; color: #fff; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; }
+        
+        #error-log { color: #e74c3c; font-weight: bold; margin-top: 10px; }
+
+        #result-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 100; flex-direction: column; 
+            align-items: center; justify-content: center;
+        }
+        #result-box {
+            background: var(--ui-bg); padding: 40px; border-radius: 12px; border: 2px solid var(--accent);
+            text-align: center; box-shadow: 0 0 30px rgba(230,126,34,0.5); max-width: 90%;
+        }
+        #result-title { font-size: 28px; margin-bottom: 20px; line-height: 1.4; }
+
+        @media (max-width: 1000px) and (orientation: portrait) {
+            body { padding: 10px; }
+            :root { --tile-size: 4.5vw; }
+            #board-container { flex-direction: column; align-items: center; gap: 15px; }
+            #ui-panel { width: 100%; height: auto; max-height: 450px; padding: 15px; }
+            .panel { font-size: 16px; margin-bottom: 10px; }
+        }
+        @media (max-width: 950px) and (orientation: landscape) {
+            body { padding: 5px 10px; }
+            :root { --tile-size: 4.1vh; }
+            #board-container { gap: 15px; justify-content: flex-start; }
+            #ui-panel { width: 260px; height: calc(21 * var(--tile-size)); padding: 12px; }
+            #ui-panel h3 { font-size: 16px; margin-bottom: 8px; padding-bottom: 5px; }
+            .btn { padding: 8px; font-size: 14px; margin: 3px 0; }
+            .ability-btn { padding: 7px; font-size: 12px; margin: 4px 0; }
+            .status-row { margin-bottom: 10px; font-size: 14px; }
+            .panel { font-size: 14px; margin-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="home-screen">
+    <h2>Escape the King</h2>
+    <div class="instructions">
+        <strong>【遊び方】</strong><br><br>
+        1. 初期配置: お互いのメインコマは陣地の最奥中央からスタートします。先攻後攻はランダムです。<br>
+        2. 王が倒れるか、相手の陣地最奥を突破すると勝敗が決まります。<br>
+        3. 地形:<br>
+        ・赤色エリア: 岩を設置できない安全地帯です。<br>
+        ・森林: 止まると身を隠し、相手から視認されなくなります。<br>
+        ・砂漠: 歩兵以外が踏むと50%の確率で行動力がさらに減少。<br>
+        4. 四方を岩に囲まれ、かつ岩砕きアビリティが0のコマは敗北となります。<br>
+        5. アビリティボタンをタップすると、攻撃の射程範囲が赤く表示されます。<br><br>
+        <strong>【オンライン対戦】</strong><br>
+        「オンライン対戦」を選択するとルームコードが発行されます。友人に教えてコードを入力してもらうと対戦開始です！
+    </div>
+    <div class="select-group">
+        <label>ジョブ選択:</label>
+        <select id="job-select">
+            <option value="king">王 (バランス・無敵化)</option>
+            <option value="knight">騎士 (突破力・直線突進)</option>
+            <option value="assassin">暗殺者 (隠密・毒武器化)</option>
+            <option value="infantry">歩兵 (分隊召喚)</option>
+            <option value="mage">魔法使い (召喚魔法・大火球)</option>
+        </select>
+    </div>
+    <div class="select-group">
+        <label>ステージ選択:</label>
+        <select id="stage-select">
+            <option value="plains">草原 (オーソドックス)</option>
+            <option value="forest">森林 (森だらけの迷彩戦)</option>
+            <option value="desert">砂漠 (サンドワームとラクダ)</option>
+            <option value="demon">魔界 (魔法陣だらけ)</option>
+            <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
+            <option value="bigriver">大河 (渡河と船上戦)</option>
+            <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
+        </select>
+    </div>
+    <div class="select-group">
+        <label>難易度選択:</label>
+        <select id="difficulty-select">
+            <option value="1">レベル1 (ハンデ無し)</option>
+            <option value="2">レベル2 (敵に1体追加)</option>
+            <option value="3">レベル3 (敵に2体追加)</option>
+            <option value="4">レベル4 (敵に3体追加)</option>
+            <option value="5">レベル5 (敵に4体追加)</option>
+            <option value="6">レベル6 (敵に5体追加)</option>
+            <option value="7">レベル7 (敵に6体追加・重複なし)</option>
+            <option value="8">レベル8 (敵に7体追加・重複なし)</option>
+            <option value="9">レベル9 (モンスター7種 ＋ 役職コマ2種)</option>
+            <option value="10">レベル10 (モンスター7種 ＋ 役職コマ3種)</option>
+            <option value="11">レベル11 (モンスター7種 ＋ 役職コマ4種)</option>
+            <option value="12">レベル12 (モンスター7種 ＋ 役職コマ5種)</option>
+        </select>
+    </div>
+    <button id="btn-start" class="btn" style="padding: 15px; font-size: 18px; background: var(--accent); margin-bottom: 10px;">CPU対戦スタート</button>
+    <button id="btn-online" class="btn" style="padding: 15px; font-size: 18px; background: #27ae60;">🌐 オンライン対戦</button>
+    <div id="error-log"></div>
+</div>
+
+<div id="online-lobby">
+    <h2>🌐 オンライン対戦 <span class="online-badge">ONLINE</span></h2>
+    <div class="lobby-tabs">
+        <button class="lobby-tab active" id="tab-create" onclick="switchLobbyTab('create')">ルームを作成</button>
+        <button class="lobby-tab" id="tab-join" onclick="switchLobbyTab('join')">ルームに参加</button>
+    </div>
+
+    <div id="create-panel">
+        <div class="select-group">
+            <label>ジョブ選択:</label>
+            <select id="ol-job-select">
+                <option value="king">王 (バランス・無敵化)</option>
+                <option value="knight">騎士 (突破力・直線突進)</option>
+                <option value="assassin">暗殺者 (隠密・毒武器化)</option>
+                <option value="infantry">歩兵 (分隊召喚)</option>
+                <option value="mage">魔法使い (召喚魔法・大火球)</option>
+            </select>
+        </div>
+        <div class="select-group">
+            <label>ステージ選択:</label>
+            <select id="ol-stage-select">
+                <option value="plains">草原 (オーソドックス)</option>
+                <option value="forest">森林 (森だらけの迷彩戦)</option>
+                <option value="desert">砂漠 (サンドワームとラクダ)</option>
+                <option value="demon">魔界 (魔法陣だらけ)</option>
+                <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
+                <option value="bigriver">大河 (渡河と船上戦)</option>
+                <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
+            </select>
+        </div>
+        <div class="select-group">
+            <label>難易度 (NPCモンスター数):</label>
+            <select id="ol-difficulty-select">
+                <option value="1">レベル1 (NPCなし)</option>
+                <option value="2">レベル2 (NPC 1体)</option>
+                <option value="3">レベル3 (NPC 2体)</option>
+            </select>
+        </div>
+        <div id="create-waiting" style="display:none;">
+            <div class="code-display" id="ol-room-code">----</div>
+            <div class="waiting-indicator">友人にこのコードを伝えてください<br><span class="dot-anim">相手の接続を待っています</span></div>
+        </div>
+        <button class="btn" id="btn-create-room" style="background: #27ae60; padding: 15px; font-size: 18px;" onclick="createRoom()">ルームを作成する</button>
+    </div>
+
+    <div id="join-panel" style="display:none;">
+        <div class="select-group">
+            <label>ジョブ選択 (あなたのジョブ):</label>
+            <select id="ol-join-job-select">
+                <option value="king">王 (バランス・無敵化)</option>
+                <option value="knight">騎士 (突破力・直線突進)</option>
+                <option value="assassin">暗殺者 (隠密・毒武器化)</option>
+                <option value="infantry">歩兵 (分隊召喚)</option>
+                <option value="mage">魔法使い (召喚魔法・大火球)</option>
+            </select>
+        </div>
+        <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
+        <input type="text" class="code-input" id="ol-join-code" placeholder="ABCD" maxlength="4">
+        <div id="join-waiting" style="display:none;">
+            <div class="waiting-indicator"><span class="dot-anim">接続中</span></div>
+        </div>
+        <div id="join-error" style="color:#e74c3c; margin-top:8px; font-weight:bold;"></div>
+        <button class="btn" id="btn-join-room" style="background: #2980b9; padding: 15px; font-size: 18px; margin-top: 10px;" onclick="joinRoom()">参加する</button>
+    </div>
+
+    <button class="btn" style="margin-top: 15px; background: #555;" onclick="backToHome()">タイトルに戻る</button>
+</div>
+
+<div id="game-screen">
+    <div class="panel">
+        <div id="turn-indicator">Player's Turn (Turn: 1)</div>
+        <div id="status-message" style="color: #f1c40f;">準備完了</div>
+    </div>
+    <div id="online-game-info"></div>
+    <div id="board-container">
+        <div id="board"></div>
+        <div id="ui-panel">
+            <h3 id="ui-name">未選択</h3>
+            <div class="status-row">
+                <span>AP: <span id="ui-ap" style="color:#3498db;">-</span></span>
+                <span>HP: <span id="ui-hp" style="color:#e74c3c;">-</span></span>
+            </div>
+            <button class="btn" style="margin-bottom:15px; background: #2980b9;" id="btn-move">移動 / 決定 (AP 1)</button>
+            <hr style="border: 1px solid #444; margin-bottom: 15px;">
+            <div id="ability-list"></div>
+            <hr style="border: 1px solid #444; margin-top: 15px; margin-bottom: 15px;">
+            <button class="btn" style="background:#c0392b; padding: 15px;" id="btn-end-turn">ターン終了</button>
+        </div>
+    </div>
+</div>
+
+<div id="result-screen">
+    <div id="result-box">
+        <h2 id="result-title"></h2>
+        <button class="btn" style="margin-bottom:10px;" id="btn-rematch">再戦する</button>
+        <button class="btn" style="margin-bottom:10px; background:#e67e22;" id="btn-change">ジョブやステージを変えて再戦</button>
+        <button class="btn" style="background:#7f8c8d;" id="btn-title">タイトルに戻る</button>
+    </div>
+</div>
+
+<div id="root"></div>
+<script type="module" src="/src/main.tsx"></script>
+
+<script>
+// ============================================================
+//  GAME ENGINE
+// ============================================================
+const SIZE = 21;
+let board = [];
+let entities = [];
+let selectedEntity = null;
+let actionMode = 'move';
+let turn = 1;
+let isPlayerTurn = true;
+let treasures = ['platinum', 'gold', 'silver', 'copper'];
+let activeStage = '';
+let duneTimer = 1;
+let sandwormTarget = null;
+let sandwormWarning = false;
+let sandwormActive = false;
+let magicCircleTimer = 5; 
+let usedAbilities = {};
+// Castle stage
+let bridgeStates = { north: true, south: true, east: true, west: true };
+let bridgeSwitchMap = {};
+const BRIDGE_TILE_MAP = {
+    north: [{r:6,c:9},{r:6,c:10}],
+    south: [{r:14,c:9},{r:14,c:10}],
+    west:  [{r:9,c:5},{r:10,c:5}],
+    east:  [{r:9,c:15},{r:10,c:15}]
+};
+// Big River stage
+let stageKrakenSpawned = false;
+// Mountain stage
+let avalanchesTriggered = new Set();
+let cableCarMovesLeft = 4;
+
+// ============================================================
+//  ONLINE MODE STATE
+// ============================================================
+let isOnlineMode = false;
+let myPlayerIndex = -1;   // 0 = P1 (player team, starts row 20), 1 = P2 (cpu team, starts row 0)
+let wsConn = null;
+let onlineRoomCode = '';
+let onlineWaiting = false;
+
+function myTeam() { 
+    if (!isOnlineMode) return 'player';
+    return myPlayerIndex === 0 ? 'player' : 'cpu'; 
+}
+function enemyTeam() { 
+    if (!isOnlineMode) return 'cpu';
+    return myPlayerIndex === 0 ? 'cpu' : 'player'; 
+}
+
+function canIAct() {
+    if (!isOnlineMode) return isPlayerTurn;
+    if (myPlayerIndex === 0) return isPlayerTurn;
+    if (myPlayerIndex === 1) return !isPlayerTurn;
+    return false;
+}
+
+// Board coordinate flip for Player 2 (sees board mirrored vertically)
+function displayR(actualRow) {
+    return (isOnlineMode && myPlayerIndex === 1) ? (SIZE - 1 - actualRow) : actualRow;
+}
+function actualRowFor(displayRow) {
+    return (isOnlineMode && myPlayerIndex === 1) ? (SIZE - 1 - displayRow) : displayRow;
+}
+
+// ============================================================
+//  SEEDED RANDOM (for deterministic board generation online)
+// ============================================================
+let _rngState = 0;
+function _seededRandom() {
+    _rngState ^= _rngState << 13;
+    _rngState ^= _rngState >> 17;
+    _rngState ^= _rngState << 5;
+    return ((_rngState >>> 0) / 4294967296);
+}
+function withSeededRandom(seed, fn) {
+    _rngState = seed >>> 0 || 1;
+    const orig = Math.random;
+    Math.random = _seededRandom;
+    try { fn(); } finally { Math.random = orig; }
+}
+
+// ============================================================
+//  GAME DATA
+// ============================================================
+const ABILITY_NAMES = {
+    drop_rock: '岩落とし(AP-1)', shatter: '岩砕き', dash: 'ダッシュ',
+    trap: '罠設置', bow: '弓攻撃', sword: '剣撃', punch: 'ぶん殴り', teleport: 'テレポート',
+    magic_bullet: '魔法弾', wind_magic: '風魔法', ice_magic: '氷魔法',
+    poison_bow: '毒弓矢', dagger: '短剣刺し', poison_dagger: '毒剣刺し',
+    spin_slash: '回転斬り', smash_slash: '粉砕斬り',
+    great_fireball: '大火球魔法', summon_magic: '召喚獣魔法', rock_throw: '岩投げ',
+    summon_archer: '弓兵召喚(5T~)', summon_lancer: '槍兵召喚(5T~)', spear: '槍攻撃',
+    roll_rock: '岩転がし(直線∞)'
+};
+
+const JOB_DATA = {
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1 }, hp: 30, ap: 2 },
+    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1 }, hp: 30, ap: 2 },
+    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, dagger: 10 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
+    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 } 
+};
+
+// ============================================================
+//  WEBSOCKET FUNCTIONS
+// ============================================================
+function connectWS(onOpen) {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsConn = new WebSocket(`${proto}//${location.host}/api/ws`);
+    wsConn.onopen = onOpen;
+    wsConn.onmessage = handleWsMessage;
+    wsConn.onclose = () => {
+        if (isOnlineMode) {
+            msg("接続が切れました。");
+        }
+    };
+    wsConn.onerror = () => {
+        document.getElementById('join-error').textContent = 'サーバーへの接続に失敗しました。';
+        document.getElementById('join-waiting').style.display = 'none';
+        document.getElementById('btn-join-room').disabled = false;
+        document.getElementById('btn-create-room').disabled = false;
+    };
+}
+
+function wsSend(obj) {
+    if (wsConn && wsConn.readyState === WebSocket.OPEN) {
+        wsConn.send(JSON.stringify(obj));
+    }
+}
+
+function getGameState() {
+    return {
+        board: JSON.parse(JSON.stringify(board)),
+        entities: JSON.parse(JSON.stringify(entities)),
+        turn, isPlayerTurn, activeStage, duneTimer,
+        sandwormTarget, sandwormWarning, sandwormActive,
+        magicCircleTimer,
+        treasures: [...treasures]
+    };
+}
+
+function applyGameState(state) {
+    board = state.board;
+    entities = state.entities;
+    turn = state.turn;
+    isPlayerTurn = state.isPlayerTurn;
+    activeStage = state.activeStage;
+    duneTimer = state.duneTimer;
+    sandwormTarget = state.sandwormTarget;
+    sandwormWarning = state.sandwormWarning;
+    sandwormActive = state.sandwormActive;
+    magicCircleTimer = state.magicCircleTimer;
+    treasures = state.treasures;
+    selectedEntity = null;
+    usedAbilities = {};
+}
+
+function syncState(type = 'stateSync') {
+    if (!isOnlineMode) return;
+    wsSend({ type, state: getGameState() });
+}
+
+function handleWsMessage(event) {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'roomCreated') {
+        onlineRoomCode = data.roomCode;
+        document.getElementById('ol-room-code').textContent = data.roomCode;
+        document.getElementById('create-waiting').style.display = 'block';
+        document.getElementById('btn-create-room').style.display = 'none';
+        return;
+    }
+
+    if (data.type === 'gameStart') {
+        myPlayerIndex = data.playerIndex;
+        isOnlineMode = true;
+        document.getElementById('online-lobby').style.display = 'none';
+
+        const settings = data.settings;
+        const seed = settings.seed;
+        const job = myPlayerIndex === 0 ? settings.p1job : settings.p2job;
+        const cpuJob = myPlayerIndex === 0 ? settings.p2job : settings.p1job;
+
+        withSeededRandom(seed, () => {
+            initBoard(settings.stage);
+            initEntitiesOnline(job, cpuJob, settings.difficulty);
+        });
+
+        turn = 1;
+        isPlayerTurn = settings.p1First;
+        activeStage = settings.stage;
+
+        document.getElementById('game-screen').style.display = 'flex';
+        updateOnlineInfo();
+        render();
+
+        if (isPlayerTurn) {
+            if (myPlayerIndex === 0) {
+                startTurn('player');
+            } else {
+                startTurn('cpu', true);
+            }
+        } else {
+            msg("相手のターン中...");
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+        }
+        return;
+    }
+
+    if (data.type === 'error') {
+        document.getElementById('join-error').textContent = data.message || 'エラーが発生しました';
+        document.getElementById('join-waiting').style.display = 'none';
+        document.getElementById('btn-join-room').disabled = false;
+        return;
+    }
+
+    if (data.type === 'stateSync') {
+        applyGameState(data.state);
+        render();
+        updateOnlineInfo();
+        if (canIAct()) {
+            const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
+            document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
+            msg("あなたのターンです！");
+        } else {
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+        }
+        return;
+    }
+
+    if (data.type === 'turnEnd') {
+        applyGameState(data.state);
+        render();
+        updateOnlineInfo();
+
+        if (myPlayerIndex === 0) {
+            startTurn('npc');
+        } else {
+            startTurn('cpu', true);
+        }
+        return;
+    }
+
+    if (data.type === 'opponentLeft') {
+        msg("⚠️ 相手が接続を切りました。");
+        alert("相手が接続を切りました。");
+    }
+}
+
+// ============================================================
+//  ONLINE LOBBY UI
+// ============================================================
+function switchLobbyTab(tab) {
+    document.getElementById('create-panel').style.display = tab === 'create' ? 'block' : 'none';
+    document.getElementById('join-panel').style.display = tab === 'join' ? 'block' : 'none';
+    document.getElementById('tab-create').classList.toggle('active', tab === 'create');
+    document.getElementById('tab-join').classList.toggle('active', tab === 'join');
+}
+
+function showOnlineLobby() {
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('online-lobby').style.display = 'block';
+    document.getElementById('create-waiting').style.display = 'none';
+    document.getElementById('btn-create-room').style.display = 'block';
+    document.getElementById('btn-create-room').disabled = false;
+    document.getElementById('join-waiting').style.display = 'none';
+    document.getElementById('join-error').textContent = '';
+}
+
+function backToHome() {
+    if (wsConn) { wsConn.close(); wsConn = null; }
+    document.getElementById('online-lobby').style.display = 'none';
+    document.getElementById('home-screen').style.display = 'block';
+}
+
+function createRoom() {
+    const job = document.getElementById('ol-job-select').value;
+    const stage = document.getElementById('ol-stage-select').value;
+    const difficulty = document.getElementById('ol-difficulty-select').value;
+    const seed = Math.floor(Math.random() * 0x7fffffff);
+
+    document.getElementById('btn-create-room').disabled = true;
+
+    connectWS(() => {
+        wsSend({
+            type: 'create',
+            settings: {
+                p1job: job,
+                p2job: 'king', // Will be overridden by guest's choice
+                stage, difficulty, seed,
+                p1First: Math.random() < 0.5
+            }
+        });
+    });
+}
+
+function joinRoom() {
+    const code = document.getElementById('ol-join-code').value.toUpperCase().trim();
+    const job = document.getElementById('ol-join-job-select').value;
+    if (code.length < 4) {
+        document.getElementById('join-error').textContent = '4文字のコードを入力してください';
+        return;
+    }
+    document.getElementById('btn-join-room').disabled = true;
+    document.getElementById('join-waiting').style.display = 'block';
+    document.getElementById('join-error').textContent = '';
+
+    connectWS(() => {
+        wsSend({ type: 'join', roomCode: code, guestJob: job });
+    });
+}
+
+function updateOnlineInfo() {
+    const el = document.getElementById('online-game-info');
+    if (!isOnlineMode) { el.style.display = 'none'; return; }
+    const myRole = myPlayerIndex === 0 ? '先攻(下)' : '後攻(上)';
+    el.style.display = 'block';
+    el.textContent = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}`;
+}
+
+// ============================================================
+//  EVENT LISTENERS
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-online').addEventListener('click', showOnlineLobby);
+    document.getElementById('btn-move').addEventListener('click', () => setMode('move'));
+    document.getElementById('btn-end-turn').addEventListener('click', endTurn);
+    
+    document.getElementById('btn-rematch').addEventListener('click', () => {
+        if (isOnlineMode) { location.reload(); return; }
+        document.getElementById('result-screen').style.display = 'none';
+        initBoard(activeStage);
+        let pJob = entities.find(e => e.id === 'p1').type;
+        let difficulty = document.getElementById('difficulty-select').value;
+        initEntities(pJob, difficulty);
+        turn = 1; 
+        isPlayerTurn = Math.random() < 0.5;
+        startTurn(isPlayerTurn ? 'player' : 'cpu');
+    });
+    document.getElementById('btn-change').addEventListener('click', () => {
+        if (isOnlineMode) { location.reload(); return; }
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'block';
+    });
+    document.getElementById('btn-title').addEventListener('click', () => location.reload());
+});
+
+// ============================================================
+//  GAME FUNCTIONS
+// ============================================================
+function msg(text, append=false) {
+    let el = document.getElementById('status-message');
+    if (append) el.innerText += " " + text;
+    else el.innerText = text;
+}
+
+function isNoRockZone(r, c) {
+    if (r === 0 || r === SIZE - 1) return true;
+    if (r >= 9 && r <= 11) {
+        if (c >= 3 && c <= 5) return true;
+        if (c === 10) return true;
+        if (c >= 15 && c <= 17) return true;
+    }
+    return false;
+}
+
+function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=false) {
+    if (r<0 || r>=SIZE || c<0 || c>=SIZE) return false;
+    if (!board[r]) return false;
+    let t = board[r][c];
+    // Boat entities make river tiles passable
+    if (!ignoreRiver && (t === 'river' || t === 'whirlpool')) {
+        let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
+        if (boatHere) ignoreRiver = true;
+    }
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool'].includes(t);
+    if (ignoreRiver && (t === 'river' || t === 'whirlpool')) blockedByTerrain = false;
+    if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
+    if (blockedByTerrain) return false;
+    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar')) return false;
+    return true;
+}
+
+function getLoS(a, targetPos) {
+    let dr = targetPos.r - a.r, dc = targetPos.c - a.c;
+    if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return 999;
+    let stepR = Math.sign(dr), stepC = Math.sign(dc);
+    let dist = Math.max(Math.abs(dr), Math.abs(dc));
+    for (let i=1; i<dist; i++) {
+        if (board[a.r + stepR*i]) {
+            let type = board[a.r + stepR*i][a.c + stepC*i];
+            if (['rock', 'volcano', 'mine'].includes(type)) return 999;
+        }
+    }
+    return dist;
+}
+
+function startGame() {
+    try {
+        document.getElementById('error-log').innerText = '';
+        const job = document.getElementById('job-select').value;
+        activeStage = document.getElementById('stage-select').value;
+        const difficulty = document.getElementById('difficulty-select').value;
+        
+        initBoard(activeStage);
+        initEntities(job, difficulty);
+        
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        
+        turn = 1;
+        isPlayerTurn = Math.random() < 0.5;
+        render();
+        startTurn(isPlayerTurn ? 'player' : 'cpu');
+    } catch (error) {
+        document.getElementById('error-log').innerText = "初期化エラー: " + error.message;
+    }
+}
+
+function initBoard(stageType) {
+    board = [];
+    for (let i = 0; i < SIZE; i++) {
+        let row = [];
+        for (let j = 0; j < SIZE; j++) row.push('plains');
+        board.push(row);
+    }
+    
+    for (let c=0; c<SIZE; c++) board[10][c] = 'river';
+    [3, 4, 5, 10, 15, 16, 17].forEach(c => board[10][c] = 'bridge');
+    [4, 10, 16].forEach(c => { 
+        if (!isNoRockZone(12, c)) board[12][c] = 'cannon'; 
+        if (!isNoRockZone(8, c)) board[8][c] = 'cannon'; 
+    });
+
+    placeRandom('mine', 4, 1, SIZE-2, true);
+    placeRandom('volcano', 4, 3, 17, true);
+
+    if (stageType === 'forest') {
+        for (let i=0; i<150; i++) {
+            let rr = Math.floor(Math.random()*SIZE), cc = Math.floor(Math.random()*SIZE);
+            if (board[rr] && board[rr][cc] === 'plains' && !isNoRockZone(rr, cc)) board[rr][cc] = 'forest';
+        }
+    } else if (stageType === 'desert') {
+        for (let rr=1; rr<SIZE-1; rr++) {
+            for (let cc=0; cc<SIZE; cc++) {
+                if (board[rr] && board[rr][cc] === 'plains' && !isNoRockZone(rr, cc) && rr !== 10) {
+                    if (Math.random() < 0.4) board[rr][cc] = 'desert';
+                }
+            }
+        }
+        placeRandom('camel_tile', 1, 16, 20, true, 10, 4); 
+        placeRandom('camel_tile', 1, 0, 4, true, 10, 4);   
+    }
+
+    if (stageType === 'demon') {
+        placeRandom('magic_circle', 5, 1, 8, true);
+        placeRandom('magic_circle', 5, 12, 19, true);
+    } else if (stageType === 'castle') {
+        // === CASTLE STAGE ===
+        // Clear base row-10 river setup
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river' || board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let c2=0; c2<SIZE; c2++) if (board[8][c2]==='cannon' || board[12][c2]==='cannon') board[8][c2]=board[12][c2]='plains';
+        // Castle courtyard (gray)
+        for (let r2=7; r2<=13; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='castle_tile';
+        // Moat
+        for (let c2=5; c2<=15; c2++) { board[6][c2]='river'; board[14][c2]='river'; }
+        for (let r2=7; r2<=13; r2++) { board[r2][5]='river'; board[r2][15]='river'; }
+        // Bridges (N/S/E/W – start open)
+        board[6][9]='bridge_ns'; board[6][10]='bridge_ns';
+        board[14][9]='bridge_ns'; board[14][10]='bridge_ns';
+        board[9][5]='bridge_ew'; board[10][5]='bridge_ew';
+        board[9][15]='bridge_ew'; board[10][15]='bridge_ew';
+        // Bridge switches inside castle
+        bridgeSwitchMap = {};
+        board[8][10]='bridge_switch'; bridgeSwitchMap['8,10']='north';
+        board[12][10]='bridge_switch'; bridgeSwitchMap['12,10']='south';
+        board[10][7]='bridge_switch'; bridgeSwitchMap['10,7']='west';
+        board[10][13]='bridge_switch'; bridgeSwitchMap['10,13']='east';
+        bridgeStates = { north: true, south: true, east: true, west: true };
+        // 4 cannons inside castle
+        board[8][8]='cannon'; board[8][12]='cannon';
+        board[12][8]='cannon'; board[12][12]='cannon';
+        // Outer terrain
+        placeRandom('mine', 2, 1, 5, true);
+        placeRandom('mine', 2, 15, 19, true);
+        placeRandom('volcano', 2, 1, 5, true);
+        placeRandom('volcano', 2, 15, 19, true);
+        placeRandom('magic_circle', 2, 1, 5, true);
+        placeRandom('magic_circle', 2, 15, 19, true);
+    } else if (stageType === 'bigriver') {
+        // === BIG RIVER STAGE ===
+        // Clear base row-10 river
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
+        // Big river rows 7-13
+        for (let r2=7; r2<=13; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='river';
+        // Center bridge (2 wide, full river height)
+        for (let r2=7; r2<=13; r2++) { board[r2][10]='bridge'; board[r2][11]='bridge'; }
+        // Whirlpools in river
+        let wCount=0, wA=0;
+        while (wCount<5 && wA<200) {
+            let wr=7+Math.floor(Math.random()*7), wc=Math.floor(Math.random()*SIZE);
+            if (board[wr][wc]==='river' && wc!==10 && wc!==11) { board[wr][wc]='whirlpool'; wCount++; }
+            wA++;
+        }
+        // Player side (bottom)
+        placeRandom('mine', 2, 14, 19, true);
+        placeRandom('volcano', 2, 14, 19, true);
+        placeRandom('magic_circle', 1, 15, 19, true);
+        placeRandom('mine', 1, 1, 6, true);
+        placeRandom('volcano', 1, 1, 6, true);
+        placeRandom('magic_circle', 1, 1, 6, true);
+        board[15][4]='cannon'; board[5][4]='cannon'; board[15][16]='cannon'; board[5][16]='cannon';
+        stageKrakenSpawned = false;
+    } else if (stageType === 'mountain') {
+        // === MOUNTAIN STAGE ===
+        // Clear base river row-10
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
+        // Summit (rows 1-4)
+        for (let r2=1; r2<=4; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='summit';
+        // Snow zone (rows 5-8)
+        for (let r2=5; r2<=8; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='snow';
+        // Mountain tiles (rows 9-15)
+        for (let r2=9; r2<=15; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='mountain_tile';
+        // Valley (rows 16-20) stays plains
+        // Rocks on summit/snow
+        for (let i=0; i<18; i++) {
+            let rr=1+Math.floor(Math.random()*8), cc=1+Math.floor(Math.random()*(SIZE-2));
+            if (['summit','snow'].includes(board[rr][cc]) && !isNoRockZone(rr,cc) && !entities.some(e=>e.r===rr&&e.c===cc)) board[rr][cc]='rock';
+        }
+        // 3 avalanche triggers in snow zone
+        avalanchesTriggered = new Set();
+        let avCount=0, avA=0;
+        while (avCount<3 && avA<200) {
+            let ar=5+Math.floor(Math.random()*4), ac=2+Math.floor(Math.random()*(SIZE-4));
+            if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
+            avA++;
+        }
+        // Cable car columns (col 0 and col 20)
+        for (let r2=2; r2<=18; r2++) { board[r2][0]='cable_tile'; board[r2][SIZE-1]='cable_tile'; }
+        board[0][0]='summit'; board[0][SIZE-1]='summit'; board[1][0]='summit'; board[1][SIZE-1]='summit';
+        // Extras
+        placeRandom('mine', 2, 16, 19, true);
+        placeRandom('volcano', 2, 14, 17, true);
+        placeRandom('magic_circle', 1, 16, 19, true);
+        placeRandom('mine', 1, 1, 4, true);
+        placeRandom('magic_circle', 1, 1, 4, true);
+        board[14][6]='cannon'; board[14][14]='cannon'; board[7][6]='cannon'; board[7][14]='cannon';
+        cableCarMovesLeft = 4;
+    } else {
+        let placed = false;
+        while (!placed) {
+            let r = Math.floor(Math.random() * 8) + 1;
+            let c = Math.floor(Math.random() * SIZE);
+            if (board[r][c] === 'plains') { board[r][c] = 'magic_circle'; placed = true; }
+        }
+        placed = false;
+        while (!placed) {
+            let r = Math.floor(Math.random() * 8) + 12;
+            let c = Math.floor(Math.random() * SIZE);
+            if (board[r][c] === 'plains') { board[r][c] = 'magic_circle'; placed = true; }
+        }
+    }
+}
+
+function placeRandom(type, count, minR, maxR, avoidNoRock=false, centerC=null, radiusC=null) {
+    let p = 0; let attempts = 0;
+    while (p < count && attempts < 1000) {
+        let rr = Math.floor(Math.random()*(maxR-minR+1))+minR;
+        let cc = Math.floor(Math.random()*SIZE);
+        if (centerC !== null && Math.abs(cc - centerC) > radiusC) { attempts++; continue; }
+        if (board[rr] && board[rr][cc] === 'plains' && (!avoidNoRock || !isNoRockZone(rr, cc))) { 
+            board[rr][cc] = type; p++; 
+        }
+        attempts++;
+    }
+}
+
+function initEntities(pJob, difficulty = "1") {
+    entities = [];
+    let cpuJobs = ['king', 'knight', 'assassin', 'infantry', 'mage'];
+    let cJob = cpuJobs[Math.floor(Math.random() * cpuJobs.length)];
+
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    addExtraEnemies(difficulty);
+    scatterRocks(4, 10, 5);
+    scatterRocks(16, 10, 5);
+    treasures = ['platinum', 'gold', 'silver', 'copper'];
+    duneTimer = 1;
+    // Stage-specific entities
+    if (activeStage === 'bigriver') {
+        let boatPos = [{r:7,c:4},{r:7,c:16},{r:13,c:4},{r:13,c:16}];
+        boatPos.forEach((p,i) => {
+            entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'npc', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        });
+        entities.push({id:'warship', type:'warship', name:'大型船', team:'npc', r:10, c:3, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        stageKrakenSpawned = false;
+    } else if (activeStage === 'mountain') {
+        let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
+    }
+}
+
+function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
+    entities = [];
+    const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
+    const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
+
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    addExtraEnemies(difficulty);
+    scatterRocks(4, 10, 5);
+    scatterRocks(16, 10, 5);
+    treasures = ['platinum', 'gold', 'silver', 'copper'];
+    duneTimer = 1;
+}
+
+function addExtraEnemies(difficulty) {
+    const types = ['slime', 'golem', 'wolf', 'big', 'red', 'blue', 'small'];
+    const names = { slime:'スライム', golem:'ゴーレム', wolf:'オオカミ', big:'大鬼', red:'赤鬼', blue:'青鬼', small:'小鬼' };
+    
+    let extraCount = 0;
+    let jobCount = 0;
+    let isHighLevel = false;
+    let diffNum = parseInt(difficulty);
+    
+    if (diffNum >= 9) {
+        extraCount = 7;
+        jobCount = diffNum - 7;
+        isHighLevel = true;
+    } else if (diffNum === 7) { extraCount = 6; isHighLevel = true; }
+    else if (diffNum === 8) { extraCount = 7; isHighLevel = true; }
+    else { extraCount = diffNum - 1; }
+
+    let pool = [...types];
+    if (isHighLevel) pool.sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < extraCount; i++) {
+        let t = isHighLevel ? pool[i] : types[Math.floor(Math.random() * types.length)];
+        let r, c;
+        let attempts = 0;
+        do {
+            r = Math.floor(Math.random() * 4);
+            c = Math.floor(Math.random() * SIZE);
+            attempts++;
+        } while (attempts < 100 && !isWalkable(r, c));
+        
+        let m = {
+            id: 'extra' + i, type: t, name: names[t], team: 'cpu',
+            r: r, c: c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, 
+            abilities: { sword: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0
+        };
+
+        if (t === 'golem') { m.abilities = { punch: 999, rock_throw: 999 }; m.hp = 3; }
+        else if (t === 'slime') { m.hp = 1; }
+        else if (t === 'wolf') { m.hp = 2; m.ap = 3; m.maxAp = 3; }
+        else if (t === 'big') { m.hp = 3; m.abilities = { drop_rock: 99, sword: 999 }; }
+        else if (t === 'red') { m.hp = 2; m.abilities = { fireball: 99, sword: 999 }; }
+        else if (t === 'blue') { m.hp = 2; m.ap = 3; m.maxAp = 3; m.abilities = { throwing_knife: 99, sword: 999 }; }
+        else if (t === 'small') { m.hp = 1; m.stealth = true; m.stealthTimer = 4; m.abilities = { throwing_knife: 99 }; }
+
+        entities.push(m);
+    }
+
+    if (jobCount > 0) {
+        let cpuJobs = ['king', 'knight', 'assassin', 'infantry', 'mage'];
+        cpuJobs.sort(() => Math.random() - 0.5);
+        for (let i = 0; i < jobCount; i++) {
+            let t = cpuJobs[i];
+            let r, c;
+            let attempts = 0;
+            do {
+                r = Math.floor(Math.random() * 4);
+                c = Math.floor(Math.random() * SIZE);
+                attempts++;
+            } while (attempts < 100 && !isWalkable(r, c));
+            
+            let jd = JOB_DATA[t];
+            entities.push({ 
+                id: 'extra_job_' + i, type: t, name: jd.name, team: 'cpu',
+                r: r, c: c, hp: jd.hp, maxHp: jd.hp, ap: jd.ap, maxAp: jd.ap,
+                abilities: {...jd.abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0
+            });
+        }
+    }
+}
+
+function scatterRocks(tr, tc, count) {
+    let placed = 0;
+    for (let i=0; i<100; i++) { 
+        let r = Math.floor(Math.random()*7) - 3 + tr;
+        let c = Math.floor(Math.random()*SIZE);
+        if (r>=0 && r<SIZE && c>=0 && c<SIZE && board[r] && board[r][c]==='plains' && !isNoRockZone(r, c)) {
+            board[r][c] = 'rock'; placed++;
+            if (placed >= count) break;
+        }
+    }
+}
+
+function processTurnStartEffects(e) {
+    if (e.hp <= 0) return;
+    // Frozen yeti does not act
+    if (e.type === 'yeti' && e.invin && e.frozenUntilTurn && turn < e.frozenUntilTurn) { e.ap = 0; return; }
+    e.ap = e.maxAp;
+    // Summit altitude damage (mountain stage)
+    if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin) {
+        e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
+    }
+    if (e.name === '分隊' && e.turnBorn !== undefined && turn - e.turnBorn >= 5 && e.skillUsed) {
+        e.skillUsed = false;
+        msg("✨ 分隊が5ターン生存！固有スキルが解放された！", true);
+    }
+    if (e.poisonTimer > 0) {
+        e.poisonTimer--;
+        if (!e.invin) e.hp -= 1;
+        if (Math.random() < 0.5) e.ap = Math.max(0, e.ap - 1);
+    }
+    if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
+    if (e.stealthTimer > 0) { 
+        e.stealthTimer--; 
+        if (e.stealthTimer <= 0) { 
+            e.stealth = false; 
+            if (e.type === 'assassin') { e.maxAp = 2; if (e.ap > 2) e.ap = 2; }
+            if (e.type === 'small') msg("小鬼の潜伏状態が解除された！", true);
+        } 
+    }
+}
+
+function startTurn(team, skipEffects = false) {
+    isPlayerTurn = (team === 'player');
+
+    if (team === 'player') {
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                if (board[r][c] === 'cannon_cd_1') board[r][c] = 'cannon';
+                else if (board[r][c] === 'cannon_cd_2') board[r][c] = 'cannon_cd_1';
+            }
+        }
+    }
+
+    usedAbilities = {};
+    actionMode = 'move';
+
+    if (team === 'player') {
+        if (activeStage === 'desert') {
+            if (duneTimer % 4 === 3) {
+                let candidates = entities.filter(e => e.hp > 0 && e.team !== 'npc');
+                if (candidates.length > 0) {
+                    let t = candidates[Math.floor(Math.random() * candidates.length)];
+                    sandwormTarget = { r: t.r, c: t.c };
+                    sandwormWarning = true;
+                    msg("⚠️ 次のターン、サンドワームの気配！(半径1マス)");
+                }
+            } else {
+                sandwormWarning = false;
+            }
+
+            if (duneTimer % 4 === 0 && duneTimer > 0) {
+                sandwormWarning = false;
+                sandwormActive = true;
+                msg("🪱 サンドワーム出現！範囲内のコマに5ダメージ！");
+                if (sandwormTarget) {
+                    entities.forEach(e => {
+                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= 1) {
+                            if (!e.invin) e.hp -= 5;
+                        }
+                    });
+                }
+                checkWin();
+            } else {
+                sandwormActive = false;
+            }
+            duneTimer++;
+        }
+
+        if (activeStage === 'forest' && turn % 3 === 0) {
+            let emptyForest = [];
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if ((board[r][c] === 'forest' || board[r][c] === 'plains') && !isNoRockZone(r, c)) {
+                        if (!entities.some(e => e.r === r && e.c === c && e.hp > 0)) emptyForest.push({ r, c });
+                    }
+                }
+            }
+            if (emptyForest.length > 0) {
+                let loc = emptyForest[Math.floor(Math.random() * emptyForest.length)];
+                entities.push({
+                    id: 'npc' + Date.now(), type: 'wolf', name: 'オオカミ', team: 'npc',
+                    r: loc.r, c: loc.c, hp: 2, maxHp: 2, ap: 3, maxAp: 3,
+                    abilities: { sword: 999 }, skillUsed: false, stealth: false, stealthTimer: 0,
+                    invin: false, invinTimer: 0, poisonTimer: 0
+                });
+                msg("🐺 森の奥からお邪魔モンスターが現れた！", true);
+            }
+        }
+
+        if (turn % magicCircleTimer === 0) {
+            let spawnedSmall = false;
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (board[r][c] === 'magic_circle') {
+                        if (spawnMonster(r, c) === 'small') spawnedSmall = true;
+                    }
+                }
+            }
+            if (spawnedSmall) msg("🔯 魔法陣からモンスターが出現！小鬼が潜伏状態に入った！(4ターン)", true);
+            else msg("🔯 魔法陣からモンスターが出現！", true);
+        }
+
+        // Big River: Kraken spawns at turn 5
+        if (activeStage === 'bigriver' && turn === 5 && !stageKrakenSpawned) {
+            stageKrakenSpawned = true;
+            let kc = 2 + Math.floor(Math.random() * (SIZE - 4));
+            entities.push({
+                id:'kraken', type:'kraken', name:'クラーケン', team:'npc',
+                r: 10, c: kc, hp: 3, maxHp: 3, ap: 2, maxAp: 2,
+                abilities:{tentacle:999}, skillUsed:true, stealth:false, stealthTimer:0,
+                invin:false, invinTimer:0, poisonTimer:0
+            });
+            msg("🐙 クラーケンが大河に出現！あらゆる者を攻撃する！", true);
+        }
+        // Mountain: Yeti awakens at turn 6; reset cable car moves
+        if (activeStage === 'mountain') {
+            cableCarMovesLeft = 4;
+            if (turn === 6) {
+                let yeti = entities.find(e => e.type === 'yeti' && e.hp > 0 && e.invin && turn >= e.frozenUntilTurn);
+                if (yeti) {
+                    yeti.invin = false;
+                    yeti.ap = yeti.maxAp;
+                    msg("❄️ イエティが目覚めた！猛烈に向かってくる！", true);
+                }
+            }
+        }
+
+        entities.forEach(e => {
+            if (e.team === 'player') {
+                processTurnStartEffects(e);
+                if (e.type === 'slime') applySlimeHeal(e);
+            }
+        });
+
+        render();
+
+        if (isOnlineMode) {
+            if (myPlayerIndex === 0) {
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                syncState('stateSync');
+                msg("あなたのターンです！");
+            } else {
+                document.getElementById('turn-indicator').textContent = "相手のターン中...";
+            }
+        } else {
+            document.getElementById('turn-indicator').textContent = `Player's Turn (Turn: ${turn})`;
+        }
+
+    } else if (team === 'cpu') {
+        if (!skipEffects) {
+            entities.forEach(e => {
+                if (e.team === 'cpu') processTurnStartEffects(e);
+            });
+        }
+
+        if (isOnlineMode) {
+            render();
+            if (myPlayerIndex === 0) {
+                syncState('turnEnd');
+                document.getElementById('turn-indicator').textContent = "相手のターン中...";
+                msg("相手のターン中...");
+            } else {
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                msg("あなたのターンです！");
+                updateOnlineInfo();
+            }
+        } else {
+            setTimeout(cpuLogic, 1000);
+        }
+
+    } else { // npc
+        entities.forEach(e => {
+            if (e.team === 'npc') processTurnStartEffects(e);
+        });
+
+        render();
+
+        if (isOnlineMode && myPlayerIndex === 0) {
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+            msg("相手のターン中...");
+        }
+
+        setTimeout(npcLogic, isOnlineMode ? 200 : 1000);
+    }
+}
+
+function applySlimeHeal(slime) {
+    let m = entities.find(e => e.team==='player' && e.type==='mage');
+    if (!m || m.hp <= 0) return;
+    if (Math.max(Math.abs(m.r - slime.r), Math.abs(m.c - slime.c)) <= 1) {
+        let keys = Object.keys(m.abilities).filter(k => m.abilities[k] !== 999);
+        if (keys.length > 0) {
+            let k = keys[Math.floor(Math.random()*keys.length)];
+            m.abilities[k]++;
+            m.hp = Math.min(m.maxHp, m.hp + 1);
+            msg(`💧 スライムの効果！[${ABILITY_NAMES[k]||k}] 回復＆HP+1！`, true);
+        }
+    }
+}
+
+function isValidTarget(se, r, c, mode) {
+    let dr = Math.abs(se.r - r), dc = Math.abs(se.c - c);
+    let dist = dr + dc;
+    let maxDist = Math.max(dr, dc);
+    let target = entities.find(e => e.r === r && e.c === c && e.hp > 0);
+
+    if (mode === 'drop_rock') return (board[r][c] === 'plains' || board[r][c] === 'desert') && !isNoRockZone(r, c) && !target;
+    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano'].includes(board[r][c]);
+    if (mode === 'dash') return dist > 0 && dist <= 2 && isWalkable(r, c);
+    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert') && !target;
+    if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
+    if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
+    if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
+    if (mode === 'great_fireball') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
+    if (mode === 'skill_mage') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
+    if (mode === 'rock_throw') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
+    if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
+    if (mode === 'sword' || mode === 'punch' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
+    if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
+    if (mode === 'spin_slash') return true; 
+    if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
+    if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
+    return false;
+}
+
+function render() {
+    const b = document.getElementById('board');
+    b.innerHTML = '';
+    // Demon stage: change plains to light purple via CSS class
+    b.classList.toggle('demon-stage', activeStage === 'demon');
+    
+    for (let vr=0; vr<SIZE; vr++) {
+        let ar = actualRowFor(vr); // actual board row
+        for (let c=0; c<SIZE; c++) {
+            let d = document.createElement('div');
+            d.className = `tile ${board[ar][c]}`;
+            d.id = `tile-${vr}-${c}`;
+            
+            if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
+            
+            if (activeStage === 'desert' && sandwormTarget) {
+                if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= 1) {
+                    if (sandwormWarning) d.classList.add('sandworm-warn');
+                    if (sandwormActive) {
+                        d.classList.add('sandworm-attack');
+                        if (ar === sandwormTarget.r && c === sandwormTarget.c) d.innerText = "🪱";
+                    }
+                }
+            }
+
+            if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
+                if (isValidTarget(selectedEntity, ar, c, actionMode)) {
+                    d.classList.add('highlight-atk');
+                }
+            }
+
+            d.onclick = () => handleTileClick(vr, c);
+            b.appendChild(d);
+        }
+    }
+
+    entities.forEach(e => {
+        if (e.hp <= 0) return;
+        
+        let isStealth = e.stealth || (board[e.r] && board[e.r][e.c] === 'forest');
+        // Hide stealthed enemies from your perspective
+        if (isStealth && e.team === enemyTeam()) return;
+
+        let ed = document.createElement('div');
+        ed.className = `entity ${e.team}-team`;
+        if (e === selectedEntity) ed.classList.add('selected');
+        
+        if (isStealth && e.team === myTeam()) {
+            if (board[e.r][e.c] === 'forest') ed.classList.add('forest-stealth');
+            else ed.classList.add('stealth');
+        }
+        if (e.invin) ed.classList.add('invin');
+        
+        let hpColor = (e.team === 'player') ? '#3498db' : '#f1c40f';
+        let poisonIcon = e.poisonTimer > 0 ? '<span style="color:#2ecc71;">☠</span>' : '';
+        const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
+        ed.innerHTML = `${isEnemy ? '敵:' : ''}${e.name.substring(0,2)}${poisonIcon}<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
+        
+        let vr = displayR(e.r);
+        let targetTile = document.getElementById(`tile-${vr}-${e.c}`);
+        if (targetTile) {
+            ed.onclick = (ev) => { ev.stopPropagation(); selectEntity(e); };
+            targetTile.appendChild(ed);
+        }
+    });
+
+    updateUI();
+}
+
+function selectEntity(e) {
+    if (!canIAct()) return;
+    
+    if (actionMode === 'move') {
+        if (e.team === myTeam() || e.team === 'npc') {
+            if (e.team === myTeam()) {
+                selectedEntity = e;
+                render();
+            }
+        } else {
+            // Clicked enemy while in move mode — try attack if something selected
+            if (selectedEntity && selectedEntity.team === myTeam()) {
+                handleAbilityTarget(e.r, e.c, e);
+            }
+        }
+    } else if (selectedEntity && selectedEntity.team === myTeam()) {
+        handleAbilityTarget(e.r, e.c, e);
+    }
+}
+
+function setMode(mode) {
+    if (!selectedEntity || selectedEntity.team !== myTeam()) return;
+
+    if (actionMode === mode) {
+        actionMode = 'move';
+        updateUI();
+        render();
+        return;
+    }
+
+    if (selectedEntity.ap <= 0 && mode === 'move') return;
+    if (mode === 'drop_rock' && selectedEntity.ap < 1) { msg("行動力(AP)が足りません"); return; }
+    if (mode === 'summon_magic' && turn < 5) { msg("召喚獣魔法は開始後5ターン経過しないと使えません"); return; }
+    if ((mode === 'summon_archer' || mode === 'summon_lancer') && turn < 5) { msg("召喚は5ターン経過後に使用可能です"); return; }
+    if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id]?.has(mode)) { 
+        msg("このアビリティは既に今ターン使用済です"); 
+        return; 
+    }
+    
+    actionMode = mode;
+
+    if (mode === 'spin_slash') {
+        handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
+        return;
+    }
+
+    updateUI();
+    render();
+}
+
+function checkTileEffects(entity) {
+    let r = entity.r;
+    let c = entity.c;
+    let eventMsg = "";
+    if (board[r] && board[r][c] === 'magic_circle') {
+        board[r][c] = 'plains';
+        eventMsg = "魔法陣を踏み消した！";
+    } else if (board[r] && board[r][c] === 'camel_tile') {
+        board[r][c] = 'plains';
+        entity.hasCamel = true;
+        eventMsg = "ラクダを獲得！砂漠を無視して進める！";
+    } else if (board[r] && board[r][c] === 'bridge_switch') {
+        let key = `${r},${c}`;
+        let side = bridgeSwitchMap[key];
+        if (side) toggleBridge(side);
+    } else if (board[r] && (board[r][c] === 'whirlpool')) {
+        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
+        eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
+    } else if (board[r] && board[r][c] === 'avalanche_tile') {
+        triggerAvalanche(r, c, entity);
+    } else if (board[r] && board[r][c] === 'summit' && activeStage === 'mountain') {
+        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
+        eventMsg = "高山の過酷な環境！HP-1、AP-1！";
+    }
+    // Board onto a boat
+    let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
+    if (boatHere && !entity.onBoat) {
+        entity.onBoat = boatHere.id;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + `${boatHere.name}に乗った！川を渡れる！`;
+    }
+    return eventMsg;
+}
+
+function toggleBridge(side) {
+    let tiles = BRIDGE_TILE_MAP[side];
+    let isOpen = bridgeStates[side];
+    bridgeStates[side] = !isOpen;
+    tiles.forEach(t => {
+        board[t.r][t.c] = isOpen ? 'bridge_up' : (side === 'north' || side === 'south' ? 'bridge_ns' : 'bridge_ew');
+    });
+    let sideNames = { north:'北', south:'南', west:'西', east:'東' };
+    msg(`🏰 城の${sideNames[side]}の跳ね橋が${isOpen ? '上がった🔒' : '下りた🔓'}！`);
+}
+
+function triggerAvalanche(triggerR, triggerC, entity) {
+    let key = `${triggerR},${triggerC}`;
+    if (avalanchesTriggered.has(key)) return;
+    avalanchesTriggered.add(key);
+    board[triggerR][triggerC] = 'snow';
+    let width = Math.floor(Math.random() * 3) + 3;
+    let startC = Math.max(0, triggerC - Math.floor(width / 2));
+    let endC = Math.min(SIZE - 1, startC + width - 1);
+    let affected = [];
+    entities.forEach(e => {
+        if (e.hp > 0 && e.c >= startC && e.c <= endC && e.r >= triggerR) {
+            if (!e.invin) {
+                e.hp -= 2;
+                let newR = Math.min(SIZE - 1, e.r + 6);
+                while (newR > e.r && !isWalkable(newR, e.c, true, true)) newR--;
+                e.r = newR;
+                affected.push(e.name);
+            }
+        }
+    });
+    msg(`⛰️ 雪崩発生！幅${endC - startC + 1}マスが崩落！${affected.length > 0 ? affected.join(',') + 'に2ダメージと吹き飛ばし！' : ''}`);
+}
+
+function handleTileClick(vr, c) {
+    let r = actualRowFor(vr);
+    if (!canIAct() || !selectedEntity || selectedEntity.team !== myTeam()) return;
+
+    if (actionMode === 'move') {
+        if (Math.abs(selectedEntity.r - r) + Math.abs(selectedEntity.c - c) === 1) {
+            let cost = 1;
+            let isInvinKing = selectedEntity.type === 'king' && selectedEntity.invin;
+            // Cable car free movement (mountain stage only, along col 0 or col 20)
+            let onCable = activeStage === 'mountain' && (c === 0 || c === SIZE-1) &&
+                board[r]?.[c] === 'cable_tile' && c === selectedEntity.c && cableCarMovesLeft > 0;
+            if (onCable) cost = 0;
+            // Determine if destination is reachable
+            let canMove = isWalkable(r, c);
+            // Boat riding: player on boat can row through river
+            let onBoatEntity = selectedEntity.onBoat ? entities.find(e => e.id === selectedEntity.onBoat && e.hp > 0) : null;
+            if (onBoatEntity && !canMove) {
+                let t = board[r]?.[c];
+                if ((t === 'river' || t === 'whirlpool') && !entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship')) {
+                    canMove = true;
+                }
+            }
+            // King invincibility: can pass through rocks and entities
+            if (!canMove && isInvinKing && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                let t = board[r]?.[c];
+                if (['rock', 'mine', 'volcano'].includes(t)) canMove = true;
+                else if (!['river', 'whirlpool', 'bridge_up'].includes(t) &&
+                    entities.find(e => e.hp > 0 && e.r === r && e.c === c && e.type !== 'boat' && e.type !== 'warship')) canMove = true;
+            }
+
+            if ((cost === 0 || selectedEntity.ap >= cost) && canMove) {
+                // King invincibility: destroy rocks, damage blockers
+                if (isInvinKing) {
+                    let t = board[r]?.[c];
+                    if (['rock', 'mine', 'volcano'].includes(t)) {
+                        if (t === 'mine') breakMine();
+                        board[r][c] = 'plains';
+                        msg("👑 無敵の王が岩を砕いて突き進んだ！");
+                    } else {
+                        let blocker = entities.find(e => e.hp > 0 && e.r === r && e.c === c && e !== selectedEntity && e.type !== 'boat' && e.type !== 'warship');
+                        if (blocker && !blocker.invin) {
+                            blocker.hp -= 2;
+                            knockback(blocker, 2, selectedEntity);
+                            msg(`👑 無敵の王が${blocker.name}を吹き飛ばした！(2ダメージ)`);
+                        }
+                    }
+                }
+                // Boat follows player through river
+                if (onBoatEntity) {
+                    let t = board[r]?.[c];
+                    if (t === 'river' || t === 'whirlpool') {
+                        onBoatEntity.r = r; onBoatEntity.c = c;
+                    } else {
+                        selectedEntity.onBoat = null; // Stepped ashore
+                    }
+                }
+
+                selectedEntity.r = r; selectedEntity.c = c;
+                selectedEntity.ap -= cost;
+                if (onCable) cableCarMovesLeft--;
+
+                let eventMsg = checkTileEffects(selectedEntity);
+
+                if (board[r] && board[r][c] === 'forest') {
+                    eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠し、潜伏状態になった！";
+                }
+
+                if (eventMsg) {
+                    msg(eventMsg);
+                } else {
+                    if (board[r] && board[r][c] === 'desert' && selectedEntity.type !== 'infantry' && !selectedEntity.hasCamel) {
+                        if (Math.random() < 0.5) {
+                            selectedEntity.ap = Math.max(0, selectedEntity.ap - 1);
+                            msg("砂に足を取られ、行動力が追加で1減少した！");
+                        }
+                    }
+                    if (board[r] && board[r][c] === 'mine') { board[r][c] = 'plains'; breakMine(); }
+                    else if (board[r] && board[r][c] === 'trap') { 
+                        board[r][c] = 'plains'; 
+                        if (!selectedEntity.invin) {
+                            selectedEntity.hp -= 1;
+                            selectedEntity.ap = Math.max(0, selectedEntity.ap - 2);
+                            msg("罠を踏んだ！ダメージ(1)と行動力減少(2)！"); 
+                        } else {
+                            msg("罠を踏んだが、無敵状態により無効化！");
+                        }
+                    }
+                }
+
+                checkEnemyTerritory(selectedEntity);
+                checkWin();
+                render();
+                if (isOnlineMode) syncState();
+            }
+        }
+    } else {
+        handleAbilityTarget(r, c, null);
+    }
+}
+
+function checkEnemyTerritory(entity) {
+    if (entity.team === 'player' && entity.r <= 9 && !entity.crossBonus) {
+        entity.crossBonus = true;
+        for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
+        msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
+    } else if (entity.team === 'cpu' && entity.r >= 11 && !entity.crossBonus) {
+        entity.crossBonus = true;
+        for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
+        msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
+    }
+}
+
+function handleAbilityTarget(r, c, targetEntity) {
+    let se = selectedEntity;
+    let used = false;
+
+    if (!isValidTarget(se, r, c, actionMode) && actionMode !== 'skill') {
+        msg("そこは対象外です");
+        return;
+    }
+
+    if (actionMode === 'shatter') {
+        if (board[r][c] === 'mine') breakMine();
+        if (board[r][c] === 'volcano') breakVolcano();
+        board[r][c] = 'plains';
+        if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
+        used = true;
+    } else if (actionMode === 'drop_rock') {
+        board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
+    } else if (actionMode === 'dash') {
+        if (se.abilities['dash'] !== 999) se.abilities['dash']--;
+        se.r = r; se.c = c; used = true; 
+        let eventMsg = checkTileEffects(se);
+        if (board[r] && board[r][c] === 'forest') eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠した！";
+        msg("ダッシュで移動！" + (eventMsg ? " " + eventMsg : "")); 
+        checkEnemyTerritory(se);
+    } else if (actionMode === 'trap') {
+        board[r][c] = 'trap'; se.abilities['trap']--; used = true; msg("罠を設置しました！");
+    } else if (actionMode === 'bow') {
+        se.abilities['bow']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `射撃命中！敵にダメージ(1)！`); used = true;
+    } else if (actionMode === 'poison_bow') {
+        se.abilities['poison_bow']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2; targetEntity.poisonTimer = 3; knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "毒弓矢！しかし無敵で防がれた！" : `毒弓矢命中！ダメージ(2)と毒(3T)を与えた！`); used = true;
+    } else if (actionMode === 'magic_bullet') {
+        se.abilities['magic_bullet']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "魔法弾！しかし無敵で弾かれた！" : "魔法弾命中！ダメージ(1)と吹き飛ばし！"); used = true;
+    } else if (actionMode === 'great_fireball') {
+        se.abilities['great_fireball']--;
+        if (!targetEntity.invin) { targetEntity.hp -= 5; targetEntity.ap--; knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え行動力を奪い吹き飛ばした！"); used = true;
+    } else if (actionMode === 'rock_throw') {
+        se.abilities['rock_throw']--;
+        if (!targetEntity.invin) { targetEntity.hp -= 2; }
+        msg(targetEntity.invin ? "岩投げ！しかし無敵で防がれた！" : "岩投げ！ダメージ(2)を与えた！"); used = true;
+    } else if (actionMode === 'summon_magic') {
+        doSummon(se, r, c);
+        used = true;
+    } else if (actionMode === 'wind_magic') {
+        se.abilities['wind_magic']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; knockback(targetEntity, 2, se); }
+        msg(targetEntity.invin ? "風魔法！しかし無敵で耐えられた！" : "風魔法！敵を後方2マスへ吹き飛ばした！"); used = true;
+    } else if (actionMode === 'ice_magic') {
+        se.abilities['ice_magic']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; }
+        msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(1)を与え行動力を奪った！"); used = true;
+    } else if (actionMode === 'sword' || actionMode === 'punch') {
+        se.abilities[actionMode]--; 
+        let dmg = (se.type === 'golem' || se.type === 'big') ? 2 : 1;
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg; knockback(targetEntity, 1, se); }
+        let atkName = actionMode === 'punch' ? 'ぶん殴り' : '剣撃';
+        msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
+    } else if (actionMode === 'dagger') {
+        se.abilities['dagger']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; }
+        msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : "短剣刺し！近接ダメージ(1)を与え行動力減少！"); used = true;
+    } else if (actionMode === 'poison_dagger') {
+        se.abilities['poison_dagger']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2; targetEntity.poisonTimer = 3; }
+        msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : "毒剣刺し！近接ダメージ(2)と毒(3T)を与え行動力減少！"); used = true;
+    } else if (actionMode === 'smash_slash') {
+        se.abilities['smash_slash']--; 
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 3; }
+        msg(targetEntity.invin ? "粉砕斬り！しかし無敵で弾かれた！" : "粉砕斬り！強烈な一撃でダメージ(3)を与え行動力を奪った！"); used = true;
+    } else if (actionMode === 'spin_slash') {
+        se.abilities['spin_slash']--; 
+        entities.forEach(e => {
+            if (e !== se && e.team !== se.team && e.hp > 0) {
+                if (Math.max(Math.abs(se.r - e.r), Math.abs(se.c - e.c)) <= 1) {
+                    if (!e.invin) { e.hp -= 2; e.ap--; knockback(e, 1, se); }
+                }
+            }
+        });
+        msg("回転斬り！周囲の敵を攻撃！"); used = true;
+    } else if (actionMode === 'teleport') {
+        se.abilities['teleport']--; se.r = r; se.c = c; used = true;
+        let eventMsg = checkTileEffects(se);
+        if (board[r] && board[r][c] === 'forest') eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠した！";
+        msg("テレポート完了！" + (eventMsg ? eventMsg : ""));
+        checkEnemyTerritory(se);
+    } else if (actionMode === 'cannon') {
+        if (!targetEntity.invin) { targetEntity.hp -= 1; knockback(targetEntity, 1, se); }
+        used = true;
+        msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : "大砲発射！敵に1ダメージと吹き飛ばし！(休2T)");
+        board[se.r][se.c] = 'cannon_cd_2';
+    } else if (actionMode === 'spear') {
+        if (se.abilities['spear'] !== 999) se.abilities['spear']--;
+        if (!targetEntity.invin) { targetEntity.hp -= 2; }
+        msg(targetEntity.invin ? "槍攻撃！しかし無敵で防がれた！" : "槍攻撃命中！ダメージ(2)！"); used = true;
+    } else if (actionMode === 'summon_archer') {
+        se.abilities['summon_archer']--;
+        let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+        let placed = false;
+        for (let d of dirs) { if (isWalkable(r, c)) { placed = true; break; } }
+        if (placed) {
+            entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+            msg("弓兵を召喚！(HP3/AP2/直線弓∞)"); used = true;
+        }
+    } else if (actionMode === 'summon_lancer') {
+        se.abilities['summon_lancer']--;
+        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        msg("槍兵を召喚！(HP5/AP2/直線槍∞)"); used = true;
+    } else if (actionMode === 'skill') {
+        if (executeSkill(se)) { used = true; se.skillUsed = true; }
+    } else if (actionMode === 'roll_rock') {
+        // Roll rock from (r, c) straight downward
+        board[r][c] = 'plains';
+        let rr = r + 1;
+        let stopped = false;
+        while (rr < SIZE && !stopped) {
+            let hit = entities.find(e => e.hp > 0 && e.r === rr && e.c === c);
+            if (hit) {
+                if (!hit.invin) { hit.hp -= 1; hit.ap = Math.max(0, hit.ap - 1); knockback(hit, 1, {r: rr-1, c: c}); }
+                msg(`⛰️ 岩転がし！${hit.name}に1ダメージ、AP-1、吹き飛ばし！`);
+                board[rr][c] = 'rock';
+                stopped = true;
+            } else if (!isWalkable(rr, c, true, true)) {
+                board[rr][c] = 'rock';
+                stopped = true;
+            }
+            rr++;
+        }
+        if (!stopped) msg("⛰️ 岩が山を転がり落ちた！（命中なし）");
+        used = true;
+    } else if (actionMode.startsWith('skill_')) {
+        executeRushSkill(se, r, c, actionMode);
+        used = true;
+    }
+
+    if (used) {
+        if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
+            if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
+            usedAbilities[se.id].add(actionMode);
+        }
+        actionMode = 'move';
+        checkWin();
+        render();
+        if (isOnlineMode) syncState();
+    }
+}
+
+function breakVolcano() {
+    msg("火山破壊！敵の周囲に岩が降り注ぐ！");
+    let enemy = entities.find(e => e.team === enemyTeam() && e.id === (myPlayerIndex === 0 ? 'c1' : 'p1'));
+    if (!enemy) enemy = entities.find(e => e.team === 'cpu');
+    if (!enemy) return;
+    if (!enemy.invin) enemy.hp -= 4;
+    let count = 0;
+    for (let i=0; i<50 && count<5; i++) {
+        let rr = enemy.r + Math.floor(Math.random()*7) - 3;
+        let cc = enemy.c + Math.floor(Math.random()*7) - 3;
+        if (rr>=0 && rr<SIZE && cc>=0 && cc<SIZE && board[rr] && board[rr][cc]==='plains' && !isNoRockZone(rr,cc)) {
+            if (!entities.some(e => e.r === rr && e.c === cc)) {
+                board[rr][cc] = 'rock'; count++;
+            }
+        }
+    }
+}
+
+function doSummon(se, r, c) {
+    se.abilities['summon_magic']--;
+    let rand = Math.random() * 20;
+    let bType = (rand > se.r) ? {t:'golem', n:'ゴーレム', ap:2, hp:3} : (rand > se.r/2) ? {t:'wolf', n:'オオカミ', ap:3, hp:2} : {t:'slime', n:'スライム', ap:2, hp:1};
+    let mAbilities = {};
+    if (bType.t === 'golem') {
+        mAbilities = { punch: 999, rock_throw: 999, shatter: 7 };
+    } else {
+        mAbilities = { sword: 999, shatter: 0 };
+    }
+    entities.push({ id: 'sum'+Date.now(), type: bType.t, name: bType.n, team: se.team, r: r, c: c, hp: bType.hp, maxHp: bType.hp, ap: bType.ap, maxAp: bType.ap, abilities: mAbilities, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0 });
+    msg(`${bType.n} (体力${bType.hp}) を召喚した！(すぐに行動可能)`);
+}
+
+function executeSkill(se) {
+    if (se.type === 'infantry') {
+        let isSquad = se.name === '分隊';
+        if (isSquad && turn - (se.turnBorn || 0) < 5) { msg("分隊は5ターン生存後に固有スキルが発動可能！"); return false; }
+        if (!isSquad && turn < 5) { msg("この固有スキルは5ターン目から使用可能です！"); return false; }
+    }
+
+    if (se.type === 'king') { 
+        se.invinTimer = 3; se.invin = true;
+        msg("王のスキル！3ターン無敵状態になった！");
+        return true; 
+    }
+    if (se.type === 'knight') { msg("騎士の突進のターゲット方向(直線5マス以内)を選んでください"); actionMode = 'skill_knight'; render(); return false; }
+    if (se.type === 'mage') { msg("大火球魔法！ターゲット(半径5マス以内の敵)を選んでください"); actionMode = 'skill_mage'; render(); return false; }
+    
+    if (se.type === 'assassin') { 
+        se.stealth = true; se.stealthTimer = 3; 
+        se.maxAp = 3; se.ap = 3;
+        if (se.abilities.bow !== undefined) { se.abilities.poison_bow = se.abilities.bow; delete se.abilities.bow; }
+        if (se.abilities.dagger !== undefined) { se.abilities.poison_dagger = se.abilities.dagger; delete se.abilities.dagger; }
+        msg("暗殺者の隠匿！3ターン隠密化し、行動力が増加(AP3)！武器に毒を塗った！"); 
+        return true; 
+    }
+    
+    if (se.type === 'infantry') {
+        let cl = {...se, id: 'cl'+Date.now(), name: '分隊', hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: {...se.abilities}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
+        cl.c += 1;
+        if (!isWalkable(cl.r, cl.c)) cl.c -= 2;
+        if (!isWalkable(cl.r, cl.c)) { cl.c += 1; cl.r += 1; }
+        entities.push(cl);
+        msg("歩兵の分隊！別動隊が出現！(HP5/AP2・5ターン生存でスキル解放)");
+        return true;
+    }
+    return false;
+}
+
+function executeRushSkill(se, targetR, targetC, mode) {
+    if (mode === 'skill_mage') {
+        let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team);
+        if (target) {
+            if (!target.invin) { target.hp -= 5; target.ap--; knockback(target, 1, se); }
+            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え、吹き飛ばし行動力を奪った！");
+        }
+        se.skillUsed = true;
+        return;
+    }
+    let stepR = Math.sign(targetR - se.r);
+    let stepC = Math.sign(targetC - se.c);
+    let dist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
+    
+    let hitTargets = new Set();
+    for (let i=1; i<=dist; i++) {
+        let currR = se.r + stepR * i;
+        let currC = se.c + stepC * i;
+
+        entities.forEach(e => {
+            if (e !== se && e.team !== se.team && e.hp > 0) {
+                if (Math.max(Math.abs(currR - e.r), Math.abs(currC - e.c)) <= 1) hitTargets.add(e);
+            }
+        });
+    }
+
+    se.r = targetR; se.c = targetC;
+    se.skillUsed = true;
+    checkEnemyTerritory(se);
+    let eventMsg = checkTileEffects(se);
+    if (board[se.r] && board[se.r][se.c] === 'forest') eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠した！";
+
+    msg("騎士の突進！軌道上の敵に1ダメージを与え吹き飛ばした！" + (eventMsg ? " " + eventMsg : ""));
+
+    hitTargets.forEach(e => {
+        if (!e.invin) { e.hp -= 1; knockback(e, 1, se); }
+    });
+}
+
+function breakMine() {
+    if (treasures.length === 0) { msg("鉱山破壊！しかし何も見つからなかった…"); return; }
+    let t = treasures.splice(Math.floor(Math.random()*treasures.length), 1)[0];
+    
+    let msgText = "鉱山破壊！";
+    if (t === 'platinum') msgText += "プラチナ獲得！(全アビリティ回復、このターンAP+1、HP回復)";
+    if (t === 'gold') msgText += "金獲得！(全アビリティ回復、HP微回復)";
+    if (t === 'silver') msgText += "銀獲得！(ランダムなアビリティ3種類回復)";
+    if (t === 'copper') msgText += "銅獲得！(岩砕きアビリティ1回復)";
+    msg(msgText);
+
+    entities.filter(e => e.team === myTeam()).forEach(e => {
+        if (t === 'platinum') { for (let k in e.abilities) if (e.abilities[k]!==999) e.abilities[k]++; e.ap++; e.hp = Math.min(e.maxHp, e.hp+10); }
+        if (t === 'gold') { for (let k in e.abilities) if (e.abilities[k]!==999) e.abilities[k]++; e.hp = Math.min(e.maxHp, e.hp+5); }
+        if (t === 'silver') { 
+            let ks = Object.keys(e.abilities).filter(k=>e.abilities[k]!==999); 
+            for (let i=0; i<3 && ks.length>0; i++) {
+                let rk = ks[Math.floor(Math.random()*ks.length)];
+                e.abilities[rk]++;
+            }
+        }
+        if (t === 'copper') { if (e.abilities.shatter !== undefined && e.abilities.shatter !== 999) e.abilities.shatter++; }
+    });
+}
+
+function knockback(target, dist, source) {
+    if (target.invin) return;
+    let dr = Math.sign(target.r - source.r);
+    let dc = Math.sign(target.c - source.c);
+    if (dr === 0 && dc === 0) dr = (target.team === 'player') ? 1 : -1;
+    
+    for (let i=0; i<dist; i++) {
+        let nr = target.r + dr;
+        let nc = target.c + dc;
+        if (isWalkable(nr, nc)) {
+            target.r = nr; target.c = nc;
+        } else break;
+    }
+}
+
+function spawnMonster(r, c) {
+    let rand = Math.random();
+    let m = { team: 'npc', r: r, c: c, ap: 2, maxAp: 2, abilities: { sword: 999 }, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0 };
+    if (rand < 0.1) { m.type = 'big'; m.name = '大鬼'; m.hp = 3; m.maxHp = 3; m.abilities.fireball = 99; m.abilities.drop_rock = 99; }
+    else if (rand < 0.35) { m.type = 'red'; m.name = '赤鬼'; m.hp = 2; m.maxHp = 2; m.abilities.fireball = 99; }
+    else if (rand < 0.6) { m.type = 'blue'; m.name = '青鬼'; m.hp = 2; m.maxHp = 2; m.ap=3; m.maxAp=3; m.abilities.throwing_knife = 99; }
+    else { m.type = 'small'; m.name = '小鬼'; m.hp = 1; m.maxHp = 1; m.abilities.throwing_knife = 99; m.stealth = true; m.stealthTimer = 4; }
+    entities.push({...m, id: 'npc'+Date.now()});
+    return m.type;
+}
+
+function endTurn() {
+    if (!canIAct()) return;
+    selectedEntity = null;
+    render();
+    
+    if (isOnlineMode) {
+        if (myPlayerIndex === 0) {
+            // P1 ends player turn → start cpu turn (which syncs to P2)
+            startTurn('cpu');
+        } else {
+            // P2 ends cpu turn → send to P1 to handle NPC + start player turn
+            wsSend({ type: 'turnEnd', state: getGameState() });
+            msg("相手のターン中...");
+            document.getElementById('turn-indicator').textContent = "相手のターン中...";
+        }
+        return;
+    }
+    
+    // Offline: start CPU AI turn
+    startTurn('cpu');
+}
+
+function findPath(sr, sc, tr, tc) {
+    let q = [{r: sr, c: sc, path: []}];
+    let visited = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+    visited[sr][sc] = true;
+    let dirs = [[0,1],[1,0],[0,-1],[-1,0]];
+    
+    while (q.length > 0) {
+        let curr = q.shift();
+        if (curr.r === tr && curr.c === tc) return curr.path;
+        
+        for (let d of dirs) {
+            let nr = curr.r + d[0], nc = curr.c + d[1];
+            let isTarget = (nr === tr && nc === tc);
+            if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && !visited[nr][nc]) {
+                if (isTarget || isWalkable(nr, nc)) {
+                    visited[nr][nc] = true;
+                    q.push({r: nr, c: nc, path: [...curr.path, {r: nr, c: nc}]});
+                }
+            }
+        }
+    }
+    return null; 
+}
+
+function cpuLogic() {
+    let cpuEntities = entities.filter(e => e.team === 'cpu' && e.hp > 0 && e.ap > 0);
+    let targets = entities.filter(e => e.team !== 'cpu' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
+    
+    if (cpuEntities.length > 0) {
+        let cpu = cpuEntities[0];
+
+        if (targets.length > 0) {
+            targets.sort((a,b) => {
+                let d1 = Math.max(Math.abs(cpu.r - a.r), Math.abs(cpu.c - a.c)) - (a.team === 'player' ? 2 : 0);
+                let d2 = Math.max(Math.abs(cpu.r - b.r), Math.abs(cpu.c - b.c)) - (b.team === 'player' ? 2 : 0);
+                return d1 - d2;
+            });
+            
+            let p = targets[0];
+            let dist = Math.max(Math.abs(cpu.r - p.r), Math.abs(cpu.c - p.c));
+            let attacked = false;
+
+            if (!cpu.skillUsed && !['slime','golem','wolf'].includes(cpu.type)) {
+                if (cpu.type === 'knight') {
+                    let rDiff = p.r - cpu.r, cDiff = p.c - cpu.c;
+                    if ((rDiff === 0 || cDiff === 0) && dist <= 5 && dist > 1) {
+                        let stepR = Math.sign(rDiff), stepC = Math.sign(cDiff);
+                        let targetR = p.r - stepR, targetC = p.c - stepC;
+                        if (targetR !== cpu.r || targetC !== cpu.c) {
+                            executeRushSkill(cpu, targetR, targetC, `skill_${cpu.type}`);
+                            cpu.ap--;
+                            attacked = true; 
+                        }
+                    }
+                } else if (cpu.type === 'king') {
+                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
+                } else if (cpu.type === 'assassin') {
+                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
+                } else if (cpu.type === 'infantry' && turn >= 5) {
+                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
+                } else if (cpu.type === 'mage' && dist <= 5) {
+                    executeRushSkill(cpu, p.r, p.c, 'skill_mage');
+                    cpu.ap--;
+                    attacked = true;
+                }
+            }
+
+            if (!attacked && cpu.abilities.summon_magic > 0 && turn >= 5) {
+                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                for(let d of dirs) {
+                    if(isWalkable(cpu.r+d[0], cpu.c+d[1])) {
+                        doSummon(cpu, cpu.r+d[0], cpu.c+d[1]);
+                        attacked = true; cpu.ap--; break;
+                    }
+                }
+            }
+
+            if (!attacked && cpu.abilities.summon_archer > 0 && turn >= 5) {
+                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                for(let d of dirs) {
+                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
+                    if(isWalkable(nr, nc)) {
+                        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: cpu.team, r: nr, c: nc, hp: 3, maxHp: 3, ap: 0, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+                        cpu.abilities.summon_archer--;
+                        msg("敵が弓兵を召喚した！");
+                        attacked = true; cpu.ap--; break;
+                    }
+                }
+            }
+
+            if (!attacked && cpu.abilities.summon_lancer > 0 && turn >= 5) {
+                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                for(let d of dirs) {
+                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
+                    if(isWalkable(nr, nc)) {
+                        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: cpu.team, r: nr, c: nc, hp: 5, maxHp: 5, ap: 0, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+                        cpu.abilities.summon_lancer--;
+                        msg("敵が槍兵を召喚した！");
+                        attacked = true; cpu.ap--; break;
+                    }
+                }
+            }
+
+
+            if (!attacked && dist <= 1) {
+                if (cpu.abilities.smash_slash > 0) {
+                    cpu.abilities.smash_slash--; 
+                    if (!p.invin) { p.ap--; p.hp -= 3; msg(`敵の粉砕斬り！${p.name}が3ダメージを受けた！`); }
+                    else { msg(`敵の粉砕斬り！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                } else if (cpu.abilities.spin_slash > 0) {
+                    cpu.abilities.spin_slash--; 
+                    if (!p.invin) { p.ap--; p.hp -= 2; knockback(p, 1, cpu); msg(`敵の回転斬り！${p.name}が2ダメージと吹き飛ばし！`); }
+                    else { msg(`敵の回転斬り！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                }
+            }
+
+            if (!attacked && p.team === 'player' && p.r <= 10 && cpu.ap >= 1 && cpu.abilities.drop_rock > 0) {
+                let rockCandidates = [
+                    {r: p.r-1, c: p.c}, {r: p.r-1, c: p.c-1}, {r: p.r-1, c: p.c+1},
+                    {r: p.r, c: p.c-1}, {r: p.r, c: p.c+1}
+                ];
+                for (let loc of rockCandidates) {
+                    if (loc.r>=0 && loc.r<SIZE && loc.c>=0 && loc.c<SIZE) {
+                        if (board[loc.r] && (board[loc.r][loc.c] === 'plains' || board[loc.r][loc.c] === 'desert') && !isNoRockZone(loc.r, loc.c) && !entities.some(e=>e.r===loc.r && e.c===loc.c)) {
+                            board[loc.r][loc.c] = 'rock';
+                            cpu.ap--;
+                            msg("敵が岩落としで進路を妨害してきた！");
+                            attacked = true; break;
+                        }
+                    }
+                }
+            }
+
+            if (!attacked) {
+                if (board[cpu.r][cpu.c] === 'cannon' && dist <= 8) { 
+                    if (!p.invin) { p.hp -= 1; knockback(p, 1, cpu); msg(`敵が大砲を使用！${p.name}に1ダメージ！`); }
+                    else { msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`); }
+                    board[cpu.r][cpu.c] = 'cannon_cd_2';
+                    attacked = true; cpu.ap--;
+                } else if (cpu.abilities.poison_bow > 0 && dist <= 5 && getLoS(cpu, p) < 99) {
+                    cpu.abilities.poison_bow--; 
+                    if (!p.invin) { p.ap--; p.hp -= 2; knockback(p, 1, cpu); p.poisonTimer = 3; msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`); }
+                    else { msg(`敵の毒弓矢！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                } else if (cpu.abilities.spear > 0 && dist <= 2 && (cpu.r === p.r || cpu.c === p.c)) {
+                    if (cpu.abilities.spear !== 999) cpu.abilities.spear--;
+                    if (!p.invin) { p.hp -= 2; msg(`敵の槍攻撃！${p.name}に2ダメージ！`); }
+                    else { msg(`敵の槍攻撃！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                } else if (cpu.abilities.bow > 0 && dist <= 5 && (cpu.r === p.r || cpu.c === p.c)) {
+                    if (cpu.abilities.bow !== 999) cpu.abilities.bow--;
+                    if (!p.invin) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の弓撃！${p.name}に1ダメージ！`); }
+                    else { msg(`敵の弓撃！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                } else if (cpu.abilities.rock_throw > 0 && dist <= 2) {
+                    cpu.abilities.rock_throw--; 
+                    if (!p.invin) { p.hp -= 2; msg(`敵の岩投げ！${p.name}に2ダメージ！`); }
+                    else { msg(`敵の岩投げ！しかし${p.name}は無敵で防いだ！`); }
+                    attacked = true; cpu.ap--;
+                } else if (dist <= 1) {
+                    if (cpu.abilities.poison_dagger > 0) {
+                        cpu.abilities.poison_dagger--; 
+                        if (!p.invin) { p.ap--; p.hp -= 2; p.poisonTimer = 3; msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`); }
+                        else { msg(`敵の毒剣刺し！しかし${p.name}は無敵で防いだ！`); }
+                        attacked = true; cpu.ap--;
+                    } else if (cpu.abilities.sword > 0 || cpu.abilities.punch > 0) {
+                        let usesPunch = cpu.abilities.punch > 0;
+                        if (usesPunch) cpu.abilities.punch--; else cpu.abilities.sword--;
+                        let atkName = usesPunch ? 'ぶん殴り' : '剣撃';
+                        if (!p.invin) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の${atkName}！${p.name}に1ダメージ！`); }
+                        else { msg(`敵の${atkName}！しかし${p.name}は無敵で防いだ！`); }
+                        attacked = true; cpu.ap--;
+                    } else {
+                        if (!p.invin) { p.hp -= 1; msg(`敵の近接攻撃！${p.name}に1ダメージ！`); }
+                        else { msg(`敵の近接攻撃！しかし${p.name}は無敵で防いだ！`); }
+                        attacked = true; cpu.ap--;
+                    }
+                }
+            }
+
+            if (!attacked) {
+                let path = findPath(cpu.r, cpu.c, p.r, p.c);
+                if (path && path.length > 0) {
+                    let next = path[0];
+                    if (isWalkable(next.r, next.c)) { cpu.r = next.r; cpu.c = next.c; }
+                } else {
+                    if (isWalkable(cpu.r+1, cpu.c)) cpu.r++;
+                }
+                cpu.ap--;
+                if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
+                    board[cpu.r][cpu.c] = 'plains'; 
+                    if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); msg("敵が罠を踏んだ！"); }
+                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
+                    msg("敵が森の中に潜伏し、姿を消した…！");
+                }
+            }
+        } else {
+            if (isWalkable(cpu.r+1, cpu.c)) cpu.r++;
+            cpu.ap--;
+            if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
+                board[cpu.r][cpu.c] = 'plains'; 
+                if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); }
+            } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
+                msg("敵が森の中に潜伏し、姿を消した…！");
+            }
+        }
+        
+        checkWin();
+        setTimeout(cpuLogic, 300);
+    } else {
+        startTurn('npc');
+    }
+    render();
+}
+
+function npcLogic() {
+    let npcs = entities.filter(e => e.team === 'npc' && e.hp > 0 && e.ap > 0);
+    if (npcs.length > 0) {
+        let n = npcs[0];
+
+        // === KRAKEN: attacks all non-npc entities within radius 2 in river ===
+        if (n.type === 'kraken') {
+            let krakenTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && Math.max(Math.abs(n.r-e.r), Math.abs(n.c-e.c)) <= 2);
+            if (krakenTargets.length > 0) {
+                krakenTargets.forEach(t => {
+                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap - 1); }
+                    msg(`🐙 クラーケンの触手！${t.name}に2ダメージ、AP-1！`, true);
+                });
+                n.ap--;
+            } else {
+                // Move within river toward nearest non-npc
+                let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0);
+                if (allTargets.length > 0) {
+                    allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
+                    let t = allTargets[0];
+                    let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                    dirs.sort((a,b) => {
+                        let da = Math.abs(n.r+a[0]-t.r)+Math.abs(n.c+a[1]-t.c);
+                        let db = Math.abs(n.r+b[0]-t.r)+Math.abs(n.c+b[1]-t.c);
+                        return da - db;
+                    });
+                    for (let d of dirs) {
+                        let nr = n.r+d[0], nc = n.c+d[1];
+                        if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && (board[nr]?.[nc]==='river'||board[nr]?.[nc]==='bridge'||board[nr]?.[nc]==='whirlpool') && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==n)) {
+                            n.r=nr; n.c=nc; break;
+                        }
+                    }
+                    n.ap--;
+                } else { n.ap = 0; }
+            }
+            checkWin(); render(); setTimeout(npcLogic, 100);
+            return;
+        }
+
+        // === YETI: frozen until turn 6, then standard melee + ice throw ===
+        if (n.type === 'yeti') {
+            if (n.invin) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
+            let allTargets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || board[e.r]?.[e.c]==='forest'));
+            if (allTargets.length > 0) {
+                allTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
+                let t = allTargets[0];
+                let d = Math.max(Math.abs(n.r-t.r), Math.abs(n.c-t.c));
+                if (n.abilities.ice_throw && d <= 3) {
+                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap-1); knockback(t, 1, n); }
+                    msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ、AP-1！`, true);
+                    n.ap--;
+                } else if (d <= 1) {
+                    if (!t.invin) { t.hp -= 2; knockback(t, 1, n); }
+                    msg(`❄️ イエティの体当たり！${t.name}に2ダメージ！`, true);
+                    n.ap--;
+                } else {
+                    let path = findPath(n.r, n.c, t.r, t.c);
+                    if (path && path.length > 0 && isWalkable(path[0].r, path[0].c)) { n.r=path[0].r; n.c=path[0].c; }
+                    n.ap--;
+                }
+            } else { n.ap = 0; }
+            checkWin(); render(); setTimeout(npcLogic, 100);
+            return;
+        }
+
+        let targets = entities.filter(e => e.team !== 'npc' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
+        
+        if (targets.length > 0) {
+            targets.sort((a,b) => (Math.abs(n.r-a.r)+Math.abs(n.c-a.c)) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
+            let p = targets[0];
+            let dist = Math.max(Math.abs(n.r - p.r), Math.abs(n.c - p.c));
+            let attacked = false;
+
+            if (n.type === 'big' && n.abilities.drop_rock > 0 && n.ap >= 1 && dist <= 3) {
+                let emptyCells = [];
+                for (let dr=-2; dr<=2; dr++){
+                    for (let dc=-2; dc<=2; dc++){
+                        let rr = n.r + dr; let cc = n.c + dc;
+                        if (Math.max(Math.abs(dr), Math.abs(dc)) <= 2 && rr>=0 && rr<SIZE && cc>=0 && cc<SIZE) {
+                            if (board[rr] && (board[rr][cc] === 'plains' || board[rr][cc] === 'desert') && !isNoRockZone(rr,cc) && !entities.some(e=>e.r===rr && e.c===cc && e.hp>0)) {
+                                emptyCells.push({r: rr, c: cc});
+                            }
+                        }
+                    }
+                }
+                if (emptyCells.length > 0) {
+                    emptyCells.sort((a,b) => Math.abs(a.r - p.r) - Math.abs(b.r - p.r)); 
+                    let t = emptyCells[0];
+                    board[t.r][t.c] = 'rock';
+                    msg(`大鬼が岩落とし！進路を阻んだ！`);
+                    attacked = true; n.ap--;
+                }
+            }
+
+            if (!attacked) {
+                if (board[n.r][n.c] === 'cannon' && dist <= 8) { 
+                    if (!p.invin) { p.hp -= 1; knockback(p, 1, n); msg(`${n.name}が大砲を発射！1ダメージ！`); }
+                    else { msg(`${n.name}が大砲を発射！しかし無敵で無効化！`); }
+                    board[n.r][n.c] = 'cannon_cd_2';
+                    attacked = true; n.ap--;
+                } else if (n.abilities.throwing_knife && dist <= 2) {
+                    if (!p.invin) { p.hp -= 1; msg(`${n.name}の投げナイフ！1ダメージ！`); }
+                    else { msg(`${n.name}の投げナイフ！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
+                } else if (n.abilities.fireball && dist <= 3) {
+                    let fDmg = n.type === 'red' ? 2 : 1; 
+                    if (!p.invin) { p.hp -= fDmg; msg(`${n.name}の火炎弾！${fDmg}ダメージ！`); }
+                    else { msg(`${n.name}の火炎弾！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
+                } else if (n.abilities.rock_throw > 0 && dist <= 2) {
+                    if (!p.invin) { p.hp -= 2; msg(`${n.name}の岩投げ！2ダメージ！`); }
+                    else { msg(`${n.name}の岩投げ！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
+                } else if (dist <= 1) {
+                    let dmg = (n.type === 'golem' || n.type === 'big') ? 2 : 1;
+                    let atkName = n.type === 'golem' ? 'ぶん殴り' : '近接攻撃';
+                    if (!p.invin) { p.hp -= dmg; msg(`${n.name}の${atkName}！${dmg}ダメージ！`); }
+                    else { msg(`${n.name}の${atkName}！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
+                }
+            }
+            
+            if (!attacked) {
+                let path = findPath(n.r, n.c, p.r, p.c);
+                if (path && path.length > 0) {
+                    let next = path[0];
+                    if (isWalkable(next.r, next.c)) { n.r = next.r; n.c = next.c; }
+                }
+                n.ap--;
+                if (board[n.r] && board[n.r][n.c] === 'trap') {
+                    board[n.r][n.c] = 'plains'; n.hp -= 1; n.ap = Math.max(0, n.ap - 2);
+                }
+            }
+        } else {
+            n.ap = 0; 
+        }
+        
+        checkWin();
+        render();
+        setTimeout(npcLogic, isOnlineMode ? 100 : 100);
+    } else {
+        turn++;
+        if (isOnlineMode && myPlayerIndex === 0) {
+            // P1 increments turn and syncs to P2 with new player turn
+            startTurn('player');
+        } else if (!isOnlineMode) {
+            startTurn('player');
+        }
+    }
+}
+
+function isTrapped(entity) {
+    if (!entity || entity.hp <= 0) return false;
+    if (entity.abilities.shatter !== undefined && entity.abilities.shatter > 0) return false;
+    
+    let dirs = [[-1,0], [1,0], [0,-1], [0,1]];
+    for (let d of dirs) {
+        let nr = entity.r + d[0];
+        let nc = entity.c + d[1];
+        if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE) {
+            if (board[nr][nc] !== 'rock') return false; 
+        }
+    }
+    return true;
+}
+
+function checkWin() {
+    let player = entities.find(e => e.id === 'p1');
+    let cpu = entities.find(e => e.id === 'c1');
+
+    let pTrapped = isTrapped(player);
+    let cTrapped = isTrapped(cpu);
+
+    let pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
+    let cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
+
+    let isEnd = false;
+    let title = "";
+
+    if (isOnlineMode) {
+        // Online: frame from myPlayerIndex's perspective
+        if (player && player.hp <= 0) {
+            title = myPlayerIndex === 0 ? "💀 Defeat... あなたの体力が尽きました。" : "🎉 Victory! 相手の体力を削りきりました！";
+            isEnd = true;
+        } else if (cpu && cpu.hp <= 0) {
+            title = myPlayerIndex === 0 ? "🎉 Victory! 相手の体力を削りきりました！" : "💀 Defeat... あなたの体力が尽きました。";
+            isEnd = true;
+        } else if (pWin) {
+            title = myPlayerIndex === 0 ? (cTrapped ? "🎉 Victory! 敵を岩で包囲しました！" : "🎉 Victory! 敵陣突破！") : "💀 Defeat... 突破(または包囲)されました。";
+            isEnd = true;
+        } else if (cWin) {
+            title = myPlayerIndex === 0 ? "💀 Defeat... 敵に突破(または包囲)されました。" : (pTrapped ? "🎉 Victory! 敵を岩で包囲しました！" : "🎉 Victory! 敵陣突破！");
+            isEnd = true;
+        }
+    } else {
+        if (player && player.hp <= 0) { title = "💀 Defeat... あなたの体力が尽きました。"; isEnd = true; }
+        else if (cpu && cpu.hp <= 0) { title = "🎉 Victory! 敵の体力を削りきりました！"; isEnd = true; }
+        else if (pWin) { title = cTrapped ? "🎉 Victory! 敵を岩で包囲しました！" : "🎉 Victory! 敵陣突破！"; isEnd = true; }
+        else if (cWin) { title = pTrapped ? "💀 Defeat... 岩に包囲されてしまった。" : "💀 Defeat... 敵に突破されました。"; isEnd = true; }
+    }
+
+    if (isEnd) {
+        document.getElementById('result-title').innerText = title;
+        document.getElementById('result-screen').style.display = 'flex';
+    }
+}
+
+function updateUI() {
+    const list = document.getElementById('ability-list');
+    list.innerHTML = '';
+    let btnM = document.getElementById('btn-move');
+    let btnE = document.getElementById('btn-end-turn');
+
+    // Disable end-turn button if not my turn
+    btnE.disabled = !canIAct();
+
+    if (!selectedEntity) {
+        document.getElementById('ui-name').innerText = "未選択";
+        document.getElementById('ui-ap').innerText = "-";
+        document.getElementById('ui-hp').innerText = "-";
+        btnM.disabled = true;
+        return;
+    }
+
+    document.getElementById('ui-name').innerText = selectedEntity.name;
+    document.getElementById('ui-ap').innerText = selectedEntity.ap;
+    document.getElementById('ui-hp').innerText = selectedEntity.hp;
+    
+    if (selectedEntity.team !== myTeam()) {
+        btnM.disabled = true;
+        list.innerHTML = '<div style="color:#aaa; text-align:center; padding:10px;">敵またはNPCのコマです<br>（行動不可）</div>';
+        return;
+    }
+
+    btnM.disabled = selectedEntity.ap <= 0;
+    if (actionMode === 'move') btnM.classList.add('active'); else btnM.classList.remove('active');
+
+    for (let key in selectedEntity.abilities) {
+        let btn = document.createElement('button');
+        btn.className = 'ability-btn';
+        if (actionMode === key) btn.classList.add('active');
+        
+        let count = selectedEntity.abilities[key];
+        let dispName = ABILITY_NAMES[key] || key;
+        btn.innerText = count === 999 ? `${dispName} (残: ∞)` : `${dispName} (残: ${count})`;
+        
+        if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id]?.has(key)) btn.disabled = true;
+        btn.onclick = () => setMode(key);
+        list.appendChild(btn);
+    }
+
+    if (selectedEntity.r >= 0 && selectedEntity.r < SIZE && board[selectedEntity.r] && board[selectedEntity.r][selectedEntity.c] === 'cannon') {
+        let cb = document.createElement('button');
+        cb.className = 'ability-btn';
+        cb.innerText = '大砲発射 (半径8マス)'; 
+        if (actionMode === 'cannon') cb.classList.add('active');
+        cb.onclick = () => { setMode('cannon'); msg("大砲のターゲット(半径8マス以内の敵)を選択してください"); };
+        list.appendChild(cb);
+    }
+
+    if (!selectedEntity.skillUsed && !['slime','golem','wolf'].includes(selectedEntity.type)) {
+        let sb = document.createElement('button');
+        sb.className = 'ability-btn';
+        sb.style.background = '#d35400'; sb.style.color = '#fff';
+        sb.innerText = '固有スキル発動';
+        if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
+        sb.onclick = () => setMode('skill');
+        list.appendChild(sb);
+    }
+
+    // Mountain stage: Rock rolling ability (context-sensitive)
+    if (activeStage === 'mountain' && selectedEntity && canIAct()) {
+        let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+        let hasRock = dirs.some(d => {
+            let nr = selectedEntity.r+d[0], nc = selectedEntity.c+d[1];
+            return nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && board[nr]?.[nc]==='rock';
+        });
+        if (hasRock) {
+            let rb = document.createElement('button');
+            rb.className = 'ability-btn';
+            rb.style.background = '#5d4037'; rb.style.color = '#fff';
+            rb.innerText = '⛰️ 岩転がし (近接岩→直線ダメージ無限)';
+            if (actionMode === 'roll_rock') rb.classList.add('active');
+            rb.onclick = () => { actionMode = 'roll_rock'; updateUI(); render(); };
+            list.appendChild(rb);
+        }
+    }
+
+    // Big River: show onBoat status
+    if (activeStage === 'bigriver' && selectedEntity && selectedEntity.onBoat) {
+        let ib = document.createElement('div');
+        ib.style.cssText = 'background:#1a5276;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
+        ib.innerText = '🚤 乗船中 — 川を渡れる！岸に上陸で自動下船';
+        list.appendChild(ib);
+    }
+
+    // Mountain: cable car status
+    if (activeStage === 'mountain' && cableCarMovesLeft > 0 &&
+        (selectedEntity?.c === 0 || selectedEntity?.c === SIZE-1) &&
+        board[selectedEntity?.r]?.[selectedEntity?.c] === 'cable_tile') {
+        let cb2 = document.createElement('div');
+        cb2.style.cssText = 'background:#546e7a;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
+        cb2.innerText = `🚡 ケーブルカー乗車中 — 縦移動AP不要 (残${cableCarMovesLeft}回)`;
+        list.appendChild(cb2);
+    }
+}
+</script>
+</body>
+</html>
