@@ -123,6 +123,8 @@
         .camel_tile::after { content: "🐪"; font-size: calc(var(--tile-size) * 0.45); }
         .trap { background: #8d6e63; }
         .trap::after { content: "🕸️"; font-size: calc(var(--tile-size) * 0.45); }
+        .hole { background: #3e2723; }
+        .hole::after { content: "🕳️"; font-size: calc(var(--tile-size) * 0.45); }
         /* Castle stage */
         .castle_tile { background: #8d8d8d; }
         .bridge_ns { background: #8B6914; }
@@ -140,7 +142,25 @@
         .avalanche_tile::after { content: "❄"; font-size: calc(var(--tile-size)*0.4); color: #1565c0; }
         .summit { background: #90a4ae; }
         .cable_tile { background: #546e7a; }
-        .cable_tile::after { content: "🚡"; font-size: calc(var(--tile-size)*0.38); }
+        .cable_tile::after { content: "ケーブル"; font-size: calc(var(--tile-size)*0.22); color: #cfd8dc; font-weight: bold; }
+        .cable_board { background: #37474f; border: 1px solid #ffd54f !important; }
+        .cable_board::after { content: "🚡"; font-size: calc(var(--tile-size)*0.45); }
+        /* Graveyard / Night town */
+        .graveyard_ground { background: #4a4a52; }
+        .church { background: #f5f0e1; border: 1px solid #c9a227 !important; }
+        .church::after { content: "⛪"; font-size: calc(var(--tile-size)*0.45); }
+        .gravestone { background: #6d6d75; }
+        .gravestone::after { content: "🪦"; font-size: calc(var(--tile-size)*0.45); }
+        .nighttown_ground { background: #2c2c44; }
+        /* Sky fortress */
+        .fortress_floor { background: #b0bec5; }
+        .sky_void { background: #1a1a2e; }
+        .fallen_floor { background: #0d0d1a; }
+        .falling-warn { box-shadow: inset 0 0 0 3px #e74c3c; animation: pulse 0.6s infinite alternate; }
+        @keyframes pulse { from { background: #5a5a3a; } to { background: #8a6a2a; } }
+        /* Item tile (hidden) */
+        .item_tile { background: #16a085; }
+        .item_tile::after { content: "❓"; font-size: calc(var(--tile-size)*0.45); }
         /* Demon stage plains override */
         .demon-stage .plains { background: #ce93d8; }
         
@@ -247,6 +267,8 @@
             <option value="assassin">暗殺者 (隠密・毒武器化)</option>
             <option value="infantry">歩兵 (分隊召喚)</option>
             <option value="mage">魔法使い (召喚魔法・大火球)</option>
+                <option value="thief">泥棒 (逃走・強奪・コピー)</option>
+                <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
         </select>
     </div>
     <div class="select-group">
@@ -259,6 +281,11 @@
             <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
             <option value="bigriver">大河 (渡河と船上戦)</option>
             <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
+            <option value="graveyard">墓場 (ゾンビと悪霊・魂集め)</option>
+            <option value="nighttown">夜の街 (毎ターン襲い来る魔物)</option>
+            <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
+            <option value="chaos">混沌 (全ギミック入り乱れ)</option>
+            <option value="random">🎲 ランダム (ステージおまかせ)</option>
         </select>
     </div>
     <div class="select-group">
@@ -286,11 +313,35 @@
 <div id="online-lobby">
     <h2>🌐 オンライン対戦 <span class="online-badge">ONLINE</span></h2>
     <div class="lobby-tabs">
-        <button class="lobby-tab active" id="tab-create" onclick="switchLobbyTab('create')">ルームを作成</button>
+        <button class="lobby-tab active" id="tab-ranked" onclick="switchLobbyTab('ranked')">ランクマッチ</button>
+        <button class="lobby-tab" id="tab-create" onclick="switchLobbyTab('create')">ルームを作成</button>
         <button class="lobby-tab" id="tab-join" onclick="switchLobbyTab('join')">ルームに参加</button>
     </div>
 
-    <div id="create-panel">
+    <div id="ranked-panel">
+        <div id="rank-display" style="text-align:center; font-size:18px; font-weight:bold; color:var(--accent); margin:10px 0;"></div>
+        <div class="select-group">
+            <label>ジョブ選択:</label>
+            <select id="ranked-job-select">
+                <option value="king">王 (バランス・無敵化)</option>
+                <option value="knight">騎士 (突破力・直線突進)</option>
+                <option value="assassin">暗殺者 (隠密・毒武器化)</option>
+                <option value="infantry">歩兵 (分隊召喚)</option>
+                <option value="mage">魔法使い (召喚魔法・大火球)</option>
+                <option value="thief">泥棒 (逃走・強奪・コピー)</option>
+                <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
+            </select>
+        </div>
+        <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
+            近いランクの相手と自動マッチングします。勝敗でRPが変動し、100RPでランクアップします。<br>
+            ※ステージは草原・先攻は自動決定されます。
+        </p>
+        <div id="ranked-status" style="color:#f1c40f; margin:10px 0; min-height:20px; font-weight:bold;"></div>
+        <button class="btn" id="btn-find-ranked" style="background:#8e44ad; padding:15px; font-size:18px;" onclick="startRankedSearch()">対戦相手を探す</button>
+        <button class="btn" id="btn-cancel-ranked" style="background:#c0392b; padding:15px; font-size:18px; display:none;" onclick="cancelRankedSearch()">検索をキャンセル</button>
+    </div>
+
+    <div id="create-panel" style="display:none;">
         <div class="select-group">
             <label>ジョブ選択:</label>
             <select id="ol-job-select">
@@ -299,6 +350,8 @@
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
                 <option value="infantry">歩兵 (分隊召喚)</option>
                 <option value="mage">魔法使い (召喚魔法・大火球)</option>
+                <option value="thief">泥棒 (逃走・強奪・コピー)</option>
+                <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
             </select>
         </div>
         <div class="select-group">
@@ -311,6 +364,11 @@
                 <option value="castle">城跡 (跳ね橋と城壁の攻防)</option>
                 <option value="bigriver">大河 (渡河と船上戦)</option>
                 <option value="mountain">山岳 (雪山越えの過酷な旅)</option>
+                <option value="graveyard">墓場 (ゾンビと悪霊・魂集め)</option>
+                <option value="nighttown">夜の街 (毎ターン襲い来る魔物)</option>
+                <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
+                <option value="chaos">混沌 (全ギミック入り乱れ)</option>
+                <option value="random">🎲 ランダム (ステージおまかせ)</option>
             </select>
         </div>
         <div class="select-group">
@@ -337,6 +395,8 @@
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
                 <option value="infantry">歩兵 (分隊召喚)</option>
                 <option value="mage">魔法使い (召喚魔法・大火球)</option>
+                <option value="thief">泥棒 (逃走・強奪・コピー)</option>
+                <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -354,6 +414,7 @@
 <div id="game-screen">
     <div class="panel">
         <div id="turn-indicator">Player's Turn (Turn: 1)</div>
+        <div id="souls-indicator" style="color:#bb8fce; font-size:13px; display:none;"></div>
         <div id="status-message" style="color: #f1c40f;">準備完了</div>
     </div>
     <div id="online-game-info"></div>
@@ -405,14 +466,21 @@ let sandwormWarning = false;
 let sandwormActive = false;
 let magicCircleTimer = 5; 
 let usedAbilities = {};
+// Phase B: souls / items / falling floors
+let souls = { player: 0, cpu: 0 };
+let digHoles = [];          // [{r,c,team}] dug holes from miner
+let currentActingTeam = 'player';
+let itemTileMap = {};      // "r,c" -> 'star'|'shoes'|'sword'
+let fallingWarn = [];      // [{r,c}] tiles warned to fall next turn
+let resolvedStage = '';    // actual stage after resolving 'random'
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
 let bridgeSwitchMap = {};
 const BRIDGE_TILE_MAP = {
-    north: [{r:6,c:9},{r:6,c:10}],
-    south: [{r:14,c:9},{r:14,c:10}],
-    west:  [{r:9,c:5},{r:10,c:5}],
-    east:  [{r:9,c:15},{r:10,c:15}]
+    north: [{r:5,c:10}],
+    south: [{r:15,c:10}],
+    west:  [{r:10,c:5}],
+    east:  [{r:10,c:15}]
 };
 // Big River stage
 let stageKrakenSpawned = false;
@@ -428,6 +496,45 @@ let myPlayerIndex = -1;   // 0 = P1 (player team, starts row 20), 1 = P2 (cpu te
 let wsConn = null;
 let onlineRoomCode = '';
 let onlineWaiting = false;
+// Phase D: ranked / session / timer / reconnect state
+let onlineSessionId = '';
+let isRankedMatch = false;
+let opponentRank = 1;
+let rankResultApplied = false;
+let turnTimerId = null;
+let turnTimeLeft = 60;
+let reconnectAttempts = 0;
+let reconnecting = false;
+let intentionalClose = false;
+
+// Anonymous identity + rank persistence (localStorage; Firebase unavailable on free tier)
+function getUserId() {
+    let id = localStorage.getItem('ek_userId');
+    if (!id) { id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('ek_userId', id); }
+    return id;
+}
+function isRankedUnlocked() { return localStorage.getItem('ek_lvl8') === '1'; }
+function getRank() { return parseInt(localStorage.getItem('ek_rank') || '1', 10); }
+function getRP() { return parseInt(localStorage.getItem('ek_rp') || '0', 10); }
+function setRank(r) { localStorage.setItem('ek_rank', String(Math.max(1, r))); }
+function setRP(p) { localStorage.setItem('ek_rp', String(p)); }
+function unlockRanked() {
+    if (!isRankedUnlocked()) {
+        localStorage.setItem('ek_lvl8', '1');
+        setRank(1); setRP(0);
+    }
+}
+function applyRpDelta(delta) {
+    let rank = getRank();
+    let rp = getRP() + delta;
+    while (rp >= 100) { rp -= 100; rank += 1; }            // rank up, carry over
+    while (rp < 0) {
+        if (rank > 1) { rank -= 1; rp = 90; }              // rank down to 90 RP
+        else { rp = 0; break; }                            // floor at rank1/0RP
+    }
+    setRank(rank); setRP(rp);
+    return { rank, rp };
+}
 
 function myTeam() { 
     if (!isOnlineMode) return 'player';
@@ -481,15 +588,66 @@ const ABILITY_NAMES = {
     spin_slash: '回転斬り', smash_slash: '粉砕斬り',
     great_fireball: '大火球魔法', summon_magic: '召喚獣魔法', rock_throw: '岩投げ',
     summon_archer: '弓兵召喚(5T~)', summon_lancer: '槍兵召喚(5T~)', spear: '槍攻撃',
-    roll_rock: '岩転がし(直線∞)'
+    roll_rock: '岩転がし(幅3/斜面/威2)',
+    purify: '浄化(魂消化→HP/回数回復)', bite: '噛み付き', possess: 'とりつき(AP-1)',
+    decoy: 'デコイ人形',
+    smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
+    wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
+    great_summon: '大召喚(5T~)', charge_order: '突撃命令', dig: '地面掘り', hole_move: '穴移動',
+    fire_breath: '火炎ブレス', peck: 'つつき'
+};
+
+const ABILITY_TIPS = {
+    drop_rock: '足元のマスに岩を置き進路を塞ぐ。AP-1。回数無制限。',
+    shatter: '岩・鉱山・火山を砕いて平地に戻す。',
+    dash: '少し離れたマスへ一気に移動する。',
+    trap: '罠を仕掛ける。踏んだ敵はHP-1・AP-2。',
+    bow: '離れた敵を射る遠距離攻撃。ダメージ1・吹き飛ばし。',
+    sword: '隣接した敵に剣撃。ダメージ1＋AP-1＋吹き飛ばし。',
+    punch: '隣接した敵をぶん殴る。ダメージ1＋AP-1＋吹き飛ばし。',
+    teleport: '任意の通行可能マスへ瞬間移動する。',
+    magic_bullet: '魔法弾を撃つ遠距離攻撃。',
+    wind_magic: '風魔法で敵を吹き飛ばす。',
+    ice_magic: '氷魔法でダメージとAPを奪う。',
+    poison_bow: '毒の矢を射る。毒状態を付与。',
+    dagger: '隣接した敵を短剣で刺す。ダメージ1＋AP-1。',
+    poison_dagger: '毒の短剣で刺す。ダメージ2＋毒3T＋AP-1。',
+    spin_slash: '周囲1マスの敵すべてを攻撃する。',
+    smash_slash: '強烈な一撃。ダメージ3＋AP-1。',
+    great_fireball: '広範囲の大火球魔法。',
+    summon_magic: '召喚獣を呼び出す(開始5T経過後)。',
+    rock_throw: '岩を投げる遠距離攻撃。ダメージ2。',
+    summon_archer: '弓兵を召喚する(開始5T経過後)。',
+    summon_lancer: '槍兵を召喚する(開始5T経過後)。',
+    spear: '隣接または1マス先の敵を槍で突く。ダメージ2。',
+    roll_rock: '隣の岩を斜面に転がし、幅3の範囲を威力2で攻撃。AP-1。',
+    purify: '教会で所持する魂を消化。魂の数だけHPを回復し、全アビリティ回数を初期値に戻す。',
+    bite: '隣接した敵に噛み付きHPを吸収する。',
+    possess: '隣接した敵にとりつきダメージ＋AP-1を与える。',
+    decoy: '隣に身代わり人形(HP1/AP2/打撃1)を設置。人形が居る間、暗殺者は潜伏状態。人形は自ターン開始に1ダメージを受ける。',
+    smokescreen: '半径2マスの敵にAP-1と後方吹き飛ばし。1ターン泥棒は潜伏する。',
+    miner_call: '炭鉱夫(HP3/AP2)を呼ぶ。岩砕き∞・地面掘り∞・ツルハシ殴り。開始5T経過後に使用可能。',
+    steal: '隣接した敵の残り使用回数があるアビリティ(岩砕き除く)から1種をランダムに奪う(1回ぶん)。',
+    copy: '半径2マスの敵を選び、そのスキルをコピー。このターンから同じスキルを使用可能。',
+    wolf_summon: 'オオカミを召喚する。開始5T経過後に使用可能。',
+    tame: '半径2マスの敵モンスター/召喚獣(ジョブコマ以外)を1体、永久に味方化。開始5T経過後。',
+    falcon_summon: 'ハヤブサ(HP3/AP2/つつき∞/飛行)を召喚。開始5T経過後に使用可能。',
+    great_summon: 'HP3以上の召喚獣/モンスターからランダムで1体を味方召喚。開始5T経過後。',
+    charge_order: '味方の召喚獣全員のAPを+1する突撃命令。',
+    dig: '隣の地面を掘る。敵が通過するとAP-2して穴は消える。掘った穴が2つ以上で味方が穴に止まると穴移動が可能。',
+    hole_move: '別の掘った穴へテレポート移動する。',
+    fire_breath: '半径2マス内を狙い4マス四方を攻撃力2で範囲攻撃。回数無限。',
+    peck: '隣接した敵をつつく。攻撃力1。回数無限。'
 };
 
 const JOB_DATA = {
     king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1 }, hp: 30, ap: 2 },
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1 }, hp: 30, ap: 2 },
-    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, dagger: 10 }, hp: 30, ap: 2 },
+    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
-    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 } 
+    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 },
+    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, great_summon: 1, charge_order: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -501,16 +659,71 @@ function connectWS(onOpen) {
     wsConn.onopen = onOpen;
     wsConn.onmessage = handleWsMessage;
     wsConn.onclose = () => {
-        if (isOnlineMode) {
-            msg("接続が切れました。");
+        if (intentionalClose) return;
+        // During an active online game, attempt to auto-reconnect.
+        if (isOnlineMode && !rankResultApplied) {
+            attemptReconnect();
         }
     };
     wsConn.onerror = () => {
+        if (isOnlineMode) return; // handled by reconnect flow
         document.getElementById('join-error').textContent = 'サーバーへの接続に失敗しました。';
         document.getElementById('join-waiting').style.display = 'none';
         document.getElementById('btn-join-room').disabled = false;
         document.getElementById('btn-create-room').disabled = false;
     };
+}
+
+// Auto-reconnect: retry every 3s up to 5 times (15s), then give up.
+function attemptReconnect() {
+    if (reconnecting) return;
+    reconnecting = true;
+    reconnectAttempts = 0;
+    stopTurnTimer();
+    showReconnectOverlay();
+    tryReconnectOnce();
+}
+
+function tryReconnectOnce() {
+    reconnectAttempts++;
+    if (reconnectAttempts > 5) {
+        reconnecting = false;
+        hideReconnectOverlay();
+        msg("⚠️ 再接続に失敗しました。");
+        alert("再接続に失敗しました。タイトルに戻ります。");
+        location.reload();
+        return;
+    }
+    updateReconnectOverlay();
+    connectWS(() => {
+        wsSend({ type: 'resume', sessionId: onlineSessionId });
+    });
+    // Schedule the next retry if this attempt does not resolve in 3s.
+    setTimeout(() => {
+        if (reconnecting) {
+            if (!wsConn || wsConn.readyState !== WebSocket.OPEN) tryReconnectOnce();
+        }
+    }, 3000);
+}
+
+function showReconnectOverlay() {
+    let el = document.getElementById('reconnect-overlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'reconnect-overlay';
+        el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;text-align:center;padding:20px;';
+        el.innerHTML = '<div><div style="font-size:42px;margin-bottom:14px;">📡</div><div id="reconnect-text">通信が切断されました。<br>再接続しています...</div></div>';
+        document.body.appendChild(el);
+    }
+    el.style.display = 'flex';
+}
+function updateReconnectOverlay() {
+    let t = document.getElementById('reconnect-text');
+    if (t) t.innerHTML = `通信が切断されました。<br>再接続しています... (${reconnectAttempts}/5)`;
+}
+function hideReconnectOverlay() {
+    let el = document.getElementById('reconnect-overlay');
+    if (el) el.style.display = 'none';
 }
 
 function wsSend(obj) {
@@ -526,7 +739,8 @@ function getGameState() {
         turn, isPlayerTurn, activeStage, duneTimer,
         sandwormTarget, sandwormWarning, sandwormActive,
         magicCircleTimer,
-        treasures: [...treasures]
+        treasures: [...treasures],
+        digHoles: JSON.parse(JSON.stringify(digHoles))
     };
 }
 
@@ -542,6 +756,7 @@ function applyGameState(state) {
     sandwormActive = state.sandwormActive;
     magicCircleTimer = state.magicCircleTimer;
     treasures = state.treasures;
+    if (state.digHoles) digHoles = state.digHoles;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -562,9 +777,20 @@ function handleWsMessage(event) {
         return;
     }
 
+    if (data.type === 'searching') {
+        let s = document.getElementById('ranked-status');
+        if (s) s.textContent = '対戦相手を検索中...（ランク差を徐々に拡大します）';
+        return;
+    }
+
     if (data.type === 'gameStart') {
         myPlayerIndex = data.playerIndex;
         isOnlineMode = true;
+        onlineSessionId = data.sessionId || onlineSessionId;
+        isRankedMatch = data.ranked === true;
+        opponentRank = data.opponentRank || 1;
+        onlineRoomCode = data.roomCode || onlineRoomCode;
+        rankResultApplied = false;
         document.getElementById('online-lobby').style.display = 'none';
 
         const settings = data.settings;
@@ -595,6 +821,37 @@ function handleWsMessage(event) {
             msg("相手のターン中...");
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
         }
+        return;
+    }
+
+    if (data.type === 'resumed') {
+        reconnecting = false;
+        hideReconnectOverlay();
+        msg("✅ 再接続しました。盤面を同期しています...");
+        return;
+    }
+
+    if (data.type === 'resumeFailed') {
+        reconnecting = false;
+        hideReconnectOverlay();
+        alert("再接続に失敗しました（試合が終了している可能性があります）。");
+        location.reload();
+        return;
+    }
+
+    if (data.type === 'peerReconnected') {
+        // The other player came back; resend our current state for full sync.
+        syncState();
+        return;
+    }
+
+    if (data.type === 'opponentSuspended') {
+        msg("⚠️ 相手の接続が切れました。再接続を待っています...");
+        return;
+    }
+
+    if (data.type === 'rankResult') {
+        handleRankResult(data);
         return;
     }
 
@@ -633,19 +890,49 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'opponentLeft') {
-        msg("⚠️ 相手が接続を切りました。");
-        alert("相手が接続を切りました。");
+        if (data.forfeit) {
+            // We already received rankResult (win) just before this.
+            msg("⚠️ 相手が再接続できませんでした。あなたの勝利です！");
+        } else {
+            msg("⚠️ 相手が接続を切りました。");
+            if (!rankResultApplied) alert("相手が接続を切りました。");
+        }
     }
+}
+
+// Apply RP change from the server and show the result screen.
+function handleRankResult(data) {
+    if (rankResultApplied) return;
+    rankResultApplied = true;
+    stopTurnTimer();
+    intentionalClose = true;
+    let line = '';
+    if (data.ranked && isRankedMatch) {
+        const before = { rank: getRank(), rp: getRP() };
+        const after = applyRpDelta(data.rpDelta);
+        const sign = data.rpDelta >= 0 ? '+' : '';
+        line = `RP ${sign}${data.rpDelta}　(ランク${after.rank} / ${after.rp}RP)`;
+        if (after.rank > before.rank) line += '　⬆️ ランクアップ！';
+        else if (after.rank < before.rank) line += '　⬇️ ランクダウン';
+    } else {
+        line = 'フレンドマッチのためRP変動なし';
+    }
+    setTimeout(() => {
+        alert((data.won ? '🏆 勝利！\n\n' : '敗北...\n\n') + line);
+    }, 300);
 }
 
 // ============================================================
 //  ONLINE LOBBY UI
 // ============================================================
 function switchLobbyTab(tab) {
+    document.getElementById('ranked-panel').style.display = tab === 'ranked' ? 'block' : 'none';
     document.getElementById('create-panel').style.display = tab === 'create' ? 'block' : 'none';
     document.getElementById('join-panel').style.display = tab === 'join' ? 'block' : 'none';
+    document.getElementById('tab-ranked').classList.toggle('active', tab === 'ranked');
     document.getElementById('tab-create').classList.toggle('active', tab === 'create');
     document.getElementById('tab-join').classList.toggle('active', tab === 'join');
+    if (tab === 'ranked') refreshRankDisplay();
 }
 
 function showOnlineLobby() {
@@ -656,12 +943,20 @@ function showOnlineLobby() {
     document.getElementById('btn-create-room').disabled = false;
     document.getElementById('join-waiting').style.display = 'none';
     document.getElementById('join-error').textContent = '';
+    document.getElementById('btn-find-ranked').style.display = 'inline-block';
+    document.getElementById('btn-cancel-ranked').style.display = 'none';
+    document.getElementById('ranked-status').textContent = '';
+    switchLobbyTab('ranked');
+    refreshRankDisplay();
 }
 
 function backToHome() {
-    if (wsConn) { wsConn.close(); wsConn = null; }
+    intentionalClose = true;
+    if (wsConn) { try { wsSend({ type: 'cancelRanked' }); } catch(e){} wsConn.close(); wsConn = null; }
     document.getElementById('online-lobby').style.display = 'none';
     document.getElementById('home-screen').style.display = 'block';
+    let s = document.getElementById('ranked-status');
+    if (s) s.textContent = '';
 }
 
 function createRoom() {
@@ -671,10 +966,13 @@ function createRoom() {
     const seed = Math.floor(Math.random() * 0x7fffffff);
 
     document.getElementById('btn-create-room').disabled = true;
+    intentionalClose = false;
 
     connectWS(() => {
         wsSend({
             type: 'create',
+            userId: getUserId(),
+            rank: getRank(),
             settings: {
                 p1job: job,
                 p2job: 'king', // Will be overridden by guest's choice
@@ -695,10 +993,86 @@ function joinRoom() {
     document.getElementById('btn-join-room').disabled = true;
     document.getElementById('join-waiting').style.display = 'block';
     document.getElementById('join-error').textContent = '';
+    intentionalClose = false;
 
     connectWS(() => {
-        wsSend({ type: 'join', roomCode: code, guestJob: job });
+        wsSend({ type: 'join', roomCode: code, guestJob: job, userId: getUserId(), rank: getRank() });
     });
+}
+
+// ---- Ranked matchmaking ----
+function startRankedSearch() {
+    if (!isRankedUnlocked()) {
+        alert('ランクマッチはシングルプレイのステージ8をクリアすると解放されます。');
+        return;
+    }
+    const job = document.getElementById('ranked-job-select').value;
+    intentionalClose = false;
+    document.getElementById('btn-find-ranked').style.display = 'none';
+    document.getElementById('btn-cancel-ranked').style.display = 'inline-block';
+    let s = document.getElementById('ranked-status');
+    if (s) s.textContent = 'サーバーに接続中...';
+    connectWS(() => {
+        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job });
+    });
+}
+
+function cancelRankedSearch() {
+    wsSend({ type: 'cancelRanked' });
+    intentionalClose = true;
+    if (wsConn) { wsConn.close(); wsConn = null; }
+    document.getElementById('btn-find-ranked').style.display = 'inline-block';
+    document.getElementById('btn-cancel-ranked').style.display = 'none';
+    let s = document.getElementById('ranked-status');
+    if (s) s.textContent = '';
+}
+
+// ---- Per-turn 60s timer (online only) ----
+function startTurnTimer() {
+    stopTurnTimer();
+    if (!isOnlineMode) return;
+    turnTimeLeft = 60;
+    updateTurnTimerDisplay();
+    turnTimerId = setInterval(() => {
+        turnTimeLeft--;
+        updateTurnTimerDisplay();
+        if (turnTimeLeft <= 0) {
+            stopTurnTimer();
+            if (canIAct() && !rankResultApplied) {
+                msg("⏰ 時間切れ！ターンを終了します。");
+                endTurn();
+            }
+        }
+    }, 1000);
+}
+function stopTurnTimer() {
+    if (turnTimerId) { clearInterval(turnTimerId); turnTimerId = null; }
+    let el = document.getElementById('turn-timer');
+    if (el) el.style.display = 'none';
+}
+function updateTurnTimerDisplay() {
+    let el = document.getElementById('turn-timer');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'turn-timer';
+        el.style.cssText = 'font-size:15px; font-weight:bold; margin-top:4px;';
+        const ind = document.getElementById('turn-indicator');
+        if (ind && ind.parentNode) ind.parentNode.insertBefore(el, ind.nextSibling);
+    }
+    el.style.display = 'block';
+    el.style.color = turnTimeLeft <= 10 ? '#e74c3c' : '#f1c40f';
+    el.textContent = `⏱ 残り ${Math.max(0, turnTimeLeft)} 秒`;
+}
+
+function refreshRankDisplay() {
+    const el = document.getElementById('rank-display');
+    if (!el) return;
+    if (isRankedUnlocked()) {
+        el.textContent = `現在のランク: ${getRank()}　(${getRP()} RP)`;
+    } else {
+        let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10);
+        el.textContent = `ステータス: 初心者（シングルプレイ勝利 ${Math.min(wins,8)}/8 でランクマッチ解放）`;
+    }
 }
 
 function updateOnlineInfo() {
@@ -757,6 +1131,15 @@ function isNoRockZone(r, c) {
     return false;
 }
 
+function isRockSurrounded(r, c) {
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+    return dirs.every(([dr,dc]) => {
+        let nr = r+dr, nc = c+dc;
+        if (nr<0 || nr>=SIZE || nc<0 || nc>=SIZE) return true;
+        return board[nr] && board[nr][nc] === 'rock';
+    });
+}
+
 function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=false) {
     if (r<0 || r>=SIZE || c<0 || c>=SIZE) return false;
     if (!board[r]) return false;
@@ -766,7 +1149,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool'].includes(t);
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
@@ -794,6 +1177,10 @@ function startGame() {
         const job = document.getElementById('job-select').value;
         activeStage = document.getElementById('stage-select').value;
         const difficulty = document.getElementById('difficulty-select').value;
+        if (activeStage === 'random') {
+            const pool = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos'];
+            activeStage = pool[Math.floor(Math.random()*pool.length)];
+        }
         
         initBoard(activeStage);
         initEntities(job, difficulty);
@@ -853,26 +1240,24 @@ function initBoard(stageType) {
         // Clear base row-10 river setup
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river' || board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) if (board[8][c2]==='cannon' || board[12][c2]==='cannon') board[8][c2]=board[12][c2]='plains';
-        // Castle courtyard (gray)
-        for (let r2=7; r2<=13; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='castle_tile';
-        // Moat
-        for (let c2=5; c2<=15; c2++) { board[6][c2]='river'; board[14][c2]='river'; }
-        for (let r2=7; r2<=13; r2++) { board[r2][5]='river'; board[r2][15]='river'; }
-        // Bridges (N/S/E/W – start open)
-        board[6][9]='bridge_ns'; board[6][10]='bridge_ns';
-        board[14][9]='bridge_ns'; board[14][10]='bridge_ns';
-        board[9][5]='bridge_ew'; board[10][5]='bridge_ew';
-        board[9][15]='bridge_ew'; board[10][15]='bridge_ew';
-        // Bridge switches inside castle
+        // Castle courtyard: full 9x9 square (rows 6-14, cols 6-14)
+        for (let r2=6; r2<=14; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='castle_tile';
+        // Moat surrounding the castle
+        for (let c2=5; c2<=15; c2++) { board[5][c2]='river'; board[15][c2]='river'; }
+        for (let r2=6; r2<=14; r2++) { board[r2][5]='river'; board[r2][15]='river'; }
+        // Bridges (N/S/E/W) – symmetric width 1, centered on the castle (col/row 10)
+        board[5][10]='bridge_ns'; board[15][10]='bridge_ns';
+        board[10][5]='bridge_ew'; board[10][15]='bridge_ew';
+        // Bridge switches inside castle (symmetric around center)
         bridgeSwitchMap = {};
-        board[8][10]='bridge_switch'; bridgeSwitchMap['8,10']='north';
-        board[12][10]='bridge_switch'; bridgeSwitchMap['12,10']='south';
+        board[7][10]='bridge_switch'; bridgeSwitchMap['7,10']='north';
+        board[13][10]='bridge_switch'; bridgeSwitchMap['13,10']='south';
         board[10][7]='bridge_switch'; bridgeSwitchMap['10,7']='west';
         board[10][13]='bridge_switch'; bridgeSwitchMap['10,13']='east';
         bridgeStates = { north: true, south: true, east: true, west: true };
-        // 4 cannons inside castle
-        board[8][8]='cannon'; board[8][12]='cannon';
-        board[12][8]='cannon'; board[12][12]='cannon';
+        // 4 cannons inside castle (symmetric)
+        board[7][7]='cannon'; board[7][13]='cannon';
+        board[13][7]='cannon'; board[13][13]='cannon';
         // Outer terrain
         placeRandom('mine', 2, 1, 5, true);
         placeRandom('mine', 2, 15, 19, true);
@@ -885,15 +1270,15 @@ function initBoard(stageType) {
         // Clear base row-10 river
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
-        // Big river rows 7-13
-        for (let r2=7; r2<=13; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='river';
-        // Center bridge (2 wide, full river height)
-        for (let r2=7; r2<=13; r2++) { board[r2][10]='bridge'; board[r2][11]='bridge'; }
+        // Big river rows 6-14 (widened by 1 each side)
+        for (let r2=6; r2<=14; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='river';
+        // Edge bridges (1 wide) at both ends of the stage
+        for (let r2=6; r2<=14; r2++) { board[r2][1]='bridge'; board[r2][SIZE-2]='bridge'; }
         // Whirlpools in river
         let wCount=0, wA=0;
         while (wCount<5 && wA<200) {
-            let wr=7+Math.floor(Math.random()*7), wc=Math.floor(Math.random()*SIZE);
-            if (board[wr][wc]==='river' && wc!==10 && wc!==11) { board[wr][wc]='whirlpool'; wCount++; }
+            let wr=6+Math.floor(Math.random()*9), wc=Math.floor(Math.random()*SIZE);
+            if (board[wr][wc]==='river' && wc!==1 && wc!==SIZE-2) { board[wr][wc]='whirlpool'; wCount++; }
             wA++;
         }
         // Player side (bottom)
@@ -910,37 +1295,82 @@ function initBoard(stageType) {
         // Clear base river row-10
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
         for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
-        // Summit (rows 1-4)
-        for (let r2=1; r2<=4; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2]='summit';
-        // Snow zone (rows 5-8)
-        for (let r2=5; r2<=8; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='snow';
-        // Mountain tiles (rows 9-15)
-        for (let r2=9; r2<=15; r2++) for (let c2=1; c2<SIZE-1; c2++) board[r2][c2]='mountain_tile';
-        // Valley (rows 16-20) stays plains
-        // Rocks on summit/snow
-        for (let i=0; i<18; i++) {
-            let rr=1+Math.floor(Math.random()*8), cc=1+Math.floor(Math.random()*(SIZE-2));
-            if (['summit','snow'].includes(board[rr][cc]) && !isNoRockZone(rr,cc) && !entities.some(e=>e.r===rr&&e.c===cc)) board[rr][cc]='rock';
+        // Snow mountain: 9x9 square (rows 6-14, cols 6-14)
+        for (let r2=6; r2<=14; r2++) for (let c2=6; c2<=14; c2++) board[r2][c2]='snow';
+        // Mountain slope ring around the snow square
+        for (let r2=4; r2<=16; r2++) for (let c2=4; c2<=16; c2++) {
+            if (board[r2][c2]==='plains') board[r2][c2]='mountain_tile';
         }
-        // 3 avalanche triggers in snow zone
+        // Summit: central 6x6 (rows 7-12, cols 7-12) = 36 tiles
+        for (let r2=7; r2<=12; r2++) for (let c2=7; c2<=12; c2++) board[r2][c2]='summit';
+        // 4 cannons at summit corners
+        board[7][7]='cannon'; board[7][12]='cannon'; board[12][7]='cannon'; board[12][12]='cannon';
+        // 8 rolling rocks randomly on the summit
+        let mrCount=0, mrA=0;
+        while (mrCount<8 && mrA<300) {
+            let rr=7+Math.floor(Math.random()*6), cc=7+Math.floor(Math.random()*6);
+            if (board[rr][cc]==='summit') { board[rr][cc]='rock'; mrCount++; }
+            mrA++;
+        }
+        // 3 avalanche triggers in the snow ring (not on summit)
         avalanchesTriggered = new Set();
         let avCount=0, avA=0;
-        while (avCount<3 && avA<200) {
-            let ar=5+Math.floor(Math.random()*4), ac=2+Math.floor(Math.random()*(SIZE-4));
+        while (avCount<3 && avA<300) {
+            let ar=6+Math.floor(Math.random()*9), ac=6+Math.floor(Math.random()*9);
             if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
             avA++;
         }
-        // Cable car columns (col 0 and col 20)
-        for (let r2=2; r2<=18; r2++) { board[r2][0]='cable_tile'; board[r2][SIZE-1]='cable_tile'; }
-        board[0][0]='summit'; board[0][SIZE-1]='summit'; board[1][0]='summit'; board[1][SIZE-1]='summit';
+        // Cable cars: boarding spot (1 tile) + L-shaped route to summit, both sides
+        // Enemy side: boarding at (5,5), down then right turn to summit
+        board[5][5]='cable_board';
+        [[6,5],[7,5],[8,5],[9,5],[10,5],[10,6]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Player side: boarding at (15,15), up then left turn to summit
+        board[15][15]='cable_board';
+        [[14,15],[13,15],[12,15],[11,15],[10,15],[10,14],[10,13]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
         // Extras
-        placeRandom('mine', 2, 16, 19, true);
-        placeRandom('volcano', 2, 14, 17, true);
-        placeRandom('magic_circle', 1, 16, 19, true);
-        placeRandom('mine', 1, 1, 4, true);
-        placeRandom('magic_circle', 1, 1, 4, true);
-        board[14][6]='cannon'; board[14][14]='cannon'; board[7][6]='cannon'; board[7][14]='cannon';
+        placeRandom('mine', 2, 17, 19, true);
+        placeRandom('volcano', 1, 16, 18, true);
+        placeRandom('magic_circle', 1, 17, 19, true);
+        placeRandom('mine', 1, 1, 3, true);
+        placeRandom('magic_circle', 1, 1, 3, true);
         cableCarMovesLeft = 4;
+    } else if (stageType === 'graveyard') {
+        // === GRAVEYARD STAGE === keep base river + bridges at row 10
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (board[r2][c2]==='plains') board[r2][c2]='graveyard_ground';
+        }
+        // Gravestones spaced 1 tile apart (checkerboard) in both territories
+        for (let r2=2; r2<=18; r2+=2) for (let c2=2; c2<=18; c2+=2) {
+            if (r2 === 10) continue;
+            if (board[r2][c2]==='graveyard_ground' && Math.random()<0.55) board[r2][c2]='gravestone';
+        }
+    } else if (stageType === 'nighttown') {
+        // === NIGHT TOWN STAGE === central river with exactly 3 bridges
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='bridge') board[10][c2]='river';
+        [4, 10, 16].forEach(c2 => board[10][c2]='bridge');
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (board[r2][c2]==='plains') board[r2][c2]='nighttown_ground';
+        }
+    } else if (stageType === 'skyfort') {
+        // === SKY FORTRESS === two floating floors joined by a central bridge
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let c2=0; c2<SIZE; c2++) { if (board[8][c2]==='cannon') board[8][c2]='plains'; if (board[12][c2]==='cannon') board[12][c2]='plains'; }
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (r2<=8 || r2>=12) board[r2][c2]='fortress_floor';
+            else board[r2][c2]='sky_void';
+        }
+        // Central connecting bridge (3 wide) across the void
+        for (let r2=9; r2<=11; r2++) { board[r2][9]='bridge'; board[r2][10]='bridge'; board[r2][11]='bridge'; }
+    } else if (stageType === 'chaos') {
+        // === CHAOS STAGE === all gimmicks mixed in. Keep base river + bridges + cannons.
+        placeRandom('magic_circle', 3, 1, 8, true);
+        placeRandom('magic_circle', 3, 12, 19, true);
+        // a few gravestones each side
+        for (let i=0;i<8;i++){ let r2=2+Math.floor(Math.random()*7), c2=Math.floor(Math.random()*SIZE); if (board[r2][c2]==='plains') board[r2][c2]='gravestone'; }
+        for (let i=0;i<8;i++){ let r2=12+Math.floor(Math.random()*7), c2=Math.floor(Math.random()*SIZE); if (board[r2][c2]==='plains') board[r2][c2]='gravestone'; }
+        // a couple camel tiles + extra cannons for variety
+        placeRandom('camel_tile', 1, 14, 19, true);
+        placeRandom('camel_tile', 1, 1, 6, true);
     } else {
         let placed = false;
         while (!placed) {
@@ -954,6 +1384,44 @@ function initBoard(stageType) {
             let c = Math.floor(Math.random() * SIZE);
             if (board[r][c] === 'plains') { board[r][c] = 'magic_circle'; placed = true; }
         }
+    }
+
+    placeChurchesAndItems(stageType);
+}
+
+function isGroundTile(t) {
+    return ['plains','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','desert','forest','castle_tile'].includes(t);
+}
+
+function placeChurchesAndItems(stageType) {
+    itemTileMap = {};
+    // Churches: one in each territory for soul-based stages
+    if (['graveyard','nighttown','chaos'].includes(stageType)) {
+        placeOnRandomGround(2, 7, 'church');   // enemy side
+        placeOnRandomGround(13, 18, 'church'); // player side
+    }
+    // Item tiles: 2 random per side on ALL stages (effect hidden until stepped on)
+    const items = ['star','shoes','sword'];
+    const placeItem = (minR, maxR) => {
+        for (let i=0;i<200;i++) {
+            let r = minR + Math.floor(Math.random()*(maxR-minR+1));
+            let c = Math.floor(Math.random()*SIZE);
+            if (board[r] && isGroundTile(board[r][c]) && !itemTileMap[`${r},${c}`]) {
+                board[r][c] = 'item_tile';
+                itemTileMap[`${r},${c}`] = items[Math.floor(Math.random()*items.length)];
+                return;
+            }
+        }
+    };
+    placeItem(0, 8); placeItem(0, 8);     // enemy side: 2
+    placeItem(12, 20); placeItem(12, 20); // player side: 2
+}
+
+function placeOnRandomGround(minR, maxR, type) {
+    for (let i=0;i<200;i++) {
+        let r = minR + Math.floor(Math.random()*(maxR-minR+1));
+        let c = Math.floor(Math.random()*SIZE);
+        if (board[r] && isGroundTile(board[r][c])) { board[r][c] = type; return; }
     }
 }
 
@@ -975,8 +1443,8 @@ function initEntities(pJob, difficulty = "1") {
     let cpuJobs = ['king', 'knight', 'assassin', 'infantry', 'mage'];
     let cJob = cpuJobs[Math.floor(Math.random() * cpuJobs.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0 });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0 });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -984,13 +1452,21 @@ function initEntities(pJob, difficulty = "1") {
     duneTimer = 1;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
-        let boatPos = [{r:7,c:4},{r:7,c:16},{r:13,c:4},{r:13,c:16}];
+        let boatPos = [{r:6,c:4},{r:6,c:16},{r:14,c:4},{r:14,c:16}];
         boatPos.forEach((p,i) => {
             entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'npc', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         });
         entities.push({id:'warship', type:'warship', name:'大型船', team:'npc', r:10, c:3, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         stageKrakenSpawned = false;
     } else if (activeStage === 'mountain') {
+        let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
+        entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
+    } else if (activeStage === 'skyfort') {
+        // Wyvern flying on each floor; defeat to ride
+        [{r:3,c:6},{r:17,c:14}].forEach((p,i)=>{
+            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'npc', r:p.r, c:p.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+        });
+    } else if (activeStage === 'chaos') {
         let yr = 2 + Math.floor(Math.random()*3), yc = 4 + Math.floor(Math.random()*(SIZE-8));
         entities.push({id:'yeti', type:'yeti', name:'イエティ', team:'npc', r:yr, c:yc, hp:5, maxHp:5, ap:0, maxAp:2, abilities:{punch:999, ice_throw:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:0, poisonTimer:0, frozenUntilTurn:6});
     }
@@ -1001,8 +1477,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0 });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0 });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -1096,19 +1572,30 @@ function processTurnStartEffects(e) {
     if (e.hp <= 0) return;
     // Frozen yeti does not act
     if (e.type === 'yeti' && e.invin && e.frozenUntilTurn && turn < e.frozenUntilTurn) { e.ap = 0; return; }
+    // Decoy doll takes 1 self-damage at its own turn start
+    if (e.type === 'decoy') e.hp -= 1;
+    // Assassin stays stealthed while an ally decoy survives; lose decoy-stealth otherwise
+    if (e.type === 'assassin' && e.decoyStealth) {
+        let decoyAlive = entities.some(d => d.type === 'decoy' && d.team === e.team && d.hp > 0);
+        if (decoyAlive) { e.stealth = true; }
+        else { e.decoyStealth = false; if (e.stealthTimer <= 0) e.stealth = false; }
+    }
     e.ap = e.maxAp;
+    // Shoes item: expire the temporary AP boost
+    if (e.shoesTimer > 0) {
+        e.shoesTimer--;
+        if (e.shoesTimer <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
+    }
     // Summit altitude damage (mountain stage)
     if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin) {
         e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
     }
-    if (e.name === '分隊' && e.turnBorn !== undefined && turn - e.turnBorn >= 5 && e.skillUsed) {
-        e.skillUsed = false;
-        msg("✨ 分隊が5ターン生存！固有スキルが解放された！", true);
-    }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
-        if (!e.invin) e.hp -= 1;
+        let stacks = e.poisonStacks || 1;
+        if (!e.invin) e.hp -= stacks;
         if (Math.random() < 0.5) e.ap = Math.max(0, e.ap - 1);
+        if (e.poisonTimer <= 0) e.poisonStacks = 0;
     }
     if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
     if (e.stealthTimer > 0) { 
@@ -1123,6 +1610,8 @@ function processTurnStartEffects(e) {
 
 function startTurn(team, skipEffects = false) {
     isPlayerTurn = (team === 'player');
+    currentActingTeam = team;
+    stopTurnTimer();
 
     if (team === 'player') {
         for (let r = 0; r < SIZE; r++) {
@@ -1202,20 +1691,22 @@ function startTurn(team, skipEffects = false) {
             else msg("🔯 魔法陣からモンスターが出現！", true);
         }
 
-        // Big River: Kraken spawns at turn 5
-        if (activeStage === 'bigriver' && turn === 5 && !stageKrakenSpawned) {
-            stageKrakenSpawned = true;
+        // Big River: Kraken spawns at turn 3, then every 5 turns (3, 8, 13, ...)
+        if (activeStage === 'bigriver' && turn >= 3 && (turn - 3) % 5 === 0) {
             let kc = 2 + Math.floor(Math.random() * (SIZE - 4));
+            let kr = 6 + Math.floor(Math.random() * 9);
+            let kid = 'kraken' + turn;
             entities.push({
-                id:'kraken', type:'kraken', name:'クラーケン', team:'npc',
-                r: 10, c: kc, hp: 3, maxHp: 3, ap: 2, maxAp: 2,
+                id:kid, type:'kraken', name:'クラーケン', team:'npc',
+                r: kr, c: kc, hp: 3, maxHp: 3, ap: 2, maxAp: 2,
                 abilities:{tentacle:999}, skillUsed:true, stealth:false, stealthTimer:0,
                 invin:false, invinTimer:0, poisonTimer:0
             });
+            stageKrakenSpawned = true;
             msg("🐙 クラーケンが大河に出現！あらゆる者を攻撃する！", true);
         }
-        // Mountain: Yeti awakens at turn 6; reset cable car moves
-        if (activeStage === 'mountain') {
+        // Mountain / Chaos: Yeti awakens at turn 6; reset cable car moves
+        if (activeStage === 'mountain' || activeStage === 'chaos') {
             cableCarMovesLeft = 4;
             if (turn === 6) {
                 let yeti = entities.find(e => e.type === 'yeti' && e.hp > 0 && e.invin && turn >= e.frozenUntilTurn);
@@ -1225,6 +1716,47 @@ function startTurn(team, skipEffects = false) {
                     msg("❄️ イエティが目覚めた！猛烈に向かってくる！", true);
                 }
             }
+        }
+
+        // Graveyard / Chaos: zombies (10% frankenstein) from turn 3, every 3 turns at 4 spots
+        if ((activeStage === 'graveyard' || activeStage === 'chaos') && turn >= 3 && turn % 3 === 0) {
+            let spots = randomEmptyCells(4);
+            let frankCount = 0;
+            spots.forEach(s => {
+                if (Math.random() < 0.1) { spawnAt('frankenstein', s.r, s.c); frankCount++; }
+                else spawnAt('zombie', s.r, s.c);
+            });
+            if (spots.length > 0) msg(`🧟 墓場からゾンビが${spots.length}体出現！${frankCount>0?`(フランケン${frankCount}体)`:''}`, true);
+        }
+
+        // Night town: a monster every 2 turns from the full bestiary
+        if (activeStage === 'nighttown' && turn % 2 === 0) {
+            const pool = ['bat','wolf','werewolf','vampire','zombie','frankenstein','spirit','great_spirit'];
+            let spot = randomEmptyCells(1)[0];
+            if (spot) {
+                let t = pool[Math.floor(Math.random()*pool.length)];
+                if (t === 'wolf') {
+                    entities.push({id:'npcwolf'+Date.now(), type:'wolf', name:'オオカミ', team:'npc', r:spot.r, c:spot.c, hp:2, maxHp:2, ap:3, maxAp:3, abilities:{sword:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1});
+                } else spawnAt(t, spot.r, spot.c);
+                msg(`🌙 夜の街に魔物が現れた！`, true);
+            }
+        }
+
+        // Chaos: extra special monster every 3 turns
+        if (activeStage === 'chaos' && turn >= 3 && turn % 3 === 0) {
+            const pool = ['bat','werewolf','vampire','spirit'];
+            let spot = randomEmptyCells(1)[0];
+            if (spot) { spawnAt(pool[Math.floor(Math.random()*pool.length)], spot.r, spot.c); msg('🌀 混沌の魔物が出現！', true); }
+        }
+
+        // Sky fortress: falling floors from turn 3 (warned the previous turn)
+        if (activeStage === 'skyfort' && turn >= 3) {
+            resolveFallingFloors();
+        }
+
+        // Spirits merge into a great spirit when two are within radius 3
+        if (activeStage === 'graveyard' || activeStage === 'nighttown' || activeStage === 'chaos') {
+            mergeSpirits();
         }
 
         entities.forEach(e => {
@@ -1241,6 +1773,7 @@ function startTurn(team, skipEffects = false) {
                 document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 syncState('stateSync');
                 msg("あなたのターンです！");
+                startTurnTimer();
             } else {
                 document.getElementById('turn-indicator').textContent = "相手のターン中...";
             }
@@ -1265,6 +1798,7 @@ function startTurn(team, skipEffects = false) {
                 document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 msg("あなたのターンです！");
                 updateOnlineInfo();
+                startTurnTimer();
             }
         } else {
             setTimeout(cpuLogic, 1000);
@@ -1306,8 +1840,12 @@ function isValidTarget(se, r, c, mode) {
     let maxDist = Math.max(dr, dc);
     let target = entities.find(e => e.r === r && e.c === c && e.hp > 0);
 
-    if (mode === 'drop_rock') return (board[r][c] === 'plains' || board[r][c] === 'desert') && !isNoRockZone(r, c) && !target;
-    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano'].includes(board[r][c]);
+    if (mode === 'drop_rock') {
+        if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
+        return (board[r][c] === 'plains' || board[r][c] === 'desert') && !isNoRockZone(r, c) && !target;
+    }
+    if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
+    if (mode === 'shatter') return dist === 1 && ['rock', 'mine', 'volcano', 'gravestone'].includes(board[r][c]);
     if (mode === 'dash') return dist > 0 && dist <= 2 && isWalkable(r, c);
     if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
@@ -1325,7 +1863,21 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spin_slash') return true; 
     if (mode === 'skill_knight') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && isWalkable(r, c, false, true);
     if (mode === 'roll_rock') return dist === 1 && board[r]?.[c] === 'rock';
+    if (mode === 'smokescreen') return maxDist === 0;
+    if (mode === 'charge_order') return maxDist === 0;
+    if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon' || mode === 'great_summon') return maxDist === 1 && isWalkable(r, c);
+    if (mode === 'dig') return maxDist === 1 && (board[r]?.[c] === 'plains' || board[r]?.[c] === 'desert') && !target;
+    if (mode === 'hole_move') return board[r]?.[c] === 'hole' && !target && !(se.r === r && se.c === c);
+    if (mode === 'tame') return maxDist <= 2 && target && target.team !== se.team && !isJobPiece(target);
+    if (mode === 'skill_copy') return maxDist <= 2 && target && target.team !== se.team && isJobPiece(target);
+    if (mode === 'skill_dragon' || mode === 'fire_breath') return maxDist <= 2 && isWalkable(r, c);
     return false;
+}
+
+function isJobPiece(e) {
+    return e && JOB_DATA[e.type] !== undefined;
 }
 
 function render() {
@@ -1351,6 +1903,10 @@ function render() {
                         if (ar === sandwormTarget.r && c === sandwormTarget.c) d.innerText = "🪱";
                     }
                 }
+            }
+
+            if (activeStage === 'skyfort' && fallingWarn.some(w => w.r === ar && w.c === c)) {
+                d.classList.add('falling-warn');
             }
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
@@ -1394,6 +1950,19 @@ function render() {
         }
     });
 
+    // Soul counter (graveyard / nighttown / chaos)
+    let si = document.getElementById('souls-indicator');
+    if (si) {
+        if (['graveyard','nighttown','chaos'].includes(activeStage)) {
+            let mine = souls[myTeam()] || 0;
+            let foe = souls[enemyTeam()] || 0;
+            si.style.display = 'block';
+            si.textContent = `👻 魂 — あなた:${mine} / 相手:${foe}（教会で浄化／橋で悪霊召喚）`;
+        } else {
+            si.style.display = 'none';
+        }
+    }
+
     updateUI();
 }
 
@@ -1431,6 +2000,7 @@ function setMode(mode) {
     if (mode === 'drop_rock' && selectedEntity.ap < 1) { msg("行動力(AP)が足りません"); return; }
     if (mode === 'summon_magic' && turn < 5) { msg("召喚獣魔法は開始後5ターン経過しないと使えません"); return; }
     if ((mode === 'summon_archer' || mode === 'summon_lancer') && turn < 5) { msg("召喚は5ターン経過後に使用可能です"); return; }
+    if (['miner_call','wolf_summon','falcon_summon','great_summon','tame'].includes(mode) && turn < 5) { msg("召喚・テイムは開始5ターン経過後に使用可能です"); return; }
     if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id]?.has(mode)) { 
         msg("このアビリティは既に今ターン使用済です"); 
         return; 
@@ -1467,9 +2037,49 @@ function checkTileEffects(entity) {
         eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
     } else if (board[r] && board[r][c] === 'avalanche_tile') {
         triggerAvalanche(r, c, entity);
-    } else if (board[r] && board[r][c] === 'summit' && activeStage === 'mountain') {
+    } else if (board[r] && board[r][c] === 'summit' && (activeStage === 'mountain' || activeStage === 'chaos')) {
         if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
         eventMsg = "高山の過酷な環境！HP-1、AP-1！";
+    } else if (board[r] && board[r][c] === 'item_tile') {
+        let item = itemTileMap[`${r},${c}`];
+        board[r][c] = defaultGround();
+        delete itemTileMap[`${r},${c}`];
+        eventMsg = applyItem(entity, item);
+    } else if (board[r] && board[r][c] === 'hole') {
+        let hole = digHoles.find(h => h.r === r && h.c === c);
+        if (hole) {
+            if (hole.team !== entity.team) {
+                if (!entity.invin) entity.ap = Math.max(0, entity.ap - 2);
+                board[r][c] = defaultGround();
+                digHoles = digHoles.filter(h => h !== hole);
+                eventMsg = "掘られた穴に落ちた！AP-2！穴は崩れた！";
+            } else {
+                let myHoles = digHoles.filter(h => h.team === entity.team);
+                if (myHoles.length >= 2) {
+                    if (entity.abilities.hole_move === undefined) entity.abilities.hole_move = 999;
+                    eventMsg = "味方の穴に到達！穴移動が可能になった！";
+                }
+            }
+        }
+    }
+    // Graveyard: crossing a bridge with collected souls summons spirits near the enemy
+    if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'chaos')) {
+        let team = entity.team;
+        if ((team === 'player' || team === 'cpu') && souls[team] > 0) {
+            let n = souls[team];
+            let foeRows = (team === 'player') ? [0, 8] : [12, 20];
+            let cells = [];
+            for (let rr=foeRows[0]; rr<=foeRows[1]; rr++) for (let cc=0; cc<SIZE; cc++)
+                if (isWalkable(rr,cc) && !entities.some(e=>e.hp>0&&e.r===rr&&e.c===cc)) cells.push({r:rr,c:cc});
+            cells.sort(()=>Math.random()-0.5);
+            cells.slice(0, n).forEach(s => spawnAt('spirit', s.r, s.c));
+            souls[team] = 0;
+            eventMsg = (eventMsg ? eventMsg + " " : "") + `橋を渡り魂${n}を解き放った！敵周辺に悪霊${Math.min(n,cells.length)}体が出現！`;
+        }
+    }
+    // Church: enable purification (handled in updateUI)
+    if (board[r] && board[r][c] === 'church') {
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "⛪ 教会だ。浄化アビリティで魂を消化できる。";
     }
     // Board onto a boat
     let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
@@ -1522,12 +2132,15 @@ function handleTileClick(vr, c) {
         if (Math.abs(selectedEntity.r - r) + Math.abs(selectedEntity.c - c) === 1) {
             let cost = 1;
             let isInvinKing = selectedEntity.type === 'king' && selectedEntity.invin;
-            // Cable car free movement (mountain stage only, along col 0 or col 20)
-            let onCable = activeStage === 'mountain' && (c === 0 || c === SIZE-1) &&
-                board[r]?.[c] === 'cable_tile' && c === selectedEntity.c && cableCarMovesLeft > 0;
-            if (onCable) cost = 0;
             // Determine if destination is reachable
             let canMove = isWalkable(r, c);
+            // Mountain cable car: AP cost 1 per step; board/exit only at the boarding spot or summit
+            if (activeStage === 'mountain') {
+                let fromT = board[selectedEntity.r]?.[selectedEntity.c];
+                let toT = board[r]?.[c];
+                if (toT === 'cable_tile' && !['cable_board','cable_tile','summit'].includes(fromT)) canMove = false;
+                if (fromT === 'cable_tile' && !['cable_tile','cable_board','summit'].includes(toT)) canMove = false;
+            }
             // Boat riding: player on boat can row through river
             let onBoatEntity = selectedEntity.onBoat ? entities.find(e => e.id === selectedEntity.onBoat && e.hp > 0) : null;
             if (onBoatEntity && !canMove) {
@@ -1535,6 +2148,12 @@ function handleTileClick(vr, c) {
                 if ((t === 'river' || t === 'whirlpool') && !entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship')) {
                     canMove = true;
                 }
+            }
+            // Flying units pass through rocks and other obstacles (not occupied tiles)
+            if (!canMove && selectedEntity.flying && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                let t = board[r]?.[c];
+                if (['rock', 'mine', 'volcano', 'gravestone'].includes(t) &&
+                    !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) canMove = true;
             }
             // King invincibility: can pass through rocks and entities
             if (!canMove && isInvinKing && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
@@ -1573,7 +2192,6 @@ function handleTileClick(vr, c) {
 
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.ap -= cost;
-                if (onCable) cableCarMovesLeft--;
 
                 let eventMsg = checkTileEffects(selectedEntity);
 
@@ -1638,11 +2256,20 @@ function handleAbilityTarget(r, c, targetEntity) {
     if (actionMode === 'shatter') {
         if (board[r][c] === 'mine') breakMine();
         if (board[r][c] === 'volcano') breakVolcano();
-        board[r][c] = 'plains';
+        let wasGravestone = board[r][c] === 'gravestone';
+        board[r][c] = wasGravestone ? defaultGround() : 'plains';
+        if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
         if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
+        if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
         used = true;
     } else if (actionMode === 'drop_rock') {
-        board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
+        if (targetEntity && targetEntity.team !== se.team && isRockSurrounded(targetEntity.r, targetEntity.c)) {
+            if (!targetEntity.invin) targetEntity.hp -= 30;
+            used = true; se.ap -= 1;
+            msg(targetEntity.invin ? "真上から岩を落下！しかし無敵で防がれた！" : "真上から岩を落下！四方を岩に囲まれた敵に30ダメージ！(AP-1)");
+        } else {
+            board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
+        }
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
         se.r = r; se.c = c; used = true; 
@@ -1658,7 +2285,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `射撃命中！敵にダメージ(1)！`); used = true;
     } else if (actionMode === 'poison_bow') {
         se.abilities['poison_bow']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2; targetEntity.poisonTimer = 3; knockback(targetEntity, 1, se); }
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2; targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; knockback(targetEntity, 1, se); }
         msg(targetEntity.invin ? "毒弓矢！しかし無敵で防がれた！" : `毒弓矢命中！ダメージ(2)と毒(3T)を与えた！`); used = true;
     } else if (actionMode === 'magic_bullet') {
         se.abilities['magic_bullet']--; 
@@ -1684,18 +2311,22 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; }
         msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(1)を与え行動力を奪った！"); used = true;
     } else if (actionMode === 'sword' || actionMode === 'punch') {
-        se.abilities[actionMode]--; 
-        let dmg = (se.type === 'golem' || se.type === 'big') ? 2 : 1;
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg; knockback(targetEntity, 1, se); }
+        if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--; 
         let atkName = actionMode === 'punch' ? 'ぶん殴り' : '剣撃';
-        msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
+        if (meleeDodged(targetEntity)) { msg(`${atkName}！しかし飛行コマに回避された！`); used = true; }
+        else {
+            let dmg = ((se.type === 'golem' || se.type === 'big') ? 2 : 1) + (se.atkBonus || 0);
+            if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg; knockback(targetEntity, 1, se); }
+            msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
+        }
     } else if (actionMode === 'dagger') {
         se.abilities['dagger']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; }
+        if (meleeDodged(targetEntity)) { msg("短剣刺し！しかし飛行コマに回避された！"); }
+        else if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + (se.atkBonus||0); }
         msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : "短剣刺し！近接ダメージ(1)を与え行動力減少！"); used = true;
     } else if (actionMode === 'poison_dagger') {
         se.abilities['poison_dagger']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2; targetEntity.poisonTimer = 3; }
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2 + (se.atkBonus||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
         msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : "毒剣刺し！近接ダメージ(2)と毒(3T)を与え行動力減少！"); used = true;
     } else if (actionMode === 'smash_slash') {
         se.abilities['smash_slash']--; 
@@ -1724,7 +2355,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         board[se.r][se.c] = 'cannon_cd_2';
     } else if (actionMode === 'spear') {
         if (se.abilities['spear'] !== 999) se.abilities['spear']--;
-        if (!targetEntity.invin) { targetEntity.hp -= 2; }
+        if (!targetEntity.invin) { targetEntity.hp -= 2 + (se.atkBonus||0); }
         msg(targetEntity.invin ? "槍攻撃！しかし無敵で防がれた！" : "槍攻撃命中！ダメージ(2)！"); used = true;
     } else if (actionMode === 'summon_archer') {
         se.abilities['summon_archer']--;
@@ -1739,27 +2370,116 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['summon_lancer']--;
         entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
         msg("槍兵を召喚！(HP5/AP2/直線槍∞)"); used = true;
+    } else if (actionMode === 'decoy') {
+        se.abilities['decoy']--;
+        entities.push({ id: 'decoy'+Date.now(), type: 'decoy', name: 'デコイ人形', team: se.team, r, c, hp: 1, maxHp: 1, ap: 2, maxAp: 2, abilities: { punch: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        se.stealth = true; se.decoyStealth = true;
+        msg("デコイ人形を設置！人形が居る間、暗殺者は潜伏状態になる！(HP1/AP2/打撃1)"); used = true;
+    } else if (actionMode === 'smokescreen') {
+        se.abilities['smokescreen']--;
+        let hit = 0;
+        entities.forEach(t => {
+            if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) <= 2) {
+                if (!t.invin) { t.ap = Math.max(0, t.ap - 1); knockback(t, 1, se); hit++; }
+            }
+        });
+        se.stealth = true; se.stealthTimer = Math.max(se.stealthTimer, 1);
+        msg(`煙幕展開！周囲の敵${hit}体のAPを奪い吹き飛ばし、泥棒は潜伏した！`); used = true;
+    } else if (actionMode === 'steal') {
+        se.abilities['steal']--;
+        let pool = Object.keys(targetEntity.abilities).filter(k => k !== 'shatter' && targetEntity.abilities[k] !== 999 && targetEntity.abilities[k] > 0);
+        if (pool.length === 0) { msg("強奪！しかし奪えるアビリティが無かった…"); used = true; }
+        else {
+            let k = pool[Math.floor(Math.random()*pool.length)];
+            targetEntity.abilities[k]--;
+            se.abilities[k] = (se.abilities[k] && se.abilities[k] !== 999 ? se.abilities[k] : 0) + 1;
+            msg(`強奪成功！敵から「${ABILITY_NAMES[k]||k}」を1回ぶん奪った！`); used = true;
+        }
+    } else if (actionMode === 'miner_call') {
+        se.abilities['miner_call']--;
+        entities.push({ id: 'miner'+Date.now(), type: 'miner', name: '炭鉱', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { shatter: 999, dig: 999, punch: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, turnBorn: turn });
+        msg("炭鉱夫を呼んだ！(HP3/AP2・岩砕き∞/地面掘り∞/ツルハシ殴り)"); used = true;
+    } else if (actionMode === 'dig') {
+        if (se.abilities['dig'] !== 999) se.abilities['dig']--;
+        board[r][c] = 'hole'; digHoles.push({ r, c, team: se.team });
+        msg("地面を掘った！敵が通ると行動力-2。穴が2つ以上で味方が穴に止まると穴移動可能。"); used = true;
+    } else if (actionMode === 'hole_move') {
+        se.r = r; se.c = c; used = true;
+        checkEnemyTerritory(se);
+        msg("穴移動！別の穴へテレポートした！");
+    } else if (actionMode === 'wolf_summon') {
+        se.abilities['wolf_summon']--;
+        entities.push({ id: 'wolf'+Date.now(), type: 'wolf', name: 'オオカミ', team: se.team, r, c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { sword: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        msg("オオカミを召喚！(HP2/AP3/噛みつき∞)"); used = true;
+    } else if (actionMode === 'falcon_summon') {
+        se.abilities['falcon_summon']--;
+        entities.push({ id: 'falcon'+Date.now(), type: 'falcon', name: 'ハヤ', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { peck: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        msg("ハヤブサを召喚！(HP3/AP2/つつき∞・飛行)"); used = true;
+    } else if (actionMode === 'great_summon') {
+        se.abilities['great_summon']--;
+        let pool = [
+            { type: 'yeti', name: 'イエ', hp: 5, ab: { punch: 999, ice_throw: 999 } },
+            { type: 'golem', name: 'ゴー', hp: 6, ab: { punch: 999 } },
+            { type: 'big', name: '大鬼', hp: 5, ab: { punch: 999 } }
+        ];
+        let pick = pool[Math.floor(Math.random()*pool.length)];
+        entities.push({ id: pick.type+Date.now(), type: pick.type, name: pick.name, team: se.team, r, c, hp: pick.hp, maxHp: pick.hp, ap: 2, maxAp: 2, abilities: {...pick.ab}, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        msg(`大召喚！${pick.name}を味方として召喚した！(HP${pick.hp})`); used = true;
+    } else if (actionMode === 'charge_order') {
+        se.abilities['charge_order']--;
+        let n = 0;
+        entities.forEach(t => { if (t.hp > 0 && t.team === se.team && t !== se && !isJobPiece(t)) { t.ap += 1; n++; } });
+        msg(`突撃命令！味方召喚獣${n}体のAPが+1された！`); used = true;
+    } else if (actionMode === 'tame') {
+        se.abilities['tame']--;
+        targetEntity.team = se.team;
+        targetEntity.soulValue = 0; targetEntity.soulCounted = true;
+        msg(`テイム成功！${targetEntity.name}を永久に味方にした！`); used = true;
+    } else if (actionMode === 'peck') {
+        if (se.abilities['peck'] !== 999) se.abilities['peck']--;
+        if (meleeDodged(targetEntity)) { msg("つつき！しかし飛行コマに回避された！"); }
+        else if (!targetEntity.invin) { targetEntity.hp -= 1 + (se.atkBonus||0); }
+        msg(targetEntity.invin ? "つつき！しかし無敵で防がれた！" : "つつき命中！ダメージ(1)！"); used = true;
+    } else if (actionMode === 'fire_breath') {
+        if (se.abilities['fire_breath'] !== 999) se.abilities['fire_breath']--;
+        let hit = 0;
+        for (let rr = r; rr <= r+1; rr++) for (let cc = c; cc <= c+1; cc++) {
+            let t = entities.find(e => e.hp > 0 && e.r === rr && e.c === cc && e.team !== se.team);
+            if (t && !t.invin) { t.hp -= 2; hit++; }
+        }
+        msg(`火炎ブレス！4マス範囲の敵${hit}体に2ダメージ！`); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
-        // Roll rock from (r, c) straight downward
+        // Roll rock from (r, c) straight downhill, 3 columns wide
         board[r][c] = 'plains';
-        let rr = r + 1;
-        let stopped = false;
-        while (rr < SIZE && !stopped) {
-            let hit = entities.find(e => e.hp > 0 && e.r === rr && e.c === c);
-            if (hit) {
-                if (!hit.invin) { hit.hp -= 1; hit.ap = Math.max(0, hit.ap - 1); knockback(hit, 1, {r: rr-1, c: c}); }
-                msg(`⛰️ 岩転がし！${hit.name}に1ダメージ、AP-1、吹き飛ばし！`);
-                board[rr][c] = 'rock';
-                stopped = true;
-            } else if (!isWalkable(rr, c, true, true)) {
-                board[rr][c] = 'rock';
-                stopped = true;
-            }
-            rr++;
+        // Determine downhill direction (away from summit center row 10)
+        let dir = se.r > r ? -1 : 1;
+        let cols = [c-1, c, c+1].filter(x => x >= 0 && x < SIZE);
+        let names = [];
+        let stopRow = null;
+        let rr = r + dir;
+        while (rr >= 0 && rr < SIZE) {
+            let blockedHere = false;
+            cols.forEach(cc => {
+                let hit = entities.find(e => e.hp > 0 && e.r === rr && e.c === cc);
+                if (hit && !hit.invin) {
+                    hit.hp -= 2; hit.ap = Math.max(0, hit.ap - 1);
+                    knockback(hit, 1, {r: rr - dir, c: cc});
+                    names.push(hit.name);
+                }
+            });
+            // Stop when the center column hits an obstacle
+            if (!isWalkable(rr, c, true, true)) { blockedHere = true; stopRow = rr - dir; }
+            if (blockedHere) break;
+            stopRow = rr;
+            rr += dir;
         }
-        if (!stopped) msg("⛰️ 岩が山を転がり落ちた！（命中なし）");
+        if (stopRow !== null && stopRow >= 0 && stopRow < SIZE && isWalkable(stopRow, c) && !entities.some(e=>e.hp>0&&e.r===stopRow&&e.c===c)) {
+            board[stopRow][c] = 'rock';
+        }
+        if (names.length > 0) msg(`⛰️ 岩転がし！幅3マスで${[...new Set(names)].join(',')}に2ダメージ・AP-1・吹き飛ばし！`);
+        else msg("⛰️ 岩が山の斜面を転がり落ちた！（命中なし）");
         used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
@@ -1811,6 +2531,13 @@ function doSummon(se, r, c) {
 }
 
 function executeSkill(se) {
+    if (se.copiedSkill && se.type === 'thief') {
+        let origType = se.type;
+        se.type = se.copiedSkill;
+        let res = executeSkill(se);
+        se.type = origType;
+        return res;
+    }
     if (se.type === 'infantry') {
         let isSquad = se.name === '分隊';
         if (isSquad && turn - (se.turnBorn || 0) < 5) { msg("分隊は5ターン生存後に固有スキルが発動可能！"); return false; }
@@ -1824,6 +2551,11 @@ function executeSkill(se) {
     }
     if (se.type === 'knight') { msg("騎士の突進のターゲット方向(直線5マス以内)を選んでください"); actionMode = 'skill_knight'; render(); return false; }
     if (se.type === 'mage') { msg("大火球魔法！ターゲット(半径5マス以内の敵)を選んでください"); actionMode = 'skill_mage'; render(); return false; }
+    if (se.type === 'thief') { msg("コピー！スキルを奪う敵(半径2マス以内)を選んでください"); actionMode = 'skill_copy'; render(); return false; }
+    if (se.type === 'beastmaster') {
+        if (turn < 5) { msg("ドラゴン召喚は開始5ターン経過後に使用可能です"); return false; }
+        msg("ドラゴン召喚！設置場所(半径2マス以内)を選んでください"); actionMode = 'skill_dragon'; render(); return false;
+    }
     
     if (se.type === 'assassin') { 
         se.stealth = true; se.stealthTimer = 3; 
@@ -1854,6 +2586,21 @@ function executeRushSkill(se, targetR, targetC, mode) {
             msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え、吹き飛ばし行動力を奪った！");
         }
         se.skillUsed = true;
+        return;
+    }
+    if (mode === 'skill_copy') {
+        let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team && isJobPiece(e));
+        if (target) {
+            se.copiedSkill = target.type;
+            se.skillUsed = false;
+            msg(`コピー成功！${JOB_DATA[target.type].name}のスキルをコピーした！このターンから使用可能！`);
+        } else { msg("コピー！しかし対象が見つからなかった…"); }
+        return;
+    }
+    if (mode === 'skill_dragon') {
+        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 8, maxHp: 8, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        se.skillUsed = true;
+        msg("ドラゴン召喚！(HP8/AP2・火炎ブレス∞/噛みつき∞・飛行)");
         return;
     }
     let stepR = Math.sign(targetR - se.r);
@@ -1910,6 +2657,10 @@ function breakMine() {
     });
 }
 
+function meleeDodged(target) {
+    return target && target.flying && !target.invin && Math.random() < 0.5;
+}
+
 function knockback(target, dist, source) {
     if (target.invin) return;
     let dr = Math.sign(target.r - source.r);
@@ -1936,9 +2687,140 @@ function spawnMonster(r, c) {
     return m.type;
 }
 
+// ===== Phase B: special monsters with soul values =====
+function monsterTemplate(type, r, c) {
+    let base = { team:'npc', r, c, ap:2, maxAp:2, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:0 };
+    switch(type) {
+        case 'zombie':       return {...base, type, name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
+        case 'frankenstein': return {...base, type, name:'フランケン', hp:3, maxHp:3, abilities:{punch:999}, soulValue:2};
+        case 'spirit':       return {...base, type, name:'悪霊', hp:1, maxHp:1, abilities:{bite:999, possess:999}, soulValue:1};
+        case 'great_spirit': return {...base, type, name:'大悪霊', hp:5, maxHp:5, abilities:{bite:999, possess:999}, soulValue:2};
+        case 'bat':          return {...base, type, name:'コウモリ', hp:1, maxHp:1, ap:3, maxAp:3, abilities:{bite:999}, flying:true, soulValue:1};
+        case 'werewolf':     return {...base, type, name:'オオカミ男', hp:3, maxHp:3, ap:3, maxAp:3, abilities:{sword:999}, soulValue:1};
+        case 'vampire':      return {...base, type, name:'ヴァンパイア', hp:3, maxHp:3, abilities:{bite:999, throwing_knife:99}, soulValue:2};
+        default:             return {...base, type:'zombie', name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
+    }
+}
+
+function spawnAt(type, r, c) {
+    let m = monsterTemplate(type, r, c);
+    m.id = 'npc' + type + Date.now() + Math.floor(Math.random()*1000);
+    entities.push(m);
+    return m;
+}
+
+function randomEmptyCells(n) {
+    let cells = [];
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+        if (isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c)) cells.push({r,c});
+    }
+    cells.sort(()=>Math.random()-0.5);
+    return cells.slice(0, n);
+}
+
+// Sky fortress falling floors: resolve last turn's warnings, then warn 2 new cells.
+function resolveFallingFloors() {
+    // 1) Cells warned last turn now collapse
+    fallingWarn.forEach(({r,c}) => {
+        if (board[r] && (board[r][c] === 'fortress_floor' || board[r][c] === 'bridge')) {
+            board[r][c] = 'fallen_floor';
+            let victim = entities.find(e => e.hp>0 && e.r===r && e.c===c && !e.flying);
+            if (victim && !victim.invin) {
+                victim.hp -= 30;
+                msg(`💥 ${victim.name}が崩落に巻き込まれ30ダメージ！`, true);
+            }
+        }
+    });
+    fallingWarn = [];
+    // 2) Pick 2 new cells to warn — prefer empty floor; fall back to piece tiles
+    let empty = [], occupied = [];
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+        if (board[r][c] === 'fortress_floor' || board[r][c] === 'bridge') {
+            if (entities.some(e=>e.hp>0&&e.r===r&&e.c===c)) occupied.push({r,c});
+            else empty.push({r,c});
+        }
+    }
+    let pool = empty.length >= 2 ? empty : empty.concat(occupied);
+    pool.sort(()=>Math.random()-0.5);
+    fallingWarn = pool.slice(0, 2);
+    if (fallingWarn.length) msg("⚠️ 足場が崩れそうだ！(赤枠のマスが次ターン崩落)");
+    checkWin();
+}
+
+function defaultGround() {
+    if (activeStage === 'graveyard') return 'graveyard_ground';
+    if (activeStage === 'nighttown') return 'nighttown_ground';
+    if (activeStage === 'skyfort') return 'fortress_floor';
+    return 'plains';
+}
+
+// Item tile pickup effects
+function applyItem(entity, item) {
+    if (item === 'star') {
+        entity.hp += 10; entity.maxHp += 10;
+        return "🌠 流れ星のかけら！最大HP+10＆HP回復！";
+    } else if (item === 'shoes') {
+        entity.shoesTimer = 3; entity.maxAp += 1; entity.ap += 1;
+        return "👟 新作の靴！3ターンの間、行動力+1！";
+    } else if (item === 'sword') {
+        entity.atkBonus = (entity.atkBonus || 0) + 1;
+        return "⚔️ 鋼の剣！ゲーム終了まで攻撃力+1！";
+    }
+    return "アイテムを拾った！";
+}
+
+// Church purification: spend all of the team's souls to heal HP and reset ability uses.
+function doPurify(entity) {
+    let team = entity.team;
+    let n = souls[team] || 0;
+    if (n <= 0) { msg("消化できる魂がありません"); return; }
+    entity.hp = Math.min(entity.maxHp, entity.hp + n);
+    if (entity.initialAbilities) {
+        for (let k in entity.initialAbilities) entity.abilities[k] = entity.initialAbilities[k];
+    }
+    souls[team] = 0;
+    msg(`⛪ 浄化！魂${n}を消化しHPを${n}回復＆全アビリティ回数を回復した！`, true);
+    updateUI(); render();
+    if (isOnlineMode) syncState();
+}
+
+// Two nearby spirits (radius 3) merge into a single great spirit (HP5).
+function mergeSpirits() {
+    let spirits = entities.filter(e => e.type === 'spirit' && e.hp > 0);
+    for (let i = 0; i < spirits.length; i++) {
+        for (let j = i + 1; j < spirits.length; j++) {
+            let a = spirits[i], b = spirits[j];
+            if (a.hp <= 0 || b.hp <= 0) continue;
+            if (Math.max(Math.abs(a.r-b.r), Math.abs(a.c-b.c)) <= 3) {
+                let gs = monsterTemplate('great_spirit', a.r, a.c);
+                gs.id = 'gspirit' + Date.now() + Math.floor(Math.random()*1000);
+                b.hp = 0; b.soulCounted = true;
+                Object.assign(a, gs);
+                msg("👹 二体の悪霊が合体し『大悪霊』が誕生した！", true);
+                return;
+            }
+        }
+    }
+}
+
+// Award souls for npc monsters that just died, to the team currently acting.
+function reapSouls() {
+    entities.forEach(e => {
+        if (e.team==='npc' && e.hp<=0 && e.soulValue>0 && !e.soulCounted) {
+            e.soulCounted = true;
+            if (currentActingTeam==='player' || currentActingTeam==='cpu') {
+                souls[currentActingTeam] += e.soulValue;
+                if (currentActingTeam===myTeam())
+                    msg(`👻 魂を${e.soulValue}獲得！(所持: ${souls[currentActingTeam]})`, true);
+            }
+        }
+    });
+}
+
 function endTurn() {
     if (!canIAct()) return;
     selectedEntity = null;
+    stopTurnTimer();
     render();
     
     if (isOnlineMode) {
@@ -2152,6 +3034,8 @@ function cpuLogic() {
                 if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
                     board[cpu.r][cpu.c] = 'plains'; 
                     if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); msg("敵が罠を踏んだ！"); }
+                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
+                    board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
                     msg("敵が森の中に潜伏し、姿を消した…！");
                 }
@@ -2162,6 +3046,8 @@ function cpuLogic() {
             if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
                 board[cpu.r][cpu.c] = 'plains'; 
                 if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); }
+            } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
+                board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
             } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
                 msg("敵が森の中に潜伏し、姿を消した…！");
             }
@@ -2176,6 +3062,7 @@ function cpuLogic() {
 }
 
 function npcLogic() {
+    currentActingTeam = 'npc';
     let npcs = entities.filter(e => e.team === 'npc' && e.hp > 0 && e.ap > 0);
     if (npcs.length > 0) {
         let n = npcs[0];
@@ -2288,6 +3175,14 @@ function npcLogic() {
                     if (!p.invin) { p.hp -= 2; msg(`${n.name}の岩投げ！2ダメージ！`); }
                     else { msg(`${n.name}の岩投げ！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
+                } else if (n.abilities.possess && dist <= 1) {
+                    if (!p.invin) { p.hp -= 1; p.ap = Math.max(0, p.ap - 1); msg(`👻 ${n.name}がとりついた！1ダメージ＆AP-1！`, true); }
+                    else { msg(`👻 ${n.name}のとりつき！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
+                } else if (n.abilities.bite && dist <= 1) {
+                    if (!p.invin) { p.hp -= 1; n.hp = Math.min(n.maxHp, n.hp + 1); msg(`🦇 ${n.name}の噛み付き！1ダメージを吸収しHP回復！`, true); }
+                    else { msg(`🦇 ${n.name}の噛み付き！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
                 } else if (dist <= 1) {
                     let dmg = (n.type === 'golem' || n.type === 'big') ? 2 : 1;
                     let atkName = n.type === 'golem' ? 'ぶん殴り' : '近接攻撃';
@@ -2306,6 +3201,8 @@ function npcLogic() {
                 n.ap--;
                 if (board[n.r] && board[n.r][n.c] === 'trap') {
                     board[n.r][n.c] = 'plains'; n.hp -= 1; n.ap = Math.max(0, n.ap - 2);
+                } else if (board[n.r] && board[n.r][n.c] === 'magic_circle') {
+                    board[n.r][n.c] = 'plains';
                 }
             }
         } else {
@@ -2342,6 +3239,7 @@ function isTrapped(entity) {
 }
 
 function checkWin() {
+    reapSouls();
     let player = entities.find(e => e.id === 'p1');
     let cpu = entities.find(e => e.id === 'c1');
 
@@ -2377,6 +3275,24 @@ function checkWin() {
     }
 
     if (isEnd) {
+        stopTurnTimer();
+        const iWon = title.includes('Victory');
+        if (isOnlineMode) {
+            if (!rankResultApplied) {
+                // Report the result to the server, which computes RP for both sides.
+                wsSend({ type: 'gameEnd', won: iWon });
+            }
+        } else {
+            // Single-player: count victories; unlock ranked at 8 wins.
+            if (iWon && !isRankedUnlocked()) {
+                let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10) + 1;
+                localStorage.setItem('ek_spwins', String(wins));
+                if (wins >= 8) {
+                    unlockRanked();
+                    title += '\n🎖️ レベル8到達！ランクマッチが解放されました！';
+                }
+            }
+        }
         document.getElementById('result-title').innerText = title;
         document.getElementById('result-screen').style.display = 'flex';
     }
@@ -2419,11 +3335,25 @@ function updateUI() {
         
         let count = selectedEntity.abilities[key];
         let dispName = ABILITY_NAMES[key] || key;
-        btn.innerText = count === 999 ? `${dispName} (残: ∞)` : `${dispName} (残: ${count})`;
+        btn.innerText = count === 999 ? `${dispName}（無制限）` : `${dispName}（残り${count}回使用可能）`;
+        btn.title = ABILITY_TIPS[key] || dispName;
         
         if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id]?.has(key)) btn.disabled = true;
         btn.onclick = () => setMode(key);
         list.appendChild(btn);
+    }
+
+    // Church purification: consume all team souls to heal HP and restore ability uses
+    if (board[selectedEntity.r] && board[selectedEntity.r][selectedEntity.c] === 'church' && canIAct()) {
+        let team = selectedEntity.team;
+        let pb = document.createElement('button');
+        pb.className = 'ability-btn';
+        pb.style.background = '#8e44ad'; pb.style.color = '#fff';
+        pb.innerText = `⛪ 浄化（魂${souls[team]||0}を消化）`;
+        pb.title = '所持する魂を消化し、その数だけHPを回復＆全アビリティ回数を初期値に戻す';
+        if ((souls[team]||0) <= 0) pb.disabled = true;
+        pb.onclick = () => doPurify(selectedEntity);
+        list.appendChild(pb);
     }
 
     if (selectedEntity.r >= 0 && selectedEntity.r < SIZE && board[selectedEntity.r] && board[selectedEntity.r][selectedEntity.c] === 'cannon') {
@@ -2456,10 +3386,31 @@ function updateUI() {
             let rb = document.createElement('button');
             rb.className = 'ability-btn';
             rb.style.background = '#5d4037'; rb.style.color = '#fff';
-            rb.innerText = '⛰️ 岩転がし (近接岩→直線ダメージ無限)';
+            rb.innerText = '⛰️ 岩転がし (隣の岩→斜面を幅3で攻撃/威力2/AP-1)';
             if (actionMode === 'roll_rock') rb.classList.add('active');
             rb.onclick = () => { actionMode = 'roll_rock'; updateUI(); render(); };
             list.appendChild(rb);
+        }
+    }
+
+    // Big River: boarding ability (adjacent to a boat on land)
+    if (activeStage === 'bigriver' && selectedEntity && canIAct() && !selectedEntity.onBoat) {
+        let adjBoat = entities.find(e => e.hp>0 && (e.type==='boat'||e.type==='warship') &&
+            Math.abs(e.r-selectedEntity.r)+Math.abs(e.c-selectedEntity.c)===1);
+        if (adjBoat && selectedEntity.ap >= 1) {
+            let bb = document.createElement('button');
+            bb.className = 'ability-btn';
+            bb.style.background = '#1a5276'; bb.style.color = '#fff';
+            bb.innerText = '🚤 乗船 (隣の船に乗り込む / AP-1)';
+            bb.onclick = () => {
+                selectedEntity.r = adjBoat.r; selectedEntity.c = adjBoat.c;
+                selectedEntity.onBoat = adjBoat.id;
+                selectedEntity.ap -= 1;
+                msg(`🚤 ${selectedEntity.name}が${adjBoat.name}に乗り込んだ！川を渡れる！`);
+                checkWin(); render(); updateUI();
+                if (isOnlineMode) syncState();
+            };
+            list.appendChild(bb);
         }
     }
 
@@ -2472,12 +3423,11 @@ function updateUI() {
     }
 
     // Mountain: cable car status
-    if (activeStage === 'mountain' && cableCarMovesLeft > 0 &&
-        (selectedEntity?.c === 0 || selectedEntity?.c === SIZE-1) &&
-        board[selectedEntity?.r]?.[selectedEntity?.c] === 'cable_tile') {
+    if (activeStage === 'mountain' && selectedEntity &&
+        ['cable_board','cable_tile'].includes(board[selectedEntity.r]?.[selectedEntity.c])) {
         let cb2 = document.createElement('div');
         cb2.style.cssText = 'background:#546e7a;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
-        cb2.innerText = `🚡 ケーブルカー乗車中 — 縦移動AP不要 (残${cableCarMovesLeft}回)`;
+        cb2.innerText = '🚡 ケーブルカー — ケーブル沿いに移動(AP1)。乗降は乗り場と山頂のみ';
         list.appendChild(cb2);
     }
 }
