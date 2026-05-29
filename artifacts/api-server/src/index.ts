@@ -197,6 +197,15 @@ function finishRanked(room: Room, winnerIndex: number) {
     safeSend(w.ws, { type: "rankResult", won: true, rpDelta: 0, ranked: false });
     safeSend(l.ws, { type: "rankResult", won: false, rpDelta: 0, ranked: false });
   }
+  // Terminal cleanup: clear any pending grace timer and drop the room shortly
+  // after results are delivered, so finished rooms are not retained forever.
+  if (room.suspendTimer) {
+    clearTimeout(room.suspendTimer);
+    room.suspendTimer = null;
+  }
+  setTimeout(() => {
+    rooms.delete(room.code);
+  }, 5000);
 }
 
 const server = createServer(app);
@@ -298,9 +307,13 @@ wss.on("connection", (ws: WebSocket) => {
           ts: Date.now(),
           searchTimer: null,
         };
-        // Avoid duplicate queue entries for the same socket.
+        // Avoid duplicate queue entries for the same socket; clear its timer.
         const existing = queue.findIndex((q) => q.ws === ws);
-        if (existing >= 0) queue.splice(existing, 1);
+        if (existing >= 0) {
+          if (queue[existing]?.searchTimer)
+            clearInterval(queue[existing]!.searchTimer!);
+          queue.splice(existing, 1);
+        }
         queue.push(entry);
         safeSend(ws, { type: "searching" });
         entry.searchTimer = setInterval(tryMatch, 2000);
@@ -317,6 +330,8 @@ wss.on("connection", (ws: WebSocket) => {
         let found: Room | null = null;
         let idx = -1;
         for (const room of rooms.values()) {
+          // Only suspended rooms are eligible for reconnect.
+          if (room.status !== "suspended") continue;
           for (let k = 0; k < 2; k++) {
             if (room.players[k]?.sessionId === sessionId) {
               found = room;

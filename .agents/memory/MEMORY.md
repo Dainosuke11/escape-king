@@ -1,1 +1,2 @@
 - [Escape the King board geometry](escape-king-board.md) — fixed 21x21 coords; stage layouts & interdependent BRIDGE_TILE_MAP/cable rules.
+- [Escape the King online/ranked](escape-king-online.md) — WebSocket relay (not server-authoritative); client-side rank/RP; room/resume/queue-timer/state-sync contract.

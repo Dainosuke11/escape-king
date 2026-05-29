@@ -740,7 +740,8 @@ function getGameState() {
         sandwormTarget, sandwormWarning, sandwormActive,
         magicCircleTimer,
         treasures: [...treasures],
-        digHoles: JSON.parse(JSON.stringify(digHoles))
+        digHoles: JSON.parse(JSON.stringify(digHoles)),
+        souls: { player: souls.player, cpu: souls.cpu }
     };
 }
 
@@ -757,6 +758,7 @@ function applyGameState(state) {
     magicCircleTimer = state.magicCircleTimer;
     treasures = state.treasures;
     if (state.digHoles) digHoles = state.digHoles;
+    if (state.souls) souls = state.souls;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -870,7 +872,9 @@ function handleWsMessage(event) {
             const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
             document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
             msg("あなたのターンです！");
+            startTurnTimer();
         } else {
+            stopTurnTimer();
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
         }
         return;
@@ -2208,6 +2212,12 @@ function handleTileClick(vr, c) {
                             msg("砂に足を取られ、行動力が追加で1減少した！");
                         }
                     }
+                    if (board[r] && board[r][c] === 'mountain_tile' && !selectedEntity.flying) {
+                        if (Math.random() < 0.5) {
+                            selectedEntity.ap = Math.max(0, selectedEntity.ap - 1);
+                            msg("険しい斜面に足を取られ、行動力が追加で1減少した！（ケーブルカーが有利）");
+                        }
+                    }
                     if (board[r] && board[r][c] === 'mine') { board[r][c] = 'plains'; breakMine(); }
                     else if (board[r] && board[r][c] === 'trap') { 
                         board[r][c] = 'plains'; 
@@ -2696,8 +2706,8 @@ function monsterTemplate(type, r, c) {
         case 'spirit':       return {...base, type, name:'悪霊', hp:1, maxHp:1, abilities:{bite:999, possess:999}, soulValue:1};
         case 'great_spirit': return {...base, type, name:'大悪霊', hp:5, maxHp:5, abilities:{bite:999, possess:999}, soulValue:2};
         case 'bat':          return {...base, type, name:'コウモリ', hp:1, maxHp:1, ap:3, maxAp:3, abilities:{bite:999}, flying:true, soulValue:1};
-        case 'werewolf':     return {...base, type, name:'オオカミ男', hp:3, maxHp:3, ap:3, maxAp:3, abilities:{sword:999}, soulValue:1};
-        case 'vampire':      return {...base, type, name:'ヴァンパイア', hp:3, maxHp:3, abilities:{bite:999, throwing_knife:99}, soulValue:2};
+        case 'werewolf':     return {...base, type, name:'オオカミ男', hp:5, maxHp:5, ap:3, maxAp:3, abilities:{bite:999}, soulValue:1};
+        case 'vampire':      return {...base, type, name:'ヴァンパイア', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{drain:999}, soulValue:2};
         default:             return {...base, type:'zombie', name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
     }
 }
@@ -3179,8 +3189,18 @@ function npcLogic() {
                     if (!p.invin) { p.hp -= 1; p.ap = Math.max(0, p.ap - 1); msg(`👻 ${n.name}がとりついた！1ダメージ＆AP-1！`, true); }
                     else { msg(`👻 ${n.name}のとりつき！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
+                } else if (n.abilities.drain && dist <= 1) {
+                    if (!p.invin) { p.hp -= 1; n.hp = Math.min(n.maxHp, n.hp + 1); msg(`🧛 ${n.name}の吸血！1ダメージを吸収しHP回復！`, true); }
+                    else { msg(`🧛 ${n.name}の吸血！しかし無敵で防いだ！`); }
+                    attacked = true; n.ap--;
                 } else if (n.abilities.bite && dist <= 1) {
-                    if (!p.invin) { p.hp -= 1; n.hp = Math.min(n.maxHp, n.hp + 1); msg(`🦇 ${n.name}の噛み付き！1ダメージを吸収しHP回復！`, true); }
+                    let drainers = ['zombie','spirit','great_spirit','bat'];
+                    let biteDmg = (n.type === 'werewolf') ? 2 : 1;
+                    if (!p.invin) {
+                        p.hp -= biteDmg;
+                        if (drainers.includes(n.type)) { n.hp = Math.min(n.maxHp, n.hp + 1); msg(`🦇 ${n.name}の噛み付き！${biteDmg}ダメージを吸収しHP回復！`, true); }
+                        else { msg(`🐺 ${n.name}の噛み付き！${biteDmg}ダメージ！`, true); }
+                    }
                     else { msg(`🦇 ${n.name}の噛み付き！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
                 } else if (dist <= 1) {
