@@ -3297,8 +3297,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         board[r][c] = 'trap'; se.abilities['trap']--; trapOwnerMap[`${r},${c}`] = se.team; used = true;
     } else if (actionMode === 'bow') {
         se.abilities['bow']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `射撃命中！敵にダメージ(1)！`); used = true;
+        let _bowSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + _bowSB + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${1+_bowSB})！`); used = true;
     } else if (actionMode === 'poison_bow') {
         se.abilities['poison_bow']--; 
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; knockback(targetEntity, 1, se); }
@@ -3388,13 +3389,15 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
     } else if (actionMode === 'dagger') {
         se.abilities['dagger']--; 
+        let _dagSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
         if (meleeDodged(targetEntity)) { msg("短剣刺し！しかし飛行コマに回避された！"); }
-        else if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); }
-        msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : "短剣刺し！近接ダメージ(1)を与え行動力減少！"); used = true;
+        else if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + _dagSB + (se.atkBonus||0) + (targetEntity.defDebuff||0); }
+        msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : `${_dagSB?'【潜伏ボーナス+1】':''}短剣刺し！近接ダメージ(${1+_dagSB})を与え行動力減少！`); used = true;
     } else if (actionMode === 'poison_dagger') {
         se.abilities['poison_dagger']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
-        msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : "毒剣刺し！近接ダメージ(2)と毒(3T)を与え行動力減少！"); used = true;
+        let _pdSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2 + _pdSB + (se.atkBonus||0) + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+        msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : `${_pdSB?'【潜伏ボーナス+1】':''}毒剣刺し！近接ダメージ(${2+_pdSB})と毒(3T)を与え行動力減少！`); used = true;
     } else if (actionMode === 'smash_slash') {
         se.abilities['smash_slash']--; 
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 3 + (targetEntity.defDebuff||0); }
