@@ -2076,9 +2076,11 @@ function processTurnStartEffects(e) {
         }
     }
     // シャークウォリアー ウォーターゲージ処理
+    // 海洋コマは海ステージ(大河)では酸素デメリットを受けない
+    const SEA_STAGES = ['bigriver'];
     if (isOceanUnit(e) && e.type === 'shark_warrior') {
         let tile = board[e.r]?.[e.c];
-        let onWater = isWaterTile(tile);
+        let onWater = isWaterTile(tile) || SEA_STAGES.includes(activeStage);
         if (!onWater) {
             let drain = (tile === 'desert') ? 2 : 1;
             if (e.waterMode) drain += 1;
