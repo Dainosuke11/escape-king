@@ -140,13 +140,6 @@
         /* Big River stage */
         .whirlpool { background: #1a5276; }
         .whirlpool::after { content: "🌀"; font-size: calc(var(--tile-size)*0.4); }
-        /* Shark Warrior water tiles */
-        .shallow_water { background: #7ec8e3; }
-        .shallow_water::after { content: "〜"; font-size: calc(var(--tile-size)*0.28); color: #1565c0; font-weight:bold; }
-        .deep_water { background: #1565c0; }
-        .deep_water::after { content: "🌊"; font-size: calc(var(--tile-size)*0.35); }
-        .vortex_tile { background: #0d3349; }
-        .vortex_tile::after { content: "🌀"; font-size: calc(var(--tile-size)*0.4); }
         /* Mountain stage */
         .mountain_tile { background: #795548; }
         .snow { background: #e8f4f8; }
@@ -304,7 +297,6 @@
             <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
             <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
             <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
         </select>
     </div>
     <div class="select-group">
@@ -379,7 +371,6 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -408,7 +399,6 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <div class="select-group">
@@ -461,7 +451,6 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -524,8 +513,6 @@ let selectedEntity = null;
 let actionMode = 'move';
 let turn = 1;
 let tempRocks = [];
-let waterHitsMap = {};      // "r,c" → extra hits to convert shallow_water → deep_water
-let vortexTiles = [];       // [{r,c,expireOnTurn}] temporary vortex tiles from 渦潮
 let isPlayerTurn = true;
 let treasures = ['platinum', 'gold', 'silver', 'copper'];
 let activeStage = '';
@@ -736,17 +723,7 @@ const ABILITY_NAMES = {
     counter: 'カウンター(被弾反撃)', ryujin_transform: '変身(竜形態/飛行)',
     afterimage: '残像(デコイ/潜伏/5T~)',
     fortify: '築城(正面3岩+南大砲/1T限定)',
-    unwavering_stance: '不退転の構え(被ダメ+1/味方AP+1・攻撃+1)',
-    stone_punch: '石で殴る(威1/AP-1/吹飛/岩設置)',
-    harpoon: 'モリで刺す(直線2/威1)',
-    water_cutter: 'ウォーターカッター(直線3貫通/威3/ゲージ1/浅瀬化)',
-    water_eruption: '水流噴火(半径2/9マス浅瀬/威2/ゲージ1)',
-    dive: '潜水(水マス/2T潜伏/ATK+2/AP+2)',
-    shark_transform: '変身(水中モード/AP5/ゲージ15~)',
-    chomp: '噛み砕く(水中形態/威5/AP-1)',
-    wave_ride: '波乗り(正面3×3/威2/吹飛/AP-1/ゲージ2/浅瀬化)',
-    whirlpool_atk: '渦潮(半径3/威2/2T渦潮/AP-1/ゲージ3/浅瀬化)',
-    octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)'
+    unwavering_stance: '不退転の構え(被ダメ+1/味方AP+1・攻撃+1)'
 };
 
 const ABILITY_TIPS = {
@@ -828,17 +805,7 @@ const ABILITY_TIPS = {
     ryujin_transform: '竜の姿に変身(飛行・ヘルブレス使用可)。再使用で元に戻る。3Tクールダウン。',
     afterimage: '隣接マスに残像(HP1/AP4/打撃のみ)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。',
     fortify: '正面(北)3マスに一時的な岩を設置し、南に大砲マスを配置。岩と大砲は次の自分ターン開始時に消滅。回数2。',
-    unwavering_stance: '1ターンの間、騎士が受けるダメージ+1（自己犠牲）。代わりに半径8マス内の味方全員（自身含む）のAPと攻撃力を1ターン+1する。回数1。',
-    stone_punch: '隣接した敵を石で殴る。ダメージ1＋AP-1＋吹き飛ばし。吹き飛ばした場所に岩を設置。回数10。',
-    harpoon: '同じ行か列にいる2マス以内の敵を銛で刺す。ダメージ1。回数10。',
-    water_cutter: 'ウォーターゲージ1消費。直線3マスを水で切断する貫通攻撃。ダメージ3。通過マスが浅瀬マスに変わる。回数3。',
-    water_eruption: 'ウォーターゲージ1消費。半径2マス以内の場所を中心に噴水発生。3×3マスにダメ2＋浅瀬化。回数1。',
-    dive: '水マス上でのみ使用可能。2ターン潜伏(ATK+2・AP+2)。効果終了時に元に戻る。回数1。',
-    shark_transform: 'ウォーターゲージ15以上必要。水中モード(AP5)に変身。陸上でゲージ-1/T。再使用で解除。2Tクールダウン。',
-    chomp: '水中モード限定の近接攻撃。隣接した敵に5ダメ＋AP-1。回数無制限。',
-    wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。回数2。',
-    whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
-    octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。'
+    unwavering_stance: '1ターンの間、騎士が受けるダメージ+1（自己犠牲）。代わりに半径8マス内の味方全員（自身含む）のAPと攻撃力を1ターン+1する。回数1。'
 };
 
 const JOB_DATA = {
@@ -849,12 +816,11 @@ const JOB_DATA = {
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 },
-    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, monk_summon: 1 }, hp: 30, ap: 2 },
+    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, punch: 10, monk_summon: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, plasma_blade: 3, plasma_blade2: 2, sweep: 3, plasma_snipe: 2, plasma_bazooka: 2, incinerate: 2, recon_drone: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
-    ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
-    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 }
+    ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1376,37 +1342,12 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water'].includes(t);
-    if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile'].includes(t);
+    if (ignoreRiver && (t === 'river' || t === 'whirlpool')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
     if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar' && e.type!=='wyvern')) return false;
     return true;
-}
-
-function isOceanUnit(e) {
-    return !!(e && (e.oceanUnit || e.type === 'boat' || e.type === 'warship'));
-}
-
-function isWaterTile(t) {
-    return ['river','whirlpool','shallow_water','deep_water'].includes(t);
-}
-
-function floodTile(r, c) {
-    if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) return;
-    let t = board[r][c];
-    if (['deep_water','river','whirlpool','rock','volcano','mine','bridge_up','sky_void','fallen_floor','gravestone','vortex_tile'].includes(t)) return;
-    if (t === 'shallow_water') {
-        let key = r+','+c;
-        waterHitsMap[key] = (waterHitsMap[key]||0) + 1;
-        if (waterHitsMap[key] >= 2) {
-            board[r][c] = 'deep_water';
-            delete waterHitsMap[key];
-        }
-    } else {
-        board[r][c] = 'shallow_water';
-        waterHitsMap[r+','+c] = 0;
-    }
 }
 
 function getLoS(a, targetPos) {
@@ -1423,7 +1364,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon'];
 
 function resolveJob(job) {
@@ -1814,8 +1755,8 @@ function initEntities(pJob, difficulty = "1") {
     let cpuJobs = ['king', 'knight', 'assassin', 'infantry', 'mage'];
     let cJob = cpuJobs[Math.floor(Math.random() * cpuJobs.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0 });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0 });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -1875,8 +1816,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0 });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0 });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -2073,46 +2014,6 @@ function processTurnStartEffects(e) {
             msg(`🧠 ${e.name}のマインドコントロールが解除された！`, true);
         }
     }
-    // シャークウォリアー ウォーターゲージ処理
-    if (isOceanUnit(e) && e.type === 'shark_warrior') {
-        let tile = board[e.r]?.[e.c];
-        let onWater = isWaterTile(tile);
-        if (!onWater) {
-            let drain = (tile === 'desert') ? 2 : 1;
-            if (e.waterMode) drain += 1;
-            e.waterGauge = Math.max(0, (e.waterGauge||0) - drain);
-            if (e.waterGauge <= 0 && !e.invin) {
-                e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
-                msg(`🦈 ${e.name}は乾燥でダメージ！HP-1・AP-1！`, true);
-            }
-        }
-        let wg = e.waterGauge || 0;
-        if (wg >= 20 && !e.highWaterBuff) {
-            e.maxAp++; e.ap = Math.min(e.ap + 1, e.maxAp);
-            e.atkBonus = (e.atkBonus||0) + 1; e.highWaterBuff = true;
-            e.hp = Math.min(e.hp + 1, e.maxHp);
-            msg(`🌊 ${e.name}のゲージが20以上！AP+1・ATK+1・HP+1バフ！`, true);
-        } else if (wg >= 20 && e.highWaterBuff) {
-            e.hp = Math.min(e.hp + 1, e.maxHp);
-        } else if (wg < 20 && e.highWaterBuff) {
-            e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp);
-            e.atkBonus = Math.max(0, (e.atkBonus||0) - 1); e.highWaterBuff = false;
-        }
-        // 潜水バフ期限
-        if ((e.diveTimer||0) > 0) {
-            e.diveTimer--;
-            if (e.diveTimer <= 0 && e.diveBuff) {
-                e.maxAp = Math.max(1, e.maxAp - 2); e.ap = Math.min(e.ap, e.maxAp);
-                e.atkBonus = Math.max(0, (e.atkBonus||0) - 2); e.diveBuff = false;
-                msg(`🤿 ${e.name}の潜水効果が切れた！`, true);
-            }
-        }
-        // 変身クールダウン
-        if ((e.sharkTransformCooldown||0) > 0) {
-            e.sharkTransformCooldown--;
-            if (e.sharkTransformCooldown <= 0) msg(`🦈 ${e.name}の変身クールダウンが回復！`, true);
-        }
-    }
 }
 
 function startTurn(team, skipEffects = false) {
@@ -2132,17 +2033,6 @@ function startTurn(team, skipEffects = false) {
             if (tr.expireOnTurn <= turn) {
                 if (tr.r >= 0 && tr.r < SIZE && tr.c >= 0 && tr.c < SIZE) {
                     board[tr.r][tr.c] = tr.restoreTile || 'plains';
-                }
-                return false;
-            }
-            return true;
-        });
-        // 渦潮タイルの期限処理
-        vortexTiles = vortexTiles.filter(vt => {
-            if (vt.expireOnTurn <= turn) {
-                if (vt.r >= 0 && vt.r < SIZE && vt.c >= 0 && vt.c < SIZE && board[vt.r][vt.c] === 'vortex_tile') {
-                    board[vt.r][vt.c] = 'shallow_water';
-                    waterHitsMap[vt.r+','+vt.c] = 0;
                 }
                 return false;
             }
@@ -2577,7 +2467,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'shatter') return dist === 1 && (['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]) || (target && target.type === 'car'));
     if (mode === 'dash') {
-        let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
+        let canPhase = se.flying || se.invin;
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
         if (dist === 0 || dist > 2) return false;
         if (!isWalkable(r, c)) return false;
@@ -2602,7 +2492,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
-    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
     if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
     if (mode === 'spin_slash') return true; 
@@ -2666,13 +2556,6 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'ryujin_transform') return true;
     if (mode === 'afterimage') { if (turn < 5) return false; return maxDist===1 && isWalkable(r,c); }
     if (mode === 'skill_ryujin') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8;
-    // サメ戦士
-    if (mode === 'harpoon') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2 && target && target.team!==se.team;
-    if (mode === 'water_cutter') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
-    if (mode === 'water_eruption') return maxDist<=2;
-    if (mode === 'whirlpool_atk') return maxDist<=3;
-    if (mode === 'octopus_summon') return maxDist===1 && isWalkable(r,c);
-    if (mode === 'skill_hydro') return (se.r===r||se.c===c) && maxDist>0;
     return false;
 }
 
@@ -2876,18 +2759,6 @@ function setMode(mode) {
         handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
         return;
     }
-    if (mode === 'wave_ride') {
-        handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
-        return;
-    }
-    if (mode === 'dive') {
-        handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
-        return;
-    }
-    if (mode === 'shark_transform') {
-        handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
-        return;
-    }
 
     updateUI();
     render();
@@ -2914,29 +2785,8 @@ function checkTileEffects(entity) {
         let side = bridgeSwitchMap[key];
         if (side) toggleBridge(side);
     } else if (board[r] && (board[r][c] === 'whirlpool')) {
-        if (isOceanUnit(entity)) {
-            entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
-            eventMsg = "🌊 渦潮！海洋コマなのでゲージ+5！";
-        } else {
-            if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
-            eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
-        }
-    } else if (board[r] && board[r][c] === 'shallow_water') {
-        if (isOceanUnit(entity)) {
-            entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
-        } else if (!entity.flying && Math.random() < 0.5) {
-            entity.ap = Math.max(0, entity.ap - 1);
-            eventMsg = "💧 浅瀬で足を取られた！AP-1！";
-        }
-    } else if (board[r] && (board[r][c] === 'deep_water' || board[r][c] === 'river')) {
-        if (isOceanUnit(entity)) {
-            entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
-        }
-    } else if (board[r] && board[r][c] === 'vortex_tile') {
-        if (!entity.flying && !isOceanUnit(entity) && !entity.invin) {
-            entity.ap = Math.max(0, entity.ap - 1);
-            eventMsg = "🌀 渦潮マスに引き込まれた！AP-1！";
-        }
+        if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
+        eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
     } else if (board[r] && board[r][c] === 'avalanche_tile') {
         triggerAvalanche(r, c, entity);
     } else if (board[r] && board[r][c] === 'item_tile') {
@@ -3090,14 +2940,8 @@ function handleTileClick(vr, c) {
             // Flying units pass through rocks, water, and other obstacles (not occupied tiles)
             if (!canMove && selectedEntity.flying && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
                 let t = board[r]?.[c];
-                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea', 'deep_water'].includes(t) &&
+                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea'].includes(t) &&
                     !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) canMove = true;
-            }
-            // Ocean units can swim in water tiles
-            if (!canMove && isOceanUnit(selectedEntity) && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
-                let t = board[r]?.[c];
-                if (['river','whirlpool','deep_water','shallow_water'].includes(t) &&
-                    !entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship')) canMove = true;
             }
             // King invincibility: can pass through rocks and entities
             if (!canMove && isInvinKing && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
@@ -3137,10 +2981,6 @@ function handleTileClick(vr, c) {
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.ap -= cost;
 
-                // Shark warrior water mode: stepping on land costs gauge
-                if (isOceanUnit(selectedEntity) && selectedEntity.waterMode && !isWaterTile(board[r]?.[c])) {
-                    selectedEntity.waterGauge = Math.max(0, (selectedEntity.waterGauge||0) - 1);
-                }
                 let eventMsg = checkTileEffects(selectedEntity);
 
                 if (board[r] && board[r][c] === 'forest') {
@@ -3251,8 +3091,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
-        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
-        if (isOceanUnit(se) && se.waterMode && !isWaterTile(board[r]?.[c])) se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
         se.r = r; se.c = c; used = true; 
         let eventMsg = checkTileEffects(se);
         if (board[r] && board[r][c] === 'forest') eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠した！";
@@ -3819,140 +3657,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         msg("⚠️ 岩転がし予告！次のターン岩が幅3マスで転がり落ちてくる！");
         used = true;
-    } else if (actionMode === 'stone_punch') {
-        if (se.abilities['stone_punch'] !== 999) se.abilities['stone_punch']--;
-        let origR = targetEntity.r, origC = targetEntity.c;
-        let spDmg = 1 + (se.atkBonus||0);
-        if (meleeDodged(targetEntity)) { msg("💪 石で殴る！しかし飛行コマに回避された！"); used = true; }
-        else {
-            if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= spDmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-            if (!targetEntity.invin && (targetEntity.counterReady||0) > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！`, true); }
-            let rockPlaced = false;
-            if (!targetEntity.invin && (targetEntity.r !== origR || targetEntity.c !== origC)) {
-                const rockable = ['plains','desert','graveyard_ground','nighttown_ground','fortress_floor','mountain_tile','snow','summit','castle_tile','dungeon_ground','forest'];
-                if (rockable.includes(board[origR]?.[origC]) && !isNoRockZone(origR,origC) && !entities.some(e=>e.hp>0&&e.r===origR&&e.c===origC)) {
-                    board[origR][origC] = 'rock'; rockPlaced = true;
-                }
-            }
-            msg(targetEntity.invin ? "💪 石で殴る！しかし無敵で防がれた！" : `💪 石で殴る命中！ダメージ(${spDmg})・AP-1・吹き飛ばし！${rockPlaced ? '岩を設置！' : ''}`);
-            used = true;
-        }
-    } else if (actionMode === 'harpoon') {
-        se.abilities['harpoon']--;
-        let hpDmg = 1 + (se.atkBonus||0);
-        if (!targetEntity.invin) { targetEntity.hp -= hpDmg + (targetEntity.defDebuff||0); }
-        msg(targetEntity.invin ? "🔱 モリで刺す！しかし無敵で防がれた！" : `🔱 モリで刺す！${targetEntity.name}に${hpDmg}ダメージ！`); used = true;
-    } else if (actionMode === 'chomp') {
-        if (se.abilities['chomp'] !== 999) se.abilities['chomp']--;
-        let cDmg = 5 + (se.atkBonus||0);
-        if (meleeDodged(targetEntity)) { msg("🦷 噛み砕く！しかし飛行コマに回避された！"); used = true; }
-        else {
-            if (!targetEntity.invin) { targetEntity.hp -= cDmg + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0, targetEntity.ap - 1); }
-            msg(targetEntity.invin ? "🦷 噛み砕く！しかし無敵で防がれた！" : `🦷 噛み砕く！${targetEntity.name}に${cDmg}ダメージ・AP-1！`); used = true;
-        }
-    } else if (actionMode === 'water_cutter') {
-        if ((se.waterGauge||0) < 1) { msg("💧 ウォーターゲージが足りない！(1必要)"); return; }
-        se.abilities['water_cutter']--;
-        se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
-        let wcDr = Math.sign(r - se.r), wcDc = Math.sign(c - se.c);
-        let wcHits = 0;
-        for (let step = 1; step <= 3; step++) {
-            let nr = se.r + wcDr*step, nc = se.c + wcDc*step;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
-            let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-            if (hit && !hit.invin) { hit.hp -= 3 + (se.atkBonus||0) + (hit.defDebuff||0); wcHits++; }
-            floodTile(nr, nc);
-        }
-        msg(`💧 ウォーターカッター！直線3マス貫通(命中${wcHits}体)！通過マスが浅瀬化！`); used = true;
-    } else if (actionMode === 'water_eruption') {
-        if ((se.waterGauge||0) < 1) { msg("💧 ウォーターゲージが足りない！(1必要)"); return; }
-        se.abilities['water_eruption']--;
-        se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
-        let weHits = 0;
-        for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
-            let nr = r+dr, nc = c+dc;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
-            let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-            if (hit && !hit.invin) { hit.hp -= 2 + (se.atkBonus||0) + (hit.defDebuff||0); weHits++; }
-            floodTile(nr, nc);
-        }
-        msg(`🌊 水流噴火！中心3×3に噴水(命中${weHits}体)！全マスが浅瀬化！`); used = true;
-    } else if (actionMode === 'dive') {
-        let diveTile = board[se.r]?.[se.c];
-        if (!isWaterTile(diveTile)) { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
-        se.abilities['dive']--;
-        se.stealth = true; se.stealthTimer = 2;
-        se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
-        se.atkBonus = (se.atkBonus||0) + 2;
-        se.diveBuff = true; se.diveTimer = 2;
-        msg("🤿 潜水！2ターン潜伏！ATK+2・AP+2！"); used = true;
-    } else if (actionMode === 'shark_transform') {
-        if ((se.sharkTransformCooldown||0) > 0) { msg(`🦈 変身クールダウン中！あと${se.sharkTransformCooldown}T！`); return; }
-        if (!se.waterMode) {
-            if ((se.waterGauge||0) < 15) { msg("🦈 変身にはウォーターゲージ15以上必要！"); return; }
-            if (se.abilities['shark_transform'] !== 999) se.abilities['shark_transform']--;
-            se.savedAbilitiesShark = {...se.abilities};
-            se.savedMaxAp = se.maxAp;
-            se.waterMode = true;
-            se.abilities = { drop_rock: 999, shatter: (se.savedAbilitiesShark.shatter||5), chomp: 999, shark_transform: 999 };
-            let apDiff = 5 - se.maxAp;
-            se.maxAp = 5; se.ap = Math.min(se.ap + Math.max(0, apDiff), se.maxAp);
-            msg("🦈 水中モードに変身！AP5・噛み砕く使用可！陸上でゲージ-1/T！");
-        } else {
-            se.waterMode = false;
-            se.abilities = se.savedAbilitiesShark ? {...se.savedAbilitiesShark} : se.abilities;
-            se.maxAp = se.savedMaxAp || 2;
-            se.ap = Math.min(se.ap, se.maxAp);
-            se.sharkTransformCooldown = 2;
-            msg("🦈 人型に戻った！2Tクールダウン！");
-        }
-        used = true;
-    } else if (actionMode === 'wave_ride') {
-        if ((se.waterGauge||0) < 2) { msg("💧 ウォーターゲージが足りない！(2必要)"); return; }
-        se.abilities['wave_ride']--;
-        se.waterGauge = Math.max(0, (se.waterGauge||0) - 2);
-        let wrDir = se.team === 'player' ? -1 : 1;
-        let wrHits = 0;
-        for (let depth = 1; depth <= 3; depth++) {
-            for (let w = -1; w <= 1; w++) {
-                let nr = se.r + wrDir*depth, nc = se.c + w;
-                if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
-                let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-                if (hit && !hit.invin) {
-                    hit.hp -= 2 + (se.atkBonus||0) + (hit.defDebuff||0);
-                    hit.ap = Math.max(0, hit.ap - 1);
-                    knockback(hit, 1, se);
-                    wrHits++;
-                }
-                floodTile(nr, nc);
-            }
-        }
-        msg(`🌊 波乗り！正面3×3に大波(命中${wrHits}体)！AP-1・吹き飛ばし・浅瀬化！`); used = true;
-    } else if (actionMode === 'whirlpool_atk') {
-        if ((se.waterGauge||0) < 3) { msg("💧 ウォーターゲージが足りない！(3必要)"); return; }
-        se.abilities['whirlpool_atk']--;
-        se.waterGauge = Math.max(0, (se.waterGauge||0) - 3);
-        let waHits = 0;
-        for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
-            let nr = r+dr, nc = c+dc;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
-            let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-            if (hit && !hit.invin) {
-                hit.hp -= 2 + (se.atkBonus||0) + (hit.defDebuff||0);
-                hit.ap = Math.max(0, hit.ap - 1);
-                waHits++;
-            }
-            let bt = board[nr]?.[nc];
-            if (!['deep_water','river','whirlpool','rock','volcano','mine','bridge_up','sky_void','fallen_floor','gravestone','vortex_tile'].includes(bt)) {
-                vortexTiles.push({r:nr, c:nc, expireOnTurn: turn+2});
-                board[nr][nc] = 'vortex_tile';
-            }
-        }
-        msg(`🌀 渦潮発動！3×3が渦潮化(命中${waHits}体)AP-1！2T後に浅瀬化！`); used = true;
-    } else if (actionMode === 'octopus_summon') {
-        se.abilities['octopus_summon']--;
-        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
-        msg("🐙 タコ召喚！(HP3/AP2/触手∞/海洋コマ)"); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -4124,55 +3828,10 @@ function executeSkill(se) {
         msg("🐉 ドラゴンインパクト！方向を選んでください(直線8マス)");
         actionMode = 'skill_ryujin'; render(); return false;
     }
-    // ====== サメ戦士 スキル: ハイドロポンプ ======
-    if (se.type === 'shark_warrior') {
-        let gauge = se.waterGauge || 0;
-        if (gauge <= 0) { msg("💧 ウォーターゲージがない！水マスに入ってゲージを溜めよう！"); return false; }
-        se.hydroPumpGauge = gauge;
-        se.waterGauge = 0;
-        if (se.highWaterBuff && gauge < 20) {
-            se.maxAp = Math.max(1, se.maxAp - 1); se.ap = Math.min(se.ap, se.maxAp);
-            se.atkBonus = Math.max(0, (se.atkBonus||0) - 1); se.highWaterBuff = false;
-        }
-        let rd = gauge <= 5 ? "直線3・威力3" : gauge <= 15 ? "直線5・威力4" : gauge <= 25 ? "直線8・幅3・威力5" : "端まで・幅3・威力6";
-        msg(`💦 ハイドロポンプ！ゲージ${gauge}消費(${rd})！方向を選んでください！`);
-        actionMode = 'skill_hydro'; render(); return false;
-    }
     return false;
 }
 
 function executeRushSkill(se, targetR, targetC, mode) {
-    if (mode === 'skill_hydro') {
-        let gauge = se.hydroPumpGauge || 0;
-        let range, width, dmg;
-        if (gauge <= 5)       { range = 3;    width = 1; dmg = 3; }
-        else if (gauge <= 15) { range = 5;    width = 1; dmg = 4; }
-        else if (gauge <= 25) { range = 8;    width = 3; dmg = 5; }
-        else                   { range = SIZE; width = 3; dmg = 6; }
-        let dr = Math.sign(targetR - se.r), dc = Math.sign(targetC - se.c);
-        if (dr === 0 && dc === 0) { se.skillUsed = true; return; }
-        let hits = 0;
-        for (let step = 1; step <= range; step++) {
-            let nr = se.r + dr*step, nc = se.c + dc*step;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
-            let half = Math.floor(width/2);
-            for (let w = -half; w <= half; w++) {
-                let wr = nr + (dc!==0 ? w : 0), wc = nc + (dr!==0 ? w : 0);
-                if (wr<0||wr>=SIZE||wc<0||wc>=SIZE) continue;
-                let hit = entities.find(e=>e.hp>0&&e.r===wr&&e.c===wc&&e.team!==se.team);
-                if (hit && !hit.invin) {
-                    hit.hp -= dmg + (hit.defDebuff||0);
-                    hit.ap = Math.max(0, hit.ap - 1);
-                    knockback(hit, 1, se);
-                    hits++;
-                }
-                floodTile(wr, wc);
-            }
-        }
-        msg(`💦 ハイドロポンプ発射！ゲージ${gauge}・射程${range}・威力${dmg}・幅${width}(命中${hits}体)！通過マスが浅瀬化！`);
-        se.skillUsed = true;
-        return;
-    }
     if (mode === 'skill_mage') {
         let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team);
         if (target) {
@@ -5134,9 +4793,9 @@ function updateUI() {
         return;
     }
 
-    document.getElementById('ui-name').innerText = selectedEntity.name + (selectedEntity.waterMode ? ' 🌊[水中]' : '');
+    document.getElementById('ui-name').innerText = selectedEntity.name;
     document.getElementById('ui-ap').innerText = selectedEntity.ap;
-    document.getElementById('ui-hp').innerText = selectedEntity.hp + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '');
+    document.getElementById('ui-hp').innerText = selectedEntity.hp;
     
     if (selectedEntity.team !== myTeam()) {
         btnM.disabled = true;
