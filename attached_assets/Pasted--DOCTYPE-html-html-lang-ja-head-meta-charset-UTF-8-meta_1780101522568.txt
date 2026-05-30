@@ -1620,7 +1620,7 @@ function initEntities(pJob, difficulty = "1") {
         // Wyverns on MAIN FLOORS (not island) — vehicle team, rideable
         let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9},{r:3,c:20}];
         wPos.forEach((p,i)=>{
-            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+            entities.push({id:'wyvern'+i, type:'wyvern', name:'🐉', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
         skyfortLiftPos = 9;
         // 4 power-up items on floating island (rows 7-13, cols 0-6)
@@ -1762,12 +1762,9 @@ function processTurnStartEffects(e) {
         e.shoesTimer--;
         if (e.shoesTimer <= 0) { e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp); }
     }
-    // Summit altitude damage (mountain stage) — 20% AP-1, 20% 1 damage
+    // Summit altitude damage (mountain stage) - HP only, AP penalty removed
     if (activeStage === 'mountain' && board[e.r]?.[e.c] === 'summit' && !e.invin && !e.flying) {
-        let coldMsg = [];
-        if (Math.random() < 0.2) { e.ap = Math.max(0, e.ap - 1); coldMsg.push("行動力-1"); }
-        if (Math.random() < 0.2) { e.hp -= 1; coldMsg.push("1ダメージ"); }
-        if (coldMsg.length > 0) msg(`❄️ ${e.name}は山頂の寒さと薄い空気にやられた！${coldMsg.join("＋")}！`, true);
+        e.hp -= 1;
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
@@ -1866,8 +1863,7 @@ function startTurn(team, skipEffects = false) {
                     let t = candidates[Math.floor(Math.random() * candidates.length)];
                     sandwormTarget = { r: t.r, c: t.c };
                     sandwormWarning = true;
-                    let swR = activeStage === 'chaos' ? 4 : 1;
-                    msg(`⚠️ 次のターン、サンドワームの気配！(半径${swR}マス)`);
+                    msg("⚠️ 次のターン、サンドワームの気配！(半径1マス)");
                 }
             } else {
                 sandwormWarning = false;
@@ -1876,11 +1872,10 @@ function startTurn(team, skipEffects = false) {
             if (duneTimer % 4 === 0 && duneTimer > 0) {
                 sandwormWarning = false;
                 sandwormActive = true;
-                let swR = activeStage === 'chaos' ? 4 : 1;
-                msg(`🪱 サンドワーム出現！半径${swR}マス内のコマに5ダメージ！`);
+                msg("🪱 サンドワーム出現！範囲内のコマに5ダメージ！");
                 if (sandwormTarget) {
                     entities.forEach(e => {
-                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= swR) {
+                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= 1) {
                             if (!e.invin) e.hp -= 5;
                         }
                     });
@@ -1952,7 +1947,7 @@ function startTurn(team, skipEffects = false) {
         // Nighttown: warn 1 turn ahead, then give car NPCs AP every 3 turns
         if (activeStage === 'nighttown') {
             nighttownCarTimer++;
-            if (nighttownCarTimer % 2 === 1) {
+            if (nighttownCarTimer % 3 === 2) {
                 // Warning turn: predict each car's path and mark tiles
                 carWarnTiles = [];
                 entities.filter(e => e.type === 'car' && e.team === 'npc' && e.hp > 0).forEach(car => {
@@ -1960,13 +1955,15 @@ function startTurn(team, skipEffects = false) {
                         if (!carWarnTiles.some(w => w.r === t.r && w.c === t.c)) carWarnTiles.push(t);
                     });
                 });
-                if (carWarnTiles.length > 0) msg("🚗 次のターン、車が走り出す！赤マスに注意！", true);
-            } else if (nighttownCarTimer % 2 === 0 && nighttownCarTimer > 0) {
+                if (carWarnTiles.length > 0) msg("🚗 次のターン、車が走り出す予兆！赤マスに注意！", true);
+            } else if (nighttownCarTimer % 3 === 0 && nighttownCarTimer > 0) {
                 carWarnTiles = [];
                 entities.forEach(e => {
                     if (e.type === 'car' && e.team === 'npc' && e.hp > 0) e.ap = e.maxAp;
                 });
                 msg("🚗 車が走り出した！逃げろ！", true);
+            } else {
+                carWarnTiles = [];
             }
         }
         // Skyfort: dragon spawns every 3 turns
@@ -2029,7 +2026,7 @@ function startTurn(team, skipEffects = false) {
             if (spot) {
                 let t = pool[Math.floor(Math.random()*pool.length)];
                 if (t === 'wolf') {
-                    entities.push({id:'npcwolf'+Date.now(), type:'wolf', name:'オオカミ', team:'npc', r:spot.r, c:spot.c, hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1});
+                    entities.push({id:'npcwolf'+Date.now(), type:'wolf', name:'オオカミ', team:'npc', r:spot.r, c:spot.c, hp:2, maxHp:2, ap:3, maxAp:3, abilities:{sword:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1});
                 } else spawnAt(t, spot.r, spot.c);
                 msg(`🌙 夜の街に魔物が現れた！`, true);
             }
@@ -2183,26 +2180,24 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board'];
-        return rockableGrounds.includes(board[r][c]) && !isNoRockZone(r, c) && !target;
+        return (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'graveyard_ground' || board[r][c] === 'nighttown_ground' || board[r][c] === 'nighttown_goal' || board[r][c] === 'fortress_floor') && !isNoRockZone(r, c) && !target;
     }
     // Stolen lock: prevents use for 1 turn after being stolen from
     if (se.stolenLock && se.stolenLock[mode] > turn) return false;
     if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'shatter') return dist === 1 && (['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]) || (target && target.type === 'car'));
     if (mode === 'dash') {
-        let canPhase = se.flying || se.invin;
-        if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
+        if (se.flying) return dist > 0 && dist <= 2;
         if (dist === 0 || dist > 2) return false;
         if (!isWalkable(r, c)) return false;
         let rawDr = r - se.r, rawDc = c - se.c;
         if (rawDr !== 0 && rawDc === 0 && Math.abs(rawDr) === 2) {
-            let midR = se.r + Math.sign(rawDr), midC = se.c;
-            if (!isWalkable(midR, midC) || entities.some(e => e.hp > 0 && e.r === midR && e.c === midC)) return false;
+            let midT = board[se.r + Math.sign(rawDr)]?.[se.c];
+            if (['river','sky_void','fallen_floor','whirlpool'].includes(midT)) return false;
         }
         if (rawDr === 0 && rawDc !== 0 && Math.abs(rawDc) === 2) {
-            let midR = se.r, midC = se.c + Math.sign(rawDc);
-            if (!isWalkable(midR, midC) || entities.some(e => e.hp > 0 && e.r === midR && e.c === midC)) return false;
+            let midT = board[se.r]?.[se.c + Math.sign(rawDc)];
+            if (['river','sky_void','fallen_floor','whirlpool'].includes(midT)) return false;
         }
         return true;
     }
@@ -2216,7 +2211,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
-    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'sword' || mode === 'punch' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
     if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
     if (mode === 'spin_slash') return true; 
@@ -2264,9 +2259,8 @@ function render() {
             
             if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
             
-            if ((activeStage === 'desert' || activeStage === 'chaos') && sandwormTarget) {
-                let swR = activeStage === 'chaos' ? 4 : 1;
-                if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= swR) {
+            if (activeStage === 'desert' && sandwormTarget) {
+                if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= 1) {
                     if (sandwormWarning) d.classList.add('sandworm-warn');
                     if (sandwormActive) {
                         d.classList.add('sandworm-attack');
@@ -2474,7 +2468,7 @@ function checkTileEffects(entity) {
         }
     }
     // Graveyard: crossing a bridge with collected souls summons spirits near enemy entities (radius 2)
-    if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'nighttown' || activeStage === 'chaos')) {
+    if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'chaos')) {
         let team = entity.team;
         if ((team === 'player' || team === 'cpu') && souls[team] > 0) {
             let n = souls[team];
@@ -2814,9 +2808,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['ice_magic']--; 
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1; }
         msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(1)を与え行動力を奪った！"); used = true;
-    } else if (actionMode === 'sword' || actionMode === 'punch' || actionMode === 'bite') {
+    } else if (actionMode === 'sword' || actionMode === 'punch') {
         if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--; 
-        let atkName = actionMode === 'punch' ? 'ぶん殴り' : actionMode === 'bite' ? '噛みつき' : '剣撃';
+        let atkName = actionMode === 'punch' ? 'ぶん殴り' : '剣撃';
         if (meleeDodged(targetEntity)) { msg(`${atkName}！しかし飛行コマに回避された！`); used = true; }
         else {
             let dmg = ((se.type === 'golem' || se.type === 'big') ? 2 : 1) + (se.atkBonus || 0);
@@ -2915,7 +2909,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("穴移動！別の穴へテレポートした！");
     } else if (actionMode === 'wolf_summon') {
         se.abilities['wolf_summon']--;
-        entities.push({ id: 'wolf'+Date.now(), type: 'wolf', name: 'オオカミ', team: se.team, r, c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        entities.push({ id: 'wolf'+Date.now(), type: 'wolf', name: 'オオカミ', team: se.team, r, c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { sword: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
         msg("オオカミを召喚！(HP2/AP3/噛みつき∞)"); used = true;
     } else if (actionMode === 'falcon_summon') {
         se.abilities['falcon_summon']--;
@@ -3314,11 +3308,11 @@ function doPurify(entity) {
     let n = souls[team] || 0;
     if (n <= 0) { msg("消化できる魂がありません"); return; }
     entity.hp = Math.min(entity.maxHp, entity.hp + n);
-    for (let k in entity.abilities) {
-        if (entity.abilities[k] !== 999) entity.abilities[k] += n;
+    if (entity.initialAbilities) {
+        for (let k in entity.initialAbilities) entity.abilities[k] = entity.initialAbilities[k];
     }
     souls[team] = 0;
-    msg(`⛪ 浄化！魂${n}を消化しHP+${n}＆全アビリティ使用回数+${n}！`, true);
+    msg(`⛪ 浄化！魂${n}を消化しHPを${n}回復＆全アビリティ回数を回復した！`, true);
     updateUI(); render();
     if (isOnlineMode) syncState();
 }
@@ -3561,13 +3555,10 @@ function cpuLogic() {
                         if (!p.invin) { p.ap--; p.hp -= 2; p.poisonTimer = 3; msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`); }
                         else { msg(`敵の毒剣刺し！しかし${p.name}は無敵で防いだ！`); }
                         attacked = true; cpu.ap--;
-                    } else if (cpu.abilities.sword > 0 || cpu.abilities.punch > 0 || cpu.abilities.bite > 0) {
+                    } else if (cpu.abilities.sword > 0 || cpu.abilities.punch > 0) {
                         let usesPunch = cpu.abilities.punch > 0;
-                        let usesBite = !usesPunch && (cpu.abilities.bite > 0);
-                        if (usesPunch) cpu.abilities.punch--;
-                        else if (usesBite && cpu.abilities.bite !== 999) cpu.abilities.bite--;
-                        else if (!usesBite && cpu.abilities.sword !== 999) cpu.abilities.sword--;
-                        let atkName = usesPunch ? 'ぶん殴り' : usesBite ? '噛みつき' : '剣撃';
+                        if (usesPunch) cpu.abilities.punch--; else cpu.abilities.sword--;
+                        let atkName = usesPunch ? 'ぶん殴り' : '剣撃';
                         if (!p.invin) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の${atkName}！${p.name}に1ダメージ！`); }
                         else { msg(`敵の${atkName}！しかし${p.name}は無敵で防いだ！`); }
                         attacked = true; cpu.ap--;
@@ -3729,9 +3720,9 @@ function npcLogic() {
             if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && passableTiles.includes(board[nr]?.[nc] || '')) {
                 let blocker = entities.find(e => e.hp > 0 && e.r === nr && e.c === nc && e.team !== 'npc' && e.team !== 'vehicle');
                 if (blocker && !blocker.invin) {
-                    blocker.hp -= 1;
+                    blocker.hp -= 3;
                     knockback(blocker, 2, n);
-                    msg(`🚗 車が${blocker.name}に突撃！1ダメージ＋吹き飛ばし！`, true);
+                    msg(`🚗 車が${blocker.name}に突撃！3ダメージ＋吹き飛ばし！`, true);
                 }
                 n.r = nr; n.c = nc;
             } else {
@@ -3742,8 +3733,8 @@ function npcLogic() {
                 if (nr2 >= 0 && nr2 < SIZE && nc2 >= 0 && nc2 < SIZE && passableTiles.includes(board[nr2]?.[nc2] || '')) {
                     let blocker2 = entities.find(e => e.hp > 0 && e.r === nr2 && e.c === nc2 && e.team !== 'npc' && e.team !== 'vehicle');
                     if (blocker2 && !blocker2.invin) {
-                        blocker2.hp -= 1; knockback(blocker2, 2, n);
-                        msg(`🚗 車が${blocker2.name}に突撃！1ダメージ＋吹き飛ばし！`, true);
+                        blocker2.hp -= 3; knockback(blocker2, 2, n);
+                        msg(`🚗 車が${blocker2.name}に突撃！3ダメージ＋吹き飛ばし！`, true);
                     }
                     n.r = nr2; n.c = nc2;
                 }
@@ -4070,27 +4061,6 @@ function updateUI() {
             if (actionMode === 'roll_rock') rb.classList.add('active');
             rb.onclick = () => { actionMode = 'roll_rock'; updateUI(); render(); };
             list.appendChild(rb);
-        }
-    }
-
-    // Skyfort: Wyvern adjacent boarding
-    if (activeStage === 'skyfort' && selectedEntity && canIAct() && !selectedEntity.onWyvern && (selectedEntity.team === myTeam())) {
-        let adjWyvern = entities.find(e => e.hp > 0 && e.type === 'wyvern' && e.team === 'vehicle' &&
-            Math.abs(e.r - selectedEntity.r) + Math.abs(e.c - selectedEntity.c) === 1);
-        if (adjWyvern) {
-            let wb = document.createElement('button');
-            wb.className = 'ability-btn';
-            wb.style.background = '#4a148c'; wb.style.color = '#fff';
-            wb.innerText = '🐉 騎乗 (隣のワイバーンに乗る / 飛行可)';
-            wb.onclick = () => {
-                selectedEntity.r = adjWyvern.r; selectedEntity.c = adjWyvern.c;
-                selectedEntity.onWyvern = adjWyvern.id;
-                selectedEntity.flying = true;
-                msg(`🐉 ${selectedEntity.name}がワイバーンに騎乗した！飛行コマになった！`);
-                checkWin(); render(); updateUI();
-                if (isOnlineMode) syncState();
-            };
-            list.appendChild(wb);
         }
     }
 
