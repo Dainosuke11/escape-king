@@ -285,7 +285,7 @@
         <label>ジョブ選択:</label>
         <select id="job-select">
             <option value="random">🎲 ランダム (おまかせ)</option>
-            <option value="king">王 (バランス・無敵化)</option>
+            <option value="king">王 (号令・召喚・カウンター)</option>
             <option value="knight">騎士 (突破力・直線突進)</option>
             <option value="assassin">暗殺者 (隠密・毒武器化)</option>
             <option value="infantry">歩兵 (分隊召喚)</option>
@@ -359,7 +359,7 @@
             <label>ジョブ選択:</label>
             <select id="ranked-job-select">
                 <option value="random">🎲 ランダム (おまかせ)</option>
-                <option value="king">王 (バランス・無敵化)</option>
+                <option value="king">王 (号令・召喚・カウンター)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
                 <option value="infantry">歩兵 (分隊召喚)</option>
@@ -387,7 +387,7 @@
             <label>ジョブ選択:</label>
             <select id="ol-job-select">
                 <option value="random">🎲 ランダム (おまかせ)</option>
-                <option value="king">王 (バランス・無敵化)</option>
+                <option value="king">王 (号令・召喚・カウンター)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
                 <option value="infantry">歩兵 (分隊召喚)</option>
@@ -439,7 +439,7 @@
             <label>ジョブ選択 (あなたのジョブ):</label>
             <select id="ol-join-job-select">
                 <option value="random">🎲 ランダム (おまかせ)</option>
-                <option value="king">王 (バランス・無敵化)</option>
+                <option value="king">王 (号令・召喚・カウンター)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
                 <option value="infantry">歩兵 (分隊召喚)</option>
@@ -1964,6 +1964,15 @@ function processTurnStartEffects(e) {
         e.defDebuffTimer--;
         if (e.defDebuffTimer <= 0) e.defDebuff = 0;
     }
+    // 王の号令バフ (AP+1・カウンター) の期限処理
+    if ((e.kingBuff||0) > 0) {
+        e.kingBuff--;
+        if (e.kingBuff <= 0) {
+            e.maxAp = Math.max(1, e.maxAp - 1);
+            e.ap = Math.min(e.ap, e.maxAp);
+            if ((e.abilities?.counter||0) > 0) e.abilities.counter--;
+        }
+    }
     if (e.trapHitPenalty > 0) {
         e.trapHitPenalty--;
         e.ap = Math.max(0, e.ap - 1);
@@ -2025,6 +2034,14 @@ function startTurn(team, skipEffects = false) {
                 if (tr.r >= 0 && tr.r < SIZE && tr.c >= 0 && tr.c < SIZE) {
                     board[tr.r][tr.c] = tr.restoreTile || 'plains';
                 }
+                return false;
+            }
+            return true;
+        });
+        // 王の号令で召喚されたコマの自動消滅処理
+        entities = entities.filter(e => {
+            if (e.despawnOnTurn && e.despawnOnTurn <= turn) {
+                msg(`👑 ${e.name}は役目を終えて消えた！`, true);
                 return false;
             }
             return true;
@@ -3703,10 +3720,47 @@ function executeSkill(se) {
         if (!isSquad && turn < 5) { msg("この固有スキルは5ターン目から使用可能です！"); return false; }
     }
 
-    if (se.type === 'king') { 
-        se.invinTimer = 3; se.invin = true;
-        msg("王のスキル！3ターン無敵状態になった！");
-        return true; 
+    if (se.type === 'king') {
+        // 正面3マス（北方向）に弓兵・槍兵・分隊を召喚
+        const despawn = turn + 2;
+        const summons = [
+            { type:'archer',   name:'弓兵', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{ bow:999 }, r:se.r-1, c:se.c-1 },
+            { type:'lancer',   name:'槍兵', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{ spear:999 }, r:se.r-1, c:se.c },
+            { type:'infantry', name:'分隊', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{ sword:10, punch:5, bow:3 }, r:se.r-1, c:se.c+1 }
+        ];
+        let spawned = 0;
+        summons.forEach((st, i) => {
+            const fallbacks = [
+                {r:st.r, c:st.c}, {r:se.r-1,c:se.c}, {r:se.r,c:se.c-1},
+                {r:se.r,c:se.c+1}, {r:se.r+1,c:se.c}, {r:se.r-1,c:se.c+1}, {r:se.r-1,c:se.c-1}
+            ];
+            for (let p of fallbacks) {
+                if (p.r>=0 && p.r<SIZE && p.c>=0 && p.c<SIZE &&
+                    isWalkable(p.r,p.c) && !entities.some(e=>e.hp>0&&e.r===p.r&&e.c===p.c)) {
+                    entities.push({ ...st, id:st.type+'kcmd'+Date.now()+i,
+                        team:se.team, r:p.r, c:p.c,
+                        skillUsed:true, stealth:false, stealthTimer:0,
+                        invin:false, invinTimer:0, poisonTimer:0,
+                        turnBorn:turn, despawnOnTurn:despawn,
+                        atkBonus:0, defDebuff:0 });
+                    spawned++;
+                    break;
+                }
+            }
+        });
+        // 半径8マス内の味方（自身含む）にAP+1・カウンター+1を1ターン付与
+        let commanded = 0;
+        entities.forEach(e => {
+            if (e.team===se.team && e.hp>0 && Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=8) {
+                if (!(e.kingBuff>0)) { e.maxAp++; e.ap=Math.min(e.ap+1,e.maxAp); }
+                e.kingBuff = 1;
+                e.abilities = e.abilities || {};
+                e.abilities.counter = (e.abilities.counter||0) + 1;
+                commanded++;
+            }
+        });
+        msg(`👑 王の号令！正面に弓兵・槍兵・分隊が出現（2T後消滅）！半径8の味方${commanded}体にAP+1・カウンター付与！`);
+        return true;
     }
     if (se.type === 'knight') { msg("騎士の突進のターゲット方向(直線5マス以内)を選んでください"); actionMode = 'skill_knight'; render(); return false; }
     if (se.type === 'mage') { msg("大火球魔法！ターゲット(半径5マス以内の敵)を選んでください"); actionMode = 'skill_mage'; render(); return false; }
@@ -4909,6 +4963,10 @@ function updateUI() {
             addStatus('🛡️ 不退転の自己犠牲中！受けるダメージ+1', '#e74c3c');
         if ((selectedEntity.unwaverBuff||0) > 0)
             addStatus('⚔️ 不退転の加護！AP+1・攻撃力+1中', '#e67e22');
+        if ((selectedEntity.kingBuff||0) > 0)
+            addStatus('👑 王の号令！AP+1・カウンター付与中', '#f39c12');
+        if (selectedEntity.despawnOnTurn)
+            addStatus(`👑 号令コマ：あと${selectedEntity.despawnOnTurn - turn}T で消滅`, '#8e44ad');
     }
 }
 </script>
