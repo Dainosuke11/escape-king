@@ -725,7 +725,8 @@ const ABILITY_NAMES = {
     sweep: '薙ぎ払い(半径2弧/威2/吹飛)', plasma_snipe: 'プラズマスナイプ(直線5/威4)',
     plasma_bazooka: 'プラズマバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
     recon_drone: '偵察ドローン(半径3暴露)',
-    tentacle_whip: '触手のムチ(半径2/威1)', tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
+    tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
+    tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
     optical_camo: '光学迷彩(3T潜伏)', form_shift: '形態変化(戦闘形態)',
     branch_whip: '枝のムチ(半径2/威1)', seed_plant: '種まき(成長→ベビーM)',
@@ -809,6 +810,7 @@ const ABILITY_TIPS = {
     incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
     recon_drone: '対象マス周囲半径3マスの潜伏敵を全員暴露。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
+    water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
     tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
@@ -2643,6 +2645,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'recon_drone') return maxDist<=5 && isWalkable(r,c,true);
     // Alien
     if (mode === 'tentacle_whip') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'water_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && (target.team!==se.team || isOceanUnit(target));
     if (mode === 'tractor_beam') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'abduction') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'egg_place') return maxDist<=1 && isWalkable(r,c);
@@ -3637,6 +3640,16 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
         msg(targetEntity?.invin ? '🐙 触手のムチ！しかし無敵で防がれた！' : '🐙 触手のムチ！1ダメ・吹き飛ばし！'); used = true;
+    } else if (actionMode === 'water_spit') {
+        se.abilities['water_spit']--;
+        if (targetEntity && targetEntity.team === se.team && isOceanUnit(targetEntity)) {
+            targetEntity.waterGauge = Math.min(targetEntity.maxWaterGauge||30, (targetEntity.waterGauge||0) + 5);
+            targetEntity.hp = Math.min(targetEntity.maxHp||targetEntity.hp, targetEntity.hp + 1);
+            msg(`💧 水吐き！味方${targetEntity.name}にゲージ+5・HP+1！`); used = true;
+        } else if (targetEntity) {
+            if (!targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); }
+            msg(targetEntity.invin ? '💧 水吐き！しかし無敵で防がれた！' : `💧 水吐き！${targetEntity.name}に1ダメ！`); used = true;
+        }
     } else if (actionMode === 'tractor_beam') {
         se.abilities['tractor_beam']--;
         if (targetEntity && !targetEntity.invin) {
@@ -3950,9 +3963,10 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         msg(`🌀 渦潮発動！3×3が渦潮化(命中${waHits}体)AP-1！2T後に浅瀬化！`); used = true;
     } else if (actionMode === 'octopus_summon') {
+        if (turn < 5) { msg("🐙 タコ召喚は5ターン経過後に使用可能！"); return; }
         se.abilities['octopus_summon']--;
-        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
-        msg("🐙 タコ召喚！(HP3/AP2/触手∞/海洋コマ)"); used = true;
+        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:3}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
+        msg("🐙 タコ召喚！(HP3/AP2/触手∞・水吐き3/海洋コマ)"); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
