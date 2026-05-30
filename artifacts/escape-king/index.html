@@ -284,23 +284,25 @@
     <div class="select-group">
         <label>ジョブ選択:</label>
         <select id="job-select">
+            <option value="random">🎲 ランダム (おまかせ)</option>
             <option value="king">王 (バランス・無敵化)</option>
             <option value="knight">騎士 (突破力・直線突進)</option>
             <option value="assassin">暗殺者 (隠密・毒武器化)</option>
             <option value="infantry">歩兵 (分隊召喚)</option>
             <option value="mage">魔法使い (召喚魔法・大火球)</option>
-                <option value="thief">泥棒 (逃走・強奪・コピー)</option>
-                <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
-                <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
-                <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
-                <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
-                <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
-                <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
+            <option value="thief">泥棒 (逃走・強奪・コピー)</option>
+            <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
+            <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
+            <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
+            <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
+            <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
+            <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
         </select>
     </div>
     <div class="select-group">
         <label>ステージ選択:</label>
         <select id="stage-select">
+            <option value="random">🎲 ランダム (ステージおまかせ)</option>
             <option value="plains">草原 (オーソドックス)</option>
             <option value="forest">森林 (森だらけの迷彩戦)</option>
             <option value="desert">砂漠 (サンドワームとラクダ)</option>
@@ -313,7 +315,6 @@
             <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
             <option value="chaos">混沌 (全ギミック入り乱れ)</option>
             <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
-            <option value="random">🎲 ランダム (ステージおまかせ)</option>
         </select>
     </div>
     <div class="select-group">
@@ -357,6 +358,7 @@
         <div class="select-group">
             <label>ジョブ選択:</label>
             <select id="ranked-job-select">
+                <option value="random">🎲 ランダム (おまかせ)</option>
                 <option value="king">王 (バランス・無敵化)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
@@ -384,6 +386,7 @@
         <div class="select-group">
             <label>ジョブ選択:</label>
             <select id="ol-job-select">
+                <option value="random">🎲 ランダム (おまかせ)</option>
                 <option value="king">王 (バランス・無敵化)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
@@ -401,6 +404,7 @@
         <div class="select-group">
             <label>ステージ選択:</label>
             <select id="ol-stage-select">
+                <option value="random">🎲 ランダム (ステージおまかせ)</option>
                 <option value="plains">草原 (オーソドックス)</option>
                 <option value="forest">森林 (森だらけの迷彩戦)</option>
                 <option value="desert">砂漠 (サンドワームとラクダ)</option>
@@ -413,7 +417,6 @@
                 <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
                 <option value="chaos">混沌 (全ギミック入り乱れ)</option>
                 <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
-                <option value="random">🎲 ランダム (ステージおまかせ)</option>
             </select>
         </div>
         <div class="select-group">
@@ -435,6 +438,7 @@
         <div class="select-group">
             <label>ジョブ選択 (あなたのジョブ):</label>
             <select id="ol-join-job-select">
+                <option value="random">🎲 ランダム (おまかせ)</option>
                 <option value="king">王 (バランス・無敵化)</option>
                 <option value="knight">騎士 (突破力・直線突進)</option>
                 <option value="assassin">暗殺者 (隠密・毒武器化)</option>
@@ -1140,8 +1144,8 @@ function backToHome() {
 }
 
 function createRoom() {
-    const job = document.getElementById('ol-job-select').value;
-    const stage = document.getElementById('ol-stage-select').value;
+    const job = resolveJob(document.getElementById('ol-job-select').value);
+    const stage = resolveStage(document.getElementById('ol-stage-select').value);
     const difficulty = document.getElementById('ol-difficulty-select').value;
     const seed = Math.floor(Math.random() * 0x7fffffff);
 
@@ -1165,7 +1169,7 @@ function createRoom() {
 
 function joinRoom() {
     const code = document.getElementById('ol-join-code').value.toUpperCase().trim();
-    const job = document.getElementById('ol-join-job-select').value;
+    const job = resolveJob(document.getElementById('ol-join-job-select').value);
     if (code.length < 4) {
         document.getElementById('join-error').textContent = '4文字のコードを入力してください';
         return;
@@ -1182,7 +1186,7 @@ function joinRoom() {
 
 // ---- Ranked matchmaking ----
 function startRankedSearch() {
-    const job = document.getElementById('ranked-job-select').value;
+    const job = resolveJob(document.getElementById('ranked-job-select').value);
     intentionalClose = false;
     document.getElementById('btn-find-ranked').style.display = 'none';
     document.getElementById('btn-cancel-ranked').style.display = 'inline-block';
@@ -1360,16 +1364,22 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin'];
+const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon'];
+
+function resolveJob(job) {
+    return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
+}
+function resolveStage(stage) {
+    return stage === 'random' ? ALL_STAGES[Math.floor(Math.random()*ALL_STAGES.length)] : stage;
+}
+
 function startGame() {
     try {
         document.getElementById('error-log').innerText = '';
-        const job = document.getElementById('job-select').value;
-        activeStage = document.getElementById('stage-select').value;
+        const job = resolveJob(document.getElementById('job-select').value);
+        activeStage = resolveStage(document.getElementById('stage-select').value);
         const difficulty = document.getElementById('difficulty-select').value;
-        if (activeStage === 'random') {
-            const pool = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon'];
-            activeStage = pool[Math.floor(Math.random()*pool.length)];
-        }
         
         initBoard(activeStage);
         initEntities(job, difficulty);
