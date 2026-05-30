@@ -508,6 +508,7 @@ let entities = [];
 let selectedEntity = null;
 let actionMode = 'move';
 let turn = 1;
+let tempRocks = [];
 let isPlayerTurn = true;
 let treasures = ['platinum', 'gold', 'silver', 'copper'];
 let activeStage = '';
@@ -716,7 +717,8 @@ const ABILITY_NAMES = {
     flying_kick: '跳び蹴り(直線3/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威1/吹飛)',
     flame_breath: '火炎ブレス(半径2/威2/燃焼2T)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
     counter: 'カウンター(被弾反撃)', ryujin_transform: '変身(竜形態/飛行)',
-    afterimage: '残像(デコイ/潜伏/5T~)'
+    afterimage: '残像(デコイ/潜伏/5T~)',
+    fortify: '築城(正面3岩+南大砲/1T限定)'
 };
 
 const ABILITY_TIPS = {
@@ -796,14 +798,15 @@ const ABILITY_TIPS = {
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
     counter: '構え状態を1回追加。次に近接攻撃を受けた時に自動で2ダメ反撃。回数3。',
     ryujin_transform: '竜の姿に変身(飛行・ヘルブレス使用可)。再使用で元に戻る。3Tクールダウン。',
-    afterimage: '隣接マスに残像(HP1/AP4/打撃のみ)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。'
+    afterimage: '隣接マスに残像(HP1/AP4/打撃のみ)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。',
+    fortify: '正面(北)3マスに一時的な岩を設置し、南に大砲マスを配置。岩と大砲は次の自分ターン開始時に消滅。回数2。'
 };
 
 const JOB_DATA = {
-    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1 }, hp: 30, ap: 2 },
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1 }, hp: 30, ap: 2 },
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1 }, hp: 30, ap: 2 },
-    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 },
@@ -975,7 +978,7 @@ function handleWsMessage(event) {
             initEntitiesOnline(job, cpuJob, settings.difficulty);
         });
 
-        turn = 1;
+        turn = 1; tempRocks = [];
         isPlayerTurn = settings.p1First;
         activeStage = settings.stage;
 
@@ -1283,7 +1286,7 @@ window.addEventListener('DOMContentLoaded', () => {
         let pJob = entities.find(e => e.id === 'p1').type;
         let difficulty = document.getElementById('difficulty-select').value;
         initEntities(pJob, difficulty);
-        turn = 1; 
+        turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
         startTurn(isPlayerTurn ? 'player' : 'cpu');
     });
@@ -1372,7 +1375,7 @@ function startGame() {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
         
-        turn = 1;
+        turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
         render();
         startTurn(isPlayerTurn ? 'player' : 'cpu');
@@ -1992,6 +1995,16 @@ function startTurn(team, skipEffects = false) {
                 else if (board[r][c] === 'cannon_cd_2') board[r][c] = 'cannon_cd_1';
             }
         }
+        // 築城アビリティで設置した一時的な岩・大砲タイルの消滅処理
+        tempRocks = tempRocks.filter(tr => {
+            if (tr.expireOnTurn <= turn) {
+                if (tr.r >= 0 && tr.r < SIZE && tr.c >= 0 && tr.c < SIZE) {
+                    board[tr.r][tr.c] = tr.restoreTile || 'plains';
+                }
+                return false;
+            }
+            return true;
+        });
     }
 
     usedAbilities = {};
@@ -2465,6 +2478,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'hell_breath') return true;
     if (mode === 'thunder_magic') return maxDist > 0 && maxDist <= 2+(se.rangeBonus||0) && target && target.team !== se.team;
     if (mode === 'meditation') return true;
+    if (mode === 'fortify') return true;
     // Cyborg
     if (mode === 'power_charge') return true;
     if (mode === 'jet_boost') return maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
@@ -3307,6 +3321,30 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.ap = Math.max(0, se.ap - 2);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k]++; }
         msg('🧘 瞑想！AP-2して全アビリティの使用回数を+1！'); used = true;
+    } else if (actionMode === 'fortify') {
+        se.abilities['fortify']--;
+        let rocksPlaced = 0;
+        // 正面3マス（北=row-1）に一時的な岩を設置
+        [[se.r-1, se.c-1],[se.r-1, se.c],[se.r-1, se.c+1]].forEach(([fr, fc]) => {
+            if (fr >= 0 && fr < SIZE && fc >= 0 && fc < SIZE && !isNoRockZone(fr, fc) &&
+                board[fr][fc] !== 'rock' && !entities.some(e => e.hp > 0 && e.r === fr && e.c === fc)) {
+                board[fr][fc] = 'rock';
+                tempRocks.push({r: fr, c: fc, expireOnTurn: turn + 1, restoreTile: 'plains'});
+                rocksPlaced++;
+            }
+        });
+        // 南（row+1）に大砲マスを一時設置
+        let cr = se.r + 1, cc = se.c;
+        let cannonPlaced = false;
+        if (cr >= 0 && cr < SIZE && !isNoRockZone(cr, cc) && isWalkable(cr, cc, false) &&
+            !entities.some(e => e.hp > 0 && e.r === cr && e.c === cc)) {
+            let prevTile = board[cr][cc];
+            board[cr][cc] = 'cannon';
+            tempRocks.push({r: cr, c: cc, expireOnTurn: turn + 1, restoreTile: prevTile || 'plains'});
+            cannonPlaced = true;
+        }
+        msg(`🏰 築城！正面に岩${rocksPlaced}個${cannonPlaced ? '・南に大砲' : ''}を設置！次の自分ターン開始時に消滅！`);
+        used = true;
     // ====== 機械兵 ======
     } else if (actionMode === 'power_charge') {
         se.abilities['power_charge']--;
