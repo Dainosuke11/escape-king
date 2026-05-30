@@ -292,10 +292,6 @@
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
                 <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
-                <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
-                <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
-                <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
-                <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
         </select>
     </div>
     <div class="select-group">
@@ -365,10 +361,6 @@
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
                 <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
-                <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
-                <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
-                <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
-                <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -392,10 +384,6 @@
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
                 <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
-                <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
-                <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
-                <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
-                <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
             </select>
         </div>
         <div class="select-group">
@@ -443,10 +431,6 @@
                 <option value="thief">泥棒 (逃走・強奪・コピー)</option>
                 <option value="beastmaster">獣使い (召喚・テイム・騎乗)</option>
                 <option value="macho">マッチョ (岩雪崩・僧侶召喚・ドーピング)</option>
-                <option value="cyborg">機械兵 (プラズマ・ジェット・リミッター解除)</option>
-                <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
-                <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
-                <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -700,23 +684,7 @@ const ABILITY_NAMES = {
     healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', dig: '地面掘り', hole_move: '穴移動',
     rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)', monk_summon: '僧侶召喚',
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
-    fire_breath: '火炎ブレス', peck: 'つつき',
-    hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
-    power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(半径3飛行移動)',
-    plasma_blade: 'プラズマブレード(威3/HP-1/AP-1)', plasma_blade2: 'プラズマブレード改(威6/AP-1/HP-1)',
-    sweep: '薙ぎ払い(半径2弧/威2/吹飛)', plasma_snipe: 'プラズマスナイプ(直線5/威4)',
-    plasma_bazooka: 'プラズマバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
-    recon_drone: '偵察ドローン(半径3暴露)',
-    tentacle_whip: '触手のムチ(半径2/威1)', tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
-    abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
-    optical_camo: '光学迷彩(3T潜伏)', form_shift: '形態変化(戦闘形態)',
-    branch_whip: '枝のムチ(半径2/威1)', seed_plant: '種まき(成長→ベビーM)',
-    fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛)',
-    root_spread: '根を張る(AP-2/半径8回復)', roar: '咆哮(半径1/威1/AP-2)',
-    flying_kick: '跳び蹴り(直線3/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威1/吹飛)',
-    flame_breath: '火炎ブレス(半径2/威2/燃焼2T)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
-    counter: 'カウンター(被弾反撃)', ryujin_transform: '変身(竜形態/飛行)',
-    afterimage: '残像(デコイ/潜伏/5T~)'
+    fire_breath: '火炎ブレス', peck: 'つつき'
 };
 
 const ABILITY_TIPS = {
@@ -765,38 +733,7 @@ const ABILITY_TIPS = {
     dig: '隣の地面を掘る。敵が通過するとAP-2して穴は消える。掘った穴が2つ以上で味方が穴に止まると穴移動が可能。',
     hole_move: '別の掘った穴へテレポート移動する。',
     fire_breath: '半径2マス内の敵1体に2ダメージ。回数無限。',
-    peck: '隣接した敵をつつく。攻撃力1。回数無限。',
-    hell_breath: '半径3マス内の全敵に3ダメージ＋AP-1＋吹き飛ばし。ドラゴンNPCに1回付与。',
-    thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
-    meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
-    power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
-    jet_boost: 'AP-1・HP-1して半径3マスの任意マスに飛行移動。回数5。',
-    plasma_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
-    plasma_blade2: '隣接した敵に6ダメ・AP-1。AP-1・HP-1のコスト。回数2。',
-    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。自傷なし。回数3。',
-    plasma_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
-    plasma_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
-    incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
-    recon_drone: '対象マス周囲半径3マスの潜伏敵を全員暴露。回数2。',
-    tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
-    tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
-    abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
-    egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
-    optical_camo: '光学迷彩で3ターン潜伏状態になる。移動中でも隠れる。回数2。',
-    form_shift: '戦闘形態に変化。全アビリティ+2・攻撃力+2。再度使用で元に戻る。回数1。',
-    branch_whip: '半径2マス(植物LV分拡大)の敵に1ダメ・吹き飛ばし。回数5。',
-    seed_plant: '隣接マスに種を植える。1T後→若芽、2T後→ベビーマンドレイク(HP6/AP2)。回数10。',
-    fusion: '半径1マス内のベビーマンドレイクを全吸収。植物LVアップ＋HP・射程・範囲が拡大。回数1。',
-    seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。回数2。',
-    root_spread: 'AP-2して半径8マスの味方全員HP+1・全アビリティ+1＋種を即時1段階成長。回数1。',
-    roar: '自身周囲半径1マス(植物LV分拡大)の全敵に1ダメ・AP-2。回数1。',
-    flying_kick: '直線3マス内の敵に接近して2ダメ・AP-1・吹き飛ばし。AP消費1。回数1。',
-    rapid_strikes: '周囲半径1マスの全敵に1ダメ・吹き飛ばし。回数3。',
-    flame_breath: '半径2マスの敵1体に2ダメ＋2ターン燃焼(毎ターン1ダメ)。回数2。',
-    tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
-    counter: '構え状態を1回追加。次に近接攻撃を受けた時に自動で2ダメ反撃。回数3。',
-    ryujin_transform: '竜の姿に変身(飛行・ヘルブレス使用可)。再使用で元に戻る。3Tクールダウン。',
-    afterimage: '隣接マスに残像(HP1/AP4/打撃のみ)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。'
+    peck: '隣接した敵をつつく。攻撃力1。回数無限。'
 };
 
 const JOB_DATA = {
@@ -804,14 +741,10 @@ const JOB_DATA = {
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10 }, hp: 30, ap: 2 },
-    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1 }, hp: 30, ap: 2 },
+    mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, summon_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 },
-    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, punch: 10, monk_summon: 1 }, hp: 30, ap: 2 },
-    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, plasma_blade: 3, plasma_blade2: 2, sweep: 3, plasma_snipe: 2, plasma_bazooka: 2, incinerate: 2, recon_drone: 2 }, hp: 30, ap: 2 },
-    alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
-    mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
-    ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 }
+    macho: { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, punch: 10, monk_summon: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1955,29 +1888,6 @@ function processTurnStartEffects(e) {
     if (e.stolenLock) {
         for (let k of Object.keys(e.stolenLock)) { if (e.stolenLock[k] <= turn) delete e.stolenLock[k]; }
     }
-    // 燃焼ダメージ
-    if ((e.burnTimer||0) > 0) {
-        e.burnTimer--;
-        if (!e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は燃焼中！1ダメージ！(残${e.burnTimer}T)`, true); }
-    }
-    // リミッター解除 毎ターン自傷
-    if (e.limiterReleased && !e.invin) {
-        e.hp -= 3;
-        msg(`⚙️ ${e.name}はリミッター解除の反動で3ダメージ！`, true);
-    }
-    // 変身クールダウン
-    if ((e.transformCooldownLeft||0) > 0) {
-        e.transformCooldownLeft--;
-        if (e.transformCooldownLeft <= 0) msg(`🐲 ${e.name}の変身クールダウンが回復した！`, true);
-    }
-    // マインドコントロール解除
-    if ((e.mindControlTimer||0) > 0) {
-        e.mindControlTimer--;
-        if (e.mindControlTimer <= 0 && e.originalTeam) {
-            e.team = e.originalTeam; delete e.originalTeam;
-            msg(`🧠 ${e.name}のマインドコントロールが解除された！`, true);
-        }
-    }
 }
 
 function startTurn(team, skipEffects = false) {
@@ -2143,7 +2053,7 @@ function startTurn(team, skipEffects = false) {
         if (activeStage === 'skyfort' && turn >= 3 && turn % 3 === 0) {
             let dSpot = randomEmptyCells(1)[0];
             if (dSpot) {
-                entities.push({id:'dragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:dSpot.r, c:dSpot.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999, hell_breath:1}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+                entities.push({id:'dragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:dSpot.r, c:dSpot.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
                 msg("🐉 ドラゴンが出現！天空要塞が荒れ狂う！", true);
             }
         }
@@ -2204,36 +2114,6 @@ function startTurn(team, skipEffects = false) {
             });
             if (dNames.length > 0) msg(`🕯️ 地下迷宮の闇から ${dNames.join('・')} が現れた！`, true);
         }
-        // 種/若芽/宇宙卵の成長
-        entities.forEach(e => {
-            if (e.hp <= 0) return;
-            let age = turn - (e.turnBorn||0);
-            if (e.type === 'seed' && age >= 1) {
-                e.type = 'sprout'; e.name = '若芽'; e.hp = Math.max(e.hp, 3); e.maxHp = 3;
-            } else if (e.type === 'sprout' && age >= 2) {
-                e.type = 'baby_mandrake'; e.name = 'ベビーM'; e.hp = 6; e.maxHp = 6; e.ap = 2; e.maxAp = 2;
-                e.abilities = { branch_whip: 999, seed_plant: 1, seed_bazooka: 1, roar: 1 };
-                msg(`🌿 ベビーマンドレイクが誕生！`, true);
-            } else if (e.type === 'alien_egg' && age >= 2) {
-                e.type = 'alien_jr'; e.name = '宇宙人Jr'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
-                e.abilities = { tentacle_whip: 999, optical_camo: 1, punch: 5 };
-                msg(`👽 宇宙の卵が孵化！宇宙人Jrが誕生！`, true);
-            }
-        });
-        // アブダクション解除（1ターン経過で帰還）
-        entities.forEach(e => {
-            if (e.abducted && e.hp > 0 && turn - (e.abductedTurn||0) >= 1) {
-                e.abducted = false;
-                let placed = false;
-                for (let dr=-2; dr<=2 && !placed; dr++) for (let dc=-2; dc<=2 && !placed; dc++) {
-                    let nr=(e.abductedR||0)+dr, nc=(e.abductedC||0)+dc;
-                    if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)) {
-                        e.r=nr; e.c=nc; placed=true;
-                    }
-                }
-                msg(`👽 ${e.name}がアブダクションから帰還した！`, true);
-            }
-        });
         // Decrement curse timers for all entities
         if (Object.keys(cursedAbilities).length > 0) {
             for (let eid in cursedAbilities) {
@@ -2461,45 +2341,6 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'skill_copy') return maxDist <= 2 && target && target.team !== se.team && isJobPiece(target);
     if (mode === 'skill_dragon') return maxDist <= 2 && isWalkable(r, c);
     if (mode === 'fire_breath') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
-    // Dragon / Mage new abilities
-    if (mode === 'hell_breath') return true;
-    if (mode === 'thunder_magic') return maxDist > 0 && maxDist <= 2+(se.rangeBonus||0) && target && target.team !== se.team;
-    if (mode === 'meditation') return true;
-    // Cyborg
-    if (mode === 'power_charge') return true;
-    if (mode === 'jet_boost') return maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
-    if (mode === 'plasma_blade') return maxDist === 1 && target && target.team !== se.team;
-    if (mode === 'plasma_blade2') return maxDist === 1 && target && target.team !== se.team;
-    if (mode === 'sweep') return true;
-    if (mode === 'plasma_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'plasma_bazooka') return maxDist>0 && maxDist<=4+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'incinerate') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'recon_drone') return maxDist<=5 && isWalkable(r,c,true);
-    // Alien
-    if (mode === 'tentacle_whip') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'tractor_beam') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'abduction') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'egg_place') return maxDist<=1 && isWalkable(r,c);
-    if (mode === 'optical_camo') return true;
-    if (mode === 'form_shift') return true;
-    if (mode === 'skill_mind_control') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
-    // Mandrake
-    if (mode === 'branch_whip') return maxDist>0 && maxDist<=2+(se.plantLevel||0)+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'seed_plant') { let g=board[r]?.[c]; return maxDist<=1+(se.plantLevel||0) && !target && (g==='plains'||g==='dungeon_ground'||g==='desert'||g==='graveyard_ground'||g==='nighttown_ground'||g==='fortress_floor'||g==='mountain_tile'||g==='snow'||g==='summit'); }
-    if (mode === 'fusion') return true;
-    if (mode === 'seed_bazooka') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.plantLevel||0)+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'root_spread') return true;
-    if (mode === 'roar') return true;
-    if (mode === 'skill_root_bind') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5;
-    // Ryujin
-    if (mode === 'flying_kick') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'rapid_strikes') return true;
-    if (mode === 'flame_breath') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'tail_swing') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'counter') return true;
-    if (mode === 'ryujin_transform') return true;
-    if (mode === 'afterimage') { if (turn < 5) return false; return maxDist===1 && isWalkable(r,c); }
-    if (mode === 'skill_ryujin') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8;
     return false;
 }
 
@@ -2577,8 +2418,6 @@ function render() {
     });
     sortedEntities.forEach(e => {
         if (e.hp <= 0) return;
-        // Abducted entities are in another dimension
-        if (e.abducted) return;
         // Fog of war: hide enemies and NPCs in fog
         if (fogSet.has(`${e.r},${e.c}`) && e.team !== myTeam()) return;
         
@@ -3126,9 +2965,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         let atkName = actionMode === 'punch' ? 'ぶん殴り' : actionMode === 'bite' ? '噛みつき' : '剣撃';
         if (meleeDodged(targetEntity)) { msg(`${atkName}！しかし飛行コマに回避された！`); used = true; }
         else {
-            let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0);
+            let dmg = ((se.type === 'golem' || se.type === 'big') ? 2 : 1) + (se.atkBonus || 0);
             if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg; knockback(targetEntity, 1, se); }
-            if (!targetEntity.invin && (targetEntity.counterReady||0) > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
             msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
         }
     } else if (actionMode === 'dagger') {
@@ -3199,36 +3037,16 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`煙幕展開！周囲の敵${hit}体のAPを奪い吹き飛ばし、泥棒は潜伏した！`); used = true;
     } else if (actionMode === 'steal') {
         se.abilities['steal']--;
-        let stealMsgs = [];
-        // Pick up items on ground in range 1
-        let stealRange = Math.max(Math.abs(se.r - r), Math.abs(se.c - c));
-        for (let sr = se.r-1; sr <= se.r+1; sr++) {
-            for (let sc2 = se.c-1; sc2 <= se.c+1; sc2++) {
-                if (sr>=0&&sr<SIZE&&sc2>=0&&sc2<SIZE&&board[sr][sc2]==='item_tile'&&itemTileMap[`${sr},${sc2}`]) {
-                    let itm = itemTileMap[`${sr},${sc2}`];
-                    delete itemTileMap[`${sr},${sc2}`]; board[sr][sc2] = defaultGround();
-                    applyItem(se, itm);
-                    stealMsgs.push(`アイテム「${itm}」回収`);
-                }
-            }
-        }
-        // Steal buffs from target: whistleBuff, atkBonus, invin, stealth
-        if (targetEntity) {
-            if ((targetEntity.whistleBuff||0) > 0) { se.whistleBuff = Math.max(se.whistleBuff||0, targetEntity.whistleBuff); targetEntity.whistleBuff = 0; stealMsgs.push('笛バフ奪取'); }
-            if ((targetEntity.atkBonus||0) > 0) { se.atkBonus = (se.atkBonus||0) + targetEntity.atkBonus; targetEntity.atkBonus = 0; stealMsgs.push(`攻撃力+${targetEntity.atkBonus||0}奪取`); }
-            if (targetEntity.invin) { targetEntity.invin = false; targetEntity.invinTimer = 0; se.invin = true; se.invinTimer = 1; stealMsgs.push('無敵状態奪取'); }
-        }
-        // Steal ability charges
         let pool = Object.keys(targetEntity.abilities).filter(k => k !== 'shatter' && targetEntity.abilities[k] !== 999 && targetEntity.abilities[k] > 0);
-        if (pool.length > 0) {
+        if (pool.length === 0) { msg("強奪！しかし奪えるアビリティが無かった…"); used = true; }
+        else {
             let k = pool[Math.floor(Math.random()*pool.length)];
             targetEntity.abilities[k]--;
             se.abilities[k] = (se.abilities[k] && se.abilities[k] !== 999 ? se.abilities[k] : 0) + 1;
             if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
             targetEntity.stolenLock[k] = turn + 1;
-            stealMsgs.push(`「${ABILITY_NAMES[k]||k}」奪取`);
+            msg(`強奪成功！敵から「${ABILITY_NAMES[k]||k}」を1回ぶん奪った！1ターン使用不可！`); used = true;
         }
-        msg(`強奪！${stealMsgs.length>0 ? stealMsgs.join('・')+'！' : 'しかし奪えるものが無かった…'}`); used = true;
     } else if (actionMode === 'miner_call') {
         se.abilities['miner_call']--;
         entities.push({ id: 'miner'+Date.now(), type: 'miner', name: '炭鉱', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { shatter: 999, dig: 999, punch: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, turnBorn: turn });
@@ -3283,268 +3101,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['fire_breath'] !== 999) se.abilities['fire_breath']--;
         if (targetEntity && !targetEntity.invin) targetEntity.hp -= 2;
         msg(targetEntity?.invin ? "火炎ブレス！しかし無敵で防がれた！" : "火炎ブレス！敵に2ダメージ！"); used = true;
-    // ====== 新アビリティ ドラゴン/魔法使い ======
-    } else if (actionMode === 'hell_breath') {
-        if (se.abilities['hell_breath'] !== 999) se.abilities['hell_breath']--;
-        let hbHit = 0;
-        entities.forEach(t => {
-            if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) <= 3) {
-                if (!t.invin) { t.hp -= 3; t.ap = Math.max(0,t.ap-1); knockback(t,1,se); hbHit++; }
-            }
-        });
-        msg(`🔥 ヘルブレス！半径3マスの敵${hbHit}体に3ダメ・AP-1・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'thunder_magic') {
-        se.abilities['thunder_magic']--;
-        let tmHit = 0;
-        entities.forEach(t => {
-            if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c)) <= 1) {
-                if (!t.invin) { t.hp -= 2; t.ap = Math.max(0,t.ap-2); tmHit++; }
-            }
-        });
-        msg(`⚡ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2！`); used = true;
-    } else if (actionMode === 'meditation') {
-        se.abilities['meditation']--;
-        se.ap = Math.max(0, se.ap - 2);
-        for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k]++; }
-        msg('🧘 瞑想！AP-2して全アビリティの使用回数を+1！'); used = true;
-    // ====== 機械兵 ======
-    } else if (actionMode === 'power_charge') {
-        se.abilities['power_charge']--;
-        se.ap = Math.max(0, se.ap - 1);
-        se.hp = Math.min(se.maxHp, se.hp + 5);
-        msg('🔋 電力補給！AP-1してHP+5回復！'); used = true;
-    } else if (actionMode === 'jet_boost') {
-        se.abilities['jet_boost']--;
-        se.ap = Math.max(0, se.ap - 1);
-        se.hp = Math.max(1, se.hp - 1);
-        let wasFlying = se.flying;
-        se.flying = true; se.r = r; se.c = c;
-        let jevMsg = checkTileEffects(se) || '';
-        if (!wasFlying) se.flying = false; // 一時的飛行、着地後は元に戻す
-        msg(`🚀 ジェットブースト！AP-1・HP-1して半径3マス飛行移動！${jevMsg}`);
-        checkEnemyTerritory(se); used = true;
-    } else if (actionMode === 'plasma_blade') {
-        se.abilities['plasma_blade']--;
-        se.hp = Math.max(1, se.hp - 1);
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 3; targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        // counter check
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード！しかし無敵で防がれた！' : 'プラズマブレード！HP-1して敵に3ダメ・AP-1！'); used = true;
-    } else if (actionMode === 'plasma_blade2') {
-        se.abilities['plasma_blade2']--;
-        se.ap = Math.max(0, se.ap - 1); se.hp = Math.max(1, se.hp - 1);
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 6; targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード改！しかし無敵で防がれた！' : 'プラズマブレード改！AP-1・HP-1して敵に6ダメ・AP-1！'); used = true;
-    } else if (actionMode === 'sweep') {
-        se.abilities['sweep']--;
-        let swpHit = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
-                if (!t.invin) { t.hp -= 2; knockback(t,1,se); swpHit++; }
-            }
-        });
-        msg(`⚔️ 薙ぎ払い！半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'plasma_snipe') {
-        se.abilities['plasma_snipe']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 4; targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマスナイプ！しかし無敵で防がれた！' : 'プラズマスナイプ！直線5マス貫通4ダメ・AP-1！'); used = true;
-    } else if (actionMode === 'plasma_bazooka') {
-        se.abilities['plasma_bazooka']--;
-        let pbHit = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
-                if (!t.invin) { t.hp -= 3; knockback(t,1,se); pbHit++; }
-            }
-        });
-        msg(`💥 プラズマバズーカ！ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'incinerate') {
-        se.abilities['incinerate']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 5; targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！5ダメ・AP-2・2ターン燃焼ダメージ！'); used = true;
-    } else if (actionMode === 'recon_drone') {
-        se.abilities['recon_drone']--;
-        let found = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=3 && t.stealth) {
-                t.stealth = false; t.stealthTimer = 0; found++;
-            }
-        });
-        msg(`🛸 偵察ドローン！半径3マスの潜伏${found}体を暴露！`); used = true;
-    // ====== エイリアン ======
-    } else if (actionMode === 'tentacle_whip') {
-        se.abilities['tentacle_whip']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1; knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🐙 触手のムチ！しかし無敵で防がれた！' : '🐙 触手のムチ！1ダメ・吹き飛ばし！'); used = true;
-    } else if (actionMode === 'tractor_beam') {
-        se.abilities['tractor_beam']--;
-        if (targetEntity && !targetEntity.invin) {
-            targetEntity.hp -= 1;
-            let pr = targetEntity.r + Math.sign(se.r - targetEntity.r);
-            let pc = targetEntity.c + Math.sign(se.c - targetEntity.c);
-            if (isWalkable(pr,pc) && !entities.some(e=>e.hp>0&&e.r===pr&&e.c===pc)) { targetEntity.r=pr; targetEntity.c=pc; }
-        }
-        msg(targetEntity?.invin ? '🛸 トラクタービーム！しかし無敵で防がれた！' : '🛸 トラクタービーム！1ダメ・引き寄せ！'); used = true;
-    } else if (actionMode === 'abduction') {
-        se.abilities['abduction']--;
-        if (targetEntity && !targetEntity.invin) {
-            targetEntity.hp -= 2;
-            targetEntity.abducted = true; targetEntity.abductedTurn = turn;
-            targetEntity.abductedR = targetEntity.r; targetEntity.abductedC = targetEntity.c;
-            msg(`👽 アブダクション！${targetEntity.name}を2ダメ＋1ターン異空間に誘拐！`);
-        } else { msg('👽 アブダクション！しかし無敵で防がれた！'); }
-        used = true;
-    } else if (actionMode === 'egg_place') {
-        se.abilities['egg_place']--;
-        entities.push({ id:'egg'+Date.now(), type:'alien_egg', name:'宇宙卵', team:se.team, r, c, hp:2, maxHp:2, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg('🥚 卵設置！2ターン後に宇宙人Jrが孵化！'); used = true;
-    } else if (actionMode === 'optical_camo') {
-        se.abilities['optical_camo']--;
-        se.stealth = true; se.stealthTimer = 3;
-        msg('💨 光学迷彩！3ターン潜伏状態！'); used = true;
-    } else if (actionMode === 'form_shift') {
-        se.abilities['form_shift']--;
-        if (!se.formShifted) {
-            se.savedAbils = {...se.abilities};
-            se.atkBonus = (se.atkBonus||0) + 2;
-            se.formShifted = true;
-            // Enhance all abilities
-            for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k] += 2; }
-            msg('👽 形態変化！戦闘形態！全アビリティ+2・攻撃力+2！');
-        } else {
-            if (se.savedAbils) { se.abilities = se.savedAbils; }
-            se.atkBonus = Math.max(0,(se.atkBonus||0)-2);
-            se.formShifted = false;
-            msg('👽 元の形態に戻った！');
-        }
-        used = true;
-    // ====== マンドレイク ======
-    } else if (actionMode === 'branch_whip') {
-        se.abilities['branch_whip']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1; knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🌿 枝のムチ！しかし無敵で防がれた！' : '🌿 枝のムチ！1ダメ・吹き飛ばし！'); used = true;
-    } else if (actionMode === 'seed_plant') {
-        se.abilities['seed_plant']--;
-        entities.push({ id:'seed'+Date.now(), type:'seed', name:'種', team:se.team, r, c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg('🌱 種まき！1ターンで若芽→2ターンでベビーマンドレイクに成長！'); used = true;
-    } else if (actionMode === 'fusion') {
-        se.abilities['fusion']--;
-        let absorbed = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team===se.team && t.type==='baby_mandrake' && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                t.hp = 0; absorbed++;
-            }
-        });
-        if (absorbed > 0) {
-            se.plantLevel = (se.plantLevel||0) + absorbed;
-            let lv = se.plantLevel;
-            let healAmt = absorbed * 3;
-            se.maxHp += absorbed; se.hp = Math.min(se.maxHp, se.hp + healAmt);
-            se.maxAp = Math.min(se.maxAp + 1, 5); se.ap = Math.min(se.ap + 1, se.maxAp);
-            msg(`🌿 融合！ベビー${absorbed}体吸収！植物LV${lv}！HP+${healAmt}・射程・範囲が拡大！`);
-        } else { msg('🌿 融合！しかし半径1マス内にベビーマンドレイクがいない！'); }
-        used = true;
-    } else if (actionMode === 'seed_bazooka') {
-        se.abilities['seed_bazooka']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1; targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🌱 種バズーカ！しかし無敵で防がれた！' : '🌱 種バズーカ！1ダメ・AP-1・吹き飛ばし！'); used = true;
-    } else if (actionMode === 'root_spread') {
-        se.abilities['root_spread']--;
-        se.ap = Math.max(0, se.ap - 2);
-        let healed = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=8) {
-                t.hp = Math.min(t.hp+1, t.maxHp);
-                for (let k of Object.keys(t.abilities)) { if (t.abilities[k]!==999) t.abilities[k]++; }
-                healed++;
-            }
-        });
-        entities.forEach(t => {
-            if (t.hp>0 && t.team===se.team) {
-                if (t.type==='seed') { t.type='sprout'; t.name='若芽'; t.hp=Math.min(3,t.hp+2); t.maxHp=3; }
-                else if (t.type==='sprout') { t.type='baby_mandrake'; t.name='ベビーM'; t.hp=6; t.maxHp=6; t.ap=2; t.maxAp=2; t.abilities={branch_whip:999,seed_plant:1,seed_bazooka:1,roar:1}; msg('🌿 ベビーマンドレイクが誕生！',true); }
-            }
-        });
-        msg(`🌳 根を張る！AP-2して半径8の味方${healed}体を回復・全アビリティ+1・種を即成長！`); used = true;
-    } else if (actionMode === 'roar') {
-        se.abilities['roar']--;
-        let rHit = 0, rRange = 1 + (se.plantLevel||0);
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=rRange) {
-                if (!t.invin) { t.hp -= 1; t.ap = Math.max(0,t.ap-2); rHit++; }
-            }
-        });
-        msg(`🌿 咆哮！半径${rRange}マスの敵${rHit}体に1ダメ・AP-2！`); used = true;
-    // ====== 竜人族 ======
-    } else if (actionMode === 'flying_kick') {
-        se.abilities['flying_kick']--;
-        let fkDr = Math.sign(r-se.r), fkDc = Math.sign(c-se.c);
-        let fkDist = Math.max(Math.abs(r-se.r),Math.abs(c-se.c));
-        for (let i=1; i<fkDist; i++) {
-            let nr=se.r+fkDr*i, nc=se.c+fkDc*i;
-            if (isWalkable(nr,nc,false,true) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) { se.r=nr; se.c=nc; }
-        }
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 2; targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🦵 跳び蹴り！しかし無敵で防がれた！' : '🦵 跳び蹴り！接近して2ダメ・AP-1・吹き飛ばし！');
-        checkEnemyTerritory(se); used = true;
-    } else if (actionMode === 'rapid_strikes') {
-        se.abilities['rapid_strikes']--;
-        let rsHit = 0;
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                if (!t.invin) { t.hp -= 1; knockback(t,1,se); rsHit++; }
-            }
-        });
-        msg(`👊 乱打！半径1マスの敵${rsHit}体に1ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'flame_breath') {
-        se.abilities['flame_breath']--;
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 2; targetEntity.burnTimer = (targetEntity.burnTimer||0) + 2; }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🔥 火炎ブレス！しかし無敵で防がれた！' : '🔥 火炎ブレス！2ダメ・2ターン燃焼ダメージ！'); used = true;
-    } else if (actionMode === 'tail_swing') {
-        se.abilities['tail_swing']--;
-        let tsHit = 0, tsDr = Math.sign(r-se.r), tsDc = Math.sign(c-se.c);
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
-                let td = Math.sign(t.r-se.r), tc = Math.sign(t.c-se.c);
-                if (!(td===tsDr && tc===tsDc)) {
-                    if (!t.invin) { t.hp -= 2; knockback(t,1,se); tsHit++; }
-                }
-            }
-        });
-        msg(`🐲 テイルスイング！背後半円の敵${tsHit}体に2ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'counter') {
-        se.abilities['counter']--;
-        se.counterReady = (se.counterReady||0) + 1;
-        msg(`⚡ カウンター構え！被弾時に2ダメ反撃！(${se.counterReady}回)`); used = true;
-    } else if (actionMode === 'ryujin_transform') {
-        se.abilities['ryujin_transform']--;
-        if ((se.transformCooldownLeft||0) > 0) { msg(`変身はあと${se.transformCooldownLeft}ターン後に使用可能！`); se.abilities['ryujin_transform']++; return; }
-        if (!se.ryujinDragonForm) {
-            se.savedAbilities = {...se.abilities};
-            se.abilities = { drop_rock: 999, shatter: 5, dash: 5, hell_breath: 1, ryujin_transform: se.abilities.ryujin_transform };
-            se.flying = true; se.ryujinDragonForm = true;
-            msg('🐲 変身！竜の姿に！飛行・ヘルブレス使用可能！竜人族スキルが変化！');
-        } else {
-            se.abilities = se.savedAbilities || se.abilities;
-            se.abilities.ryujin_transform = Math.max(0, se.abilities.ryujin_transform);
-            se.flying = false; se.ryujinDragonForm = false;
-            se.transformCooldownLeft = 3;
-            msg('🐲 人の姿に戻った！3ターン後に再変身可能！');
-        }
-        used = true;
-    } else if (actionMode === 'afterimage') {
-        if (turn < 5) { msg('残像は開始5ターン後に使用可能！'); return; }
-        se.abilities['afterimage']--;
-        entities.push({ id:'aft'+Date.now(), type:'afterimage', name:'残像', team:se.team, r, c, hp:1, maxHp:1, ap:4, maxAp:4, abilities:{punch:999}, skillUsed:false, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        se.stealth = true; se.stealthTimer = 3;
-        msg('残像生成！(HP1/AP4/打撃のみ) 竜人族は潜伏状態！'); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
@@ -3669,32 +3225,6 @@ function executeSkill(se) {
         msg("歩兵の分隊！別動隊が出現！(HP5/AP2・5ターン生存でスキル解放)");
         return true;
     }
-    // ====== 機械兵 スキル: リミッター解除 ======
-    if (se.type === 'cyborg') {
-        if (turn < 5) { msg("⚙️ リミッター解除は開始5ターン後に使用可能！"); return false; }
-        if (se.limiterReleased) { msg("⚙️ リミッター解除は既に発動中！"); return false; }
-        se.hp = Math.min(se.maxHp, se.hp + 10);
-        for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
-        se.maxAp = Math.min(se.maxAp + 1, 5); se.ap = Math.min(se.ap + 1, se.maxAp);
-        se.atkBonus = (se.atkBonus||0) + 1;
-        se.limiterReleased = true;
-        msg("⚙️ リミッター解除！HP+10・全アビリティ+1・AP上限+1・攻撃力+1！毎ターン3ダメージ！"); return true;
-    }
-    // ====== エイリアン スキル: マインドコントロール ======
-    if (se.type === 'alien') {
-        msg("🧠 マインドコントロール！支配する敵(半径2マス以内)を選んでください");
-        actionMode = 'skill_mind_control'; render(); return false;
-    }
-    // ====== マンドレイク スキル: 根っこバインド ======
-    if (se.type === 'mandrake') {
-        msg("🌿 根っこバインド！方向を選んでください(直線5マス幅3)");
-        actionMode = 'skill_root_bind'; render(); return false;
-    }
-    // ====== 竜人族 スキル: ドラゴンインパクト ======
-    if (se.type === 'ryujin' || (se.type === 'ryujin' && se.ryujinDragonForm)) {
-        msg("🐉 ドラゴンインパクト！方向を選んでください(直線8マス)");
-        actionMode = 'skill_ryujin'; render(); return false;
-    }
     return false;
 }
 
@@ -3718,56 +3248,11 @@ function executeRushSkill(se, targetR, targetC, mode) {
         return;
     }
     if (mode === 'skill_dragon') {
-        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999, hell_breath: 1 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
         se.skillUsed = true;
         msg("ドラゴン召喚！(HP5/AP2・火炎ブレス∞/噛みつき∞・飛行)");
         return;
     }
-    // ====== 新スキルモード ======
-    if (mode === 'skill_mind_control') {
-        let mcT = entities.find(e => e.r===targetR && e.c===targetC && e.hp>0 && e.team!==se.team);
-        if (mcT && !mcT.invin) {
-            mcT.originalTeam = mcT.team;
-            mcT.team = se.team;
-            mcT.mindControlTimer = 2;
-            msg(`🧠 マインドコントロール！${mcT.name}を2ターン支配した！`);
-        } else { msg('マインドコントロール！しかし対象が見つからない/無敵で防がれた！'); }
-        se.skillUsed = true; return;
-    }
-    if (mode === 'skill_root_bind') {
-        let rbStepR = Math.sign(targetR-se.r), rbStepC = Math.sign(targetC-se.c);
-        let rbHit = 0;
-        for (let i=1; i<=5; i++) {
-            let br=se.r+rbStepR*i, bc=se.c+rbStepC*i;
-            for (let w=-1; w<=1; w++) {
-                let wr=br+(rbStepC!==0?w:0), wc=bc+(rbStepR!==0?w:0);
-                if (wr<0||wr>=SIZE||wc<0||wc>=SIZE) continue;
-                entities.forEach(t => {
-                    if (t.hp>0 && t.team!==se.team && t.r===wr && t.c===wc && !t.flying) {
-                        if (!t.invin) { t.hp-=3; t.ap=Math.max(0,t.ap-2); t.poisonTimer=(t.poisonTimer||0)+3; rbHit++; }
-                    }
-                });
-            }
-        }
-        msg(`🌿 根っこバインド！直線5マス幅3の敵${rbHit}体に3ダメ・AP-2・3T毒！`);
-        se.skillUsed = true; return;
-    }
-    if (mode === 'skill_ryujin') {
-        let drStepR = Math.sign(targetR-se.r), drStepC = Math.sign(targetC-se.c);
-        let drHit = 0;
-        for (let i=1; i<=8; i++) {
-            let cr=se.r+drStepR*i, cc=se.c+drStepC*i;
-            if (cr<0||cr>=SIZE||cc<0||cc>=SIZE) break;
-            entities.forEach(t => {
-                if (t.hp>0 && t.team!==se.team && t.r===cr && t.c===cc) {
-                    if (!t.invin) { t.hp-=5; t.ap=Math.max(0,t.ap-1); knockback(t,1,se); drHit++; }
-                }
-            });
-        }
-        msg(`🐉 ドラゴンインパクト！直線8マス5ダメ・AP-1・吹き飛ばし！(${drHit}体命中)`);
-        se.skillUsed = true; return;
-    }
-    // ====== 既存スキルモード ======
     let stepR = Math.sign(targetR - se.r);
     let stepC = Math.sign(targetC - se.c);
     let dist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
@@ -4800,32 +4285,6 @@ function updateUI() {
         cb2.style.cssText = 'background:#546e7a;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
         cb2.innerText = '🚡 ケーブルカー — ケーブル沿いに移動(AP1)。乗降は乗り場と山頂のみ';
         list.appendChild(cb2);
-    }
-
-    // ====== 新ジョブ ステータス表示 ======
-    if (selectedEntity) {
-        const addStatus = (text, bg) => {
-            let d = document.createElement('div');
-            d.style.cssText = `background:${bg};color:#fff;padding:5px 8px;border-radius:4px;margin:3px 0;font-size:12px;text-align:center;`;
-            d.innerText = text;
-            list.appendChild(d);
-        };
-        if ((selectedEntity.burnTimer||0) > 0)
-            addStatus(`🔥 燃焼中！残り${selectedEntity.burnTimer}ターン(毎ターン1ダメ)`, '#c0392b');
-        if (selectedEntity.limiterReleased)
-            addStatus('⚙️ リミッター解除中！毎ターン3自傷ダメージ', '#8e44ad');
-        if ((selectedEntity.counterReady||0) > 0)
-            addStatus(`⚡ カウンター構え中！(${selectedEntity.counterReady}回)`, '#d35400');
-        if ((selectedEntity.transformCooldownLeft||0) > 0)
-            addStatus(`🐲 変身クールダウン残り${selectedEntity.transformCooldownLeft}ターン`, '#2c3e50');
-        if (selectedEntity.ryujinDragonForm)
-            addStatus('🐲 竜形態！飛行・ヘルブレス使用可', '#16a085');
-        if (selectedEntity.formShifted)
-            addStatus('👽 戦闘形態！攻撃力+2・アビリティ強化中', '#27ae60');
-        if ((selectedEntity.mindControlTimer||0) > 0)
-            addStatus(`🧠 マインドコントロール中！残り${selectedEntity.mindControlTimer}ターン`, '#2980b9');
-        if ((selectedEntity.plantLevel||0) > 0)
-            addStatus(`🌿 植物LV${selectedEntity.plantLevel}！射程・範囲が拡大中`, '#27ae60');
     }
 }
 </script>
