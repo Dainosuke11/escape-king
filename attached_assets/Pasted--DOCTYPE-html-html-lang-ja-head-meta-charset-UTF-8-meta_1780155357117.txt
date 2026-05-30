@@ -883,7 +883,7 @@ function connectWS(onOpen) {
     };
 }
 
-// Auto-reconnect: retry every 3s up to 20 times (~60s), then give up.
+// Auto-reconnect: retry every 3s up to 5 times (15s), then give up.
 function attemptReconnect() {
     if (reconnecting) return;
     reconnecting = true;
@@ -895,7 +895,7 @@ function attemptReconnect() {
 
 function tryReconnectOnce() {
     reconnectAttempts++;
-    if (reconnectAttempts > 20) {
+    if (reconnectAttempts > 5) {
         reconnecting = false;
         hideReconnectOverlay();
         msg("⚠️ 再接続に失敗しました。");
@@ -928,36 +928,10 @@ function showReconnectOverlay() {
 }
 function updateReconnectOverlay() {
     let t = document.getElementById('reconnect-text');
-    if (t) t.innerHTML = `通信が切断されました。<br>再接続しています... (${reconnectAttempts}/20)`;
+    if (t) t.innerHTML = `通信が切断されました。<br>再接続しています... (${reconnectAttempts}/5)`;
 }
 function hideReconnectOverlay() {
     let el = document.getElementById('reconnect-overlay');
-    if (el) el.style.display = 'none';
-}
-
-// Opponent suspend overlay (countdown to forfeit win)
-let _suspendTimerId = null;
-function showSuspendOverlay(expireAt) {
-    hideSuspendOverlay();
-    let el = document.getElementById('suspend-overlay');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'suspend-overlay';
-        el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(160,20,20,0.93);z-index:9998;padding:10px 22px;border-radius:8px;color:#fff;font-size:15px;text-align:center;min-width:240px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
-        document.body.appendChild(el);
-    }
-    el.style.display = 'block';
-    function tick() {
-        let rem = Math.max(0, Math.ceil((expireAt - Date.now()) / 1000));
-        if (el) el.innerHTML = `⚠️ 相手が切断中 — 残り<strong style="font-size:20px"> ${rem} </strong>秒で不戦勝`;
-        if (rem <= 0) { hideSuspendOverlay(); return; }
-        _suspendTimerId = setTimeout(tick, 500);
-    }
-    tick();
-}
-function hideSuspendOverlay() {
-    if (_suspendTimerId) { clearTimeout(_suspendTimerId); _suspendTimerId = null; }
-    let el = document.getElementById('suspend-overlay');
     if (el) el.style.display = 'none';
 }
 
@@ -1084,16 +1058,12 @@ function handleWsMessage(event) {
 
     if (data.type === 'peerReconnected') {
         // The other player came back; resend our current state for full sync.
-        hideSuspendOverlay();
-        msg("✅ 相手が再接続しました！試合を再開します。");
         syncState();
         return;
     }
 
     if (data.type === 'opponentSuspended') {
-        const graceMs = data.graceMs || 60000;
-        msg(`⚠️ 相手の接続が切れました。${Math.ceil(graceMs/1000)}秒以内に復帰しなければ不戦勝です！`);
-        showSuspendOverlay(Date.now() + graceMs);
+        msg("⚠️ 相手の接続が切れました。再接続を待っています...");
         return;
     }
 
@@ -1139,9 +1109,9 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'opponentLeft') {
-        hideSuspendOverlay();
         if (data.forfeit) {
-            msg("🏆 相手が1分以内に再接続できませんでした。あなたの不戦勝です！");
+            // We already received rankResult (win) just before this.
+            msg("⚠️ 相手が再接続できませんでした。あなたの勝利です！");
         } else {
             msg("⚠️ 相手が接続を切りました。");
             if (!rankResultApplied) alert("相手が接続を切りました。");
@@ -3379,12 +3349,10 @@ function handleAbilityTarget(r, c, targetEntity) {
         let atkName = actionMode === 'punch' ? 'ぶん殴り' : actionMode === 'bite' ? '噛みつき' : '剣撃';
         if (meleeDodged(targetEntity)) { msg(`${atkName}！しかし飛行コマに回避された！`); used = true; }
         else {
-            let stealthBonus = (se.type === 'assassin' && se.stealth) ? 1 : 0;
-            let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0) + stealthBonus;
+            let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0);
             if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
             if (!targetEntity.invin && (targetEntity.counterReady||0) > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-            let bonus = stealthBonus > 0 ? '【潜伏ボーナス+1】' : '';
-            msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${bonus}${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
+            msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
         }
     } else if (actionMode === 'dagger') {
         se.abilities['dagger']--; 

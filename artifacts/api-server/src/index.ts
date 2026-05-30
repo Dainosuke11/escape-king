@@ -49,7 +49,7 @@ const rooms = new Map<string, Room>();
 const queue: QueueEntry[] = [];
 // userId -> last opponents (most recent first), for anti-boosting
 const recentOpponents = new Map<string, string[]>();
-const RECONNECT_GRACE_MS = 25000;
+const RECONNECT_GRACE_MS = 60000; // 1 minute to reconnect before forfeit
 
 function generateRoomCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -221,6 +221,14 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
   }
 });
+
+// Keepalive: ping every 25 s so proxies/load balancers don't kill idle sockets.
+const pingInterval = setInterval(() => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) client.ping();
+  });
+}, 25000);
+wss.on("close", () => clearInterval(pingInterval));
 
 wss.on("connection", (ws: WebSocket) => {
   let playerIndex = -1;
