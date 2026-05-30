@@ -1866,8 +1866,8 @@ function startTurn(team, skipEffects = false) {
                     let t = candidates[Math.floor(Math.random() * candidates.length)];
                     sandwormTarget = { r: t.r, c: t.c };
                     sandwormWarning = true;
-                    let swR = activeStage === 'chaos' ? 4 : 1;
-                    msg(`⚠️ 次のターン、サンドワームの気配！(半径${swR}マス)`);
+                    msg(`⚠️ 次のターン、サンドワームの気配！(半径1マス・3×3)`);
+
                 }
             } else {
                 sandwormWarning = false;
@@ -1876,11 +1876,10 @@ function startTurn(team, skipEffects = false) {
             if (duneTimer % 4 === 0 && duneTimer > 0) {
                 sandwormWarning = false;
                 sandwormActive = true;
-                let swR = activeStage === 'chaos' ? 4 : 1;
-                msg(`🪱 サンドワーム出現！半径${swR}マス内のコマに5ダメージ！`);
+                msg(`🪱 サンドワーム出現！3×3マス内のコマに5ダメージ！`);
                 if (sandwormTarget) {
                     entities.forEach(e => {
-                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= swR) {
+                        if (Math.max(Math.abs(e.r - sandwormTarget.r), Math.abs(e.c - sandwormTarget.c)) <= 1) {
                             if (!e.invin) e.hp -= 5;
                         }
                     });
@@ -2265,8 +2264,7 @@ function render() {
             if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
             
             if ((activeStage === 'desert' || activeStage === 'chaos') && sandwormTarget) {
-                let swR = activeStage === 'chaos' ? 4 : 1;
-                if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= swR) {
+                if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= 1) {
                     if (sandwormWarning) d.classList.add('sandworm-warn');
                     if (sandwormActive) {
                         d.classList.add('sandworm-attack');
