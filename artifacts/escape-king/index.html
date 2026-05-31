@@ -655,7 +655,7 @@ let isRankedMatch = false;
 let opponentRank = 1;
 let rankResultApplied = false;
 let turnTimerId = null;
-let turnTimeLeft = 60;
+let turnTimeLeft = 80;
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
@@ -1396,12 +1396,12 @@ function cancelRankedSearch() {
     if (s) s.textContent = '';
 }
 
-// ---- Per-turn 60s timer (online only) ----
+// ---- Per-turn 80s timer (online only) ----
 function startTurnTimer() {
     stopTurnTimer();
     stopOpponentTimer();
     if (!isOnlineMode) return;
-    turnTimeLeft = 60;
+    turnTimeLeft = 80;
     updateTurnTimerDisplay();
     turnTimerId = setInterval(() => {
         turnTimeLeft--;
@@ -1421,11 +1421,11 @@ function stopTurnTimer() {
     if (el) el.style.display = 'none';
 }
 let opponentTimerId = null;
-let opponentTimeLeft = 60;
+let opponentTimeLeft = 80;
 function startOpponentTimer() {
     if (opponentTimerId) { clearInterval(opponentTimerId); opponentTimerId = null; }
     if (!isOnlineMode) return;
-    opponentTimeLeft = 60;
+    opponentTimeLeft = 80;
     updateOpponentTimerDisplay();
     opponentTimerId = setInterval(() => {
         opponentTimeLeft--;
