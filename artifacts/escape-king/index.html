@@ -4581,12 +4581,13 @@ function executeSkill(se) {
     if (se.type === 'cyborg') {
         if (turn < 5) { msg("⚙️ リミッター解除は開始5ターン後に使用可能！"); return false; }
         if (se.limiterReleased) { msg("⚙️ リミッター解除は既に発動中！"); return false; }
+        se.maxHp += 10;
         se.hp = Math.min(se.maxHp, se.hp + 10);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
         se.maxAp = Math.min(se.maxAp + 1, 5); se.ap = Math.min(se.ap + 1, se.maxAp);
         se.atkBonus = (se.atkBonus||0) + 1;
         se.limiterReleased = true;
-        msg("⚙️ リミッター解除！HP+10・全アビリティ+1・AP上限+1・攻撃力+1！毎ターン3ダメージ！"); return true;
+        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・AP上限+1・攻撃力+1！毎ターン3ダメージ！"); return true;
     }
     // ====== エイリアン スキル: マインドコントロール ======
     if (se.type === 'alien') {
