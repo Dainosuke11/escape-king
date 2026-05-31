@@ -823,15 +823,17 @@ const ABILITY_NAMES = {
     smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
     wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
     healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', dig: '地面掘り', hole_move: '穴移動',
-    rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)', monk_summon: '僧侶召喚',
+    rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)',
+    rock_hide: '岩隠れ(1T無敵バリア/剥がれたら後退+岩)', tsusembo: '通せんぼ(正面3岩/次T消滅)', golem_create: 'ゴーレム制作(半径2岩消費/HP=岩数×2/5T~)',
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
     fire_breath: '火炎ブレス', peck: 'つつき',
     hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
     power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(直線3飛行移動/HP-2)',
-    plasma_blade: 'プラズマブレード(威3/HP-2/AP-1)', plasma_blade2: 'プラズマブレード改(威6/AP-1/HP-3)',
-    sweep: '薙ぎ払い(半径2弧/威2/吹飛)', plasma_snipe: 'プラズマスナイプ(直線5/威4)',
-    plasma_bazooka: 'プラズマバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
+    laser_blade: 'レーザーブレード(威3/HP-1/AP-1)',
+    sweep: '薙ぎ払い(半径2弧/威2/吹飛)', laser_snipe: 'レーザースナイプ(直線5/威4)',
+    laser_bazooka: 'レーザーバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
     recon_drone: '偵察ドローン召喚(隣接/HP1/AP2/飛行/複数可)',
+    emp_field: '電磁パルスフィールド(半径5/AP-1/4アビリティ封印1T)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
@@ -851,7 +853,7 @@ const ABILITY_NAMES = {
     water_eruption: '水流噴火(半径2/9マス浅瀬/威2/ゲージ1)',
     dive: '潜水(水マス/2T潜伏/ATK+2/AP+2)',
     shark_transform: '変身(水中モード/AP5/ゲージ15~)',
-    chomp: '噛み砕く(水中形態/威5/AP-1)',
+    chomp: '噛み砕く(水中形態/威3/AP-1)', shark_charge: '突撃(威2+残AP/吹飛/水中有利)',
     wave_ride: '波乗り(正面3×3/威2/吹飛/AP-1/ゲージ2/浅瀬化)',
     whirlpool_atk: '渦潮(半径3/威2/2T渦潮/AP-1/ゲージ3/浅瀬化)',
     octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)',
@@ -885,7 +887,7 @@ const ABILITY_TIPS = {
     dagger: '隣接した敵を短剣で刺す。ダメージ1＋AP-1。',
     poison_dagger: '毒の短剣で刺す。ダメージ2＋毒3T＋AP-1。',
     spin_slash: '周囲1マスの敵すべてを攻撃する。',
-    smash_slash: '強烈な一撃。ダメージ3＋AP-1。',
+    smash_slash: '強烈な一撃。ダメージ4＋AP-1。',
     great_fireball: '広範囲の大火球魔法。',
     summon_magic: '召喚獣を呼び出す(開始5T経過後)。',
     rock_throw: '岩を投げる遠距離攻撃。ダメージ2。',
@@ -906,9 +908,12 @@ const ABILITY_TIPS = {
     falcon_summon: 'ハヤブサ(HP3/AP2/つつき∞/飛行)を召喚。開始5T経過後に使用可能。',
     healing_flute: '半径8マス内の味方全員のHPを1回復。回数3回。',
     charge_order: '追い風の笛を鳴らして半径8マス内の獣使いを除く味方コマ全員のAPを2ターン間+1する。',
+    beast_fuse: '半径1の味方1体を1T間融合吸収。HP上限・AP上限・ATK+1、アビリティ引き継ぎ。次ターン終了時に解放。',
     rock_avalanche: '半径3マス内の敵1体に2ダメージ。命中後、対象周辺半径2マスにランダムで岩を3個降らす。',
     drop_rock_heavy: '半径2マスの敵1体に2ダメージ＋AP-1＋吹き飛ばし。吹き飛ばした後、敵の隣接マスに岩を1個設置。',
-    monk_summon: 'HP3/AP2の僧侶を呼ぶ。杖で殴る(威1/∞)と治癒(HP+1/∞/半径2)を持つ。開始5T後。',
+    rock_hide: '1ターン無敵バリアを張る。バリアが破られたとき、1マス後退してバリアがあった場所に岩を置く。',
+    tsusembo: '正面3マス幅に岩を置いて進路を塞ぐ。設置した岩は次のターン開始時に消滅する。',
+    golem_create: '半径2マスの全ての岩を消費してゴーレムを召喚(HP=岩数×2)。開始5ターン経過後に使用可能。',
     staff_hit: '隣接した相手に杖で攻撃。ダメージ1。回数無限。',
     heal_ally: '半径2マス内の味方コマのHPを1回復。回数無限。',
     doping: '3ターン間：AP+1、全攻撃力+1、射程+1、アビリティ使用回数+1。切れたターン：AP-1ペナルティ。',
@@ -920,13 +925,13 @@ const ABILITY_TIPS = {
     thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
     meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
-    jet_boost: 'AP-1・HP-2して直線3マスに飛行移動。回数5。',
-    plasma_blade: '隣接した敵に3ダメ・AP-1。自身HP-2のコスト。回数3。',
-    plasma_blade2: '隣接した敵に6ダメ・AP-1。AP-1・HP-3のコスト。回数2。',
+    jet_boost: 'AP-1・HP-2して直線3マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
+    laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
     sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。AP-1消費。回数3。',
-    plasma_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
-    plasma_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
+    laser_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
+    laser_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
     incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
+    emp_field: 'AP-1消費。半径5マス内の全敵のAPを-1し、各敵のランダム4アビリティを1T封印する。回数2。',
     recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
@@ -937,7 +942,7 @@ const ABILITY_TIPS = {
     form_shift: '戦闘形態に変化。全アビリティ+2・攻撃力+2。再度使用で元に戻る。回数1。',
     branch_whip: '半径2マス(植物LV分拡大)の敵に1ダメ・吹き飛ばし。回数5。',
     seed_plant: '隣接マスに種を植える。1T後→若芽、2T後→ベビーマンドレイク(HP6/AP2)。回数10。',
-    fusion: '半径1マス内のベビーマンドレイクを全吸収。植物LVアップ＋HP・射程・範囲が拡大。回数1。',
+    fusion: 'AP-1消費。半径1マス内の植物コマを全吸収(種+1/若芽+2/ベビーM+3)。植物LVアップ＋HP・全アビリティ(fusion除く)増加。回数1。',
     seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。回数2。',
     root_spread: 'AP-2して半径8マスの味方全員HP+1・全アビリティ+1＋種を即時1段階成長。回数1。',
     roar: '自身周囲半径1マス(植物LV分拡大)の全敵に1ダメ・AP-2。回数1。',
@@ -956,7 +961,8 @@ const ABILITY_TIPS = {
     water_eruption: 'ウォーターゲージ1消費。半径2マス以内の場所を中心に噴水発生。3×3マスにダメ2＋浅瀬化。回数1。',
     dive: '水マス上でのみ使用可能。2ターン潜伏(ATK+2・AP+2)。効果終了時に元に戻る。回数1。',
     shark_transform: 'ウォーターゲージ15以上必要。水中モード(AP5)に変身。陸上でゲージ-1/T。再使用で解除。2Tクールダウン。',
-    chomp: '水中モード限定の近接攻撃。隣接した敵に5ダメ＋AP-1。回数無制限。',
+    chomp: '水中モード限定の近接攻撃。隣接した敵に3ダメ＋AP-1。回数無制限。',
+    shark_charge: '全APを消費して突撃。基本2ダメ＋消費AP数ボーナスダメ。対象を後方吹き飛ばし。回数3。',
     wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。回数2。',
     whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
@@ -980,14 +986,14 @@ const JOB_DATA = {
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1 }, hp: 30, ap: 2 },
-    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1 }, hp: 30, ap: 2 },
-    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, monk_summon: 1 }, hp: 30, ap: 2 },
-    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, plasma_blade: 3, plasma_blade2: 2, sweep: 3, plasma_snipe: 2, plasma_bazooka: 2, incinerate: 2, recon_drone: 2 }, hp: 30, ap: 2 },
+    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
+    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
+    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
-    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
+    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1, shark_charge: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 }
 };
 
@@ -2326,6 +2332,49 @@ function processTurnStartEffects(e) {
         if (decoyAlive) { e.stealth = true; }
         else { e.decoyStealth = false; if (e.stealthTimer <= 0) e.stealth = false; }
     }
+    // tsusembo一時岩の除去
+    if (e.tsusemboRocks && e.tsusemboRocks.length > 0) {
+        e.tsusemboRocks.forEach(pos => { if (board[pos.r]?.[pos.c] === 'rock') board[pos.r][pos.c] = defaultGround(); });
+        e.tsusemboRocks = [];
+    }
+    // rock_hide無敵切れ→後退+岩設置
+    if (e.rockHideActive && !e.invin) {
+        e.rockHideActive = false;
+        let dr = e.team === 'player' ? 1 : -1;
+        let br = e.r + dr, bc = e.c;
+        if (br>=0 && br<SIZE && bc>=0 && bc<SIZE && !entities.some(x=>x.hp>0&&x.r===br&&x.c===bc)) {
+            board[e.r][e.c] = 'rock'; e.r = br; e.c = bc;
+            msg(`🪨 ${e.name}の岩隠れ無敵が終了！元の場所に岩を残して後退！`, true);
+        }
+    }
+    // beast_fuseタイマー→解放
+    if ((e.beastFuseTimer||0) > 0) {
+        e.beastFuseTimer--;
+        if (e.beastFuseTimer <= 0 && e.beastFuseEntity) {
+            let fused = e.beastFuseEntity;
+            let fr = e.r, fc = e.c;
+            for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+                if (dr===0&&dc===0) continue;
+                let nr=e.r+dr, nc=e.c+dc;
+                if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)) { fr=nr; fc=nc; break; }
+            }
+            fused.r=fr; fused.c=fc; fused.hp=Math.max(1,fused.hp); fused.absorbed=false;
+            entities.push(fused);
+            e.beastFuseEntity = null;
+            e.maxHp=Math.max(1,e.maxHp-1); e.hp=Math.min(e.hp,e.maxHp);
+            e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp);
+            e.atkBonus=Math.max(0,(e.atkBonus||0)-1);
+            msg(`🦁 ${e.name}の獣融合が解除！${fused.name}が出現！`, true);
+        }
+    }
+    // emp_field封印タイマー
+    if ((e.empSealTimer||0) > 0) {
+        e.empSealTimer--;
+        if (e.empSealTimer <= 0 && e.sealedAbilities) {
+            e.sealedAbilities = {};
+            msg(`⚡ ${e.name}の電磁封印が解除された！`, true);
+        }
+    }
     e.ap = e.maxAp;
     // Mountain cable car: AP=4 while riding
     if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(board[e.r]?.[e.c])) {
@@ -2343,8 +2392,8 @@ function processTurnStartEffects(e) {
         if (Math.random() < 0.2) { e.hp -= 1; coldMsg.push("1ダメージ"); }
         if (coldMsg.length > 0) msg(`❄️ ${e.name}は山頂の寒さと薄い空気にやられた！${coldMsg.join("＋")}！`, true);
     }
-    // Underwater Temple: oxygen consumption (player/cpu entities only)
-    if (activeStage === 'underwater' && (e.team === 'player' || e.team === 'cpu')) {
+    // Underwater Temple: oxygen consumption (player/cpu entities only, but ocean units are exempt)
+    if (activeStage === 'underwater' && (e.team === 'player' || e.team === 'cpu') && !isOceanUnit(e)) {
         if (oxygenMap[e.id] === undefined) oxygenMap[e.id] = 5;
         if (board[e.r]?.[e.c] === 'bubble_vent') {
             oxygenMap[e.id] = 5;
@@ -2472,7 +2521,7 @@ function processTurnStartEffects(e) {
         let tile = board[e.r]?.[e.c];
         let onWater = isWaterTile(tile) || SEA_STAGES.includes(activeStage);
         if (!onWater) {
-            let drain = (tile === 'desert') ? 2 : 1;
+            let drain = (tile === 'desert' || tile === 'lava' || tile === 'lava_ground') ? 2 : 1;
             if (e.waterMode) drain += 1;
             e.waterGauge = Math.max(0, (e.waterGauge||0) - drain);
             if (e.waterGauge <= 0 && !e.invin) {
@@ -2491,6 +2540,11 @@ function processTurnStartEffects(e) {
         } else if (wg < 20 && e.highWaterBuff) {
             e.maxAp = Math.max(1, e.maxAp - 1); e.ap = Math.min(e.ap, e.maxAp);
             e.atkBonus = Math.max(0, (e.atkBonus||0) - 1); e.highWaterBuff = false;
+        }
+        // ウォーターゲージ低下警告（ゲージ≤3で毎ターン1ダメ+AP-1）
+        if (isOceanUnit(e) && e.type === 'shark_warrior' && (e.waterGauge||0) <= 3 && !e.invin) {
+            e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
+            msg(`🦈 ${e.name}のウォーターゲージが危険！HP-1・AP-1！(残ゲージ:${e.waterGauge||0})`, true);
         }
         // 潜水バフ期限
         if ((e.diveTimer||0) > 0) {
@@ -2552,7 +2606,7 @@ function startTurn(team, skipEffects = false) {
         });
         // 死亡エフェクト処理（ドローン爆発・サルのプレゼントドロップ）
         let deadSpecials = entities.filter(e => e.hp <= 0 && !e.deathProcessed &&
-            (e.type==='recon_drone_unit' || e.type==='monkey_toy'));
+            (e.type==='recon_drone_unit' || e.type==='monkey_toy' || e.type==='baby_mandrake'));
         deadSpecials.forEach(e => {
             e.deathProcessed = true;
             if (e.type === 'recon_drone_unit') {
@@ -2576,6 +2630,11 @@ function startTurn(team, skipEffects = false) {
                     invin:false, invinTimer:0, poisonTimer:0, atkBonus:0, isPresentBox:true
                 });
                 msg(`🎁 おもちゃのサルが壊れてプレゼントを落とした！`, true);
+            }
+            if (e.type === 'baby_mandrake') {
+                // 死亡時に種を自動配置
+                entities.push({ id:'seed'+Date.now(), type:'seed', name:'種', team:e.team, r:e.r, c:e.c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+                msg(`🌱 ${e.name}が倒れた！種を残した！`, true);
             }
         });
         // プレゼント箱の爆発・アイテム処理
@@ -2905,8 +2964,8 @@ function startTurn(team, skipEffects = false) {
             if (e.type === 'seed' && age >= 1) {
                 e.type = 'sprout'; e.name = '若芽'; e.hp = Math.max(e.hp, 3); e.maxHp = 3;
             } else if (e.type === 'sprout' && age >= 2) {
-                e.type = 'baby_mandrake'; e.name = 'ベビーM'; e.hp = 6; e.maxHp = 6; e.ap = 2; e.maxAp = 2;
-                e.abilities = { branch_whip: 999, seed_plant: 1, seed_bazooka: 1, roar: 1 };
+                e.type = 'baby_mandrake'; e.name = 'ベビーM'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
+                e.abilities = { branch_whip: 999, seed_bazooka: 1, roar: 1 };
                 msg(`🌿 ベビーマンドレイクが誕生！`, true);
             } else if (e.type === 'alien_egg' && age >= 2) {
                 e.type = 'alien_jr'; e.name = '宇宙人Jr'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
@@ -3139,7 +3198,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
-    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp' || mode === 'shark_charge') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
     if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
     if (mode === 'spin_slash') return true; 
@@ -3171,13 +3230,19 @@ function isValidTarget(se, r, c, mode) {
     // Cyborg
     if (mode === 'power_charge') return true;
     if (mode === 'jet_boost') return (se.r===r||se.c===c) && maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
-    if (mode === 'plasma_blade') return maxDist === 1 && target && target.team !== se.team;
-    if (mode === 'plasma_blade2') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'laser_blade') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'sweep') return true;
-    if (mode === 'plasma_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'plasma_bazooka') return maxDist>0 && maxDist<=4+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'laser_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'laser_bazooka') return maxDist>0 && maxDist<=4+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'incinerate') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'recon_drone') return maxDist<=1 && isWalkable(r,c,true);
+    if (mode === 'emp_field') return true;
+    // Macho
+    if (mode === 'rock_hide') return true;
+    if (mode === 'tsusembo') return true;
+    if (mode === 'golem_create') return true;
+    // Beastmaster
+    if (mode === 'beast_fuse') return maxDist===1 && target && target.team===se.team && target!==se;
     // Alien
     if (mode === 'tentacle_whip') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'water_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && (target.team!==se.team || isOceanUnit(target));
@@ -3810,7 +3875,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (board[r][c] === 'volcano') breakVolcano();
             let wasCar = board[r][c] === 'car_tile';
             let wasGravestone = board[r][c] === 'gravestone';
-            board[r][c] = (wasGravestone || wasCar) ? defaultGround() : 'plains';
+            board[r][c] = defaultGround();
             if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
             if (wasCar) msg("🚗 車を破壊した！");
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
@@ -3892,11 +3957,69 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         }
         msg(targetEntity.invin ? "岩落とし強！しかし無敵で防がれた！" : `💪 岩落とし強！${targetEntity.name}に${hDmg}ダメージ・AP-1・吹き飛ばし、岩を設置！`); used = true;
-    } else if (actionMode === 'monk_summon') {
-        if (turn < 5) { msg("僧侶召喚は開始5ターン経過後に使用可能です"); return; }
-        se.abilities['monk_summon']--;
-        entities.push({ id:'monk'+Date.now(), type:'monk', name:'僧侶', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{staff_hit:999, heal_ally:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg("🧙 僧侶召喚！(HP3/AP2・杖で殴る∞・治癒∞)"); used = true;
+    } else if (actionMode === 'rock_hide') {
+        se.abilities['rock_hide']--;
+        se.invin = true; se.invinTimer = 1;
+        se.rockHideActive = true;
+        msg("🪨 岩隠れ！1ターン無敵バリア！破られたら後退して岩を置く！"); used = true;
+    } else if (actionMode === 'tsusembo') {
+        se.abilities['tsusembo']--;
+        // 正面(北、敵方向)3マス幅に岩を置く
+        let dr = se.team === 'player' ? -1 : 1;
+        let tsRocks = [];
+        for (let dc=-1; dc<=1; dc++) {
+            let nr = se.r + dr, nc = se.c + dc;
+            if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && board[nr][nc] !== 'rock' && isWalkable(nr, nc) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
+                board[nr][nc] = 'rock'; tsRocks.push({r:nr, c:nc});
+            }
+        }
+        se.tsusemboRocks = tsRocks;
+        msg(`🪨 通せんぼ！正面3マスに岩${tsRocks.length}個設置！次ターン消滅！`); used = true;
+    } else if (actionMode === 'golem_create') {
+        if (turn < 5) { msg("ゴーレム制作は開始5ターン経過後に使用可能です"); return; }
+        se.abilities['golem_create']--;
+        let rockCount = 0;
+        for (let dr=-2; dr<=2; dr++) for (let dc=-2; dc<=2; dc++) {
+            let nr = se.r+dr, nc = se.c+dc;
+            if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && ['rock','mine','volcano'].includes(board[nr][nc])) {
+                board[nr][nc] = 'plains'; rockCount++;
+            }
+        }
+        if (rockCount === 0) { msg("🪨 ゴーレム制作！しかし半径2マスに岩が無い！"); used = true; }
+        else {
+            let gHP = rockCount * 2;
+            let gr = se.r, gc = se.c;
+            // 隣接空きマスに召喚
+            for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+                if (dr===0&&dc===0) continue;
+                let nr = se.r+dr, nc = se.c+dc;
+                if (isWalkable(nr,nc) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) { gr=nr; gc=nc; break; }
+            }
+            entities.push({ id:'golem'+Date.now(), type:'golem', name:'ゴーレム', team:se.team, r:gr, c:gc, hp:gHP, maxHp:gHP, ap:2, maxAp:2, abilities:{punch:999,rock_throw:999,shatter:5}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+            msg(`🪨 ゴーレム制作！岩${rockCount}個消費→ゴーレム召喚(HP${gHP}/AP2)！`); used = true;
+        }
+    } else if (actionMode === 'beast_fuse') {
+        se.abilities['beast_fuse']--;
+        if (targetEntity && targetEntity.team === se.team && targetEntity !== se) {
+            // Store absorbed entity for later release
+            se.beastFuseEntity = { ...targetEntity, absorbed: true };
+            se.beastFuseTimer = 2; // release at start of next next turn
+            // Gain stats
+            se.maxHp++;
+            se.hp = Math.min(se.maxHp, se.hp + 1);
+            se.maxAp = Math.min(se.maxAp + 1, 6);
+            se.ap = Math.min(se.ap + 1, se.maxAp);
+            se.atkBonus = (se.atkBonus||0) + 1;
+            // Inherit abilities
+            Object.keys(targetEntity.abilities).forEach(k => {
+                if (k !== 'drop_rock' && k !== 'shatter') {
+                    se.abilities[k] = (se.abilities[k]||0) + (targetEntity.abilities[k] !== 999 ? targetEntity.abilities[k] : 0);
+                }
+            });
+            // Remove absorbed entity
+            targetEntity.hp = 0;
+            msg(`🦁 獣融合！${targetEntity.name}を吸収！HP上限+1・AP上限+1・ATK+1！次ターン終了時に解放！`); used = true;
+        } else { msg("🦁 獣融合！しかし半径1マスに融合できる味方がいない！"); used = true; }
     } else if (actionMode === 'staff_hit') {
         if (se.abilities['staff_hit'] !== 999) se.abilities['staff_hit']--;
         let sDmg = 1 + (se.atkBonus||0);
@@ -3943,8 +4066,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : `${_pdSB?'【潜伏ボーナス+1】':''}毒剣刺し！近接ダメージ(${2+_pdSB})と毒(3T)を与え行動力減少！`); used = true;
     } else if (actionMode === 'smash_slash') {
         se.abilities['smash_slash']--; 
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 3 + (targetEntity.defDebuff||0); }
-        msg(targetEntity.invin ? "粉砕斬り！しかし無敵で弾かれた！" : "粉砕斬り！強烈な一撃でダメージ(3)を与え行動力を奪った！"); used = true;
+        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 4 + (targetEntity.defDebuff||0); }
+        msg(targetEntity.invin ? "粉砕斬り！しかし無敵で弾かれた！" : "粉砕斬り！強烈な一撃でダメージ(4)を与え行動力を奪った！"); used = true;
     } else if (actionMode === 'spin_slash') {
         se.abilities['spin_slash']--; 
         entities.forEach(e => {
@@ -4161,22 +4284,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         let wasFlying = se.flying;
         se.flying = true; se.r = r; se.c = c;
         let jevMsg = checkTileEffects(se) || '';
-        if (!wasFlying) se.flying = false; // 一時的飛行、着地後は元に戻す
-        msg(`🚀 ジェットブースト！AP-1・HP-2して直線3マス飛行移動！${jevMsg}`);
+        if (!wasFlying) se.flying = false;
+        // 着地後に隣接敵に1ダメ
+        let jbHit = 0;
+        entities.forEach(t => { if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))===1 && !t.invin) { t.hp -= 1; jbHit++; } });
+        msg(`🚀 ジェットブースト！AP-1・HP-2して直線3マス飛行移動！${jbHit>0?`着地衝撃で隣接${jbHit}体に1ダメ！`:''}${jevMsg}`);
         checkEnemyTerritory(se); used = true;
-    } else if (actionMode === 'plasma_blade') {
-        se.abilities['plasma_blade']--;
-        se.hp = Math.max(1, se.hp - 2);
+    } else if (actionMode === 'laser_blade') {
+        se.abilities['laser_blade']--;
+        se.hp = Math.max(1, se.hp - 1);
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 3 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        // counter check
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード！しかし無敵で防がれた！' : 'プラズマブレード！HP-2して敵に3ダメ・AP-1！'); used = true;
-    } else if (actionMode === 'plasma_blade2') {
-        se.abilities['plasma_blade2']--;
-        se.ap = Math.max(0, se.ap - 1); se.hp = Math.max(1, se.hp - 3);
-        if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 6 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード改！しかし無敵で防がれた！' : 'プラズマブレード改！AP-1・HP-3して敵に6ダメ・AP-1！'); used = true;
+        msg(targetEntity?.invin ? 'レーザーブレード！しかし無敵で防がれた！' : 'レーザーブレード！HP-1して敵に3ダメ・AP-1！'); used = true;
     } else if (actionMode === 'sweep') {
         se.abilities['sweep']--;
         se.ap = Math.max(0, se.ap - 1);
@@ -4187,20 +4306,41 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         msg(`⚔️ 薙ぎ払い！AP-1・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'plasma_snipe') {
-        se.abilities['plasma_snipe']--;
+    } else if (actionMode === 'laser_snipe') {
+        se.abilities['laser_snipe']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマスナイプ！しかし無敵で防がれた！' : 'プラズマスナイプ！直線5マス貫通4ダメ・AP-1！'); used = true;
-    } else if (actionMode === 'plasma_bazooka') {
-        se.abilities['plasma_bazooka']--;
+        msg(targetEntity?.invin ? 'レーザースナイプ！しかし無敵で防がれた！' : 'レーザースナイプ！直線5マス4ダメ・AP-1！'); used = true;
+    } else if (actionMode === 'laser_bazooka') {
+        se.abilities['laser_bazooka']--;
         let pbHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
                 if (!t.invin) { t.hp -= 3; knockback(t,1,se); pbHit++; }
             }
         });
-        msg(`💥 プラズマバズーカ！ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし！`); used = true;
+        msg(`💥 レーザーバズーカ！ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし！`); used = true;
+    } else if (actionMode === 'emp_field') {
+        se.abilities['emp_field']--;
+        se.ap = Math.max(0, se.ap - 1);
+        let empHit = 0;
+        entities.forEach(t => {
+            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=5) {
+                if (!t.invin) {
+                    t.ap = Math.max(0, t.ap - 1);
+                    let abilKeys = Object.keys(t.abilities).filter(k=>t.abilities[k]>0&&t.abilities[k]!==999);
+                    let sealed = []; let shuffled = abilKeys.sort(()=>Math.random()-0.5);
+                    for (let i=0; i<Math.min(4,shuffled.length); i++) {
+                        if (!t.sealedAbilities) t.sealedAbilities = {};
+                        t.sealedAbilities[shuffled[i]] = (t.sealedAbilities[shuffled[i]]||0) + 1;
+                        sealed.push(shuffled[i]);
+                    }
+                    if (!t.empSealTimer) t.empSealTimer = 1; else t.empSealTimer = Math.max(t.empSealTimer, 1);
+                    empHit++;
+                }
+            }
+        });
+        msg(`⚡ 電磁パルスフィールド！半径5マスの敵${empHit}体にAP-1＋4アビリティ1T封印！`); used = true;
     } else if (actionMode === 'incinerate') {
         se.abilities['incinerate']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
@@ -4431,21 +4571,23 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg('🌱 種まき！1ターンで若芽→2ターンでベビーマンドレイクに成長！'); used = true;
     } else if (actionMode === 'fusion') {
         se.abilities['fusion']--;
-        let babyCount = 0, seedlingCount = 0;
+        se.ap = Math.max(0, se.ap - 1);
+        let seedCount = 0, sproutCount = 0, babyCount = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
                 if (t.type==='baby_mandrake') { t.hp=0; babyCount++; }
-                else if (t.type==='seed'||t.type==='sprout') { t.hp=0; seedlingCount++; }
+                else if (t.type==='sprout') { t.hp=0; sproutCount++; }
+                else if (t.type==='seed') { t.hp=0; seedCount++; }
             }
         });
-        let lvGain = babyCount * 2 + seedlingCount;
-        let totalAbsorbed = babyCount + seedlingCount;
+        let lvGain = seedCount * 1 + sproutCount * 2 + babyCount * 3;
+        let totalAbsorbed = seedCount + sproutCount + babyCount;
         if (totalAbsorbed > 0) {
             let prevLv = se.plantLevel || 0;
             se.plantLevel = prevLv + lvGain;
-            // Per-level bonus: HP+1, all ability uses +1
+            // Per-level bonus: HP+1, all ability uses +1 (except fusion itself)
             se.maxHp += lvGain; se.hp = Math.min(se.hp + lvGain, se.maxHp);
-            for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]+=lvGain; }
+            for (let k of Object.keys(se.abilities)) { if (k !== 'fusion' && se.abilities[k]!==999) se.abilities[k]+=lvGain; }
             // Milestone bonuses at multiples of 5
             let milestones = 0;
             for (let lv2=prevLv+1; lv2<=se.plantLevel; lv2++) { if (lv2%5===0) milestones++; }
@@ -4455,7 +4597,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 se.maxAp = Math.min(se.maxAp + milestones, 6); se.ap = Math.min(se.ap + milestones, se.maxAp);
                 msg(`🌿 融合！植物LV${se.plantLevel}！🎉 節目ボーナス×${milestones}：全射程+${milestones}・ATK+${milestones}・AP+${milestones}！`);
             } else {
-                msg(`🌿 融合！${totalAbsorbed}体吸収(LV+${lvGain})！植物LV${se.plantLevel}！HP+${lvGain}・全アビリティ+${lvGain}！`);
+                msg(`🌿 融合！${totalAbsorbed}体吸収(LV+${lvGain})！植物LV${se.plantLevel}！HP+${lvGain}・全アビリティ(fusion除)+${lvGain}！`);
             }
         } else { msg('🌿 融合！しかし半径1マス内に種/若芽/ベビーマンドレイクがいない！'); }
         used = true;
@@ -4478,7 +4620,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team) {
                 if (t.type==='seed') { t.type='sprout'; t.name='若芽'; t.hp=Math.min(3,t.hp+2); t.maxHp=3; }
-                else if (t.type==='sprout') { t.type='baby_mandrake'; t.name='ベビーM'; t.hp=6; t.maxHp=6; t.ap=2; t.maxAp=2; t.abilities={branch_whip:999,seed_plant:1,seed_bazooka:1,roar:1}; msg('🌿 ベビーマンドレイクが誕生！',true); }
+                else if (t.type==='sprout') { t.type='baby_mandrake'; t.name='ベビーM'; t.hp=4; t.maxHp=4; t.ap=2; t.maxAp=2; t.abilities={branch_whip:999,seed_bazooka:1,roar:1}; msg('🌿 ベビーマンドレイクが誕生！',true); }
             }
         });
         msg(`🌳 根を張る！AP-2して半径8の味方${healed}体を回復・全アビリティ+1・種を即成長！`); used = true;
@@ -4543,7 +4685,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             se.abilities = { drop_rock: 999, shatter: 5, dash: 5, hell_breath: 999, ryujin_transform: se.abilities.ryujin_transform };
             se.flying = true; se.ryujinDragonForm = true;
             se.transformCooldownLeft = 2;
-            msg('🐲 変身！竜の姿に！飛行・ヘルブレス無制限！2ターン後に再変身可能！');
+            se.hp = Math.min(se.maxHp, se.hp + 3);
+            msg('🐲 変身！竜の姿に！HP+3！飛行・ヘルブレス無制限！2ターン後に再変身可能！');
         } else {
             se.abilities = se.savedAbilities || se.abilities;
             se.abilities.ryujin_transform = Math.max(0, se.abilities.ryujin_transform);
@@ -4599,11 +4742,22 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "🔱 モリで刺す！しかし無敵で防がれた！" : `🔱 モリで刺す！${targetEntity.name}に${hpDmg}ダメージ！`); used = true;
     } else if (actionMode === 'chomp') {
         if (se.abilities['chomp'] !== 999) se.abilities['chomp']--;
-        let cDmg = 5 + (se.atkBonus||0);
+        let cDmg = 3 + (se.atkBonus||0);
         if (meleeDodged(targetEntity)) { msg("🦷 噛み砕く！しかし飛行コマに回避された！"); used = true; }
         else {
             if (!targetEntity.invin) { targetEntity.hp -= cDmg + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0, targetEntity.ap - 1); }
             msg(targetEntity.invin ? "🦷 噛み砕く！しかし無敵で防がれた！" : `🦷 噛み砕く！${targetEntity.name}に${cDmg}ダメージ・AP-1！`); used = true;
+        }
+    } else if (actionMode === 'shark_charge') {
+        se.abilities['shark_charge']--;
+        let chargeAp = se.ap;
+        se.ap = 0;
+        let baseDmg = 2 + chargeAp + (se.atkBonus||0);
+        if (se.waterMode) baseDmg += 2;
+        if (meleeDodged(targetEntity)) { msg("🦈 サメ突撃！しかし飛行コマに回避された！"); used = true; }
+        else {
+            if (!targetEntity.invin) { targetEntity.hp -= baseDmg + (targetEntity.defDebuff||0); knockback(targetEntity, 2, se); }
+            msg(targetEntity.invin ? "🦈 サメ突撃！しかし無敵で防がれた！" : `🦈 サメ突撃！全AP${chargeAp}消費→${targetEntity.name}に${baseDmg}ダメ・強制後退！${se.waterMode?'(水中ボーナス+2)':''}`); used = true;
         }
     } else if (actionMode === 'water_cutter') {
         if ((se.waterGauge||0) < 1) { msg("💧 ウォーターゲージが足りない！(1必要)"); return; }
@@ -4652,7 +4806,9 @@ function handleAbilityTarget(r, c, targetEntity) {
             se.abilities = { drop_rock: 999, shatter: (se.savedAbilitiesShark.shatter||5), chomp: 999, shark_transform: 999 };
             let apDiff = 5 - se.maxAp;
             se.maxAp = 5; se.ap = Math.min(se.ap + Math.max(0, apDiff), se.maxAp);
-            msg("🦈 水中モードに変身！AP5・噛み砕く使用可！陸上でゲージ-1/T！");
+            se.ap = Math.min(se.maxAp, se.ap + 2);
+            se.hp = Math.min(se.maxHp, se.hp + 3);
+            msg("🦈 水中モードに変身！AP+2・HP+3！AP5・噛み砕く使用可！陸上でゲージ-1/T！");
         } else {
             se.waterMode = false;
             se.abilities = se.savedAbilitiesShark ? {...se.savedAbilitiesShark} : se.abilities;
@@ -4736,7 +4892,7 @@ function breakVolcano() {
     for (let i=0; i<50 && count<5; i++) {
         let rr = enemy.r + Math.floor(Math.random()*7) - 3;
         let cc = enemy.c + Math.floor(Math.random()*7) - 3;
-        if (rr>=0 && rr<SIZE && cc>=0 && cc<SIZE && board[rr] && board[rr][cc]==='plains' && !isNoRockZone(rr,cc)) {
+        if (rr>=0 && rr<SIZE && cc>=0 && cc<SIZE && board[rr] && isWalkable(rr, cc) && !isNoRockZone(rr,cc)) {
             if (!entities.some(e => e.r === rr && e.c === cc)) {
                 board[rr][cc] = 'rock'; count++;
             }
@@ -4938,8 +5094,15 @@ function executeRushSkill(se, targetR, targetC, mode) {
     if (mode === 'skill_mage') {
         let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team);
         if (target) {
-            if (!target.invin) { target.hp -= 5; target.ap--; knockback(target, 1, se); }
-            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : "大火球魔法！ダメージ(5)を与え、吹き飛ばし行動力を奪った！");
+            if (!target.invin) { target.hp -= 6; target.ap--; knockback(target, 1, se); }
+            // 飛び火: 隣接する敵にも2ダメ
+            let splashHit = 0;
+            entities.forEach(t => {
+                if (t !== target && t.hp > 0 && t.team !== se.team && !t.invin && Math.max(Math.abs(t.r-targetR),Math.abs(t.c-targetC)) <= 1) {
+                    t.hp -= 2; splashHit++;
+                }
+            });
+            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : `大火球魔法！ダメージ(6)を与え、吹き飛ばし行動力を奪った！${splashHit>0?`飛び火で隣接${splashHit}体に2ダメ！`:''}`);
         }
         se.skillUsed = true;
         return;
@@ -5426,7 +5589,7 @@ function cpuLogic() {
             if (!attacked && dist <= 1) {
                 if (cpu.abilities.smash_slash > 0) {
                     cpu.abilities.smash_slash--; 
-                    if (!p.invin) { p.ap--; p.hp -= 3; msg(`敵の粉砕斬り！${p.name}が3ダメージを受けた！`); }
+                    if (!p.invin) { p.ap--; p.hp -= 4; msg(`敵の粉砕斬り！${p.name}が4ダメージを受けた！`); }
                     else { msg(`敵の粉砕斬り！しかし${p.name}は無敵で防いだ！`); }
                     attacked = true; cpu.ap--;
                 } else if (cpu.abilities.spin_slash > 0) {
@@ -5715,8 +5878,7 @@ function npcLogic() {
                 let t = allTargets[0];
                 let d = Math.max(Math.abs(n.r-t.r), Math.abs(n.c-t.c));
                 if (n.abilities.ice_throw && d <= 3) {
-                    if (!t.invin) { t.hp -= 2; t.ap = Math.max(0, t.ap-1); knockback(t, 1, n); }
-                    msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ、AP-1！`, true);
+                    if (!t.invin) { t.hp -= 2; if (Math.random() < 0.5) { t.ap = Math.max(0, t.ap-1); msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ、AP-1！`, true); } else { msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ！`, true); } knockback(t, 1, n); }
                     n.ap--;
                 } else if (d <= 1) {
                     if (!t.invin) { t.hp -= 2; knockback(t, 1, n); }
@@ -5884,14 +6046,24 @@ function checkWin() {
     let isEnd = false;
     let title = "";
 
+    // 敵ジョブコマ撃破後、赤コマ残存なら全滅条件に
+    let otherCpuAlive = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.id !== 'c1');
+    let otherPlayerAlive = entities.some(e => e.team === 'player' && e.hp > 0 && e.id !== 'p1');
+    let cpuJobDead = cpu && cpu.hp <= 0;
+    let playerJobDead = player && player.hp <= 0;
+
     if (isOnlineMode) {
         // Online: frame from myPlayerIndex's perspective
-        if (player && player.hp <= 0) {
+        if (playerJobDead && !otherPlayerAlive) {
             title = myPlayerIndex === 0 ? "💀 Defeat... あなたの体力が尽きました。" : "🎉 Victory! 相手の体力を削りきりました！";
             isEnd = true;
-        } else if (cpu && cpu.hp <= 0) {
+        } else if (playerJobDead && otherPlayerAlive) {
+            // Player job died but minions remain — cpu must eliminate all
+        } else if (cpuJobDead && !otherCpuAlive) {
             title = myPlayerIndex === 0 ? "🎉 Victory! 相手の体力を削りきりました！" : "💀 Defeat... あなたの体力が尽きました。";
             isEnd = true;
+        } else if (cpuJobDead && otherCpuAlive) {
+            // CPU job died but minions remain — player must eliminate all
         } else if (pWin) {
             title = myPlayerIndex === 0 ? (cTrapped ? "🎉 Victory! 敵を岩で包囲しました！" : "🎉 Victory! 敵陣突破！") : "💀 Defeat... 突破(または包囲)されました。";
             isEnd = true;
@@ -5900,8 +6072,10 @@ function checkWin() {
             isEnd = true;
         }
     } else {
-        if (player && player.hp <= 0) { title = "💀 Defeat... あなたの体力が尽きました。"; isEnd = true; }
-        else if (cpu && cpu.hp <= 0) { title = "🎉 Victory! 敵の体力を削りきりました！"; isEnd = true; }
+        if (playerJobDead && !otherPlayerAlive) { title = "💀 Defeat... あなたの体力が尽きました。"; isEnd = true; }
+        else if (cpuJobDead && !otherCpuAlive) { title = "🎉 Victory! 敵の体力を削りきりました！"; isEnd = true; }
+        else if (playerJobDead && otherPlayerAlive) { /* 続行: 残コマ全滅待ち */ }
+        else if (cpuJobDead && otherCpuAlive) { /* 続行: 残コマ全滅待ち */ }
         else if (pWin) { title = cTrapped ? "🎉 Victory! 敵を岩で包囲しました！" : "🎉 Victory! 敵陣突破！"; isEnd = true; }
         else if (cWin) { title = pTrapped ? "💀 Defeat... 岩に包囲されてしまった。" : "💀 Defeat... 敵に突破されました。"; isEnd = true; }
     }
