@@ -857,8 +857,8 @@ const ABILITY_NAMES = {
     octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)',
     knife_juggling: 'ナイフジャグリング(直線3/威1+回数増)',
     scary_face: '恐怖の笑顔(半径2スタン/2技封印2T)',
-    ball_ride: '玉乗り(直線3移動/威2/吹飛)',
-    acrobat: 'アクロバット(1T飛行/AP4)',
+    ball_ride: '玉乗り(直線2移動/威2/吹飛)',
+    acrobat: 'アクロバット(1T飛行/AP+2)',
     aerial_trapeze: '空中ブランコ(隣接投げ5マス/威2)',
     bomb_cracker: '爆弾クラッカー(範囲2投/半径1/威2/潜伏)',
     monkey_toy: 'サル召喚(HP1/AP2/シンバル∞/プレゼント∞)',
@@ -947,7 +947,7 @@ const ABILITY_TIPS = {
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
     counter: '構え状態を1回追加。次に近接攻撃を受けた時に自動で2ダメ反撃。回数3。',
     ryujin_transform: '竜の姿に変身(飛行・ヘルブレス使用可)。再使用で元に戻る。3Tクールダウン。',
-    afterimage: '隣接マスに残像(HP1/AP4/打撃のみ)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。',
+    afterimage: '隣接マスに残像(HP1/AP3/打撃のみ/1T消滅)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。',
     fortify: '正面(北)3マスに一時的な岩を設置し、南に大砲マスを配置。岩と大砲は次の自分ターン開始時に消滅。回数2。',
     unwavering_stance: '1ターンの間、騎士が受けるダメージ+1（自己犠牲）。代わりに半径8マス内の味方全員（自身含む）のAPと攻撃力を1ターン+1する。回数1。',
     stone_punch: '隣接した敵を石で殴る。ダメージ1＋AP-1＋吹き飛ばし。吹き飛ばした場所に岩を設置。回数10。',
@@ -962,8 +962,8 @@ const ABILITY_TIPS = {
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
     knife_juggling: '直線3マスにナイフを投げる。威力1。命中すると次の使用時ダメージ+1・回数+1（スタック蓄積）。回数3。',
     scary_face: '半径2マスの全敵にスタン：AP-1＋後方吹き飛ばし＋ランダム2アビリティを2T封印。回数3。',
-    ball_ride: '直線3マス前進。進路上の敵に2ダメ・吹き飛ばし。回数5。',
-    acrobat: '1ターン間飛行状態になりAP4で行動する。効果終了後APは元に戻る。回数2。',
+    ball_ride: '直線2マス前進。進路上の敵に2ダメ・吹き飛ばし。回数5。',
+    acrobat: '1ターン間飛行状態になり現在のAPに+2する。効果終了後APは元に戻る。回数2。',
     aerial_trapeze: '隣接(1マス)の敵コマか岩を選択して直線5マス投げ飛ばす。2ダメ・AP-1。着地先にコマがいれば連鎖ダメージ。岩は破壊される。回数2。',
     bomb_cracker: '半径2マス以内の場所へ投擲し中心半径1マスで爆発。2ダメ・吹き飛ばし。ピエロは1T潜伏状態になる。回数1。',
     monkey_toy: '隣接マスにおもちゃのサル(HP1/AP2)を召喚。シンバル騒音(半径1威1)とプレゼント設置を持つ。撃破時にプレゼントを落とす。回数1。',
@@ -2423,6 +2423,15 @@ function processTurnStartEffects(e) {
         if (e.coffinTimer <= 0) { e.inCoffin = false; msg(`⚰️ ${e.name}が棺桶から脱出した！`, true); }
         e.ap = 0; // 棺桶中は行動不能
     }
+    // カウンター 1ターン有効期限
+    if ((e.counterReady||0) > 0) {
+        if ((e.counterTimer||0) > 0) {
+            e.counterTimer--;
+            if (e.counterTimer <= 0) { e.counterReady = 0; msg(`⚡ ${e.name}のカウンター構えが解除された！`, true); }
+        } else {
+            e.counterReady = 0;
+        }
+    }
     // アクロバット タイマー
     if ((e.acrobatTimer||0) > 0) {
         e.acrobatTimer--;
@@ -2562,7 +2571,7 @@ function startTurn(team, skipEffects = false) {
             if (e.type === 'monkey_toy') {
                 entities.push({
                     id:'present_'+Date.now(), type:'present_box', name:'プレゼント🎁',
-                    team:e.team, r:e.r, c:e.c, hp:5, maxHp:5, ap:0, maxAp:0,
+                    team:e.team, r:e.r, c:e.c, hp:1, maxHp:1, ap:0, maxAp:0,
                     abilities:{}, skillUsed:true, stealth:false, stealthTimer:0,
                     invin:false, invinTimer:0, poisonTimer:0, atkBonus:0, isPresentBox:true
                 });
@@ -2582,23 +2591,6 @@ function startTurn(team, skipEffects = false) {
                     }
                 });
                 msg(`🎁💥 プレゼント箱が爆発！周囲1マスの敵にダメージ＆吹き飛ばし！`, true);
-                return false;
-            }
-            // Check for ally on same tile (item drop)
-            let allyOnTile = entities.find(t => t.hp>0 && t.team===pb.team && t.r===pb.r && t.c===pb.c && JOB_DATA[t.type]);
-            if (allyOnTile) {
-                let roll = Math.random();
-                if (roll < 0.33) {
-                    allyOnTile.maxAp=Math.max(allyOnTile.maxAp,allyOnTile.maxAp+1); allyOnTile.ap=Math.min(allyOnTile.ap+1,allyOnTile.maxAp+1);
-                    allyOnTile.shoesTimer=(allyOnTile.shoesTimer||0)+3;
-                    msg(`🎁👟 プレゼント：靴！${allyOnTile.name}のAP+1(3T)！`, true);
-                } else if (roll < 0.66) {
-                    allyOnTile.hp=Math.min(allyOnTile.maxHp,allyOnTile.hp+3);
-                    msg(`🎁⭐ プレゼント：スターの欠片！${allyOnTile.name}のHP+3！`, true);
-                } else {
-                    allyOnTile.atkBonus=(allyOnTile.atkBonus||0)+1;
-                    msg(`🎁⚔️ プレゼント：鋼鉄の剣！${allyOnTile.name}のATK永続+1！`, true);
-                }
                 return false;
             }
             return true;
@@ -3024,6 +3016,13 @@ function startTurn(team, skipEffects = false) {
             mergeSpirits();
         }
 
+        // 残像 1ターン自動消滅
+        entities = entities.filter(e => {
+            if (e.type === 'afterimage' && turn > e.turnBorn) {
+                msg(`👥 残像が消えた！`, true); return false;
+            }
+            return true;
+        });
         entities.forEach(e => {
             if (e.team === 'player') {
                 processTurnStartEffects(e);
@@ -3215,7 +3214,7 @@ function isValidTarget(se, r, c, mode) {
     // ピエロ
     if (mode === 'knife_juggling') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
     if (mode === 'scary_face') return true; // self-centered AoE
-    if (mode === 'ball_ride') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
+    if (mode === 'ball_ride') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2;
     if (mode === 'acrobat') return true;
     if (mode === 'aerial_trapeze') return maxDist===1 && (target || board[r]?.[c]==='rock');
     if (mode === 'bomb_cracker') return maxDist<=2 && isWalkable(r,c,true);
@@ -4278,7 +4277,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let dr=r===se.r?0:Math.sign(r-se.r), dc=c===se.c?0:Math.sign(c-se.c);
         if (dr===0&&dc===0) { msg("玉乗り：方向を選んでください"); se.abilities['ball_ride']++; return false; }
         let moved=0, hitEnemy=false;
-        for (let step=1; step<=3; step++) {
+        for (let step=1; step<=2; step++) {
             let nr=se.r+dr*step, nc=se.c+dc*step;
             if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
             let t=entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
@@ -4301,8 +4300,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.preAcrobatMaxAp = se.maxAp;
         se.flying = true;
         se.acrobatTimer = 1;
-        se.maxAp = 4; se.ap = 4;
-        msg(`🤸 アクロバット！1ターン飛行状態・AP4で行動！`); used = true;
+        se.maxAp = se.maxAp + 2; se.ap = Math.min(se.ap + 2, se.maxAp);
+        msg(`🤸 アクロバット！1ターン飛行状態・現在AP+2！`); used = true;
     } else if (actionMode === 'aerial_trapeze') {
         let adjTarget = entities.find(e=>e.hp>0&&e.r===r&&e.c===c&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
         let isRock = (board[r]?.[c]==='rock');
@@ -4359,7 +4358,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (!isWalkable(r,c)) { msg("🎁 その場所には置けません！"); return false; }
         entities.push({
             id:'present_'+Date.now(), type:'present_box', name:'プレゼント🎁',
-            team:se.team, r:r, c:c, hp:5, maxHp:5, ap:0, maxAp:0,
+            team:se.team, r:r, c:c, hp:1, maxHp:1, ap:0, maxAp:0,
             abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, atkBonus:0, isPresentBox:true
         });
         msg(`🎁 プレゼント設置！敵が近づくと爆発！味方が踏むとアイテムゲット！`); used = true;
@@ -4534,29 +4533,31 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'counter') {
         se.abilities['counter']--;
         se.counterReady = (se.counterReady||0) + 1;
-        msg(`⚡ カウンター構え！被弾時に2ダメ反撃！(${se.counterReady}回)`); used = true;
+        se.counterTimer = 1;
+        msg(`⚡ カウンター構え！被弾時に2ダメ反撃！このターンのみ有効！`); used = true;
     } else if (actionMode === 'ryujin_transform') {
         se.abilities['ryujin_transform']--;
         if ((se.transformCooldownLeft||0) > 0) { msg(`変身はあと${se.transformCooldownLeft}ターン後に使用可能！`); se.abilities['ryujin_transform']++; return; }
         if (!se.ryujinDragonForm) {
             se.savedAbilities = {...se.abilities};
-            se.abilities = { drop_rock: 999, shatter: 5, dash: 5, hell_breath: 1, ryujin_transform: se.abilities.ryujin_transform };
+            se.abilities = { drop_rock: 999, shatter: 5, dash: 5, hell_breath: 999, ryujin_transform: se.abilities.ryujin_transform };
             se.flying = true; se.ryujinDragonForm = true;
-            msg('🐲 変身！竜の姿に！飛行・ヘルブレス使用可能！竜人族スキルが変化！');
+            se.transformCooldownLeft = 2;
+            msg('🐲 変身！竜の姿に！飛行・ヘルブレス無制限！2ターン後に再変身可能！');
         } else {
             se.abilities = se.savedAbilities || se.abilities;
             se.abilities.ryujin_transform = Math.max(0, se.abilities.ryujin_transform);
             se.flying = false; se.ryujinDragonForm = false;
-            se.transformCooldownLeft = 3;
-            msg('🐲 人の姿に戻った！3ターン後に再変身可能！');
+            se.transformCooldownLeft = 2;
+            msg('🐲 人の姿に戻った！2ターン後に再変身可能！');
         }
         used = true;
     } else if (actionMode === 'afterimage') {
         if (turn < 5) { msg('残像は開始5ターン後に使用可能！'); return; }
         se.abilities['afterimage']--;
-        entities.push({ id:'aft'+Date.now(), type:'afterimage', name:'残像', team:se.team, r, c, hp:1, maxHp:1, ap:4, maxAp:4, abilities:{punch:999}, skillUsed:false, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+        entities.push({ id:'aft'+Date.now(), type:'afterimage', name:'残像', team:se.team, r, c, hp:1, maxHp:1, ap:3, maxAp:3, abilities:{punch:999}, skillUsed:false, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
         se.stealth = true; se.stealthTimer = 3;
-        msg('残像生成！(HP1/AP4/打撃のみ) 竜人族は潜伏状態！'); used = true;
+        msg('残像生成！(HP1/AP3/打撃のみ/1ターン消滅) 竜人族は潜伏状態！'); used = true;
     } else if (actionMode === 'skill') {
         if (executeSkill(se)) { used = true; se.skillUsed = true; }
     } else if (actionMode === 'roll_rock') {
@@ -4633,7 +4634,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🌊 水流噴火！中心3×3に噴水(命中${weHits}体)！全マスが浅瀬化！`); used = true;
     } else if (actionMode === 'dive') {
         let diveTile = board[se.r]?.[se.c];
-        if (!isWaterTile(diveTile)) { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
+        if (!isWaterTile(diveTile) && activeStage !== 'bigriver') { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
         se.abilities['dive']--;
         se.stealth = true; se.stealthTimer = 2;
         se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
@@ -4643,7 +4644,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'shark_transform') {
         if ((se.sharkTransformCooldown||0) > 0) { msg(`🦈 変身クールダウン中！あと${se.sharkTransformCooldown}T！`); return; }
         if (!se.waterMode) {
-            if ((se.waterGauge||0) < 15) { msg("🦈 変身にはウォーターゲージ15以上必要！"); return; }
+            if ((se.waterGauge||0) < 15 && activeStage !== 'bigriver') { msg("🦈 変身にはウォーターゲージ15以上必要！"); return; }
             if (se.abilities['shark_transform'] !== 999) se.abilities['shark_transform']--;
             se.savedAbilitiesShark = {...se.abilities};
             se.savedMaxAp = se.maxAp;
@@ -6091,6 +6092,37 @@ function updateUI() {
                 if (isOnlineMode) syncState();
             };
             list.appendChild(wb);
+        }
+    }
+
+    // プレゼントを開ける (隣接したプレゼント箱を手動開封)
+    if (selectedEntity && canIAct()) {
+        let adjPresent = entities.find(e => e.type === 'present_box' && e.team === selectedEntity.team &&
+            Math.max(Math.abs(e.r - selectedEntity.r), Math.abs(e.c - selectedEntity.c)) === 1);
+        if (adjPresent) {
+            let pb2 = document.createElement('button');
+            pb2.className = 'ability-btn';
+            pb2.style.background = '#e91e63'; pb2.style.color = '#fff';
+            pb2.innerText = '🎁 プレゼントを開ける (隣のプレゼント箱を開封 → ランダムアイテム)';
+            pb2.onclick = () => {
+                entities = entities.filter(e => e !== adjPresent);
+                let roll = Math.random();
+                if (roll < 0.33) {
+                    selectedEntity.maxAp = (selectedEntity.maxAp||2) + 1;
+                    selectedEntity.ap = Math.min((selectedEntity.ap||0) + 1, selectedEntity.maxAp);
+                    selectedEntity.shoesTimer = (selectedEntity.shoesTimer||0) + 3;
+                    msg(`🎁👟 プレゼントを開けた！スニーカー！${selectedEntity.name}のAP+1(3T)！`);
+                } else if (roll < 0.66) {
+                    selectedEntity.atkBonus = (selectedEntity.atkBonus||0) + 1;
+                    msg(`🎁⚔️ プレゼントを開けた！鋼の剣！${selectedEntity.name}のATK永続+1！`);
+                } else {
+                    selectedEntity.hp = Math.min(selectedEntity.maxHp, (selectedEntity.hp||0) + 3);
+                    msg(`🎁⭐ プレゼントを開けた！星のカケラ！${selectedEntity.name}のHP+3！`);
+                }
+                updateUI(); render();
+                if (isOnlineMode) syncState();
+            };
+            list.appendChild(pb2);
         }
     }
 
