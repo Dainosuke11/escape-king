@@ -521,7 +521,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🎩 泥棒 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 短剣刺し10 / 毒弓矢5 / テレポート3<br>強奪3 / スキル:コピーキャット(選択アビリティをコピー)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐾 獣使い (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 弓攻撃10 / オオカミ召喚1(5T~)<br>テイム5(5T~) / ハヤブサ召喚1(5T~) / スキル:群れの号令(召喚コマAP+1)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">💪 マッチョ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / ぶん殴り10 / 岩投げ5<br>岩雪崩1 / 岩落とし強1 / 僧侶召喚1 / ドーピング1 / スキル:ドーピング(ATK+1・AP+1/3T)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⚙️ 機械兵 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 電力補給5 / ジェットブースト5 / プラズマブレード3<br>プラズマブレード改2 / 薙ぎ払い3 / プラズマスナイプ2 / プラズマバズーカ2<br>焼却砲2 / 偵察ドローン2(5T~) / スキル:リミッター解除(ATK+3/毎T自傷3)</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">⚙️ 機械兵 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 電力補給5 / ジェットブースト5(直線3/HP-2) / プラズマブレード3(HP-2)<br>プラズマブレード改2(HP-3) / 薙ぎ払い3(AP-1) / プラズマスナイプ2 / プラズマバズーカ2<br>焼却砲2 / 偵察ドローン2(隣接/複数可) / スキル:リミッター解除(2T~)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">👽 エイリアン (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 触手のムチ10 / トラクタービーム3<br>アブダクション1 / 卵設置3 / 光学迷彩2 / 形態変化1 / スキル:マインドコントロール(1体を仲間に)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🌿 マンドレイク (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 枝のムチ5 / 種まき10 / 融合1<br>種バズーカ2 / 根を張る1 / 咆哮1 / スキル:植物の覚醒(LVアップ/全アビリティ強化)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐲 竜人族 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / ぶん殴り10 / 跳び蹴り1 / 乱打3<br>火炎ブレス2 / テイルスイング3 / カウンター3 / 変身2 / 残像1 / スキル:ドラゴンインパクト</div></div>
@@ -794,11 +794,11 @@ const ABILITY_NAMES = {
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
     fire_breath: '火炎ブレス', peck: 'つつき',
     hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
-    power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(半径3飛行移動)',
-    plasma_blade: 'プラズマブレード(威3/HP-1/AP-1)', plasma_blade2: 'プラズマブレード改(威6/AP-1/HP-1)',
+    power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(直線3飛行移動/HP-2)',
+    plasma_blade: 'プラズマブレード(威3/HP-2/AP-1)', plasma_blade2: 'プラズマブレード改(威6/AP-1/HP-3)',
     sweep: '薙ぎ払い(半径2弧/威2/吹飛)', plasma_snipe: 'プラズマスナイプ(直線5/威4)',
     plasma_bazooka: 'プラズマバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
-    recon_drone: '偵察ドローン召喚(5T~/HP1/AP2/飛行)',
+    recon_drone: '偵察ドローン召喚(隣接/HP1/AP2/飛行/複数可)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
@@ -887,14 +887,14 @@ const ABILITY_TIPS = {
     thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
     meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
-    jet_boost: 'AP-1・HP-1して半径3マスの任意マスに飛行移動。回数5。',
-    plasma_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
-    plasma_blade2: '隣接した敵に6ダメ・AP-1。AP-1・HP-1のコスト。回数2。',
-    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。自傷なし。回数3。',
+    jet_boost: 'AP-1・HP-2して直線3マスに飛行移動。回数5。',
+    plasma_blade: '隣接した敵に3ダメ・AP-1。自身HP-2のコスト。回数3。',
+    plasma_blade2: '隣接した敵に6ダメ・AP-1。AP-1・HP-3のコスト。回数2。',
+    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。AP-1消費。回数3。',
     plasma_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
     plasma_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
     incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
-    recon_drone: '半径5マス以内に偵察ドローン(HP1/AP2/飛行)を召喚。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。既存ドローン撃墜後のみ再召喚可能。回数2。',
+    recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
     tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
@@ -938,7 +938,7 @@ const ABILITY_TIPS = {
     monkey_present_set: '隣接マスにプレゼント箱を設置。敵が半径1マス以内に来ると爆発(威1/吹飛)。味方が踏むとランダムアイテム獲得。',
     coffin_break: '隣接1マスに棺桶に閉じ込められた味方コマがいれば解放する。',
     drone_ram: '隣接した敵に体当たり。ダメージ1。回数無制限。',
-    power_supply_drone: 'ドローン自身のHP+5・半径8マス内の機械兵のHP+5を回復する。回数無制限。'
+    power_supply_drone: 'AP-1消費。ドローン自身のHP+5・半径8マス内の機械兵のHP+5を回復する。回数無制限。'
 };
 
 const JOB_DATA = {
@@ -997,9 +997,14 @@ function tryReconnectOnce() {
     if (reconnectAttempts > 60) {
         reconnecting = false;
         hideReconnectOverlay();
-        msg("⚠️ 再接続に失敗しました。");
-        alert("再接続に失敗しました。タイトルに戻ります。");
-        location.reload();
+        msg("⚠️ 再接続に失敗しました。タイトルに戻ります。");
+        setTimeout(() => {
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'block';
+            isOnlineMode = false;
+            if (wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
+        }, 2000);
         return;
     }
     updateReconnectOverlay();
@@ -1184,8 +1189,14 @@ function handleWsMessage(event) {
     if (data.type === 'resumeFailed') {
         reconnecting = false;
         hideReconnectOverlay();
-        alert("再接続に失敗しました（試合が終了している可能性があります）。");
-        location.reload();
+        msg("⚠️ 再接続に失敗しました（試合が既に終了しています）。タイトルに戻ります。");
+        setTimeout(() => {
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'block';
+            isOnlineMode = false;
+            if (wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
+        }, 2000);
         return;
     }
 
@@ -2926,14 +2937,14 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'unwavering_stance') return true;
     // Cyborg
     if (mode === 'power_charge') return true;
-    if (mode === 'jet_boost') return maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
+    if (mode === 'jet_boost') return (se.r===r||se.c===c) && maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
     if (mode === 'plasma_blade') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'plasma_blade2') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'sweep') return true;
     if (mode === 'plasma_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'plasma_bazooka') return maxDist>0 && maxDist<=4+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'incinerate') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'recon_drone') return maxDist<=5 && isWalkable(r,c,true);
+    if (mode === 'recon_drone') return maxDist<=1 && isWalkable(r,c,true);
     // Alien
     if (mode === 'tentacle_whip') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'water_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && (target.team!==se.team || isOceanUnit(target));
@@ -3893,35 +3904,36 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'jet_boost') {
         se.abilities['jet_boost']--;
         se.ap = Math.max(0, se.ap - 1);
-        se.hp = Math.max(1, se.hp - 1);
+        se.hp = Math.max(1, se.hp - 2);
         let wasFlying = se.flying;
         se.flying = true; se.r = r; se.c = c;
         let jevMsg = checkTileEffects(se) || '';
         if (!wasFlying) se.flying = false; // 一時的飛行、着地後は元に戻す
-        msg(`🚀 ジェットブースト！AP-1・HP-1して半径3マス飛行移動！${jevMsg}`);
+        msg(`🚀 ジェットブースト！AP-1・HP-2して直線3マス飛行移動！${jevMsg}`);
         checkEnemyTerritory(se); used = true;
     } else if (actionMode === 'plasma_blade') {
         se.abilities['plasma_blade']--;
-        se.hp = Math.max(1, se.hp - 1);
+        se.hp = Math.max(1, se.hp - 2);
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 3 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
         // counter check
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード！しかし無敵で防がれた！' : 'プラズマブレード！HP-1して敵に3ダメ・AP-1！'); used = true;
+        msg(targetEntity?.invin ? 'プラズマブレード！しかし無敵で防がれた！' : 'プラズマブレード！HP-2して敵に3ダメ・AP-1！'); used = true;
     } else if (actionMode === 'plasma_blade2') {
         se.abilities['plasma_blade2']--;
-        se.ap = Math.max(0, se.ap - 1); se.hp = Math.max(1, se.hp - 1);
+        se.ap = Math.max(0, se.ap - 1); se.hp = Math.max(1, se.hp - 3);
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 6 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? 'プラズマブレード改！しかし無敵で防がれた！' : 'プラズマブレード改！AP-1・HP-1して敵に6ダメ・AP-1！'); used = true;
+        msg(targetEntity?.invin ? 'プラズマブレード改！しかし無敵で防がれた！' : 'プラズマブレード改！AP-1・HP-3して敵に6ダメ・AP-1！'); used = true;
     } else if (actionMode === 'sweep') {
         se.abilities['sweep']--;
+        se.ap = Math.max(0, se.ap - 1);
         let swpHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
                 if (!t.invin) { t.hp -= 2; knockback(t,1,se); swpHit++; }
             }
         });
-        msg(`⚔️ 薙ぎ払い！半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
+        msg(`⚔️ 薙ぎ払い！AP-1・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'plasma_snipe') {
         se.abilities['plasma_snipe']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
@@ -3942,9 +3954,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
         msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！5ダメ・AP-2・2ターン燃焼ダメージ！'); used = true;
     } else if (actionMode === 'recon_drone') {
-        if (turn < 5) { msg("🛸 偵察ドローンは開始5ターン後に使用可能！"); return false; }
-        let existingDrone = entities.find(e => e.hp>0 && e.type==='recon_drone_unit' && e.team===se.team);
-        if (existingDrone) { msg("🛸 既に偵察ドローンが稼働中！先に撃墜されてから再召喚できます。"); return false; }
         if (!isWalkable(r, c, true)) { msg("🛸 その場所には召喚できません！"); return false; }
         se.abilities['recon_drone']--;
         entities.push({
@@ -3962,6 +3971,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター！`, true); }
         msg(targetEntity.invin ? '💥 体当たり！しかし無敵で弾かれた！' : `💥 体当たり！${targetEntity.name}に1ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'power_supply_drone') {
+        se.ap = Math.max(0, se.ap - 1);
         se.hp = Math.min(se.maxHp, se.hp + 5);
         let boosted = 0;
         entities.forEach(t => {
@@ -3969,7 +3979,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 t.hp = Math.min(t.maxHp, t.hp + 5); boosted++;
             }
         });
-        msg(`🔋 電力補給！ドローンHP+5・半径8マスの機械兵${boosted}体にHP+5！`); used = true;
+        msg(`🔋 電力補給！AP-1・ドローンHP+5・半径8マスの機械兵${boosted}体にHP+5！`); used = true;
     // ====== ピエロ ======
     } else if (actionMode === 'knife_juggling') {
         se.abilities['knife_juggling']--;
@@ -4560,11 +4570,11 @@ function executeSkill(se) {
     }
     
     if (se.type === 'assassin') { 
-        se.stealth = true; se.stealthTimer = 3; 
+        se.stealth = true; se.stealthTimer = 2; 
         se.maxAp = 3; se.ap = 3;
         if (se.abilities.bow !== undefined) { se.abilities.poison_bow = se.abilities.bow; delete se.abilities.bow; }
         if (se.abilities.dagger !== undefined) { se.abilities.poison_dagger = se.abilities.dagger; delete se.abilities.dagger; }
-        msg("暗殺者の隠匿！3ターン隠密化し、行動力が増加(AP3)！武器に毒を塗った！"); 
+        msg("暗殺者の隠匿！2ターン隠密化し、行動力が増加(AP3)！武器に毒を塗った！"); 
         return true; 
     }
     
@@ -4579,8 +4589,8 @@ function executeSkill(se) {
     }
     // ====== 機械兵 スキル: リミッター解除 ======
     if (se.type === 'cyborg') {
-        if (turn < 5) { msg("⚙️ リミッター解除は開始5ターン後に使用可能！"); return false; }
         if (se.limiterReleased) { msg("⚙️ リミッター解除は既に発動中！"); return false; }
+        if (turn < 2) { msg("⚙️ リミッター解除は2ターン目から使用可能！"); return false; }
         se.maxHp += 10;
         se.hp = Math.min(se.maxHp, se.hp + 10);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
