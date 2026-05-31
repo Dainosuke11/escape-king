@@ -181,6 +181,8 @@
         .dungeon_chest::after { content: "📦"; font-size: calc(var(--tile-size) * 0.45); }
         .dungeon_switch { background: #3d1e5d; border: 1px solid #9b59b6 !important; }
         .dungeon_switch::after { content: "🔘"; font-size: calc(var(--tile-size) * 0.45); }
+        .dungeon_torch { background: #2b1a00; border: 1px solid #c0830a !important; }
+        .dungeon_torch::after { content: "🕯️"; font-size: calc(var(--tile-size) * 0.45); }
         /* Underwater Temple */
         .sea_floor { background: #0d4f5e; }
         .sea_trench { background: #04111e; }
@@ -648,6 +650,7 @@ let resolvedStage = '';    // actual stage after resolving 'random'
 // Dungeon stage
 let dungeonGoggles = false;
 let dungeonSwitchGroups = {};   // "r,c" → [{r,c}] array of tiles this switch controls
+let dungeonTorches = [];        // [[r,c],...] torch positions that illuminate radius 5
 let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
@@ -1832,13 +1835,13 @@ function initBoard(stageType) {
             if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
             avA++;
         }
-        // Cable cars (extended routes for bigger mountain)
-        // Enemy side: boarding at (3,3), down col 3 → right to summit at (10,5)
-        board[3][3]='cable_board';
-        [[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[10,4],[10,5],[10,6],[10,7]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Player side: boarding at (17,17), up col 17 → left to summit at (10,12)
-        board[17][17]='cable_board';
-        [[16,17],[15,17],[14,17],[13,17],[12,17],[11,17],[10,17],[10,16],[10,15],[10,14],[10,13],[10,12]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Cable cars (コの字形: 乗り場から約4マスで到達可能)
+        // Enemy side: boarding at (4,10) → right to col 16 → down to row 8 → left into summit
+        board[4][10]='cable_board';
+        [[4,11],[4,12],[4,13],[4,14],[4,15],[4,16],[5,16],[6,16],[7,16],[8,16],[8,15],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[8,8],[8,7],[8,6],[8,5]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Player side: boarding at (16,10) → left to col 4 → up to row 11 → right into summit
+        board[16][10]='cable_board';
+        [[16,9],[16,8],[16,7],[16,6],[16,5],[16,4],[15,4],[14,4],[13,4],[12,4],[11,4],[11,5],[11,6],[11,7],[11,8],[11,9],[11,10],[11,11],[11,12],[11,13],[11,14]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
         // Extras at board edges
         placeRandom('mine', 2, 19, 20, true);
         placeRandom('volcano', 1, 19, 20, true);
@@ -1940,48 +1943,79 @@ function initBoard(stageType) {
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='dungeon_ground';
         }
-        // === MAZE WALLS (rock) ===
-        // Horizontal wall row 5: full except gaps at col 7, 10, 13
-        for (let c2=0; c2<SIZE; c2++) if (c2!==7&&c2!==10&&c2!==13) board[5][c2]='rock';
-        // Horizontal wall row 10: full except gaps at col 3, 10, 17
-        for (let c2=0; c2<SIZE; c2++) if (c2!==3&&c2!==10&&c2!==17) board[10][c2]='rock';
-        // Horizontal wall row 15: full except gaps at col 7, 10, 13
-        for (let c2=0; c2<SIZE; c2++) if (c2!==7&&c2!==10&&c2!==13) board[15][c2]='rock';
-        // Vertical walls col 5: rows 6-9 and 11-14
-        for (let r2=6; r2<=9; r2++) board[r2][5]='rock';
-        for (let r2=11; r2<=14; r2++) board[r2][5]='rock';
-        // Vertical walls col 15: rows 6-9 and 11-14
-        for (let r2=6; r2<=9; r2++) board[r2][15]='rock';
-        for (let r2=11; r2<=14; r2++) board[r2][15]='rock';
-        // Extra interior rocks for maze feel
-        [[3,3],[3,17],[7,2],[7,18],[8,8],[8,12],[12,8],[12,12],[17,3],[17,17]].forEach(([r2,c2]) => {
-            if (board[r2][c2]==='dungeon_ground') board[r2][c2]='rock';
+        // === 入り組んだ迷路壁 (mine タイル: 90%銅 / 10%金銀白金均等) ===
+        const placeM = (r2,c2) => { if(board[r2]?.[c2]==='dungeon_ground') board[r2][c2]='mine'; };
+
+        // 横壁 6本 (col 10 は常に通路)
+        [1,2,3,4,5,6,7,8,11,12,13,14,15,16,17,18,19].forEach(c2 => placeM(3,c2));  // gaps: 0,9,10,11,20
+        [0,1,2,3,6,7,8,9,11,12,13,14,17,18,19,20].forEach(c2  => placeM(6,c2));    // gaps: 4,5,10,15,16
+        [1,2,3,5,6,7,8,9,11,12,13,14,15,17,18,19].forEach(c2  => placeM(9,c2));    // gaps: 0,4,10,16,20
+        [1,2,3,5,6,7,8,9,11,12,13,14,15,17,18,19].forEach(c2  => placeM(11,c2));   // gaps: 0,4,10,16,20
+        [0,1,2,3,6,7,8,9,11,12,13,14,17,18,19,20].forEach(c2  => placeM(14,c2));   // gaps: 4,5,10,15,16
+        [1,2,3,4,5,6,7,8,11,12,13,14,15,16,17,18,19].forEach(c2 => placeM(17,c2)); // gaps: 0,9,10,11,20
+
+        // 縦壁 (各ゾーンを分断、col 10 は塞がない)
+        [4,5].forEach(r2   => { placeM(r2,5);  placeM(r2,15); });  // rows 3-6 間
+        [7,8].forEach(r2   => { placeM(r2,8);  placeM(r2,12); });  // rows 6-9 間
+        placeM(10,5); placeM(10,15);                                 // rows 9-11 間
+        [12,13].forEach(r2 => { placeM(r2,8);  placeM(r2,12); });  // rows 11-14 間
+        [15,16].forEach(r2 => { placeM(r2,5);  placeM(r2,15); }); // rows 14-17 間
+
+        // ポケット壁 (袋小路・部屋演出)
+        [[2,7],[2,13],[18,7],[18,13],[7,3],[7,17],[13,3],[13,17]].forEach(([r2,c2]) => placeM(r2,c2));
+
+        // === 宝の割り当て (mine 数に応じて 90%銅 / 各3.3%金銀白金) ===
+        let dungeonMineCount = 0;
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) if(board[r2][c2]==='mine') dungeonMineCount++;
+        treasures = [];
+        for (let i=0; i<dungeonMineCount; i++) {
+            let rv = Math.random();
+            if (rv < 0.9) treasures.push('copper');
+            else if (rv < 0.9334) treasures.push('gold');
+            else if (rv < 0.9667) treasures.push('silver');
+            else treasures.push('platinum');
+        }
+
+        // === 松明 6本 (半径 5 照明) ===
+        dungeonTorches = [[1,5],[1,15],[7,4],[7,16],[13,4],[13,16]];
+        dungeonTorches.forEach(([r2,c2]) => {
+            if(board[r2]?.[c2]==='dungeon_ground') board[r2][c2]='dungeon_torch';
         });
 
-        // === SWITCHES (toggle connected rock group) ===
+        // === スイッチ 7個 ===
         dungeonSwitchGroups = {};
         dungeonGoggles = false;
-        // SW-A at (2,5): controls row 5 cols 5-6 (opens left-upper passage)
-        board[2][5]='dungeon_switch';
-        dungeonSwitchGroups['2,5'] = [{r:5,c:5},{r:5,c:6}];
-        // SW-B at (2,15): controls row 5 cols 14-15 (opens right-upper passage)
-        board[2][15]='dungeon_switch';
-        dungeonSwitchGroups['2,15'] = [{r:5,c:14},{r:5,c:15}];
-        // SW-C at (18,10): controls row 15 cols 8-12 (opens/closes center-lower passage)
-        board[18][10]='dungeon_switch';
-        dungeonSwitchGroups['18,10'] = [{r:15,c:8},{r:15,c:9},{r:15,c:11},{r:15,c:12}];
+        board[1][4] ='dungeon_switch'; dungeonSwitchGroups['1,4']  = [{r:3,c:1}];
+        board[1][16]='dungeon_switch'; dungeonSwitchGroups['1,16'] = [{r:3,c:19}];
+        board[5][2] ='dungeon_switch'; dungeonSwitchGroups['5,2']  = [{r:6,c:2},{r:6,c:3}];
+        board[5][18]='dungeon_switch'; dungeonSwitchGroups['5,18'] = [{r:6,c:17},{r:6,c:18}];
+        board[10][2]='dungeon_switch'; dungeonSwitchGroups['10,2'] = [{r:9,c:3},{r:11,c:3}];
+        board[10][18]='dungeon_switch'; dungeonSwitchGroups['10,18']= [{r:9,c:17},{r:11,c:17}];
+        board[19][10]='dungeon_switch'; dungeonSwitchGroups['19,10']= [{r:17,c:9},{r:17,c:11}];
 
-        // === TREASURE CHESTS (all abilities +1 on step) ===
-        board[1][5] ='dungeon_chest';
-        board[1][15]='dungeon_chest';
-        board[10][1]='dungeon_chest';
-        board[10][19]='dungeon_chest';
-        board[20][5] ='dungeon_chest';
+        // === マジックサークル 2個 (中心縦通路沿い) ===
+        board[4][10] = 'magic_circle';
+        board[16][10] = 'magic_circle';
 
-        // === GOGGLES ITEMS (view radius 3 → 8) ===
+        // === 宝箱 ===
+        board[1][10] ='dungeon_chest';
+        board[10][10]='dungeon_chest';
+
+        // === ゴーグルアイテム (両スタート近く) ===
         itemTileMap = {};
-        board[1][10]='item_tile'; itemTileMap['1,10']='goggles';
-        board[19][10]='item_tile'; itemTileMap['19,10']='goggles';
+        board[2][10]='item_tile'; itemTileMap['2,10']='goggles';
+        board[18][10]='item_tile'; itemTileMap['18,10']='goggles';
+
+        // === ランダム罠 10個 (NPC設置) ===
+        trapOwnerMap = {};
+        let dTrapPlaced=0, dTrapAtt=0;
+        while (dTrapPlaced<10 && dTrapAtt<500) {
+            let tr=2+Math.floor(Math.random()*17), tc=1+Math.floor(Math.random()*19);
+            if (board[tr]?.[tc]==='dungeon_ground') {
+                board[tr][tc]='trap'; trapOwnerMap[`${tr},${tc}`]='npc'; dTrapPlaced++;
+            }
+            dTrapAtt++;
+        }
 
         return; // skip placeChurchesAndItems
 
@@ -2064,7 +2098,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','sea_floor','bubble_vent','lava_ground','lava_bridge','cooled_lava'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','lava_ground','lava_bridge','cooled_lava'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2293,6 +2327,10 @@ function processTurnStartEffects(e) {
         else { e.decoyStealth = false; if (e.stealthTimer <= 0) e.stealth = false; }
     }
     e.ap = e.maxAp;
+    // Mountain cable car: AP=4 while riding
+    if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(board[e.r]?.[e.c])) {
+        e.ap = 4;
+    }
     // Shoes item: expire the temporary AP boost
     if (e.shoesTimer > 0) {
         e.shoesTimer--;
@@ -2706,10 +2744,21 @@ function startTurn(team, skipEffects = false) {
                 if (carWarnTiles.length > 0) msg("🚗 次のターン、車が走り出す！赤マスに注意！", true);
             } else if (nighttownCarTimer % 2 === 0 && nighttownCarTimer > 0) {
                 carWarnTiles = [];
-                entities.forEach(e => {
-                    if (e.type === 'car' && e.team === 'npc' && e.hp > 0) e.ap = e.maxAp;
+                msg("🚗 車が走り出した！5マス即時走行！逃げろ！", true);
+                entities.filter(e => e.type === 'car' && e.team === 'npc' && e.hp > 0).forEach(car => {
+                    let path = predictCarPath(car);
+                    let moveCount = Math.min(5, path.length);
+                    for (let pi = 0; pi < moveCount; pi++) {
+                        let {r: nr, c: nc} = path[pi];
+                        entities.forEach(t => {
+                            if (t.hp>0 && t.r===nr && t.c===nc && t.type!=='car' && (t.team==='player'||t.team==='cpu'||t.team==='npc')) {
+                                if (!t.invin) { t.hp -= 3; t.ap = Math.max(0, t.ap - 1); knockback(t, 2, car); }
+                                msg(`🚗 ${t.name}が車に跳ね飛ばされた！3ダメ・AP-1！`, true);
+                            }
+                        });
+                        car.r = nr; car.c = nc;
+                    }
                 });
-                msg("🚗 車が走り出した！逃げろ！", true);
             }
         }
         // Skyfort: dragon spawns every 3 turns
@@ -2869,7 +2918,7 @@ function startTurn(team, skipEffects = false) {
                 msg(`🌿 ベビーマンドレイクが誕生！`, true);
             } else if (e.type === 'alien_egg' && age >= 2) {
                 e.type = 'alien_jr'; e.name = '宇宙人Jr'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
-                e.abilities = { tentacle_whip: 999, optical_camo: 1, punch: 5 };
+                e.abilities = { tentacle_whip: 999, optical_camo: 1 };
                 msg(`👽 宇宙の卵が孵化！宇宙人Jrが誕生！`, true);
             }
         });
@@ -3081,7 +3130,7 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
-    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert') && !target;
+    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
     if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
@@ -3194,11 +3243,12 @@ function render() {
     let fogSet = new Set();
     if (activeStage === 'dungeon') {
         let playerEnt = entities.find(e => e.hp > 0 && e.team === myTeam() && JOB_DATA[e.type]);
-        let viewR = dungeonGoggles ? 8 : 3;
+        let viewR = dungeonGoggles ? 10 : 4;
         if (playerEnt) {
             for (let rr=0; rr<SIZE; rr++) for (let cc=0; cc<SIZE; cc++) {
-                if (Math.max(Math.abs(rr - playerEnt.r), Math.abs(cc - playerEnt.c)) > viewR)
-                    fogSet.add(`${rr},${cc}`);
+                let inPlayerView = Math.max(Math.abs(rr - playerEnt.r), Math.abs(cc - playerEnt.c)) <= viewR;
+                let inTorchView = dungeonTorches.some(([tr,tc]) => Math.max(Math.abs(rr-tr), Math.abs(cc-tc)) <= 5);
+                if (!inPlayerView && !inTorchView) fogSet.add(`${rr},${cc}`);
             }
         }
     }
@@ -3467,8 +3517,8 @@ function checkTileEffects(entity) {
         let group = dungeonSwitchGroups[key];
         if (group) {
             group.forEach(pos => {
-                if (board[pos.r]?.[pos.c] === 'rock') board[pos.r][pos.c] = 'dungeon_ground';
-                else if (board[pos.r]?.[pos.c] === 'dungeon_ground') board[pos.r][pos.c] = 'rock';
+                if (board[pos.r]?.[pos.c] === 'rock' || board[pos.r]?.[pos.c] === 'mine') board[pos.r][pos.c] = 'dungeon_ground';
+                else if (board[pos.r]?.[pos.c] === 'dungeon_ground') board[pos.r][pos.c] = 'mine';
             });
             msg("🔘 スイッチを押した！壁が動いた！", true);
         }
@@ -3532,12 +3582,12 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'church') {
         eventMsg = (eventMsg ? eventMsg + " " : "") + "⛪ 教会だ。浄化アビリティで魂を消化できる。";
     }
-    // Board onto a wyvern (auto-board when stepping on same tile)
+    // Board onto a wyvern (auto-board; once mounted cannot dismount — like camel)
     let wyvernHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type==='wyvern' && e.team==='vehicle');
     if (wyvernHere && !entity.onWyvern && (entity.team === 'player' || entity.team === 'cpu')) {
         entity.onWyvern = wyvernHere.id;
         entity.flying = true;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + "🐉 ワイバーンに乗った！飛行コマになった！";
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "🐉 ワイバーンに乗った！飛行コマになった！（降りることはできない）";
     }
     // Board onto a boat
     let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
@@ -3658,6 +3708,12 @@ function handleTileClick(vr, c) {
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.ap -= cost;
 
+                // ワイバーン騎乗中: 移動に追従させる
+                if (selectedEntity.onWyvern) {
+                    let wyv = entities.find(e => e.id === selectedEntity.onWyvern && e.hp > 0);
+                    if (wyv) { wyv.r = r; wyv.c = c; }
+                }
+
                 // Shark warrior water mode: stepping on land costs gauge
                 if (isOceanUnit(selectedEntity) && selectedEntity.waterMode && !isWaterTile(board[r]?.[c])) {
                     selectedEntity.waterGauge = Math.max(0, (selectedEntity.waterGauge||0) - 1);
@@ -3683,11 +3739,11 @@ function handleTileClick(vr, c) {
                             msg("険しい斜面に足を取られ、行動力が追加で1減少した！（ケーブルカーが有利）");
                         }
                     }
-                    if (board[r] && board[r][c] === 'mine') { board[r][c] = 'plains'; breakMine(); }
+                    if (board[r] && board[r][c] === 'mine') { board[r][c] = defaultGround(); breakMine(); }
                     else if (board[r] && board[r][c] === 'trap') {
                         let tKey = `${r},${c}`;
                         if (!selectedEntity.flying && trapOwnerMap[tKey] !== selectedEntity.team) {
-                            board[r][c] = 'plains';
+                            board[r][c] = defaultGround();
                             delete trapOwnerMap[tKey];
                             if (!selectedEntity.invin) {
                                 selectedEntity.hp -= 1;
@@ -4353,14 +4409,13 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['form_shift']--;
         if (!se.formShifted) {
             se.savedAbils = {...se.abilities};
-            se.atkBonus = (se.atkBonus||0) + 2;
+            se.atkBonus = (se.atkBonus||0) + 1;
             se.formShifted = true;
-            // Enhance all abilities
-            for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k] += 2; }
-            msg('👽 形態変化！戦闘形態！全アビリティ+2・攻撃力+2！');
+            se.hp = Math.min(se.maxHp, se.hp + 3);
+            msg('👽 形態変化！戦闘形態！攻撃力+1・HP+3回復！触手/岩砕き/変身以外使用不可！');
         } else {
             if (se.savedAbils) { se.abilities = se.savedAbils; }
-            se.atkBonus = Math.max(0,(se.atkBonus||0)-2);
+            se.atkBonus = Math.max(0,(se.atkBonus||0)-1);
             se.formShifted = false;
             msg('👽 元の形態に戻った！');
         }
@@ -4377,20 +4432,33 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg('🌱 種まき！1ターンで若芽→2ターンでベビーマンドレイクに成長！'); used = true;
     } else if (actionMode === 'fusion') {
         se.abilities['fusion']--;
-        let absorbed = 0;
+        let babyCount = 0, seedlingCount = 0;
         entities.forEach(t => {
-            if (t.hp>0 && t.team===se.team && t.type==='baby_mandrake' && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                t.hp = 0; absorbed++;
+            if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
+                if (t.type==='baby_mandrake') { t.hp=0; babyCount++; }
+                else if (t.type==='seed'||t.type==='sprout') { t.hp=0; seedlingCount++; }
             }
         });
-        if (absorbed > 0) {
-            se.plantLevel = (se.plantLevel||0) + absorbed;
-            let lv = se.plantLevel;
-            let healAmt = absorbed * 3;
-            se.maxHp += absorbed; se.hp = Math.min(se.maxHp, se.hp + healAmt);
-            se.maxAp = Math.min(se.maxAp + 1, 5); se.ap = Math.min(se.ap + 1, se.maxAp);
-            msg(`🌿 融合！ベビー${absorbed}体吸収！植物LV${lv}！HP+${healAmt}・射程・範囲が拡大！`);
-        } else { msg('🌿 融合！しかし半径1マス内にベビーマンドレイクがいない！'); }
+        let lvGain = babyCount * 2 + seedlingCount;
+        let totalAbsorbed = babyCount + seedlingCount;
+        if (totalAbsorbed > 0) {
+            let prevLv = se.plantLevel || 0;
+            se.plantLevel = prevLv + lvGain;
+            // Per-level bonus: HP+1, all ability uses +1
+            se.maxHp += lvGain; se.hp = Math.min(se.hp + lvGain, se.maxHp);
+            for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]+=lvGain; }
+            // Milestone bonuses at multiples of 5
+            let milestones = 0;
+            for (let lv2=prevLv+1; lv2<=se.plantLevel; lv2++) { if (lv2%5===0) milestones++; }
+            if (milestones > 0) {
+                se.rangeBonus = (se.rangeBonus||0) + milestones;
+                se.atkBonus = (se.atkBonus||0) + milestones;
+                se.maxAp = Math.min(se.maxAp + milestones, 6); se.ap = Math.min(se.ap + milestones, se.maxAp);
+                msg(`🌿 融合！植物LV${se.plantLevel}！🎉 節目ボーナス×${milestones}：全射程+${milestones}・ATK+${milestones}・AP+${milestones}！`);
+            } else {
+                msg(`🌿 融合！${totalAbsorbed}体吸収(LV+${lvGain})！植物LV${se.plantLevel}！HP+${lvGain}・全アビリティ+${lvGain}！`);
+            }
+        } else { msg('🌿 融合！しかし半径1マス内に種/若芽/ベビーマンドレイクがいない！'); }
         used = true;
     } else if (actionMode === 'seed_bazooka') {
         se.abilities['seed_bazooka']--;
@@ -4896,8 +4964,8 @@ function executeRushSkill(se, targetR, targetC, mode) {
         if (mcT && !mcT.invin) {
             mcT.originalTeam = mcT.team;
             mcT.team = se.team;
-            mcT.mindControlTimer = 2;
-            msg(`🧠 マインドコントロール！${mcT.name}を2ターン支配した！`);
+            mcT.mindControlTimer = 1;
+            msg(`🧠 マインドコントロール！${mcT.name}を1ターン支配した！`);
         } else { msg('マインドコントロール！しかし対象が見つからない/無敵で防がれた！'); }
         se.skillUsed = true; return;
     }
@@ -5159,7 +5227,7 @@ function applyItem(entity, item) {
         return "⚔️ 鋼の剣！ゲーム終了まで攻撃力+1！";
     } else if (item === 'goggles') {
         dungeonGoggles = true;
-        return "🥽 暗視ゴーグルを入手！視界が半径8マスに広がった！";
+        return "🥽 暗視ゴーグルを入手！視界が半径10マスに広がった！";
     }
     return "アイテムを拾った！";
 }
@@ -5907,6 +5975,11 @@ function updateUI() {
         if (isCursed) {
             let turns = cursedAbilities[selectedEntity.id][key];
             btn.innerText = `💀 【呪い${turns}T】${dispName}`;
+        }
+        // 戦闘形態中: form_shift/shatter/tentacle_whip/tractor_beam/drop_rock のみ使用可
+        if (selectedEntity.formShifted && !['form_shift','shatter','tentacle_whip','tractor_beam','drop_rock'].includes(key)) {
+            btn.disabled = true;
+            btn.title = '⚔️ 戦闘形態中 — 変身/岩砕き/触手系のみ使用可';
         }
         btn.onclick = () => setMode(key);
         list.appendChild(btn);
