@@ -187,31 +187,6 @@
         /* Fog of war */
         .fog-tile { background: #08080f !important; border-color: #08080f !important; }
         .fog-tile::after { content: "" !important; }
-        /* Coffin trap */
-        .in-coffin { border: 3px solid #5d4037 !important; opacity: 0.6; background: #3e2723 !important; }
-        /* Present box entity */
-        .present-box-ent { border-color: #ff69b4 !important; background: #fce4ec !important; color: #880e4f !important; }
-        /* Guide screen */
-        #guide-screen {
-            display: none; background: var(--ui-bg); padding: 30px; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 750px; width: 100%;
-            border: 1px solid #444; box-sizing: border-box;
-        }
-        #guide-screen h2 { margin-top: 0; color: var(--accent); }
-        .guide-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .guide-tab { flex: 1; min-width: 100px; padding: 10px; border-radius: 6px; cursor: pointer; background: #34495e; color: #fff; border: 2px solid transparent; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .guide-tab.active { border-color: var(--accent); background: #1a252f; }
-        .guide-job-card { background: #1a1a20; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-        .guide-job-name { font-size: 15px; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
-        .guide-job-desc { font-size: 12px; color: #ccc; line-height: 1.55; }
-        .guide-content { height: 440px; overflow-y: auto; padding-right: 4px; }
-        /* Matching notification */
-        #match-toast {
-            display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-            background: rgba(39,174,96,0.96); color:#fff; font-size:22px; font-weight:bold;
-            padding:28px 44px; border-radius:14px; z-index:10000; text-align:center;
-            box-shadow:0 8px 32px rgba(0,0,0,0.6);
-        }
         
         .entity { 
             position: absolute; width: 85%; height: 85%; border-radius: 6px; 
@@ -330,7 +305,6 @@
             <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
             <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
-            <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
         </select>
     </div>
     <div class="select-group">
@@ -369,8 +343,7 @@
         </select>
     </div>
     <button id="btn-start" class="btn" style="padding: 15px; font-size: 18px; background: var(--accent); margin-bottom: 10px;">CPU対戦スタート</button>
-    <button id="btn-online" class="btn" style="padding: 15px; font-size: 18px; background: #27ae60; margin-bottom: 10px;">🌐 オンライン対戦</button>
-    <button class="btn" onclick="openGuide()" style="padding: 12px; font-size: 16px; background: #546e7a;">📖 キャラクター図鑑</button>
+    <button id="btn-online" class="btn" style="padding: 15px; font-size: 18px; background: #27ae60;">🌐 オンライン対戦</button>
     <div id="error-log"></div>
 </div>
 
@@ -406,8 +379,7 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-                <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
-                <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -436,8 +408,7 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-                <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
-                <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <div class="select-group">
@@ -490,8 +461,7 @@
                 <option value="alien">エイリアン (触手・誘拐・マインドコントロール)</option>
                 <option value="mandrake">マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
-                <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
-                <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+<option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -505,48 +475,6 @@
 
     <button class="btn" style="margin-top: 15px; background: #555;" onclick="backToHome()">タイトルに戻る</button>
 </div>
-
-<div id="guide-screen">
-    <h2>📖 キャラクター図鑑</h2>
-    <div class="guide-tabs">
-        <button class="guide-tab active" onclick="switchGuideTab('jobs')">ジョブ一覧</button>
-        <button class="guide-tab" onclick="switchGuideTab('npcs')">NPCモンスター</button>
-    </div>
-    <div class="guide-content" id="guide-jobs-content">
-        <div class="guide-job-card"><div class="guide-job-name">👑 王 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 剣撃10 / 回転斬り5 / 粉砕斬り1<br>弓兵召喚1(5T~) / カウンター1 / スキル:王の号令(周囲コマAP+1・攻撃+1・3Tカウンター)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⚔️ 騎士 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 剣撃10 / 回転斬り5 / 粉砕斬り1<br>槍兵召喚1(5T~) / 不退転の構え1 / スキル:不退転の突進(直線5・無敵)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🗡️ 暗殺者 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 短剣刺し10 / 毒剣刺し5 / 弓攻撃5<br>煙幕3 / デコイ人形1 / スキル:隠密奇襲(全攻撃ダメ+1/2Tバフ)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🧑‍🤝‍🧑 歩兵 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 剣撃10 / 弓攻撃5 / 槍攻撃5<br>炭鉱夫呼び1(5T~) / スキル:戦場の鼓舞(チーム全員AP+1)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🔮 魔法使い (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 魔法弾10 / 風魔法5 / 氷魔法3<br>大火球魔法2 / 召喚獣魔法1(5T~) / スキル:時間停止(全敵AP0/1T)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🎩 泥棒 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 短剣刺し10 / 毒弓矢5 / テレポート3<br>強奪3 / スキル:コピーキャット(選択アビリティをコピー)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐾 獣使い (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 弓攻撃10 / オオカミ召喚1(5T~)<br>テイム5(5T~) / ハヤブサ召喚1(5T~) / スキル:群れの号令(召喚コマAP+1)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">💪 マッチョ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / ぶん殴り10 / 岩投げ5<br>岩雪崩1 / 岩落とし強1 / 僧侶召喚1 / ドーピング1 / スキル:ドーピング(ATK+1・AP+1/3T)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⚙️ 機械兵 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 電力補給5 / ジェットブースト5 / プラズマブレード3<br>プラズマブレード改2 / 薙ぎ払い3 / プラズマスナイプ2 / プラズマバズーカ2<br>焼却砲2 / 偵察ドローン2(5T~) / スキル:リミッター解除(ATK+3/毎T自傷3)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">👽 エイリアン (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 触手のムチ10 / トラクタービーム3<br>アブダクション1 / 卵設置3 / 光学迷彩2 / 形態変化1 / スキル:マインドコントロール(1体を仲間に)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🌿 マンドレイク (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / 枝のムチ5 / 種まき10 / 融合1<br>種バズーカ2 / 根を張る1 / 咆哮1 / スキル:植物の覚醒(LVアップ/全アビリティ強化)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐲 竜人族 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / ぶん殴り10 / 跳び蹴り1 / 乱打3<br>火炎ブレス2 / テイルスイング3 / カウンター3 / 変身2 / 残像1 / スキル:ドラゴンインパクト</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🦈 サメ戦士 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / モリで刺す10 / ウォーターカッター3<br>水流噴火1 / 潜水1 / 変身(水中)∞ / 波乗り2 / 渦潮1 / タコ召喚1<br>ウォーターゲージ制：ゲージ15~で変身・20~でバフ獲得</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🎪 ピエロ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ナイフジャグリング3 / 恐怖の笑顔3 / 玉乗り5<br>アクロバット2 / 空中ブランコ2 / 爆弾クラッカー1 / サル召喚1<br>スキル:棺桶ナイフ(対象を3T行動不能＋毎T2ダメ)<br>隣接敵が封じられると他コマに棺桶壊し(解放)が出現</div></div>
-    </div>
-    <div class="guide-content" id="guide-npcs-content" style="display:none;">
-        <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/潜伏/ナイフ)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🪨 ゴーレム (HP3)</div><div class="guide-job-desc">ぶん殴り∞ / 岩投げ∞。強力な近接＆遠距離攻撃を持つ岩の巨人。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🟩 スライム (HP1)</div><div class="guide-job-desc">特殊能力なし。最弱だが呪いマスなどで強化される。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐺 オオカミ (HP2/AP3)</div><div class="guide-job-desc">噛み付き∞。素早く移動・吸血攻撃。獣使いに召喚・テイム可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">👻 幽霊 (HP2/AP3)</div><div class="guide-job-desc">とりつき(AP-1)∞ / 浄化(教会で魂消化)。墓場ステージに出現。岩を無視して移動。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🧟 ゾンビ (HP2/AP2)</div><div class="guide-job-desc">ぶん殴り∞ / 毒攻撃∞。噛まれると毒状態。墓場ステージに出現。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⛏️ 炭鉱夫 (HP2/AP2)</div><div class="guide-job-desc">剣撃∞ / 地面掘り∞ / 穴移動∞。地下トンネルで奇襲。歩兵が召喚可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🏹 弓兵・槍兵 (HP2/AP2)</div><div class="guide-job-desc">弓兵：弓攻撃∞(遠距離)。槍兵：槍攻撃∞(射程2)。王・騎士・歩兵が召喚可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐉 ワイバーン (HP3/AP3/飛行)</div><div class="guide-job-desc">ぶん殴り∞ / 火炎ブレス∞ / ヘルブレス∞。天空要塞に出現。騎乗可能(乗ると飛行)。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🤿 タコ (HP3/AP2/海洋)</div><div class="guide-job-desc">触手のムチ∞。サメ戦士が召喚可能。水上専用コマで海洋ボーナスあり。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐒 おもちゃのサル (HP1/AP2)</div><div class="guide-job-desc">シンバル騒音∞(半径1/威1) / プレゼント設置∞。ピエロが召喚可能。撃破時プレゼントを落とす。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🎁 プレゼント箱</div><div class="guide-job-desc">敵が半径1マスに来ると爆発(威1/吹き飛ばし)。味方が踏むとランダムアイテム(靴/スター/剣)獲得。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🛸 偵察ドローン (HP1/AP2/飛行)</div><div class="guide-job-desc">体当たり∞(威1) / 電力補給∞(HP+5/機械兵+5)。5T後に機械兵が召喚可能。撃墜時爆発＋罠設置。</div></div>
-    </div>
-    <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
-</div>
-
-<div id="match-toast">🎮 マッチング成功！<br>対戦を開始します！</div>
 
 <div id="game-screen">
     <div class="panel">
@@ -796,7 +724,7 @@ const ABILITY_NAMES = {
     plasma_blade: 'プラズマブレード(威3/HP-1/AP-1)', plasma_blade2: 'プラズマブレード改(威6/AP-1/HP-1)',
     sweep: '薙ぎ払い(半径2弧/威2/吹飛)', plasma_snipe: 'プラズマスナイプ(直線5/威4)',
     plasma_bazooka: 'プラズマバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
-    recon_drone: '偵察ドローン召喚(5T~/HP1/AP2/飛行)',
+    recon_drone: '偵察ドローン(半径3暴露)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
@@ -819,19 +747,7 @@ const ABILITY_NAMES = {
     chomp: '噛み砕く(水中形態/威5/AP-1)',
     wave_ride: '波乗り(正面3×3/威2/吹飛/AP-1/ゲージ2/浅瀬化)',
     whirlpool_atk: '渦潮(半径3/威2/2T渦潮/AP-1/ゲージ3/浅瀬化)',
-    octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)',
-    knife_juggling: 'ナイフジャグリング(直線3/威1+回数増)',
-    scary_face: '恐怖の笑顔(半径2スタン/2技封印2T)',
-    ball_ride: '玉乗り(直線3移動/威2/吹飛)',
-    acrobat: 'アクロバット(1T飛行/AP4)',
-    aerial_trapeze: '空中ブランコ(隣接投げ5マス/威2)',
-    bomb_cracker: '爆弾クラッカー(範囲2投/半径1/威2/潜伏)',
-    monkey_toy: 'サル召喚(HP1/AP2/シンバル∞/プレゼント∞)',
-    cymbal_noise: 'シンバル騒音(半径1/威1/∞)',
-    monkey_present_set: 'プレゼント設置(敵爆発/味方アイテム)',
-    coffin_break: '棺桶壊し(隣接味方を解放)',
-    drone_ram: '体当たり(威1/∞)',
-    power_supply_drone: '電力補給(HP+5/半径8機械兵+5)'
+    octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)'
 };
 
 const ABILITY_TIPS = {
@@ -892,7 +808,7 @@ const ABILITY_TIPS = {
     plasma_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
     plasma_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
     incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
-    recon_drone: '半径5マス以内に偵察ドローン(HP1/AP2/飛行)を召喚。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。既存ドローン撃墜後のみ再召喚可能。回数2。',
+    recon_drone: '対象マス周囲半径3マスの潜伏敵を全員暴露。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
     tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
@@ -924,19 +840,7 @@ const ABILITY_TIPS = {
     chomp: '水中モード限定の近接攻撃。隣接した敵に5ダメ＋AP-1。回数無制限。',
     wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。回数2。',
     whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
-    octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
-    knife_juggling: '直線3マスにナイフを投げる。威力1。命中すると次の使用時ダメージ+1・回数+1（スタック蓄積）。回数3。',
-    scary_face: '半径2マスの全敵にスタン：AP-1＋後方吹き飛ばし＋ランダム2アビリティを2T封印。回数3。',
-    ball_ride: '直線3マス前進。進路上の敵に2ダメ・吹き飛ばし。回数5。',
-    acrobat: '1ターン間飛行状態になりAP4で行動する。効果終了後APは元に戻る。回数2。',
-    aerial_trapeze: '隣接(1マス)の敵コマか岩を選択して直線5マス投げ飛ばす。2ダメ・AP-1。着地先にコマがいれば連鎖ダメージ。岩は破壊される。回数2。',
-    bomb_cracker: '半径2マス以内の場所へ投擲し中心半径1マスで爆発。2ダメ・吹き飛ばし。ピエロは1T潜伏状態になる。回数1。',
-    monkey_toy: '隣接マスにおもちゃのサル(HP1/AP2)を召喚。シンバル騒音(半径1威1)とプレゼント設置を持つ。撃破時にプレゼントを落とす。回数1。',
-    cymbal_noise: '周囲半径1マスの全敵に1ダメ。回数無制限。',
-    monkey_present_set: '隣接マスにプレゼント箱を設置。敵が半径1マス以内に来ると爆発(威1/吹飛)。味方が踏むとランダムアイテム獲得。',
-    coffin_break: '隣接1マスに棺桶に閉じ込められた味方コマがいれば解放する。',
-    drone_ram: '隣接した敵に体当たり。ダメージ1。回数無制限。',
-    power_supply_drone: 'ドローン自身のHP+5・半径8マス内の機械兵のHP+5を回復する。回数無制限。'
+    octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。'
 };
 
 const JOB_DATA = {
@@ -952,8 +856,7 @@ const JOB_DATA = {
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
-    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
-    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 }
+    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 }
 };
 
 // ============================================================
@@ -1151,13 +1054,6 @@ function handleWsMessage(event) {
         updateOnlineInfo();
         render();
 
-        // マッチング成功通知
-        const toast = document.getElementById('match-toast');
-        if (toast) {
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
-        }
-
         if (isPlayerTurn) {
             if (myPlayerIndex === 0) {
                 startTurn('player');
@@ -1167,7 +1063,6 @@ function handleWsMessage(event) {
         } else {
             msg("相手のターン中...");
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
-            startOpponentTimer();
         }
         return;
     }
@@ -1226,7 +1121,6 @@ function handleWsMessage(event) {
         } else {
             stopTurnTimer();
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
-            startOpponentTimer();
         }
         return;
     }
@@ -1315,21 +1209,6 @@ function backToHome() {
     if (s) s.textContent = '';
 }
 
-function openGuide() {
-    document.getElementById('guide-screen').style.display = 'flex';
-    switchGuideTab('jobs');
-}
-function closeGuide() {
-    document.getElementById('guide-screen').style.display = 'none';
-}
-function switchGuideTab(tab) {
-    document.getElementById('guide-tab-jobs').style.display = (tab==='jobs') ? 'block' : 'none';
-    document.getElementById('guide-tab-npcs').style.display = (tab==='npcs') ? 'block' : 'none';
-    document.querySelectorAll('.guide-tab-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.tab === tab);
-    });
-}
-
 function createRoom() {
     const job = resolveJob(document.getElementById('ol-job-select').value);
     const stage = resolveStage(document.getElementById('ol-stage-select').value);
@@ -1397,7 +1276,6 @@ function cancelRankedSearch() {
 // ---- Per-turn 60s timer (online only) ----
 function startTurnTimer() {
     stopTurnTimer();
-    stopOpponentTimer();
     if (!isOnlineMode) return;
     turnTimeLeft = 60;
     updateTurnTimerDisplay();
@@ -1417,36 +1295,6 @@ function stopTurnTimer() {
     if (turnTimerId) { clearInterval(turnTimerId); turnTimerId = null; }
     let el = document.getElementById('turn-timer');
     if (el) el.style.display = 'none';
-}
-let opponentTimerId = null;
-let opponentTimeLeft = 60;
-function startOpponentTimer() {
-    if (opponentTimerId) { clearInterval(opponentTimerId); opponentTimerId = null; }
-    if (!isOnlineMode) return;
-    opponentTimeLeft = 60;
-    updateOpponentTimerDisplay();
-    opponentTimerId = setInterval(() => {
-        opponentTimeLeft--;
-        updateOpponentTimerDisplay();
-        if (opponentTimeLeft <= 0) { clearInterval(opponentTimerId); opponentTimerId = null; }
-    }, 1000);
-}
-function stopOpponentTimer() {
-    if (opponentTimerId) { clearInterval(opponentTimerId); opponentTimerId = null; }
-    let el = document.getElementById('opponent-timer');
-    if (el) el.style.display = 'none';
-}
-function updateOpponentTimerDisplay() {
-    let el = document.getElementById('opponent-timer');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'opponent-timer';
-        el.style.cssText = 'font-size:13px; font-weight:bold; margin-top:4px; color:#e67e22;';
-        const ind = document.getElementById('turn-indicator');
-        if (ind && ind.parentNode) ind.parentNode.insertBefore(el, ind.nextSibling);
-    }
-    el.style.display = 'block';
-    el.textContent = `⏱ 相手の残り ${Math.max(0, opponentTimeLeft)} 秒`;
 }
 function updateTurnTimerDisplay() {
     let el = document.getElementById('turn-timer');
@@ -2234,23 +2082,6 @@ function processTurnStartEffects(e) {
     if (e.stolenLock) {
         for (let k of Object.keys(e.stolenLock)) { if (e.stolenLock[k] <= turn) delete e.stolenLock[k]; }
     }
-    // 棺桶ナイフ ダメージ
-    if (e.inCoffin) {
-        e.coffinTimer = (e.coffinTimer||1) - 1;
-        if (!e.invin) { e.hp -= 2; msg(`⚰️ ${e.name}は棺桶の中でもがいている！2ダメ(残${e.coffinTimer}T)`, true); }
-        if (e.coffinTimer <= 0) { e.inCoffin = false; msg(`⚰️ ${e.name}が棺桶から脱出した！`, true); }
-        e.ap = 0; // 棺桶中は行動不能
-    }
-    // アクロバット タイマー
-    if ((e.acrobatTimer||0) > 0) {
-        e.acrobatTimer--;
-        if (e.acrobatTimer <= 0) {
-            e.flying = false;
-            e.maxAp = e.preAcrobatMaxAp || 2;
-            e.ap = Math.min(e.ap, e.maxAp);
-            msg(`🤸 ${e.name}のアクロバット効果が切れた！AP通常に戻る`, true);
-        }
-    }
     // 燃焼ダメージ
     if ((e.burnTimer||0) > 0) {
         e.burnTimer--;
@@ -2355,68 +2186,6 @@ function startTurn(team, skipEffects = false) {
         entities = entities.filter(e => {
             if (e.despawnOnTurn && e.despawnOnTurn <= turn) {
                 msg(`👑 ${e.name}は役目を終えて消えた！`, true);
-                return false;
-            }
-            return true;
-        });
-        // 死亡エフェクト処理（ドローン爆発・サルのプレゼントドロップ）
-        let deadSpecials = entities.filter(e => e.hp <= 0 && !e.deathProcessed &&
-            (e.type==='recon_drone_unit' || e.type==='monkey_toy'));
-        deadSpecials.forEach(e => {
-            e.deathProcessed = true;
-            if (e.type === 'recon_drone_unit') {
-                let droneExpHits = 0;
-                entities.forEach(t => {
-                    if (t.hp>0 && t.team!==e.team && Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c))<=1 && !t.invin) {
-                        t.hp-=1; knockback(t,1,e); droneExpHits++;
-                    }
-                });
-                const explosible = ['plains','desert','graveyard_ground','nighttown_ground','fortress_floor','mountain_tile','snow','summit','castle_tile','dungeon_ground','forest','shallow_water'];
-                if (explosible.includes(board[e.r]?.[e.c]) && !isNoRockZone(e.r,e.c)) {
-                    board[e.r][e.c]='trap'; trapOwnerMap[`${e.r},${e.c}`]=e.team;
-                }
-                msg(`💥 偵察ドローン撃墜！爆発で周囲1マスにダメージ(${droneExpHits}体)＋罠設置！`, true);
-            }
-            if (e.type === 'monkey_toy') {
-                entities.push({
-                    id:'present_'+Date.now(), type:'present_box', name:'プレゼント🎁',
-                    team:e.team, r:e.r, c:e.c, hp:5, maxHp:5, ap:0, maxAp:0,
-                    abilities:{}, skillUsed:true, stealth:false, stealthTimer:0,
-                    invin:false, invinTimer:0, poisonTimer:0, atkBonus:0, isPresentBox:true
-                });
-                msg(`🎁 おもちゃのサルが壊れてプレゼントを落とした！`, true);
-            }
-        });
-        // プレゼント箱の爆発・アイテム処理
-        entities = entities.filter(pb => {
-            if (pb.type !== 'present_box') return true;
-            if (pb.hp <= 0) return false;
-            // Check for nearby enemies (explode)
-            let nearEnemy = entities.find(t => t.hp>0 && t.team!==pb.team && Math.max(Math.abs(t.r-pb.r),Math.abs(t.c-pb.c))<=1);
-            if (nearEnemy) {
-                entities.forEach(t => {
-                    if (t.hp>0 && t.team!==pb.team && Math.max(Math.abs(t.r-pb.r),Math.abs(t.c-pb.c))<=1 && !t.invin) {
-                        t.hp-=1; knockback(t,1,pb);
-                    }
-                });
-                msg(`🎁💥 プレゼント箱が爆発！周囲1マスの敵にダメージ＆吹き飛ばし！`, true);
-                return false;
-            }
-            // Check for ally on same tile (item drop)
-            let allyOnTile = entities.find(t => t.hp>0 && t.team===pb.team && t.r===pb.r && t.c===pb.c && JOB_DATA[t.type]);
-            if (allyOnTile) {
-                let roll = Math.random();
-                if (roll < 0.33) {
-                    allyOnTile.maxAp=Math.max(allyOnTile.maxAp,allyOnTile.maxAp+1); allyOnTile.ap=Math.min(allyOnTile.ap+1,allyOnTile.maxAp+1);
-                    allyOnTile.shoesTimer=(allyOnTile.shoesTimer||0)+3;
-                    msg(`🎁👟 プレゼント：靴！${allyOnTile.name}のAP+1(3T)！`, true);
-                } else if (roll < 0.66) {
-                    allyOnTile.hp=Math.min(allyOnTile.maxHp,allyOnTile.hp+3);
-                    msg(`🎁⭐ プレゼント：スターの欠片！${allyOnTile.name}のHP+3！`, true);
-                } else {
-                    allyOnTile.atkBonus=(allyOnTile.atkBonus||0)+1;
-                    msg(`🎁⚔️ プレゼント：鋼鉄の剣！${allyOnTile.name}のATK永続+1！`, true);
-                }
                 return false;
             }
             return true;
@@ -2939,20 +2708,6 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'whirlpool_atk') return maxDist<=3;
     if (mode === 'octopus_summon') return maxDist===1 && isWalkable(r,c);
     if (mode === 'skill_hydro') return (se.r===r||se.c===c) && maxDist>0;
-    // ピエロ
-    if (mode === 'knife_juggling') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
-    if (mode === 'scary_face') return true; // self-centered AoE
-    if (mode === 'ball_ride') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
-    if (mode === 'acrobat') return true;
-    if (mode === 'aerial_trapeze') return maxDist===1 && (target || board[r]?.[c]==='rock');
-    if (mode === 'bomb_cracker') return maxDist<=2 && isWalkable(r,c,true);
-    if (mode === 'monkey_toy') return maxDist===1 && isWalkable(r,c);
-    if (mode === 'cymbal_noise') return true;
-    if (mode === 'monkey_present_set') return maxDist===1 && isWalkable(r,c);
-    if (mode === 'skill_coffin') return maxDist>0 && maxDist<=2 && target && target.team!==se.team;
-    // ドローン
-    if (mode === 'drone_ram') return maxDist===1 && target && target.team!==se.team;
-    if (mode === 'power_supply_drone') return true;
     return false;
 }
 
@@ -3049,8 +2804,6 @@ function render() {
             else ed.classList.add('stealth');
         }
         if (e.invin) ed.classList.add('invin');
-        if (e.inCoffin) ed.classList.add('in-coffin');
-        if (e.type === 'present_box') ed.classList.add('present-box-ent');
         
         let hpColor = (e.team === 'player') ? '#3498db' : '#f1c40f';
         let poisonIcon = e.poisonTimer > 0 ? '<span style="color:#2ecc71;">☠</span>' : '';
@@ -3088,11 +2841,7 @@ function render() {
 }
 
 function selectEntity(e) {
-    if (!canIAct()) {
-        // 相手のターン中も情報閲覧を許可
-        showEntityInfo(e);
-        return;
-    }
+    if (!canIAct()) return;
     
     // Car NPC: prefer any player/cpu piece on the same tile
     if (e.type === 'car') {
@@ -3914,163 +3663,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
         msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！5ダメ・AP-2・2ターン燃焼ダメージ！'); used = true;
     } else if (actionMode === 'recon_drone') {
-        if (turn < 5) { msg("🛸 偵察ドローンは開始5ターン後に使用可能！"); return false; }
-        let existingDrone = entities.find(e => e.hp>0 && e.type==='recon_drone_unit' && e.team===se.team);
-        if (existingDrone) { msg("🛸 既に偵察ドローンが稼働中！先に撃墜されてから再召喚できます。"); return false; }
-        if (!isWalkable(r, c, true)) { msg("🛸 その場所には召喚できません！"); return false; }
         se.abilities['recon_drone']--;
-        entities.push({
-            id: 'drone_'+Date.now(), type: 'recon_drone_unit', name: '偵察ドローン',
-            team: se.team, r: r, c: c,
-            hp: 1, maxHp: 1, ap: 2, maxAp: 2,
-            abilities: { drone_ram: 999, power_supply_drone: 999 },
-            skillUsed: false, stealth: false, stealthTimer: 0,
-            invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, flying: true
-        });
-        msg(`🛸 偵察ドローン出撃！HP1/AP2/飛行！体当たり∞・電力補給∞。撃墜されると爆発＋罠設置！`); used = true;
-    } else if (actionMode === 'drone_ram') {
-        if (!targetEntity || targetEntity.team === se.team) { msg("体当たり：有効な敵ターゲットが必要です"); return false; }
-        if (!targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-        if (targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター！`, true); }
-        msg(targetEntity.invin ? '💥 体当たり！しかし無敵で弾かれた！' : `💥 体当たり！${targetEntity.name}に1ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'power_supply_drone') {
-        se.hp = Math.min(se.maxHp, se.hp + 5);
-        let boosted = 0;
+        let found = 0;
         entities.forEach(t => {
-            if (t.hp>0 && t.team===se.team && t.type==='cyborg' && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=8) {
-                t.hp = Math.min(t.maxHp, t.hp + 5); boosted++;
+            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=3 && t.stealth) {
+                t.stealth = false; t.stealthTimer = 0; found++;
             }
         });
-        msg(`🔋 電力補給！ドローンHP+5・半径8マスの機械兵${boosted}体にHP+5！`); used = true;
-    // ====== ピエロ ======
-    } else if (actionMode === 'knife_juggling') {
-        se.abilities['knife_juggling']--;
-        let dr = r===se.r ? 0 : Math.sign(r-se.r), dc = c===se.c ? 0 : Math.sign(c-se.c);
-        if (dr===0 && dc===0) { msg("ナイフジャグリング：方向を選んでください"); se.abilities['knife_juggling']++; return false; }
-        let hit = false;
-        for (let step=1; step<=3; step++) {
-            let nr=se.r+dr*step, nc=se.c+dc*step;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
-            let t = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-            if (t) {
-                let dmg = (se.jugglingPower||1) + (se.atkBonus||0);
-                if (!t.invin) { t.hp -= dmg + (t.defDebuff||0); t.ap = Math.max(0,t.ap-1); }
-                if (t.counterReady>0&&!se.invin) { se.hp-=2; t.counterReady--; msg(`⚡ カウンター！`,true); }
-                se.jugglingPower = (se.jugglingPower||1)+1;
-                if (se.abilities['knife_juggling']!==999) se.abilities['knife_juggling']++;
-                msg(`🎪 ナイフジャグリング！${t.name}に${dmg}ダメ！次回パワー${se.jugglingPower}・回数+1！`); hit=true; break;
-            }
-            if (['rock','mountain_tile','fortress_wall'].includes(board[nr]?.[nc])) break;
-        }
-        if (!hit) msg(`🎪 ナイフジャグリング！命中なし。`);
-        used = true;
-    } else if (actionMode === 'scary_face') {
-        se.abilities['scary_face']--;
-        let hitCount=0;
-        entities.forEach(t => {
-            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
-                if (!t.invin) {
-                    t.ap=Math.max(0,t.ap-1);
-                    knockback(t,1,se);
-                    let abilityKeys=Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]||0)>0);
-                    if (!t.stolenLock) t.stolenLock={};
-                    let sealed=abilityKeys.sort(()=>Math.random()-0.5).slice(0,2);
-                    sealed.forEach(k=>{ t.stolenLock[k]=turn+2; });
-                    hitCount++;
-                }
-            }
-        });
-        msg(`😱 恐怖の笑顔！半径2マスの敵${hitCount}体AP-1・吹き飛ばし・2技を2T封印！`); used = true;
-    } else if (actionMode === 'ball_ride') {
-        se.abilities['ball_ride']--;
-        let dr=r===se.r?0:Math.sign(r-se.r), dc=c===se.c?0:Math.sign(c-se.c);
-        if (dr===0&&dc===0) { msg("玉乗り：方向を選んでください"); se.abilities['ball_ride']++; return false; }
-        let moved=0, hitEnemy=false;
-        for (let step=1; step<=3; step++) {
-            let nr=se.r+dr*step, nc=se.c+dc*step;
-            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
-            let t=entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
-            if (t) {
-                if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r:nr-dr,c:nc-dc}); }
-                if (t.counterReady>0&&!se.invin) { se.hp-=2; t.counterReady--; msg(`⚡カウンター！`,true); }
-                msg(`🎡 玉乗り！${t.name}を蹴散らし！2ダメ・吹き飛ばし！`); hitEnemy=true;
-                if (isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==t)) { se.r=nr; se.c=nc; moved=step; }
-                break;
-            }
-            if (!isWalkable(nr,nc)) break;
-            se.r=nr; se.c=nc; moved=step;
-        }
-        if (!hitEnemy&&moved>0) msg(`🎡 玉乗り！${moved}マス前進！`);
-        else if (!hitEnemy&&moved===0) msg(`🎡 玉乗り！進めなかった！`);
-        let tileEvt=checkTileEffects?.(se)||''; if(tileEvt) msg(tileEvt);
-        checkEnemyTerritory?.(se); used = true;
-    } else if (actionMode === 'acrobat') {
-        se.abilities['acrobat']--;
-        se.preAcrobatMaxAp = se.maxAp;
-        se.flying = true;
-        se.acrobatTimer = 1;
-        se.maxAp = 4; se.ap = 4;
-        msg(`🤸 アクロバット！1ターン飛行状態・AP4で行動！`); used = true;
-    } else if (actionMode === 'aerial_trapeze') {
-        let adjTarget = entities.find(e=>e.hp>0&&e.r===r&&e.c===c&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
-        let isRock = (board[r]?.[c]==='rock');
-        if (!adjTarget && !isRock) { msg("🎪 空中ブランコ：隣接1マスの敵コマか岩を選んでください！"); return false; }
-        se.abilities['aerial_trapeze']--;
-        let dr=r===se.r?0:Math.sign(r-se.r), dc=c===se.c?0:Math.sign(c-se.c);
-        if (isRock) { board[r][c]='plains'; msg(`🎪 空中ブランコ！岩を投げ飛ばして砕いた！`); used=true; }
-        else if (adjTarget) {
-            if (!adjTarget.invin) { adjTarget.hp-=2+(adjTarget.defDebuff||0)+(se.atkBonus||0); adjTarget.ap=Math.max(0,adjTarget.ap-1); }
-            let landR=r, landC=c;
-            for (let step=1; step<=5; step++) {
-                let nr=r+dr*step, nc=c+dc*step;
-                if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
-                if (!isWalkable(nr,nc,true)) break;
-                landR=nr; landC=nc;
-            }
-            let wasAt = {r:adjTarget.r, c:adjTarget.c};
-            adjTarget.r=landR; adjTarget.c=landC;
-            let chain=entities.find(e=>e.hp>0&&e.r===landR&&e.c===landC&&e!==adjTarget);
-            if (chain&&!chain.invin) { chain.hp-=2+(chain.defDebuff||0); chain.ap=Math.max(0,chain.ap-1); }
-            msg(`🎪 空中ブランコ！${adjTarget.name}を投げ飛ばし！2ダメ・AP-1！${chain?'着地先の'+chain.name+'にも2ダメ！':''}`);
-            used = true;
-        }
-    } else if (actionMode === 'bomb_cracker') {
-        se.abilities['bomb_cracker']--;
-        let hitCount=0;
-        entities.forEach(t=>{
-            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
-                if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r,c}); hitCount++; }
-                if (t.counterReady>0&&!se.invin) { se.hp-=2; t.counterReady--; msg(`⚡カウンター！`,true); }
-            }
-        });
-        se.stealth=true; se.stealthTimer=1;
-        msg(`💥 爆弾クラッカー！半径1マスの敵${hitCount}体に2ダメ・吹き飛ばし！ピエロ1T潜伏！`); used = true;
-    } else if (actionMode === 'monkey_toy') {
-        if (!isWalkable(r,c)) { msg("🐒 その場所には召喚できません！"); return false; }
-        se.abilities['monkey_toy']--;
-        entities.push({
-            id:'monkey_toy_'+Date.now(), type:'monkey_toy', name:'おもちゃのサル',
-            team:se.team, r:r, c:c, hp:1, maxHp:1, ap:2, maxAp:2,
-            abilities:{cymbal_noise:999, monkey_present_set:999},
-            skillUsed:false, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, atkBonus:0
-        });
-        msg(`🐒 おもちゃのサル召喚！HP1/AP2！シンバル騒音∞・プレゼント設置∞・撃破時プレゼントドロップ！`); used = true;
-    } else if (actionMode === 'cymbal_noise') {
-        let hitCount=0;
-        entities.forEach(t=>{
-            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                if (!t.invin) { t.hp-=1+(t.defDebuff||0); hitCount++; }
-            }
-        });
-        msg(`🥁 シンバル騒音！周囲1マスの敵${hitCount}体に1ダメ！`); used = true;
-    } else if (actionMode === 'monkey_present_set') {
-        if (!isWalkable(r,c)) { msg("🎁 その場所には置けません！"); return false; }
-        entities.push({
-            id:'present_'+Date.now(), type:'present_box', name:'プレゼント🎁',
-            team:se.team, r:r, c:c, hp:5, maxHp:5, ap:0, maxAp:0,
-            abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, atkBonus:0, isPresentBox:true
-        });
-        msg(`🎁 プレゼント設置！敵が近づくと爆発！味方が踏むとアイテムゲット！`); used = true;
+        msg(`🛸 偵察ドローン！半径3マスの潜伏${found}体を暴露！`); used = true;
     // ====== エイリアン ======
     } else if (actionMode === 'tentacle_whip') {
         se.abilities['tentacle_whip']--;
@@ -4589,11 +4189,6 @@ function executeSkill(se) {
         msg(`💦 ハイドロポンプ！ゲージ${gauge}消費(${rd})！方向を選んでください！`);
         actionMode = 'skill_hydro'; render(); return false;
     }
-    // ====== ピエロ スキル: 棺桶ナイフ ======
-    if (se.type === 'clown') {
-        msg("⚰️ 棺桶ナイフ！閉じ込める敵(半径2マス以内)を選んでください！");
-        actionMode = 'skill_coffin'; render(); return false;
-    }
     return false;
 }
 
@@ -4681,19 +4276,6 @@ function executeRushSkill(se, targetR, targetC, mode) {
         }
         msg(`🌿 根っこバインド！直線5マス幅3の敵${rbHit}体に3ダメ・AP-2・3T毒！`);
         se.skillUsed = true; return;
-    }
-    if (mode === 'skill_coffin') {
-        let coffinT = entities.find(e => e.r===targetR && e.c===targetC && e.hp>0 && e.team!==se.team);
-        if (!coffinT) { msg("⚰️ 棺桶ナイフ：有効な敵を選んでください！"); return; }
-        if (Math.max(Math.abs(coffinT.r-se.r),Math.abs(coffinT.c-se.c)) > 2) { msg("⚰️ 棺桶ナイフ：射程外です！"); return; }
-        coffinT.inCoffin = true;
-        coffinT.coffinTimer = 3;
-        coffinT.stealth = false; coffinT.stealthTimer = 0;
-        se.skillUsed = true;
-        msg(`⚰️ 棺桶ナイフ！${coffinT.name}を棺桶に閉じ込めた！3ターン行動不能＋毎ターン2ダメ！他のコマが隣接すれば棺桶壊しで解放できる！`);
-        checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
-        return;
     }
     if (mode === 'skill_ryujin') {
         let drStepR = Math.sign(targetR-se.r), drStepC = Math.sign(targetC-se.c);
@@ -5666,44 +5248,6 @@ function updateUI() {
         if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
         sb.onclick = () => setMode('skill');
         list.appendChild(sb);
-    }
-
-    // 棺桶壊し：選択コマの隣に棺桶入り味方がいる場合にボタン表示
-    if (canIAct() && selectedEntity.team === myTeam()) {
-        let coffinedAlly = entities.find(e => e.hp>0 && e.inCoffin && e.team===selectedEntity.team
-            && Math.max(Math.abs(e.r-selectedEntity.r),Math.abs(e.c-selectedEntity.c))<=1);
-        if (coffinedAlly) {
-            let cfb = document.createElement('button');
-            cfb.className = 'ability-btn';
-            cfb.style.background = '#16a085'; cfb.style.color = '#fff';
-            cfb.innerText = `⚰️ 棺桶壊し（${coffinedAlly.name}を救出）`;
-            cfb.title = '隣接している棺桶入り味方コマを救出する（行動力1消費）';
-            cfb.onclick = () => {
-                if (selectedEntity.ap <= 0) { msg("⚰️ 棺桶壊し：行動力が足りません！"); return; }
-                coffinedAlly.inCoffin = false; coffinedAlly.coffinTimer = 0;
-                coffinedAlly.ap = Math.min(1, coffinedAlly.maxAp);
-                selectedEntity.ap--;
-                msg(`⚰️ 棺桶壊し！${coffinedAlly.name}を救出した！AP1回復！`);
-                if (isOnlineMode) syncState();
-                render(); updateUI();
-            };
-            list.appendChild(cfb);
-        }
-    }
-
-    // 棺桶状態表示
-    if (selectedEntity.inCoffin) {
-        let ci = document.createElement('div');
-        ci.style.cssText = 'margin-top:8px; padding:6px; background:#2c3e50; border-radius:4px; color:#e74c3c; font-size:12px;';
-        ci.textContent = `⚰️ 棺桶に閉じ込められている！(残${selectedEntity.coffinTimer||0}T・行動不能・毎T2ダメ)`;
-        list.appendChild(ci);
-    }
-    // アクロバット状態表示
-    if ((selectedEntity.acrobatTimer||0) > 0) {
-        let ai = document.createElement('div');
-        ai.style.cssText = 'margin-top:8px; padding:6px; background:#2c3e50; border-radius:4px; color:#2ecc71; font-size:12px;';
-        ai.textContent = `🤸 アクロバット飛行中！(残${selectedEntity.acrobatTimer}T)`;
-        list.appendChild(ai);
     }
 
     // Mountain stage: Rock rolling ability (context-sensitive)
