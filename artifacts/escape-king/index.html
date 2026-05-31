@@ -181,6 +181,22 @@
         .dungeon_chest::after { content: "📦"; font-size: calc(var(--tile-size) * 0.45); }
         .dungeon_switch { background: #3d1e5d; border: 1px solid #9b59b6 !important; }
         .dungeon_switch::after { content: "🔘"; font-size: calc(var(--tile-size) * 0.45); }
+        /* Underwater Temple */
+        .sea_floor { background: #0d4f5e; }
+        .sea_trench { background: #04111e; }
+        .sea_trench::after { content: "〜"; font-size: calc(var(--tile-size)*0.3); color: #1565c0; }
+        .coral_reef { background: #b84520; }
+        .coral_reef::after { content: "🪸"; font-size: calc(var(--tile-size)*0.45); }
+        .bubble_vent { background: #1a7fa0; border: 1px solid #4fc3f7 !important; }
+        .bubble_vent::after { content: "💨"; font-size: calc(var(--tile-size)*0.4); }
+        /* Lava Land */
+        .lava_ground { background: #1e0a05; }
+        .lava { background: #cc3300; }
+        .lava::after { content: "🔥"; font-size: calc(var(--tile-size)*0.4); }
+        .lava_bridge { background: #7a3a0a; border: 1px solid #ff8c00 !important; }
+        .lava_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffd700; }
+        .cooled_lava { background: #3a3a3a; }
+        .cooled_lava::after { content: "🪨"; font-size: calc(var(--tile-size)*0.35); }
         /* Curse tile (demon stage) */
         .curse_tile { background: #3b0060; }
         .curse_tile::after { content: "💀"; font-size: calc(var(--tile-size) * 0.45); }
@@ -349,6 +365,8 @@
             <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
             <option value="chaos">混沌 (全ギミック入り乱れ)</option>
             <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
+            <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
+            <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
         </select>
     </div>
     <div class="select-group">
@@ -456,6 +474,8 @@
                 <option value="skyfort">天空要塞 (崩れる足場と空中戦)</option>
                 <option value="chaos">混沌 (全ギミック入り乱れ)</option>
                 <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
+                <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
+                <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
             </select>
         </div>
         <div class="select-group">
@@ -542,6 +562,9 @@
         <div class="guide-job-card"><div class="guide-job-name">🐒 おもちゃのサル (HP1/AP2)</div><div class="guide-job-desc">シンバル騒音∞(半径1/威1) / プレゼント設置∞。ピエロが召喚可能。撃破時プレゼントを落とす。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🎁 プレゼント箱</div><div class="guide-job-desc">敵が半径1マスに来ると爆発(威1/吹き飛ばし)。味方が踏むとランダムアイテム(靴/スター/剣)獲得。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🛸 偵察ドローン (HP1/AP2/飛行)</div><div class="guide-job-desc">体当たり∞(威1) / 電力補給∞(HP+5/機械兵+5)。5T後に機械兵が召喚可能。撃墜時爆発＋罠設置。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
@@ -640,6 +663,13 @@ let stageKrakenSpawned = false;
 // Mountain stage
 let avalanchesTriggered = new Set();
 let cableCarMovesLeft = 4;
+// Underwater Temple
+let oxygenMap = {};
+let tideDirection = 'south';
+let tideTurn = 0;
+// Lava Land
+let lavaBridgeCollapsed = false;
+let lavaSpreadTimer = 0;
 
 // ============================================================
 //  ONLINE MODE STATE
@@ -1599,7 +1629,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water'].includes(t);
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'lava'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
@@ -1647,7 +1677,7 @@ function getLoS(a, targetPos) {
 }
 
 const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior'];
-const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon'];
+const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland'];
 
 function resolveJob(job) {
     return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
@@ -1954,6 +1984,67 @@ function initBoard(stageType) {
         board[19][10]='item_tile'; itemTileMap['19,10']='goggles';
 
         return; // skip placeChurchesAndItems
+
+    // ===== UNDERWATER TEMPLE =====
+    } else if (stageType === 'underwater') {
+        // Clear river row and cannons first
+        for (let c2=0; c2<SIZE; c2++) {
+            if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+            if (board[8]?.[c2]==='cannon') board[8][c2]='plains';
+            if (board[12]?.[c2]==='cannon') board[12][c2]='plains';
+        }
+        // Convert all plains/volcano/mine to sea_floor
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (['plains','volcano','mine'].includes(board[r2][c2])) board[r2][c2]='sea_floor';
+        }
+        // Sea trench: 2 rows wide (rows 9-10), passages at cols 4, 10, 16
+        for (let c2=0; c2<SIZE; c2++) {
+            if (c2!==4 && c2!==10 && c2!==16) { board[9][c2]='sea_trench'; board[10][c2]='sea_trench'; }
+        }
+        // Coral reef obstacles
+        [[2,3],[2,17],[4,7],[4,13],[6,1],[6,19],[14,5],[14,15],[16,8],[16,12],[18,2],[18,18],[3,10],[17,10]].forEach(([r2,c2])=>{
+            if (board[r2]?.[c2]==='sea_floor') board[r2][c2]='coral_reef';
+        });
+        // Bubble vents (restore oxygen when stepped on)
+        [[1,10],[5,5],[5,15],[15,5],[15,15]].forEach(([r2,c2])=>{ board[r2][c2]='bubble_vent'; });
+        // Item tiles
+        itemTileMap = {};
+        const uwItems = ['star','shoes','sword'];
+        [[3,5],[3,15],[17,5],[17,15]].forEach(([r2,c2])=>{
+            board[r2][c2]='item_tile'; itemTileMap[`${r2},${c2}`]=uwItems[Math.floor(Math.random()*uwItems.length)];
+        });
+        oxygenMap = {}; tideDirection = 'south'; tideTurn = 0;
+        return;
+
+    // ===== LAVA LAND =====
+    } else if (stageType === 'lavaland') {
+        // Clear river row and cannons first
+        for (let c2=0; c2<SIZE; c2++) {
+            if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+            if (board[8]?.[c2]==='cannon') board[8][c2]='plains';
+            if (board[12]?.[c2]==='cannon') board[12][c2]='plains';
+        }
+        // Convert all plains/volcano/mine to lava_ground
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (['plains','volcano','mine'].includes(board[r2][c2])) board[r2][c2]='lava_ground';
+        }
+        // Central lava pool: rows 8-12, cols 3-17
+        for (let r2=8; r2<=12; r2++) for (let c2=3; c2<=17; c2++) board[r2][c2]='lava';
+        // Lava bridges (2 crossing paths) at col 8 and col 12
+        for (let r2=8; r2<=12; r2++) { board[r2][8]='lava_bridge'; board[r2][12]='lava_bridge'; }
+        // Scattered lava patches outside center
+        [[3,4],[3,16],[5,1],[5,19],[13,2],[13,18],[17,6],[17,14],[2,10],[18,10]].forEach(([r2,c2])=>{
+            if (board[r2]?.[c2]==='lava_ground') board[r2][c2]='lava';
+        });
+        // Item tiles
+        itemTileMap = {};
+        const llItems = ['star','shoes','sword'];
+        [[2,5],[2,15],[18,5],[18,15]].forEach(([r2,c2])=>{
+            board[r2][c2]='item_tile'; itemTileMap[`${r2},${c2}`]=llItems[Math.floor(Math.random()*llItems.length)];
+        });
+        lavaBridgeCollapsed = false; lavaSpreadTimer = 0;
+        return;
+
     } else {
         let placed = false;
         while (!placed) {
@@ -1973,7 +2064,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','sea_floor','bubble_vent','lava_ground','lava_bridge','cooled_lava'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2213,6 +2304,20 @@ function processTurnStartEffects(e) {
         if (Math.random() < 0.2) { e.ap = Math.max(0, e.ap - 1); coldMsg.push("行動力-1"); }
         if (Math.random() < 0.2) { e.hp -= 1; coldMsg.push("1ダメージ"); }
         if (coldMsg.length > 0) msg(`❄️ ${e.name}は山頂の寒さと薄い空気にやられた！${coldMsg.join("＋")}！`, true);
+    }
+    // Underwater Temple: oxygen consumption (player/cpu entities only)
+    if (activeStage === 'underwater' && (e.team === 'player' || e.team === 'cpu')) {
+        if (oxygenMap[e.id] === undefined) oxygenMap[e.id] = 5;
+        if (board[e.r]?.[e.c] === 'bubble_vent') {
+            oxygenMap[e.id] = 5;
+            msg(`💨 ${e.name}は気泡噴出口で酸素全回復！`, true);
+        } else {
+            oxygenMap[e.id] = Math.max(0, oxygenMap[e.id] - 1);
+            if (oxygenMap[e.id] === 0 && !e.invin) {
+                e.hp -= 1;
+                msg(`🫧 ${e.name}の酸素が切れた！HP-1！(残酸素:0)`, true);
+            }
+        }
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
@@ -2672,6 +2777,86 @@ function startTurn(team, skipEffects = false) {
             });
             if (dNames.length > 0) msg(`🕯️ 地下迷宮の闇から ${dNames.join('・')} が現れた！`, true);
         }
+
+        // ===== UNDERWATER TEMPLE events =====
+        if (activeStage === 'underwater') {
+            // Tide: direction alternates every 3 turns, pushes all entities 1 tile
+            if (turn > 0 && turn % 3 === 0) {
+                tideDirection = tideDirection === 'south' ? 'north' : 'south';
+                tideTurn++;
+                let tdr = tideDirection === 'north' ? -1 : 1;
+                let pushed = [];
+                // Sort by direction to avoid chaining pushes
+                let alive = entities.filter(e => e.hp > 0).sort((a,b) => tdr < 0 ? a.r-b.r : b.r-a.r);
+                alive.forEach(e => {
+                    let nr = e.r + tdr, nc = e.c;
+                    if (nr >= 0 && nr < SIZE && !['sea_trench','coral_reef','rock'].includes(board[nr]?.[nc]) && !entities.find(x => x !== e && x.hp > 0 && x.r === nr && x.c === nc)) {
+                        e.r = nr; pushed.push(e.name);
+                    }
+                });
+                msg(`🌊 潮流${tideDirection === 'north' ? '→北' : '→南'}！${pushed.length > 0 ? pushed.join('・') + 'が1マス流された！' : 'コマへの影響なし。'}`, true);
+            }
+            // Shark/eel spawn every 4 turns from turn 3
+            if (turn >= 3 && turn % 4 === 0) {
+                const uwPool = ['shark','eel'];
+                let spot = randomEmptyCells(1)[0];
+                if (spot) {
+                    let t = uwPool[Math.floor(Math.random() * 2)];
+                    let base = { id:'npc'+t+Date.now(), team:'npc', r:spot.r, c:spot.c, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1 };
+                    if (t === 'shark') entities.push({...base, type:'shark', name:'サメ', hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}});
+                    else entities.push({...base, type:'eel', name:'ウツボ', hp:2, maxHp:2, ap:2, maxAp:2, abilities:{bite:999}});
+                    msg(`🦈 海底神殿に${t === 'shark' ? 'サメ' : 'ウツボ'}が出現！`, true);
+                }
+            }
+        }
+
+        // ===== LAVA LAND events =====
+        if (activeStage === 'lavaland') {
+            // Lava bridge collapse at turn 5
+            if (turn === 5 && !lavaBridgeCollapsed) {
+                lavaBridgeCollapsed = true;
+                let bridgeMsg = [];
+                for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+                    if (board[r2][c2] === 'lava_bridge') {
+                        board[r2][c2] = 'lava';
+                        let victim = entities.find(e => e.hp > 0 && e.r === r2 && e.c === c2 && !e.lavaWalker && !e.invin);
+                        if (victim) { victim.hp = 0; bridgeMsg.push(`${victim.name}が溶岩に落下！即死！`); }
+                    }
+                }
+                msg(`🌉 溶岩橋が崩落した！` + (bridgeMsg.length ? ' ' + bridgeMsg.join(' ') : ''), true);
+                checkWin();
+            }
+            // Lava spread: every 3 turns from turn 3
+            if (turn >= 3 && turn % 3 === 0) {
+                let newLava = [];
+                const dirs4 = [[-1,0],[1,0],[0,-1],[0,1]];
+                for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+                    if (board[r2][c2] === 'lava') {
+                        dirs4.forEach(([dr,dc]) => {
+                            let nr=r2+dr, nc=c2+dc;
+                            if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE && board[nr][nc]==='lava_ground' && Math.random()<0.25 && !newLava.find(x=>x.r===nr&&x.c===nc)) {
+                                newLava.push({r:nr,c:nc});
+                            }
+                        });
+                    }
+                }
+                newLava.forEach(({r:nr, c:nc}) => {
+                    board[nr][nc] = 'lava';
+                    let victim = entities.find(e => e.hp > 0 && e.r === nr && e.c === nc && !e.lavaWalker && !e.invin);
+                    if (victim) { victim.hp -= 3; msg(`🔥 溶岩が${victim.name}を飲み込んだ！HP-3！`, true); }
+                });
+                if (newLava.length > 0) msg(`🔥 溶岩が${newLava.length}マス広がった！`, true);
+            }
+            // Salamander spawn every 5 turns from turn 3
+            if (turn >= 3 && turn % 5 === 0) {
+                let spot = randomEmptyCells(1)[0];
+                if (spot) {
+                    entities.push({ id:'salamander'+Date.now(), type:'salamander', name:'サラマンダー', team:'npc', r:spot.r, c:spot.c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, lavaWalker:true, soulValue:1 });
+                    msg("🦎 サラマンダーが出現！溶岩を自在に歩く強敵！", true);
+                }
+            }
+        }
+
         // 種/若芽/宇宙卵の成長
         entities.forEach(e => {
             if (e.hp <= 0) return;
@@ -2873,7 +3058,7 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board'];
+        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','lava_ground','lava_bridge','cooled_lava','lava'];
         return rockableGrounds.includes(board[r][c]) && !isNoRockZone(r, c) && !target;
     }
     // Stolen lock: prevents use for 1 turn after being stolen from
@@ -3171,7 +3356,8 @@ function showEntityInfo(e) {
         .filter(k => k !== 'shatter' && (e.abilities[k] > 0 || e.abilities[k] === 999))
         .map(k => `${ABILITY_NAMES[k]||k}${e.abilities[k]===999?'∞':e.abilities[k]}`)
         .join(' / ');
-    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    let oxygenStr = (activeStage === 'underwater' && (e.team === 'player' || e.team === 'cpu')) ? ` &nbsp; 🫧${oxygenMap[e.id]??5}/5` : '';
+    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${oxygenStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -3310,6 +3496,16 @@ function checkTileEffects(entity) {
                 }
             }
         }
+    }
+    // Underwater: bubble vent restores oxygen
+    if (board[r] && board[r][c] === 'bubble_vent' && activeStage === 'underwater') {
+        oxygenMap[entity.id] = 5;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "💨 気泡噴出口！酸素が全回復！";
+    }
+    // Lava: deals 3 damage when stepped on voluntarily (non-lavaWalker)
+    if (board[r] && board[r][c] === 'lava' && !entity.lavaWalker) {
+        if (!entity.invin) entity.hp -= 3;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "🔥 溶岩を踏んだ！HP-3！";
     }
     // Graveyard: crossing a bridge with collected souls summons spirits near enemy entities (radius 2)
     if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'nighttown' || activeStage === 'chaos')) {
@@ -3571,6 +3767,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (!targetEntity.invin) targetEntity.hp -= 30 + (targetEntity.defDebuff||0);
             used = true; se.ap -= 1;
             msg(targetEntity.invin ? "真上から岩を落下！しかし無敵で防がれた！" : "真上から岩を落下！四方を岩に囲まれた敵に30ダメージ！(AP-1)");
+        } else if (activeStage === 'lavaland' && board[r]?.[c] === 'lava') {
+            board[r][c] = 'cooled_lava'; used = true; se.ap -= 1; msg("❄️ 岩を溶岩に落として冷却！岩に変化！(AP-1)");
         } else {
             board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
         }
@@ -4823,7 +5021,13 @@ function knockback(target, dist, source) {
     for (let i=0; i<dist; i++) {
         let nr = target.r + dr;
         let nc = target.c + dc;
-        if (isWalkable(nr, nc)) {
+        // Lava: instant death when knocked in
+        if (board[nr]?.[nc] === 'lava' && !target.lavaWalker) {
+            target.r = nr; target.c = nc;
+            if (!target.invin) { target.hp = 0; }
+            msg(`🔥 ${target.name}が溶岩に叩き込まれた！即死！`, true);
+            break;
+        } else if (isWalkable(nr, nc)) {
             target.r = nr; target.c = nc;
         } else break;
     }
@@ -4851,6 +5055,9 @@ function monsterTemplate(type, r, c) {
         case 'bat':          return {...base, type, name:'コウモリ', hp:1, maxHp:1, ap:3, maxAp:3, abilities:{bite:999}, flying:true, soulValue:1};
         case 'werewolf':     return {...base, type, name:'オオカミ男', hp:5, maxHp:5, ap:3, maxAp:3, abilities:{bite:999}, soulValue:1};
         case 'vampire':      return {...base, type, name:'ヴァンパイア', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{drain:999}, soulValue:2};
+        case 'shark':        return {...base, type, name:'サメ', hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}, soulValue:1};
+        case 'eel':          return {...base, type, name:'ウツボ', hp:2, maxHp:2, ap:2, maxAp:2, abilities:{bite:999}, soulValue:1};
+        case 'salamander':   return {...base, type, name:'サラマンダー', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{bite:999}, lavaWalker:true, soulValue:1};
         default:             return {...base, type:'zombie', name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
     }
 }
@@ -4934,6 +5141,8 @@ function defaultGround() {
     if (activeStage === 'nighttown') return 'nighttown_ground';
     if (activeStage === 'skyfort') return 'fortress_floor';
     if (activeStage === 'dungeon') return 'dungeon_ground';
+    if (activeStage === 'underwater') return 'sea_floor';
+    if (activeStage === 'lavaland') return 'lava_ground';
     return 'plains';
 }
 
@@ -5396,6 +5605,34 @@ function npcLogic() {
                 }
             }
             n.ap--;
+            checkWin(); render(); setTimeout(npcLogic, 100);
+            return;
+        }
+
+        // === SALAMANDER: walks on lava, moves toward nearest target ===
+        if (n.type === 'salamander') {
+            let sTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && !e.stealth);
+            if (sTargets.length > 0) {
+                sTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
+                let sp = sTargets[0];
+                let d = Math.max(Math.abs(n.r-sp.r), Math.abs(n.c-sp.c));
+                if (d <= 1) {
+                    if (!sp.invin) { sp.hp -= 1; }
+                    msg(`🦎 サラマンダーの噛み付き！${sp.name}に1ダメージ！`, true);
+                    n.ap--;
+                } else {
+                    let dirs4 = [[-1,0],[1,0],[0,-1],[0,1]];
+                    dirs4.sort((a,b) => (Math.abs((n.r+a[0])-sp.r)+Math.abs((n.c+a[1])-sp.c)) - (Math.abs((n.r+b[0])-sp.r)+Math.abs((n.c+b[1])-sp.c)));
+                    for (let [dr,dc] of dirs4) {
+                        let nr=n.r+dr, nc=n.c+dc;
+                        let t2=board[nr]?.[nc];
+                        if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE && (isWalkable(nr,nc)||t2==='lava'||t2==='lava_bridge') && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==n)) {
+                            n.r=nr; n.c=nc; break;
+                        }
+                    }
+                    n.ap--;
+                }
+            } else { n.ap = 0; }
             checkWin(); render(); setTimeout(npcLogic, 100);
             return;
         }
