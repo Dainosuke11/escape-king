@@ -49,7 +49,7 @@ const rooms = new Map<string, Room>();
 const queue: QueueEntry[] = [];
 // userId -> last opponents (most recent first), for anti-boosting
 const recentOpponents = new Map<string, string[]>();
-const RECONNECT_GRACE_MS = 60000; // 1 minute to reconnect before forfeit
+const RECONNECT_GRACE_MS = 120000; // 2 minutes to reconnect before forfeit
 
 function generateRoomCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

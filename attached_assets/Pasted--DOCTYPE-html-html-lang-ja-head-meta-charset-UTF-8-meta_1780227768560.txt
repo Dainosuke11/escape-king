@@ -802,7 +802,7 @@ const ABILITY_NAMES = {
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
-    optical_camo: '光学迷彩(1T潜伏)', form_shift: '形態変化(戦闘形態)',
+    optical_camo: '光学迷彩(3T潜伏)', form_shift: '形態変化(戦闘形態)',
     branch_whip: '枝のムチ(半径2/威1)', seed_plant: '種まき(成長→ベビーM)',
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛)',
     root_spread: '根を張る(AP-2/半径8回復)', roar: '咆哮(半径1/威1/AP-2)',
@@ -900,7 +900,7 @@ const ABILITY_TIPS = {
     tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
-    optical_camo: '光学迷彩で1ターン潜伏状態になる。移動中でも隠れる。回数2。',
+    optical_camo: '光学迷彩で3ターン潜伏状態になる。移動中でも隠れる。回数2。',
     form_shift: '戦闘形態に変化。全アビリティ+2・攻撃力+2。再度使用で元に戻る。回数1。',
     branch_whip: '半径2マス(植物LV分拡大)の敵に1ダメ・吹き飛ばし。回数5。',
     seed_plant: '隣接マスに種を植える。1T後→若芽、2T後→ベビーマンドレイク(HP6/AP2)。回数10。',
@@ -982,7 +982,7 @@ function connectWS(onOpen) {
     };
 }
 
-// Auto-reconnect: retry every 2s up to 60 times (~120s), then give up.
+// Auto-reconnect: retry every 3s up to 20 times (~60s), then give up.
 function attemptReconnect() {
     if (reconnecting) return;
     reconnecting = true;
@@ -994,7 +994,7 @@ function attemptReconnect() {
 
 function tryReconnectOnce() {
     reconnectAttempts++;
-    if (reconnectAttempts > 60) {
+    if (reconnectAttempts > 20) {
         reconnecting = false;
         hideReconnectOverlay();
         msg("⚠️ 再接続に失敗しました。");
@@ -1006,12 +1006,12 @@ function tryReconnectOnce() {
     connectWS(() => {
         wsSend({ type: 'resume', sessionId: onlineSessionId });
     });
-    // Schedule the next retry if this attempt does not resolve in 2s.
+    // Schedule the next retry if this attempt does not resolve in 3s.
     setTimeout(() => {
         if (reconnecting) {
             if (!wsConn || wsConn.readyState !== WebSocket.OPEN) tryReconnectOnce();
         }
-    }, 2000);
+    }, 3000);
 }
 
 function showReconnectOverlay() {
@@ -1027,7 +1027,7 @@ function showReconnectOverlay() {
 }
 function updateReconnectOverlay() {
     let t = document.getElementById('reconnect-text');
-    if (t) t.innerHTML = `通信が切断されました。<br>再接続しています... (${reconnectAttempts}/60)`;
+    if (t) t.innerHTML = `通信が切断されました。<br>再接続しています... (${reconnectAttempts}/20)`;
 }
 function hideReconnectOverlay() {
     let el = document.getElementById('reconnect-overlay');
@@ -1794,10 +1794,10 @@ function initBoard(stageType) {
         // Cable cars (extended routes for bigger mountain)
         // Enemy side: boarding at (3,3), down col 3 → right to summit at (10,5)
         board[3][3]='cable_board';
-        [[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[10,4],[10,5],[10,6],[10,7]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Player side: boarding at (17,17), up col 17 → left to summit at (10,12)
+        [[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[10,4],[10,5]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Player side: boarding at (17,17), up col 17 → left to summit at (10,14)
         board[17][17]='cable_board';
-        [[16,17],[15,17],[14,17],[13,17],[12,17],[11,17],[10,17],[10,16],[10,15],[10,14],[10,13],[10,12]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        [[16,17],[15,17],[14,17],[13,17],[12,17],[11,17],[10,17],[10,16],[10,15],[10,14]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
         // Extras at board edges
         placeRandom('mine', 2, 19, 20, true);
         placeRandom('volcano', 1, 19, 20, true);
@@ -4139,8 +4139,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg('🥚 卵設置！2ターン後に宇宙人Jrが孵化！'); used = true;
     } else if (actionMode === 'optical_camo') {
         se.abilities['optical_camo']--;
-        se.stealth = true; se.stealthTimer = 1;
-        msg('💨 光学迷彩！1ターン潜伏状態！'); used = true;
+        se.stealth = true; se.stealthTimer = 3;
+        msg('💨 光学迷彩！3ターン潜伏状態！'); used = true;
     } else if (actionMode === 'form_shift') {
         se.abilities['form_shift']--;
         if (!se.formShifted) {
