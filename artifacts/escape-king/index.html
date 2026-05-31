@@ -569,6 +569,8 @@
             <div id="entity-info-panel"></div>
             <hr style="border: 1px solid #444; margin-top: 15px; margin-bottom: 15px;">
             <button class="btn" style="background:#c0392b; padding: 15px;" id="btn-end-turn">ターン終了</button>
+            <button class="btn" style="background:#555; padding: 10px; margin-top:8px; font-size:13px;" id="btn-retire">🏳️ リタイア</button>
+            <button class="btn" style="background:#34495e; padding: 10px; margin-top:4px; font-size:13px;" id="btn-game-title">🏠 タイトルへ</button>
         </div>
     </div>
 </div>
@@ -1520,7 +1522,33 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('home-screen').style.display = 'block';
     });
-    document.getElementById('btn-title').addEventListener('click', () => location.reload());
+    document.getElementById('btn-title').addEventListener('click', () => {
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'block';
+        if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
+        isOnlineMode = false;
+    });
+
+    document.getElementById('btn-retire').addEventListener('click', () => {
+        if (!confirm('リタイアして対戦を終了しますか？')) return;
+        if (isOnlineMode && wsConn) {
+            try { wsSend({ type: 'resign' }); } catch(e){}
+        }
+        document.getElementById('result-title').innerText = '🏳️ リタイア…\n敗北となりました。';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'flex';
+    });
+
+    document.getElementById('btn-game-title').addEventListener('click', () => {
+        if (!confirm('タイトルに戻りますか？（対戦中の場合は中断されます）')) return;
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'block';
+        if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
+        isOnlineMode = false;
+        stopTurnTimer(); stopOpponentTimer();
+    });
 });
 
 // ============================================================
