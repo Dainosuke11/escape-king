@@ -703,6 +703,10 @@ let intentionalClose = false;
 // Latency tracking
 let lastPingMs = null;
 let clientPingIntervalId = null;
+// Connection status for ping indicator: 'connecting' | 'connected' | 'disconnected' | 'reconnected'
+let connStatus = 'connecting';
+let disconnectTime = null;
+let reconnectSuccessTimer = null;
 
 // Anonymous identity + rank persistence (localStorage + server DB sync)
 function getApiBase() {
@@ -1014,11 +1018,17 @@ const JOB_DATA = {
 
 function startClientPing() {
     stopClientPing();
+    connStatus = 'connecting';
+    updateOnlineInfo();
     clientPingIntervalId = setInterval(() => {
         if (wsConn && wsConn.readyState === WebSocket.OPEN) {
             wsConn.send(JSON.stringify({ type: 'clientPing', clientTs: Date.now() }));
         }
     }, 30000);
+    // Send an immediate ping so the indicator updates quickly.
+    if (wsConn && wsConn.readyState === WebSocket.OPEN) {
+        wsConn.send(JSON.stringify({ type: 'clientPing', clientTs: Date.now() }));
+    }
 }
 
 function stopClientPing() {
@@ -1048,6 +1058,9 @@ function connectWS(onOpen) {
         if (intentionalClose) return;
         // During an active online game, attempt to auto-reconnect.
         if (isOnlineMode && !rankResultApplied) {
+            connStatus = 'disconnected';
+            if (disconnectTime === null) disconnectTime = Date.now(); // record only once per outage
+            updateOnlineInfo();
             attemptReconnect();
         }
     };
@@ -1075,6 +1088,7 @@ function tryReconnectOnce() {
     if (reconnectAttempts > 60) {
         reconnecting = false;
         hideReconnectOverlay();
+        resetConnState();
         msg("⚠️ 再接続に失敗しました。タイトルに戻ります。");
         setTimeout(() => {
             document.getElementById('result-screen').style.display = 'none';
@@ -1115,6 +1129,12 @@ function updateReconnectOverlay() {
 function hideReconnectOverlay() {
     let el = document.getElementById('reconnect-overlay');
     if (el) el.style.display = 'none';
+}
+
+function resetConnState() {
+    disconnectTime = null;
+    if (reconnectSuccessTimer) { clearTimeout(reconnectSuccessTimer); reconnectSuccessTimer = null; }
+    connStatus = 'connecting';
 }
 
 // Opponent suspend overlay (countdown to forfeit win)
@@ -1197,6 +1217,7 @@ function handleWsMessage(event) {
     if (data.type === 'clientPong') {
         // Server echoed our clientTs — compute true RTT using our own clock only.
         lastPingMs = Date.now() - data.clientTs;
+        if (connStatus === 'connecting') connStatus = 'connected';
         updateOnlineInfo();
         return;
     }
@@ -1268,6 +1289,21 @@ function handleWsMessage(event) {
     if (data.type === 'resumed') {
         reconnecting = false;
         hideReconnectOverlay();
+        // Log how long the disconnection lasted.
+        if (disconnectTime !== null) {
+            const elapsedSec = ((Date.now() - disconnectTime) / 1000).toFixed(1);
+            console.info(`[WS] Reconnected after ${elapsedSec}s disconnect.`);
+            disconnectTime = null;
+        }
+        // Flash "再接続 ✓" in the ping indicator for 3 seconds.
+        connStatus = 'reconnected';
+        updateOnlineInfo();
+        if (reconnectSuccessTimer) clearTimeout(reconnectSuccessTimer);
+        reconnectSuccessTimer = setTimeout(() => {
+            connStatus = 'connecting'; // will resolve to 'connected' on next pong
+            updateOnlineInfo();
+            startClientPing(); // send immediate ping to refresh ms reading
+        }, 3000);
         msg("✅ 再接続しました。盤面を同期しています...");
         return;
     }
@@ -1275,6 +1311,7 @@ function handleWsMessage(event) {
     if (data.type === 'resumeFailed') {
         reconnecting = false;
         hideReconnectOverlay();
+        resetConnState();
         msg("⚠️ 再接続に失敗しました（試合が既に終了しています）。タイトルに戻ります。");
         setTimeout(() => {
             document.getElementById('result-screen').style.display = 'none';
@@ -1588,9 +1625,17 @@ function updateOnlineInfo() {
     const el = document.getElementById('online-game-info');
     if (!isOnlineMode) { el.style.display = 'none'; return; }
     const myRole = myPlayerIndex === 0 ? '先攻(下)' : '後攻(上)';
-    const pingLabel = lastPingMs !== null
-        ? ` | <span id="ping-indicator" style="color:${lastPingMs < 100 ? '#2ecc71' : lastPingMs < 250 ? '#f39c12' : '#e74c3c'}">${lastPingMs}ms</span>`
-        : '';
+    let pingLabel;
+    if (connStatus === 'disconnected') {
+        pingLabel = ` | <span id="ping-indicator" style="color:#e74c3c;font-weight:bold;">切断 ⚠️</span>`;
+    } else if (connStatus === 'reconnected') {
+        pingLabel = ` | <span id="ping-indicator" style="color:#2ecc71;font-weight:bold;">再接続 ✓</span>`;
+    } else if (lastPingMs !== null) {
+        const color = lastPingMs < 100 ? '#2ecc71' : lastPingMs < 250 ? '#f39c12' : '#e74c3c';
+        pingLabel = ` | <span id="ping-indicator" style="color:${color}">${lastPingMs}ms</span>`;
+    } else {
+        pingLabel = ` | <span id="ping-indicator" style="color:#aaa;">接続中...</span>`;
+    }
     el.style.display = 'block';
     el.innerHTML = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}${pingLabel}`;
 }
@@ -1628,6 +1673,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('home-screen').style.display = 'block';
         if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
         isOnlineMode = false;
+        resetConnState();
     });
 
     document.getElementById('btn-retire').addEventListener('click', () => {
@@ -1648,6 +1694,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
         isOnlineMode = false;
         stopTurnTimer(); stopOpponentTimer();
+        resetConnState();
     });
 });
 
