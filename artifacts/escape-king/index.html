@@ -6520,10 +6520,26 @@ function updateUI() {
     }
 
     if (!selectedEntity.skillUsed && ALL_JOBS.includes(selectedEntity.type)) {
+        const JOB_SKILL_NAMES = {
+            king:         '王の威光',
+            knight:       '騎士の突進',
+            mage:         '大火球魔法',
+            thief:        'コピー',
+            beastmaster:  'ドラゴン召喚',
+            macho:        'ドーピング',
+            assassin:     '暗殺者の隠匿',
+            infantry:     '分隊召喚',
+            cyborg:       'リミッター解除',
+            alien:        'マインドコントロール',
+            mandrake:     '根っこバインド',
+            ryujin:       'ドラゴンインパクト',
+            shark_warrior:'ハイドロポンプ',
+        };
+        let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
         sb.className = 'ability-btn';
         sb.style.background = '#d35400'; sb.style.color = '#fff';
-        sb.innerText = '固有スキル発動';
+        sb.innerText = skillName ? `固有スキル発動【${skillName}】` : '固有スキル発動';
         if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
         sb.onclick = () => setMode('skill');
         list.appendChild(sb);
