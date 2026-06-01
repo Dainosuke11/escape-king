@@ -830,7 +830,7 @@ const ABILITY_NAMES = {
     hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
     power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(直線3飛行移動/HP-2)',
     laser_blade: 'レーザーブレード(威3/HP-1/AP-1)',
-    sweep: '薙ぎ払い(半径2弧/威2/吹飛)', laser_snipe: 'レーザースナイプ(直線5/威4)',
+    sweep: '薙ぎ払い(半径2弧/威2/吹飛/AP-1/HP-1)', laser_snipe: 'レーザースナイプ(直線5/威4)',
     laser_bazooka: 'レーザーバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
     recon_drone: '偵察ドローン召喚(隣接/HP1/AP2/飛行/複数可)',
     emp_field: '電磁パルスフィールド(半径5/AP-1/4アビリティ封印1T)',
@@ -927,10 +927,10 @@ const ABILITY_TIPS = {
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
     jet_boost: 'AP-1・HP-2して直線3マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
     laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
-    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。AP-1消費。回数3。',
+    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。自身AP-1・HP-1消費。回数3。',
     laser_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
     laser_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
-    incinerate: '直線3マスの敵に5ダメ・AP-2・2ターン燃焼(毎ターン1ダメ)。回数2。',
+    incinerate: '自身AP-2消費。直線3マスの敵に5ダメ・敵AP-2・2ターン燃焼(毎ターン1ダメ)。使用には行動力2必要。回数2。',
     emp_field: 'AP-1消費。半径5マス内の全敵のAPを-1し、各敵のランダム4アビリティを1T封印する。回数2。',
     recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
@@ -3621,25 +3621,28 @@ function checkTileEffects(entity) {
         if (!entity.invin) entity.hp -= 3;
         eventMsg = (eventMsg ? eventMsg + " " : "") + "🔥 溶岩を踏んだ！HP-3！";
     }
-    // Graveyard: crossing a bridge with collected souls summons spirits near enemy entities (radius 2)
+    // Graveyard: crossing a bridge with collected souls summons spirits near enemy JOB piece (radius 3)
     if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'nighttown' || activeStage === 'chaos')) {
         let team = entity.team;
         if ((team === 'player' || team === 'cpu') && souls[team] > 0) {
             let n = souls[team];
             let foeTeam = team === 'player' ? 'cpu' : 'player';
-            let foes = entities.filter(e => e.hp > 0 && (e.team === foeTeam || e.team === 'npc'));
+            // 赤コマ（敵のジョブコマ）を基準にする
+            let foeJobId = foeTeam === 'cpu' ? 'c1' : 'p1';
+            let foeJob = entities.find(e => e.hp > 0 && e.id === foeJobId);
+            if (!foeJob) foeJob = entities.find(e => e.hp > 0 && e.team === foeTeam);
             let cells = [];
-            foes.forEach(foe => {
-                for (let rdr=-2; rdr<=2; rdr++) for (let rdc=-2; rdc<=2; rdc++) {
-                    let rr=foe.r+rdr, cc=foe.c+rdc;
+            if (foeJob) {
+                for (let rdr=-3; rdr<=3; rdr++) for (let rdc=-3; rdc<=3; rdc++) {
+                    let rr=foeJob.r+rdr, cc=foeJob.c+rdc;
                     if (rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&isWalkable(rr,cc)&&!entities.some(e=>e.hp>0&&e.r===rr&&e.c===cc))
                         cells.push({r:rr,c:cc});
                 }
-            });
+            }
             cells.sort(()=>Math.random()-0.5);
             cells.slice(0, n).forEach(s => spawnAt('spirit', s.r, s.c));
             souls[team] = 0;
-            eventMsg = (eventMsg ? eventMsg + " " : "") + `橋を渡り魂${n}を解き放った！敵周辺に悪霊${Math.min(n,cells.length)}体が出現！`;
+            eventMsg = (eventMsg ? eventMsg + " " : "") + `橋を渡り魂${n}を解き放った！赤コマ周辺に悪霊${Math.min(n,cells.length)}体が出現！`;
         }
     }
     // Church: enable purification (handled in updateUI)
@@ -3853,6 +3856,12 @@ function checkEnemyTerritory(entity) {
     }
 }
 
+// 行動力コストマップ（AP消費アビリティの最低AP要件）
+const ABILITY_AP_COSTS = {
+    power_charge: 1, jet_boost: 1, sweep: 1, emp_field: 1, fusion: 1,
+    incinerate: 2, meditation: 2, root_spread: 2, thunder_magic: 2
+};
+
 function handleAbilityTarget(r, c, targetEntity) {
     let se = selectedEntity;
     let used = false;
@@ -3860,6 +3869,13 @@ function handleAbilityTarget(r, c, targetEntity) {
     if (!isValidTarget(se, r, c, actionMode) && actionMode !== 'skill') {
         msg("そこは対象外です");
         return;
+    }
+
+    // 行動力不足チェック（incinerate以外は各ハンドラ内で個別処理するが一括バリデーション）
+    const apNeeded = ABILITY_AP_COSTS[actionMode] || 0;
+    if (apNeeded > 0 && se.ap < apNeeded && actionMode !== 'incinerate') {
+        msg(`行動力が足りません！（${ABILITY_AP_COSTS[actionMode]}AP必要）`);
+        return false;
     }
 
     if (actionMode === 'shatter') {
@@ -4299,13 +4315,14 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'sweep') {
         se.abilities['sweep']--;
         se.ap = Math.max(0, se.ap - 1);
+        se.hp = Math.max(1, se.hp - 1);
         let swpHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
                 if (!t.invin) { t.hp -= 2; knockback(t,1,se); swpHit++; }
             }
         });
-        msg(`⚔️ 薙ぎ払い！AP-1・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
+        msg(`⚔️ 薙ぎ払い！AP-1・HP-1して半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'laser_snipe') {
         se.abilities['laser_snipe']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
@@ -4342,10 +4359,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         });
         msg(`⚡ 電磁パルスフィールド！半径5マスの敵${empHit}体にAP-1＋4アビリティ1T封印！`); used = true;
     } else if (actionMode === 'incinerate') {
+        if (se.ap < 2) { msg("🔥 焼却砲には行動力2が必要です！"); return false; }
         se.abilities['incinerate']--;
+        se.ap = Math.max(0, se.ap - 2);
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！5ダメ・AP-2・2ターン燃焼ダメージ！'); used = true;
+        msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！AP-2消費・5ダメ・敵AP-2・2ターン燃焼ダメージ！'); used = true;
     } else if (actionMode === 'recon_drone') {
         if (!isWalkable(r, c, true)) { msg("🛸 その場所には召喚できません！"); return false; }
         se.abilities['recon_drone']--;
@@ -5153,7 +5172,10 @@ function executeRushSkill(se, targetR, targetC, mode) {
             mcT.originalTeam = mcT.team;
             mcT.team = se.team;
             mcT.mindControlTimer = 1;
-            msg(`🧠 マインドコントロール！${mcT.name}を1ターン支配した！`);
+            // 支配したターンにすぐ行動できるようAPを回復
+            mcT.ap = mcT.maxAp;
+            mcT.skillUsed = false;
+            msg(`🧠 マインドコントロール！${mcT.name}を1ターン支配した！行動力が回復して今すぐ行動できる！`);
         } else { msg('マインドコントロール！しかし対象が見つからない/無敵で防がれた！'); }
         se.skillUsed = true; return;
     }
