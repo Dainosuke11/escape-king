@@ -2398,6 +2398,8 @@ function processTurnStartEffects(e) {
     if (e.hp <= 0) return;
     // Frozen yeti does not act
     if (e.type === 'yeti' && e.invin && e.frozenUntilTurn && turn < e.frozenUntilTurn) { e.ap = 0; return; }
+    // Car NPCs are controlled exclusively by nighttownCarTimer (prediction → move system); no autonomous AP
+    if (e.type === 'car') { e.ap = 0; return; }
     // Decoy doll takes 1 self-damage at its own turn start
     if (e.type === 'decoy') e.hp -= 1;
     // Assassin stays stealthed while an ally decoy survives; lose decoy-stealth otherwise
@@ -5934,50 +5936,10 @@ function npcLogic() {
             return;
         }
 
-        // === CAR: pursues nearest player/cpu with zigzag movement, 8 AP every 3 turns ===
+        // === CAR: movement is controlled exclusively by nighttownCarTimer (prediction → move).
+        //          No autonomous NPC logic — skip immediately. ===
         if (n.type === 'car') {
-            let carTargets = entities.filter(e => (e.team === 'player' || e.team === 'cpu') && e.hp > 0);
-            if (carTargets.length === 0) { n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return; }
-            carTargets.sort((a,b) => Math.abs(n.r-a.r)+Math.abs(n.c-a.c) - (Math.abs(n.r-b.r)+Math.abs(n.c-b.c)));
-            let ct = carTargets[0];
-            // Zigzag: even AP uses horizontal, odd AP uses vertical
-            n.carZigzag = (n.carZigzag||0) + 1;
-            let useH = n.carZigzag % 2 === 0;
-            let dr = 0, dc = 0;
-            if (useH && ct.c !== n.c) dc = Math.sign(ct.c - n.c);
-            else if (!useH && ct.r !== n.r) dr = Math.sign(ct.r - n.r);
-            // Fallback: if chosen axis is already aligned, use the other
-            if (dr === 0 && dc === 0) {
-                dc = Math.sign(ct.c - n.c);
-                if (dc === 0) dr = Math.sign(ct.r - n.r);
-            }
-            let nr = n.r + dr, nc = n.c + dc;
-            let passableTiles = ['nighttown_ground','nighttown_goal','plains','bridge','forest','desert','magic_circle','church','streetlight_tile','mine','gravestone','graveyard_ground'];
-            if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && passableTiles.includes(board[nr]?.[nc] || '')) {
-                let blocker = entities.find(e => e.hp > 0 && e.r === nr && e.c === nc && e.team !== 'npc' && e.team !== 'vehicle');
-                if (blocker && !blocker.invin) {
-                    blocker.hp -= 1;
-                    knockback(blocker, 2, n);
-                    msg(`🚗 車が${blocker.name}に突撃！1ダメージ＋吹き飛ばし！`, true);
-                }
-                n.r = nr; n.c = nc;
-            } else {
-                // Can't move in chosen direction, try the other axis
-                dr = dr === 0 ? Math.sign(ct.r - n.r) : 0;
-                dc = dc === 0 ? Math.sign(ct.c - n.c) : 0;
-                let nr2 = n.r + dr, nc2 = n.c + dc;
-                if (nr2 >= 0 && nr2 < SIZE && nc2 >= 0 && nc2 < SIZE && passableTiles.includes(board[nr2]?.[nc2] || '')) {
-                    let blocker2 = entities.find(e => e.hp > 0 && e.r === nr2 && e.c === nc2 && e.team !== 'npc' && e.team !== 'vehicle');
-                    if (blocker2 && !blocker2.invin) {
-                        blocker2.hp -= 1; knockback(blocker2, 2, n);
-                        msg(`🚗 車が${blocker2.name}に突撃！1ダメージ＋吹き飛ばし！`, true);
-                    }
-                    n.r = nr2; n.c = nc2;
-                }
-            }
-            n.ap--;
-            checkWin(); render(); setTimeout(npcLogic, 100);
-            return;
+            n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return;
         }
 
         // === SALAMANDER: walks on lava, moves toward nearest target ===
