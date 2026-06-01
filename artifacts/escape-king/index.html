@@ -677,6 +677,12 @@ let lavaSpreadTimer = 0;
 // ============================================================
 //  ONLINE MODE STATE
 // ============================================================
+
+// Fly.io production WebSocket URL.
+// Development (Replit dev environment): uses the current Replit host automatically.
+// Production (Replit Deployments / *.replit.app): connects to Fly.io.
+const FLY_IO_WS_URL = 'wss://escape-king-api.fly.dev/api/ws';
+
 let isOnlineMode = false;
 let myPlayerIndex = -1;   // 0 = P1 (player team, starts row 20), 1 = P2 (cpu team, starts row 0)
 let wsConn = null;
@@ -692,6 +698,9 @@ let turnTimeLeft = 80;
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
+// Latency tracking
+let lastPingMs = null;
+let clientPingIntervalId = null;
 
 // Anonymous identity + rank persistence (localStorage + server DB sync)
 function getApiBase() {
@@ -1000,12 +1009,40 @@ const JOB_DATA = {
 // ============================================================
 //  WEBSOCKET FUNCTIONS
 // ============================================================
+
+function startClientPing() {
+    stopClientPing();
+    clientPingIntervalId = setInterval(() => {
+        if (wsConn && wsConn.readyState === WebSocket.OPEN) {
+            wsConn.send(JSON.stringify({ type: 'clientPing', clientTs: Date.now() }));
+        }
+    }, 30000);
+}
+
+function stopClientPing() {
+    if (clientPingIntervalId !== null) {
+        clearInterval(clientPingIntervalId);
+        clientPingIntervalId = null;
+    }
+    lastPingMs = null;
+}
+
 function connectWS(onOpen) {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    wsConn = new WebSocket(`${proto}//${location.host}/api/ws`);
+    // In Replit dev environments (*.replit.dev, *.repl.co, localhost) use the
+    // proxied local API. In production deployments (*.replit.app etc.) connect
+    // directly to Fly.io so the API stays live even when Replit sleeps.
+    const h = location.hostname;
+    const isDev = h === 'localhost' ||
+                  h.endsWith('.replit.dev') ||
+                  h.endsWith('.repl.co');
+    const wsUrl = isDev
+        ? `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/ws`
+        : FLY_IO_WS_URL;
+    wsConn = new WebSocket(wsUrl);
     wsConn.onopen = onOpen;
     wsConn.onmessage = handleWsMessage;
     wsConn.onclose = () => {
+        stopClientPing();
         if (intentionalClose) return;
         // During an active online game, attempt to auto-reconnect.
         if (isOnlineMode && !rankResultApplied) {
@@ -1155,6 +1192,13 @@ function syncState(type = 'stateSync') {
 function handleWsMessage(event) {
     const data = JSON.parse(event.data);
 
+    if (data.type === 'clientPong') {
+        // Server echoed our clientTs — compute true RTT using our own clock only.
+        lastPingMs = Date.now() - data.clientTs;
+        updateOnlineInfo();
+        return;
+    }
+
     if (data.type === 'roomCreated') {
         onlineRoomCode = data.roomCode;
         document.getElementById('ol-room-code').textContent = data.roomCode;
@@ -1196,6 +1240,7 @@ function handleWsMessage(event) {
         document.getElementById('game-screen').style.display = 'flex';
         updateOnlineInfo();
         render();
+        startClientPing();
 
         // マッチング成功通知
         const toast = document.getElementById('match-toast');
@@ -1541,8 +1586,11 @@ function updateOnlineInfo() {
     const el = document.getElementById('online-game-info');
     if (!isOnlineMode) { el.style.display = 'none'; return; }
     const myRole = myPlayerIndex === 0 ? '先攻(下)' : '後攻(上)';
+    const pingLabel = lastPingMs !== null
+        ? ` | <span id="ping-indicator" style="color:${lastPingMs < 100 ? '#2ecc71' : lastPingMs < 250 ? '#f39c12' : '#e74c3c'}">${lastPingMs}ms</span>`
+        : '';
     el.style.display = 'block';
-    el.textContent = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}`;
+    el.innerHTML = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}${pingLabel}`;
 }
 
 // ============================================================

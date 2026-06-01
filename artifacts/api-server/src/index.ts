@@ -222,15 +222,33 @@ server.on("upgrade", (request, socket, head) => {
   }
 });
 
-// Keepalive: ping every 25 s so proxies/load balancers don't kill idle sockets.
+// Keepalive: track liveness with WS-level ping frames (handles proxy keepalive).
+// Any client that does not reply with a pong within the interval is terminated.
+const wsAlive = new WeakMap<WebSocket, boolean>();
+
 const pingInterval = setInterval(() => {
   wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) client.ping();
+    if (client.readyState !== WebSocket.OPEN) return;
+    if (wsAlive.get(client) === false) {
+      // No pong received since last ping — connection is dead.
+      logger.warn("WebSocket client timed out, terminating");
+      client.terminate();
+      return;
+    }
+    wsAlive.set(client, false);
+    client.ping();
   });
-}, 25000);
-wss.on("close", () => clearInterval(pingInterval));
+}, 30000);
+
+wss.on("close", () => {
+  clearInterval(pingInterval);
+});
 
 wss.on("connection", (ws: WebSocket) => {
+  // Mark alive on connect; updated on each pong reply.
+  wsAlive.set(ws, true);
+  ws.on("pong", () => { wsAlive.set(ws, true); });
+
   let playerIndex = -1;
   let myRoomCode = "";
 
@@ -369,6 +387,9 @@ wss.on("connection", (ws: WebSocket) => {
         } else {
           safeSend(ws, { type: "resumeFailed" });
         }
+      } else if (msg.type === "clientPing") {
+        // Echo the client's timestamp straight back — client computes RTT = now - clientTs.
+        safeSend(ws, { type: "clientPong", clientTs: msg.clientTs });
       } else if (
         ["stateSync", "turnEnd", "chat"].includes(String(msg.type))
       ) {

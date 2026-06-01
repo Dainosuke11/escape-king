@@ -1,0 +1,43 @@
+app = "escape-king-api"
+primary_region = "nrt"
+
+[build]
+  dockerfile = "Dockerfile"
+  # Build context is the monorepo root (run `fly deploy` from workspace root)
+  ignorefile = ".flyignore"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 500
+    soft_limit = 400
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/api/healthz"
+  timeout = "5s"
+
+[processes]
+  app = "node --enable-source-maps ./dist/index.mjs"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[deploy]
+  # Allow WebSocket connections to drain before killing the old machine.
+  # Must be longer than the client reconnect grace period (120s).
+  kill_timeout = "150s"
+  kill_signal = "SIGTERM"

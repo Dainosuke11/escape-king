@@ -1,0 +1,6 @@
+artifacts/escape-king
+artifacts/mockup-sandbox
+.agents
+.local
+node_modules/.cache
+**/.git
