@@ -824,7 +824,7 @@ const ABILITY_NAMES = {
     wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
     healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', dig: '地面掘り', hole_move: '穴移動',
     rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)',
-    rock_hide: '岩隠れ(1T無敵バリア/剥がれたら後退+岩)', tsusembo: '通せんぼ(正面3岩/次T消滅)', golem_create: 'ゴーレム制作(半径2岩消費/HP=岩数×2/5T~)',
+    rock_hide: '岩隠れ(1T無敵バリア/剥がれたら後退+岩)', tsusembo: '通せんぼ(正面3岩/次T消滅)', golem_create: 'ゴーレム制作(半径1岩消費/HP=岩数×2/5T~)',
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
     fire_breath: '火炎ブレス', peck: 'つつき',
     hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
@@ -835,12 +835,12 @@ const ABILITY_NAMES = {
     recon_drone: '偵察ドローン召喚(隣接/HP1/AP2/飛行/複数可)',
     emp_field: '電磁パルスフィールド(半径5/AP-1/4アビリティ封印1T)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
-    tractor_beam: 'トラクタービーム(半径3/引き寄せ/威1)',
+    tractor_beam: 'トラクタービーム(半径3/目の前引き寄せ/威1/AP-1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
     optical_camo: '光学迷彩(1T潜伏)', form_shift: '形態変化(戦闘形態)',
     branch_whip: '枝のムチ(半径2/威1)', seed_plant: '種まき(成長→ベビーM)',
-    fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛)',
-    root_spread: '根を張る(AP-2/半径8回復)', roar: '咆哮(半径1/威1/AP-2)',
+    fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
+    root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-2)',
     flying_kick: '跳び蹴り(直線3/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威1/吹飛)',
     flame_breath: '火炎ブレス(半径2/威2/燃焼2T)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
     counter: 'カウンター(被弾反撃)', ryujin_transform: '変身(竜形態/飛行)',
@@ -913,7 +913,7 @@ const ABILITY_TIPS = {
     drop_rock_heavy: '半径2マスの敵1体に2ダメージ＋AP-1＋吹き飛ばし。吹き飛ばした後、敵の隣接マスに岩を1個設置。',
     rock_hide: '1ターン無敵バリアを張る。バリアが破られたとき、1マス後退してバリアがあった場所に岩を置く。',
     tsusembo: '正面3マス幅に岩を置いて進路を塞ぐ。設置した岩は次のターン開始時に消滅する。',
-    golem_create: '半径2マスの全ての岩を消費してゴーレムを召喚(HP=岩数×2)。開始5ターン経過後に使用可能。',
+    golem_create: '半径1マス(隣接8マス)の全ての岩を消費してゴーレムを召喚(HP=岩数×2)。開始5ターン経過後に使用可能。',
     staff_hit: '隣接した相手に杖で攻撃。ダメージ1。回数無限。',
     heal_ally: '半径2マス内の味方コマのHPを1回復。回数無限。',
     doping: '3ターン間：AP+1、全攻撃力+1、射程+1、アビリティ使用回数+1。切れたターン：AP-1ペナルティ。',
@@ -935,7 +935,7 @@ const ABILITY_TIPS = {
     recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
-    tractor_beam: '半径3マスの敵に1ダメ・1マス引き寄せ。回数3。',
+    tractor_beam: '半径3マスの敵に1ダメ・使用者の目の前に引き寄せ・AP-1。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
     optical_camo: '光学迷彩で1ターン潜伏状態になる。移動中でも隠れる。回数2。',
@@ -943,8 +943,8 @@ const ABILITY_TIPS = {
     branch_whip: '半径2マス(植物LV分拡大)の敵に1ダメ・吹き飛ばし。回数5。',
     seed_plant: '隣接マスに種を植える。1T後→若芽、2T後→ベビーマンドレイク(HP6/AP2)。回数10。',
     fusion: 'AP-1消費。半径1マス内の植物コマを全吸収(種+1/若芽+2/ベビーM+3)。植物LVアップ＋HP・全アビリティ(fusion除く)増加。回数1。',
-    seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。回数2。',
-    root_spread: 'AP-2して半径8マスの味方全員HP+1・全アビリティ+1＋種を即時1段階成長。回数1。',
+    seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。命中後に敵周辺ランダム1マスに種を設置。回数2。',
+    root_spread: 'AP-2して半径8マスの味方全員HP+1・各自ランダム1アビリティ+1(岩落とし除く)＋植物LV+1＋種を即時1段階成長。回数1。',
     roar: '自身周囲半径1マス(植物LV分拡大)の全敵に1ダメ・AP-2。回数1。',
     flying_kick: '直線3マス内の敵に接近して2ダメ・AP-1・吹き飛ばし。AP消費1。回数1。',
     rapid_strikes: '周囲半径1マスの全敵に1ダメ・吹き飛ばし。回数3。',
@@ -2962,14 +2962,14 @@ function startTurn(team, skipEffects = false) {
             if (e.hp <= 0) return;
             let age = turn - (e.turnBorn||0);
             if (e.type === 'seed' && age >= 1) {
-                e.type = 'sprout'; e.name = '若芽'; e.hp = Math.max(e.hp, 3); e.maxHp = 3;
+                e.type = 'sprout'; e.name = '若芽'; e.hp = 1; e.maxHp = 1;
             } else if (e.type === 'sprout' && age >= 2) {
-                e.type = 'baby_mandrake'; e.name = 'ベビーM'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
+                e.type = 'baby_mandrake'; e.name = 'ベビーM'; e.hp = 3; e.maxHp = 3; e.ap = 2; e.maxAp = 2;
                 e.abilities = { branch_whip: 999, seed_bazooka: 1, roar: 1 };
                 msg(`🌿 ベビーマンドレイクが誕生！`, true);
             } else if (e.type === 'alien_egg' && age >= 2) {
                 e.type = 'alien_jr'; e.name = '宇宙人Jr'; e.hp = 4; e.maxHp = 4; e.ap = 2; e.maxAp = 2;
-                e.abilities = { tentacle_whip: 999, optical_camo: 1 };
+                e.abilities = { tentacle_whip: 999, optical_camo: 1, tractor_beam: 1 };
                 msg(`👽 宇宙の卵が孵化！宇宙人Jrが誕生！`, true);
             }
         });
@@ -3979,13 +3979,13 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (turn < 5) { msg("ゴーレム制作は開始5ターン経過後に使用可能です"); return; }
         se.abilities['golem_create']--;
         let rockCount = 0;
-        for (let dr=-2; dr<=2; dr++) for (let dc=-2; dc<=2; dc++) {
+        for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
             let nr = se.r+dr, nc = se.c+dc;
             if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && ['rock','mine','volcano'].includes(board[nr][nc])) {
-                board[nr][nc] = 'plains'; rockCount++;
+                board[nr][nc] = defaultGround(); rockCount++;
             }
         }
-        if (rockCount === 0) { msg("🪨 ゴーレム制作！しかし半径2マスに岩が無い！"); used = true; }
+        if (rockCount === 0) { msg("🪨 ゴーレム制作！しかし半径1マスに岩が無い！"); used = true; }
         else {
             let gHP = rockCount * 2;
             let gr = se.r, gc = se.c;
@@ -4522,11 +4522,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['tractor_beam']--;
         if (targetEntity && !targetEntity.invin) {
             targetEntity.hp -= 1 + (targetEntity.defDebuff||0);
-            let pr = targetEntity.r + Math.sign(se.r - targetEntity.r);
-            let pc = targetEntity.c + Math.sign(se.c - targetEntity.c);
+            // 使用者の目の前(1マス隣)に引き寄せ
+            let pr = se.r + Math.sign(targetEntity.r - se.r);
+            let pc = se.c + Math.sign(targetEntity.c - se.c);
             if (isWalkable(pr,pc) && !entities.some(e=>e.hp>0&&e.r===pr&&e.c===pc)) { targetEntity.r=pr; targetEntity.c=pc; }
+            else { targetEntity.r=se.r+Math.sign(targetEntity.r-se.r); targetEntity.c=se.c+Math.sign(targetEntity.c-se.c); }
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
         }
-        msg(targetEntity?.invin ? '🛸 トラクタービーム！しかし無敵で防がれた！' : '🛸 トラクタービーム！1ダメ・引き寄せ！'); used = true;
+        msg(targetEntity?.invin ? '🛸 トラクタービーム！しかし無敵で防がれた！' : '🛸 トラクタービーム！1ダメ・目の前に引き寄せ・AP-1！'); used = true;
     } else if (actionMode === 'abduction') {
         se.abilities['abduction']--;
         if (targetEntity && !targetEntity.invin) {
@@ -4605,7 +4608,21 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['seed_bazooka']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
-        msg(targetEntity?.invin ? '🌱 種バズーカ！しかし無敵で防がれた！' : '🌱 種バズーカ！1ダメ・AP-1・吹き飛ばし！'); used = true;
+        // ダメージ後、敵の近辺ランダム1マスに種を設置
+        if (targetEntity) {
+            let seedCandidates = [];
+            for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+                let nr = targetEntity.r+dr, nc = targetEntity.c+dc;
+                if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && isWalkable(nr,nc) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
+                    seedCandidates.push({r:nr, c:nc});
+                }
+            }
+            if (seedCandidates.length > 0) {
+                let pos = seedCandidates[Math.floor(Math.random()*seedCandidates.length)];
+                entities.push({ id:'seed'+Date.now(), type:'seed', name:'種', team:se.team, r:pos.r, c:pos.c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+            }
+        }
+        msg(targetEntity?.invin ? '🌱 種バズーカ！しかし無敵で防がれた！' : '🌱 種バズーカ！1ダメ・AP-1・吹き飛ばし＋敵周辺に種まき！'); used = true;
     } else if (actionMode === 'root_spread') {
         se.abilities['root_spread']--;
         se.ap = Math.max(0, se.ap - 2);
@@ -4613,17 +4630,24 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=8) {
                 t.hp = Math.min(t.hp+1, t.maxHp);
-                for (let k of Object.keys(t.abilities)) { if (t.abilities[k]!==999) t.abilities[k]++; }
+                // drop_rock(999)以外のアビリティからランダム1種類+1
+                let randKeys = Object.keys(t.abilities).filter(k => k !== 'drop_rock' && t.abilities[k] !== 999);
+                if (randKeys.length > 0) {
+                    let pick = randKeys[Math.floor(Math.random() * randKeys.length)];
+                    t.abilities[pick]++;
+                }
                 healed++;
             }
         });
+        // 使用者自身の植物レベル+1
+        se.plantLevel = (se.plantLevel || 0) + 1;
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team) {
-                if (t.type==='seed') { t.type='sprout'; t.name='若芽'; t.hp=Math.min(3,t.hp+2); t.maxHp=3; }
-                else if (t.type==='sprout') { t.type='baby_mandrake'; t.name='ベビーM'; t.hp=4; t.maxHp=4; t.ap=2; t.maxAp=2; t.abilities={branch_whip:999,seed_bazooka:1,roar:1}; msg('🌿 ベビーマンドレイクが誕生！',true); }
+                if (t.type==='seed') { t.type='sprout'; t.name='若芽'; t.hp=1; t.maxHp=1; }
+                else if (t.type==='sprout') { t.type='baby_mandrake'; t.name='ベビーM'; t.hp=3; t.maxHp=3; t.ap=2; t.maxAp=2; t.abilities={branch_whip:999,seed_bazooka:1,roar:1}; msg('🌿 ベビーマンドレイクが誕生！',true); }
             }
         });
-        msg(`🌳 根を張る！AP-2して半径8の味方${healed}体を回復・全アビリティ+1・種を即成長！`); used = true;
+        msg(`🌳 根を張る！AP-2して半径8の味方${healed}体を回復(ランダムアビリティ+1)・植物LV${se.plantLevel}・種を即成長！`); used = true;
     } else if (actionMode === 'roar') {
         se.abilities['roar']--;
         let rHit = 0, rRange = 1 + (se.plantLevel||0);
