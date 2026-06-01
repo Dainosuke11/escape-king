@@ -189,6 +189,8 @@
         .sea_trench::after { content: "〜"; font-size: calc(var(--tile-size)*0.3); color: #1565c0; }
         .coral_reef { background: #b84520; }
         .coral_reef::after { content: "🪸"; font-size: calc(var(--tile-size)*0.45); }
+        .golden_coral { background: #7a4f00; border: 1px solid gold !important; }
+        .golden_coral::after { content: "🪸"; font-size: calc(var(--tile-size)*0.45); color: gold; }
         .bubble_vent { background: #1a7fa0; border: 1px solid #4fc3f7 !important; }
         .bubble_vent::after { content: "💨"; font-size: calc(var(--tile-size)*0.4); }
         /* Lava Land */
@@ -837,7 +839,7 @@ const ABILITY_NAMES = {
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
     fire_breath: '火炎ブレス', peck: 'つつき',
     hell_breath: 'ヘルブレス(半径3/威3/AP-1)', thunder_magic: '雷魔法(半径2/威2/AP-2)', meditation: '瞑想(AP-2/全回数+1)',
-    power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(直線3飛行移動/HP-2)',
+    power_charge: '電力補給(AP-1/HP+5)', jet_boost: 'ジェットブースト(半径2飛行移動/HP-1)',
     laser_blade: 'レーザーブレード(威3/HP-1/AP-1)',
     sweep: '薙ぎ払い(半径2弧/威2/吹飛/AP-1/HP-1)', laser_snipe: 'レーザースナイプ(直線5/威4)',
     laser_bazooka: 'レーザーバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
@@ -934,7 +936,7 @@ const ABILITY_TIPS = {
     thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
     meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
-    jet_boost: 'AP-1・HP-2して直線3マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
+    jet_boost: 'AP-1・HP-1して半径2マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
     laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
     sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。自身AP-1・HP-1消費。回数3。',
     laser_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
@@ -943,7 +945,7 @@ const ABILITY_TIPS = {
     emp_field: 'AP-1消費。半径5マス内の全敵のAPを-1し、各敵のランダム4アビリティを1T封印する。回数2。',
     recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
-    water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数3。',
+    water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数無限。',
     tractor_beam: '半径3マスの敵に1ダメ・使用者の目の前に引き寄せ・AP-1。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
@@ -968,10 +970,10 @@ const ABILITY_TIPS = {
     harpoon: '同じ行か列にいる2マス以内の敵を銛で刺す。ダメージ1。回数10。',
     water_cutter: 'ウォーターゲージ1消費。直線3マスを水で切断する貫通攻撃。ダメージ3。通過マスが浅瀬マスに変わる。回数3。',
     water_eruption: 'ウォーターゲージ1消費。半径2マス以内の場所を中心に噴水発生。3×3マスにダメ2＋浅瀬化。回数1。',
-    dive: '水マス上でのみ使用可能。2ターン潜伏(ATK+2・AP+2)。効果終了時に元に戻る。回数1。',
+    dive: '水マス(または海底神殿ステージ)上でのみ使用可能。2ターン潜伏(ATK+2・AP+2)。効果終了時に元に戻る。回数1。',
     shark_transform: 'ウォーターゲージ15以上必要。水中モード(AP5)に変身。陸上でゲージ-1/T。再使用で解除。2Tクールダウン。',
     chomp: '水中モード限定の近接攻撃。隣接した敵に3ダメ＋AP-1。回数無制限。',
-    shark_charge: '全APを消費して突撃。基本2ダメ＋消費AP数ボーナスダメ。対象を後方吹き飛ばし。回数3。',
+    shark_charge: '水中モード(変身中)のみ使用可能。全APを消費して突撃。基本2ダメ＋消費AP数ボーナスダメ。対象を後方吹き飛ばし。回数3。',
     wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。回数2。',
     whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
@@ -1686,7 +1688,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'lava'].includes(t);
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'golden_coral', 'lava'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
@@ -1889,13 +1891,13 @@ function initBoard(stageType) {
             if (board[ar][ac]==='snow') { board[ar][ac]='avalanche_tile'; avCount++; }
             avA++;
         }
-        // Cable cars (コの字形: 乗り場から約4マスで到達可能)
-        // Enemy side: boarding at (4,10) → right to col 16 → down to row 8 → left into summit
+        // Cable cars (直線: 乗り場から山頂中央まで直通・約5マス)
+        // Enemy side: boarding at (4,10) → straight down into summit (9,10)
         board[4][10]='cable_board';
-        [[4,11],[4,12],[4,13],[4,14],[4,15],[4,16],[5,16],[6,16],[7,16],[8,16],[8,15],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[8,8],[8,7],[8,6],[8,5]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Player side: boarding at (16,10) → left to col 4 → up to row 11 → right into summit
+        [[5,10],[6,10],[7,10],[8,10],[9,10]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Player side: boarding at (16,10) → straight up into summit (11,10)
         board[16][10]='cable_board';
-        [[16,9],[16,8],[16,7],[16,6],[16,5],[16,4],[15,4],[14,4],[13,4],[12,4],[11,4],[11,5],[11,6],[11,7],[11,8],[11,9],[11,10],[11,11],[11,12],[11,13],[11,14]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        [[15,10],[14,10],[13,10],[12,10],[11,10]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
         // Extras at board edges
         placeRandom('mine', 2, 19, 20, true);
         placeRandom('volcano', 1, 19, 20, true);
@@ -2030,9 +2032,9 @@ function initBoard(stageType) {
             else treasures.push('platinum');
         }
 
-        // === 松明 6本 (半径 5 照明) ===
-        dungeonTorches = [[1,5],[1,15],[7,4],[7,16],[13,4],[13,16]];
-        dungeonTorches.forEach(([r2,c2]) => {
+        // === 松明 6本 (最初は消えている / 踏んで点灯) ===
+        dungeonTorches = [];   // 最初は暗闇スタート
+        [[1,5],[1,15],[7,4],[7,16],[13,4],[13,16]].forEach(([r2,c2]) => {
             if(board[r2]?.[c2]==='dungeon_ground') board[r2][c2]='dungeon_torch';
         });
 
@@ -2101,6 +2103,18 @@ function initBoard(stageType) {
         [[3,5],[3,15],[17,5],[17,15]].forEach(([r2,c2])=>{
             board[r2][c2]='item_tile'; itemTileMap[`${r2},${c2}`]=uwItems[Math.floor(Math.random()*uwItems.length)];
         });
+        // 金の珊瑚 4個 (鉱山系ボーナス)
+        [[5,8],[5,12],[15,8],[15,12]].forEach(([r2,c2])=>{
+            if (board[r2]?.[c2]==='sea_floor') board[r2][c2]='golden_coral';
+        });
+        // 火山 4個
+        [[4,5],[4,15],[16,5],[16,15]].forEach(([r2,c2])=>{
+            if (board[r2]?.[c2]==='sea_floor') board[r2][c2]='volcano';
+        });
+        // 魔法陣 2個
+        [[2,10],[18,10]].forEach(([r2,c2])=>{
+            if (board[r2]?.[c2]==='sea_floor') board[r2][c2]='magic_circle';
+        });
         oxygenMap = {}; tideDirection = 'south'; tideTurn = 0;
         return;
 
@@ -2130,6 +2144,18 @@ function initBoard(stageType) {
         [[2,5],[2,15],[18,5],[18,15]].forEach(([r2,c2])=>{
             board[r2][c2]='item_tile'; itemTileMap[`${r2},${c2}`]=llItems[Math.floor(Math.random()*llItems.length)];
         });
+        // 火山10個・魔法陣2個・鉱山4個をランダムに配置
+        {
+            let groundCells = [];
+            for (let r2=1; r2<19; r2++) for (let c2=1; c2<19; c2++) {
+                if (board[r2]?.[c2] === 'lava_ground') groundCells.push([r2, c2]);
+            }
+            groundCells.sort(() => Math.random() - 0.5);
+            let gi = 0;
+            for (let i=0; i<10 && gi<groundCells.length; i++, gi++) board[groundCells[gi][0]][groundCells[gi][1]] = 'volcano';
+            for (let i=0; i<2 && gi<groundCells.length; i++, gi++) board[groundCells[gi][0]][groundCells[gi][1]] = 'magic_circle';
+            for (let i=0; i<4 && gi<groundCells.length; i++, gi++) board[groundCells[gi][0]][groundCells[gi][1]] = 'mine';
+        }
         lavaBridgeCollapsed = false; lavaSpreadTimer = 0;
         return;
 
@@ -2424,9 +2450,9 @@ function processTurnStartEffects(e) {
         }
     }
     e.ap = e.maxAp;
-    // Mountain cable car: AP=4 while riding
+    // Mountain cable car: AP+2 bonus while riding
     if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(board[e.r]?.[e.c])) {
-        e.ap = 4;
+        e.ap = e.maxAp + 2;
     }
     // Shoes item: expire the temporary AP boost
     if (e.shoesTimer > 0) {
@@ -2564,7 +2590,7 @@ function processTurnStartEffects(e) {
     }
     // シャークウォリアー ウォーターゲージ処理
     // 海洋コマは海ステージ(大河)では酸素デメリットを受けない
-    const SEA_STAGES = ['bigriver'];
+    const SEA_STAGES = ['bigriver', 'underwater'];
     if (isOceanUnit(e) && e.type === 'shark_warrior') {
         let tile = board[e.r]?.[e.c];
         let onWater = isWaterTile(tile) || SEA_STAGES.includes(activeStage);
@@ -3058,17 +3084,17 @@ function startTurn(team, skipEffects = false) {
             }
         }
 
-        // Skyfort: wyverns (vehicle) randomly walk 1 step, dragging any rider
+        // Skyfort: wyverns (vehicle) randomly walk 1 step, dragging any rider — only when NOT mounted
         if (activeStage === 'skyfort') {
             entities.filter(e => e.type === 'wyvern' && e.team === 'vehicle' && e.hp > 0).forEach(wyvern => {
+                // 騎乗者がいる場合はワイバーン自身は動かない
+                let hasMounted = entities.some(e => e.onWyvern === wyvern.id && e.hp > 0);
+                if (hasMounted) return;
                 let dirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}].sort(()=>Math.random()-0.5);
                 for (let {dr, dc} of dirs) {
                     let nr = wyvern.r + dr, nc = wyvern.c + dc;
                     if (board[nr]?.[nc] === 'fortress_floor' && !entities.find(e => e.hp>0 && e.r===nr && e.c===nc && e.team!=='vehicle' && !e.onWyvern)) {
                         wyvern.r = nr; wyvern.c = nc;
-                        entities.forEach(rider => {
-                            if (rider.onWyvern === wyvern.id && rider.hp > 0) { rider.r = nr; rider.c = nc; }
-                        });
                         break;
                     }
                 }
@@ -3123,10 +3149,12 @@ function startTurn(team, skipEffects = false) {
             mergeSpirits();
         }
 
-        // 残像 1ターン自動消滅
+        // 残像 1ターン自動消滅 → 竜人族の潜伏も解ける
         entities = entities.filter(e => {
             if (e.type === 'afterimage' && turn > e.turnBorn) {
-                msg(`👥 残像が消えた！`, true); return false;
+                let ryujinOwner = entities.find(ow => ow.hp > 0 && ow.type === 'ryujin' && ow.team === e.team);
+                if (ryujinOwner) { ryujinOwner.stealth = false; ryujinOwner.stealthTimer = 0; }
+                msg(`👥 残像が消えた！竜人族の潜伏が解けた！`, true); return false;
             }
             return true;
         });
@@ -3219,7 +3247,7 @@ function isValidTarget(se, r, c, mode) {
     // Stolen lock: prevents use for 1 turn after being stolen from
     if (se.stolenLock && se.stolenLock[mode] > turn) return false;
     if (mode === 'decoy') return maxDist === 1 && isWalkable(r, c);
-    if (mode === 'shatter') return dist === 1 && (['rock', 'mine', 'volcano', 'gravestone', 'car_tile'].includes(board[r][c]) || (target && target.type === 'car'));
+    if (mode === 'shatter') return dist === 1 && (['rock', 'mine', 'volcano', 'gravestone', 'car_tile', 'coral_reef', 'golden_coral'].includes(board[r][c]) || (target && target.type === 'car'));
     if (mode === 'dash') {
         let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
@@ -3246,7 +3274,8 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
-    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp' || mode === 'shark_charge') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'shark_charge') return maxDist === 1 && target && target.team !== se.team && (se.waterMode || false);
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
     if (mode === 'cannon') return maxDist > 0 && maxDist <= 8 && target && target.team !== se.team; 
     if (mode === 'spin_slash') return true; 
@@ -3277,7 +3306,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'unwavering_stance') return true;
     // Cyborg
     if (mode === 'power_charge') return true;
-    if (mode === 'jet_boost') return (se.r===r||se.c===c) && maxDist > 0 && maxDist <= 3+(se.rangeBonus||0) && isWalkable(r,c,true);
+    if (mode === 'jet_boost') return maxDist > 0 && maxDist <= 2+(se.rangeBonus||0) && isWalkable(r,c,true);
     if (mode === 'laser_blade') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'sweep') return true;
     if (mode === 'laser_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
@@ -3330,7 +3359,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'ball_ride') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2;
     if (mode === 'acrobat') return true;
     if (mode === 'aerial_trapeze') return maxDist===1 && (target || board[r]?.[c]==='rock');
-    if (mode === 'bomb_cracker') return maxDist<=2 && isWalkable(r,c,true);
+    if (mode === 'bomb_cracker') return maxDist<=2 && (isWalkable(r,c,true) || entities.some(e=>e.hp>0&&e.r===r&&e.c===c&&e.team!==se.team));
     if (mode === 'monkey_toy') return maxDist===1 && isWalkable(r,c);
     if (mode === 'cymbal_noise') return true;
     if (mode === 'monkey_present_set') return maxDist===1 && isWalkable(r,c);
@@ -3594,6 +3623,8 @@ function checkTileEffects(entity) {
             if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
             eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
         }
+    } else if (board[r] && board[r][c] === 'sea_floor' && activeStage === 'underwater' && isOceanUnit(entity)) {
+        entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
     } else if (board[r] && board[r][c] === 'shallow_water') {
         if (isOceanUnit(entity)) {
             entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
@@ -3668,6 +3699,13 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'lava' && !entity.lavaWalker) {
         if (!entity.invin) entity.hp -= 3;
         eventMsg = (eventMsg ? eventMsg + " " : "") + "🔥 溶岩を踏んだ！HP-3！";
+    }
+    // Dungeon: 踏んで松明を点灯
+    if (board[r] && board[r][c] === 'dungeon_torch' && activeStage === 'dungeon') {
+        if (!dungeonTorches.some(([tr,tc]) => tr===r && tc===c)) {
+            dungeonTorches.push([r, c]);
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "🕯️ 松明を灯した！周囲が明るくなった！";
+        }
     }
     // Graveyard: crossing a bridge with collected souls summons spirits near enemy JOB piece (radius 3)
     if (board[r] && board[r][c] === 'bridge' && (activeStage === 'graveyard' || activeStage === 'nighttown' || activeStage === 'chaos')) {
@@ -3935,13 +3973,18 @@ function handleAbilityTarget(r, c, targetEntity) {
             msg("🚗 車を岩砕きで破壊した！", true);
             used = true;
         } else {
+            let wasGoldenCoral = board[r][c] === 'golden_coral';
+            let wasCoralReef = board[r][c] === 'coral_reef';
             if (board[r][c] === 'mine') breakMine();
             if (board[r][c] === 'volcano') breakVolcano();
+            if (wasGoldenCoral) breakMine();
             let wasCar = board[r][c] === 'car_tile';
             let wasGravestone = board[r][c] === 'gravestone';
             board[r][c] = defaultGround();
             if (wasGravestone) { spawnAt('spirit', r, c); msg("⚰️ 墓石を砕いた！悪霊が解き放たれた！", true); }
             if (wasCar) msg("🚗 車を破壊した！");
+            if (wasCoralReef) msg("🪸 珊瑚礁を砕いた！", true);
+            if (wasGoldenCoral) msg("🪸✨ 金の珊瑚を砕いた！", true);
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
             if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
             used = true;
@@ -4344,7 +4387,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'jet_boost') {
         se.abilities['jet_boost']--;
         se.ap = Math.max(0, se.ap - 1);
-        se.hp = Math.max(1, se.hp - 2);
+        se.hp = Math.max(1, se.hp - 1);
         let wasFlying = se.flying;
         se.flying = true; se.r = r; se.c = c;
         let jevMsg = checkTileEffects(se) || '';
@@ -4352,7 +4395,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         // 着地後に隣接敵に1ダメ
         let jbHit = 0;
         entities.forEach(t => { if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))===1 && !t.invin) { t.hp -= 1; jbHit++; } });
-        msg(`🚀 ジェットブースト！AP-1・HP-2して直線3マス飛行移動！${jbHit>0?`着地衝撃で隣接${jbHit}体に1ダメ！`:''}${jevMsg}`);
+        msg(`🚀 ジェットブースト！AP-1・HP-1して半径2マス飛行移動！${jbHit>0?`着地衝撃で隣接${jbHit}体に1ダメ！`:''}${jevMsg}`);
         checkEnemyTerritory(se); used = true;
     } else if (actionMode === 'laser_blade') {
         se.abilities['laser_blade']--;
@@ -4549,7 +4592,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.push({
             id:'monkey_toy_'+Date.now(), type:'monkey_toy', name:'おもちゃのサル',
             team:se.team, r:r, c:c, hp:1, maxHp:1, ap:2, maxAp:2,
-            abilities:{cymbal_noise:999, monkey_present_set:999},
+            abilities:{cymbal_noise:999, monkey_present_set:1},
             skillUsed:false, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, atkBonus:0
         });
         msg(`🐒 おもちゃのサル召喚！HP1/AP2！シンバル騒音∞・プレゼント設置∞・撃破時プレゼントドロップ！`); used = true;
@@ -4634,6 +4677,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['branch_whip']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
+        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) { se.plantLevel = (se.plantLevel||0) + 1; msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！`, true); }
         msg(targetEntity?.invin ? '🌿 枝のムチ！しかし無敵で防がれた！' : '🌿 枝のムチ！1ダメ・吹き飛ばし！'); used = true;
     } else if (actionMode === 'seed_plant') {
         se.abilities['seed_plant']--;
@@ -4675,6 +4719,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['seed_bazooka']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterReady > 0 && !se.invin) { se.hp -= 2; targetEntity.counterReady--; msg(`⚡ カウンター反撃！${targetEntity.name}→${se.name}に2ダメ！`, true); }
+        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) { se.plantLevel = (se.plantLevel||0) + 1; msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！`, true); }
         // ダメージ後、敵の近辺ランダム1マスに種を設置
         if (targetEntity) {
             let seedCandidates = [];
@@ -4879,7 +4924,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🌊 水流噴火！中心3×3に噴水(命中${weHits}体)！全マスが浅瀬化！`); used = true;
     } else if (actionMode === 'dive') {
         let diveTile = board[se.r]?.[se.c];
-        if (!isWaterTile(diveTile) && activeStage !== 'bigriver') { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
+        if (!isWaterTile(diveTile) && activeStage !== 'bigriver' && activeStage !== 'underwater') { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
         se.abilities['dive']--;
         se.stealth = true; se.stealthTimer = 2;
         se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
@@ -4954,7 +4999,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'octopus_summon') {
         if (turn < 5) { msg("🐙 タコ召喚は5ターン経過後に使用可能！"); return; }
         se.abilities['octopus_summon']--;
-        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:3}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
+        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
         msg("🐙 タコ召喚！(HP3/AP2/触手∞・水吐き3/海洋コマ)"); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
@@ -6428,7 +6473,7 @@ function updateUI() {
         ['cable_board','cable_tile'].includes(board[selectedEntity.r]?.[selectedEntity.c])) {
         let cb2 = document.createElement('div');
         cb2.style.cssText = 'background:#546e7a;color:#fff;padding:6px;border-radius:4px;margin:4px 0;font-size:12px;text-align:center;';
-        cb2.innerText = '🚡 ケーブルカー — ケーブル沿いに移動(AP1)。乗降は乗り場と山頂のみ';
+        cb2.innerText = '🚡 ケーブルカー — 行動力+2ボーナス！山頂中央まで約2ターンで直通。乗降は乗り場と山頂のみ';
         list.appendChild(cb2);
     }
 
