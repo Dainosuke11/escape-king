@@ -862,10 +862,10 @@ const ABILITY_NAMES = {
     harpoon: 'モリで刺す(直線2/威1)',
     water_cutter: 'ウォーターカッター(直線3貫通/威3/ゲージ1/浅瀬化)',
     water_eruption: '水流噴火(半径2/9マス浅瀬/威2/ゲージ1)',
-    dive: '潜水(水マス/2T潜伏/ATK+2/AP+2)',
-    shark_transform: '変身(水中モード/AP5/ゲージ15~)',
-    chomp: '噛み砕く(水中形態/威3/AP-1)', shark_charge: '突撃(威2+残AP/吹飛/水中有利)',
-    wave_ride: '波乗り(正面3×3/威2/吹飛/AP-1/ゲージ2/浅瀬化)',
+    dive: '潜水(水マス/1T潜伏/ATK+1/水マスAP+1)',
+    shark_transform: '変身(水中モード/水マス要/ゲージ15~/AP+1/ATK+1)',
+    chomp: '噛み砕く(水中形態/威3/AP-1)', shark_charge: '突撃(水中モード限定/威2+残AP/吹飛)',
+    wave_ride: '波乗り(正面3×3/威2/吹飛/AP-1/ゲージ2/水マスATK+1)',
     whirlpool_atk: '渦潮(半径3/威2/2T渦潮/AP-1/ゲージ3/浅瀬化)',
     octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)',
     knife_juggling: 'ナイフジャグリング(直線3/威1+回数増)',
@@ -970,11 +970,11 @@ const ABILITY_TIPS = {
     harpoon: '同じ行か列にいる2マス以内の敵を銛で刺す。ダメージ1。回数10。',
     water_cutter: 'ウォーターゲージ1消費。直線3マスを水で切断する貫通攻撃。ダメージ3。通過マスが浅瀬マスに変わる。回数3。',
     water_eruption: 'ウォーターゲージ1消費。半径2マス以内の場所を中心に噴水発生。3×3マスにダメ2＋浅瀬化。回数1。',
-    dive: '水マス(または海底神殿ステージ)上でのみ使用可能。2ターン潜伏(ATK+2・AP+2)。効果終了時に元に戻る。回数1。',
-    shark_transform: 'ウォーターゲージ15以上必要。水中モード(AP5)に変身。陸上でゲージ-1/T。再使用で解除。2Tクールダウン。',
+    dive: '水マス(または海底神殿ステージ)上でのみ使用可能。1ターン潜伏(ATK+1)。水マス発動時はAP+1も得る。回数1。',
+    shark_transform: '水マス上かつウォーターゲージ15以上で発動可能。水中モードに変身(AP+1・ATK+1)。陸上でゲージ-1/T。サメ突撃が出現。再使用で解除(ATK-1・2Tクールダウン)。',
     chomp: '水中モード限定の近接攻撃。隣接した敵に3ダメ＋AP-1。回数無制限。',
     shark_charge: '水中モード(変身中)のみ使用可能。全APを消費して突撃。基本2ダメ＋消費AP数ボーナスダメ。対象を後方吹き飛ばし。回数3。',
-    wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。回数2。',
+    wave_ride: 'ウォーターゲージ2消費。正面3×3マスに大波。ダメ2＋吹き飛ばし＋AP-1。浅瀬化。水マス上で発動するとATK+1。回数2。',
     whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
     knife_juggling: '直線3マスにナイフを投げる。威力1。命中すると次の使用時ダメージ+1・回数+1（スタック蓄積）。回数3。',
@@ -1004,7 +1004,7 @@ const JOB_DATA = {
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
-    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1, shark_charge: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
+    shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, dive: 1, shark_transform: 999, wave_ride: 2, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 }
 };
 
@@ -3629,7 +3629,8 @@ function checkTileEffects(entity) {
         entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
     } else if (board[r] && board[r][c] === 'shallow_water') {
         if (isOceanUnit(entity)) {
-            entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
+            entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "💧 浅瀬！ゲージ+5！";
         } else if (!entity.flying && Math.random() < 0.5) {
             entity.ap = Math.max(0, entity.ap - 1);
             eventMsg = "💧 浅瀬で足を取られた！AP-1！";
@@ -4928,38 +4929,43 @@ function handleAbilityTarget(r, c, targetEntity) {
         let diveTile = board[se.r]?.[se.c];
         if (!isWaterTile(diveTile) && activeStage !== 'bigriver' && activeStage !== 'underwater') { msg("🤿 潜水は水マス上でのみ使用可能！"); return; }
         se.abilities['dive']--;
-        se.stealth = true; se.stealthTimer = 2;
-        se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
-        se.atkBonus = (se.atkBonus||0) + 2;
-        se.diveBuff = true; se.diveTimer = 2;
-        msg("🤿 潜水！2ターン潜伏！ATK+2・AP+2！"); used = true;
+        se.stealth = true; se.stealthTimer = 1;
+        se.atkBonus = (se.atkBonus||0) + 1;
+        se.diveBuff = true; se.diveTimer = 1;
+        let diveOnWater = isWaterTile(diveTile) || activeStage === 'bigriver' || activeStage === 'underwater';
+        if (diveOnWater) { se.maxAp += 1; se.ap = Math.min(se.ap + 1, se.maxAp); }
+        msg(`🤿 潜水！1ターン潜伏！ATK+1！${diveOnWater ? '水マス発動：AP+1！' : ''}`); used = true;
     } else if (actionMode === 'shark_transform') {
         if ((se.sharkTransformCooldown||0) > 0) { msg(`🦈 変身クールダウン中！あと${se.sharkTransformCooldown}T！`); return; }
         if (!se.waterMode) {
-            if ((se.waterGauge||0) < 15 && activeStage !== 'bigriver') { msg("🦈 変身にはウォーターゲージ15以上必要！"); return; }
+            let transformTile = board[se.r]?.[se.c];
+            let onWaterNow = isWaterTile(transformTile) || activeStage === 'bigriver' || activeStage === 'underwater';
+            if (!onWaterNow) { msg("🦈 変身は水マス上でのみ発動可能！"); return; }
+            if ((se.waterGauge||0) < 15) { msg("🦈 変身にはウォーターゲージ15以上必要！"); return; }
             if (se.abilities['shark_transform'] !== 999) se.abilities['shark_transform']--;
             se.savedAbilitiesShark = {...se.abilities};
             se.savedMaxAp = se.maxAp;
             se.waterMode = true;
-            se.abilities = { drop_rock: 999, shatter: (se.savedAbilitiesShark.shatter||5), chomp: 999, shark_transform: 999 };
-            let apDiff = 5 - se.maxAp;
-            se.maxAp = 5; se.ap = Math.min(se.ap + Math.max(0, apDiff), se.maxAp);
-            se.ap = Math.min(se.maxAp, se.ap + 2);
-            se.hp = Math.min(se.maxHp, se.hp + 3);
-            msg("🦈 水中モードに変身！AP+2・HP+3！AP5・噛み砕く使用可！陸上でゲージ-1/T！");
+            se.abilities = { drop_rock: 999, shatter: (se.savedAbilitiesShark.shatter||5), chomp: 999, shark_transform: 999, shark_charge: 3 };
+            se.maxAp += 1; se.ap = Math.min(se.ap + 1, se.maxAp);
+            se.atkBonus = (se.atkBonus||0) + 1;
+            msg("🦈 水中モードに変身！AP+1・ATK+1！噛み砕く＋サメ突撃が使用可能！陸上でゲージ-1/T！");
         } else {
+            se.atkBonus = Math.max(0, (se.atkBonus||0) - 1);
             se.waterMode = false;
             se.abilities = se.savedAbilitiesShark ? {...se.savedAbilitiesShark} : se.abilities;
             se.maxAp = se.savedMaxAp || 2;
             se.ap = Math.min(se.ap, se.maxAp);
             se.sharkTransformCooldown = 2;
-            msg("🦈 人型に戻った！2Tクールダウン！");
+            msg("🦈 人型に戻った！ATK-1・2Tクールダウン！");
         }
         used = true;
     } else if (actionMode === 'wave_ride') {
         if ((se.waterGauge||0) < 2) { msg("💧 ウォーターゲージが足りない！(2必要)"); return; }
         se.abilities['wave_ride']--;
         se.waterGauge = Math.max(0, (se.waterGauge||0) - 2);
+        let wrOnWater = isWaterTile(board[se.r]?.[se.c]) || activeStage === 'bigriver' || activeStage === 'underwater';
+        let wrAtkBonus = (se.atkBonus||0) + (wrOnWater ? 1 : 0);
         let wrDir = se.team === 'player' ? -1 : 1;
         let wrHits = 0;
         for (let depth = 1; depth <= 3; depth++) {
@@ -4968,7 +4974,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
                 let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
                 if (hit && !hit.invin) {
-                    hit.hp -= 2 + (se.atkBonus||0) + (hit.defDebuff||0);
+                    hit.hp -= 2 + wrAtkBonus + (hit.defDebuff||0);
                     hit.ap = Math.max(0, hit.ap - 1);
                     knockback(hit, 1, se);
                     wrHits++;
@@ -4976,7 +4982,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 floodTile(nr, nc);
             }
         }
-        msg(`🌊 波乗り！正面3×3に大波(命中${wrHits}体)！AP-1・吹き飛ばし・浅瀬化！`); used = true;
+        msg(`🌊 波乗り！正面3×3に大波(命中${wrHits}体)！AP-1・吹き飛ばし・浅瀬化！${wrOnWater?'(水マスATK+1)':''}`); used = true;
     } else if (actionMode === 'whirlpool_atk') {
         if ((se.waterGauge||0) < 3) { msg("💧 ウォーターゲージが足りない！(3必要)"); return; }
         se.abilities['whirlpool_atk']--;
