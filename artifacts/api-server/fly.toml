@@ -1,4 +1,4 @@
-app = "escape-king-api"
+app = "escape-king"
 primary_region = "nrt"
 
 [build]
@@ -28,9 +28,6 @@ primary_region = "nrt"
   method = "GET"
   path = "/api/healthz"
   timeout = "5s"
-
-[processes]
-  app = "node --enable-source-maps ./dist/index.mjs"
 
 [[vm]]
   size = "shared-cpu-1x"

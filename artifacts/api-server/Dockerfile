@@ -1,5 +1,5 @@
 FROM node:22-alpine AS builder
-RUN npm install -g pnpm@9 --no-update-notifier
+RUN npm install -g pnpm@10 --no-update-notifier
 
 WORKDIR /workspace
 
@@ -11,8 +11,9 @@ COPY lib/db/package.json lib/db/
 COPY lib/api-zod/package.json lib/api-zod/
 COPY artifacts/api-server/package.json artifacts/api-server/
 
-# Install all dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
+# Install all dependencies (--no-frozen-lockfile: workspace overrides are
+# platform-specific; the lockfile is always freshly resolved in Docker)
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Copy source files
 COPY lib/db/ lib/db/
