@@ -222,6 +222,11 @@
         .rail_tile::after { content: ""; display: block; width: 60%; height: 4px; background: #aaa; margin: auto; margin-top: calc(50% - 2px); }
         .train_station { background: #444422; border: 2px solid #ffcc00 !important; }
         .train_station::after { content: "🚉"; font-size: calc(var(--tile-size)*0.4); }
+        .train_switch { background: #552200; border: 2px solid #ff8800 !important; }
+        .train_switch::after { content: "🔀"; font-size: calc(var(--tile-size)*0.38); }
+        .flying_drone_vehicle { background: #554400; border: 2px solid #ffdd00 !important; border-radius: 50%; }
+        .skyfort_bridge { background: #7a6a3a; border: 2px solid #d4b060 !important; }
+        .skyfort_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffe080; }
         /* Lava Land */
         .lava_ground { background: #1e0a05; }
         .lava { background: #cc3300; }
@@ -674,6 +679,8 @@ let rollRockPending = null;     // {r, c, dir, cols} pending roll_rock action
 let rollRockWarnTiles = [];     // [{r,c}] tiles to show roll-rock warning
 let sandwormActive = false;
 let nighttownCarTimer = 0;
+let ntTrainPhase = 0;       // 0-7: even=wait at station, odd=sweep segment
+let ntTrainClockwise = true; // train travel direction
 let carWarnTiles = []; // [{r,c}] tiles shown as warning before car activation
 let prevTurnLog = []; // 前ターンのバトルメッセージ履歴
 let currentTurnMsgs = []; // 現ターンのメッセージ蓄積
@@ -888,6 +895,7 @@ const ABILITY_NAMES = {
     laser_bazooka: 'レーザーバズーカ(半径1爆風/威3)', incinerate: '焼却砲(直線3/威5/燃焼2T)',
     recon_drone: '偵察ドローン召喚(隣接/HP1/AP2/飛行/複数可)',
     emp_field: '電磁パルスフィールド(半径5/AP-1/4アビリティ封印1T)',
+    analysis: '分析(半径2/AP-1/敵:ランダムアビ1T封印/味方:APコスト-1)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/目の前引き寄せ/威1/AP-1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
@@ -984,7 +992,8 @@ const ABILITY_TIPS = {
     laser_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
     incinerate: '自身AP-2消費。直線3マスの敵に5ダメ・敵AP-2・2ターン燃焼(毎ターン1ダメ)。使用には行動力2必要。回数2。',
     emp_field: 'AP-1消費。半径5マス内の全敵のAPを-1し、各敵のランダム4アビリティを1T封印する。回数2。',
-    recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞。撃墜されると爆発(半径1)＋罠設置。回数2。',
+    recon_drone: '隣接マス(半径1)に偵察ドローン(HP1/AP2/飛行)を召喚。複数同時稼働可能。体当たり(威1)∞・電力補給∞・分析2。撃墜されると爆発(半径1)＋罠設置。回数2。',
+    analysis: 'AP-1消費。半径2マス内の対象に分析。敵コマ→ランダム1アビリティを1T封印。味方コマ→行動力を消費するランダム1アビリティのAPコストを1回分無料化。回数2。',
     tentacle_whip: '半径2マスの敵に1ダメ・吹き飛ばし。回数無限(10)。',
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数無限。',
     tractor_beam: '半径3マスの敵に1ダメ・使用者の目の前に引き寄せ・AP-1。回数3。',
@@ -1038,7 +1047,7 @@ const JOB_DATA = {
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
-    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
+    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2, analysis: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 10, fusion: 1, seed_bazooka: 2, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
@@ -1794,7 +1803,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
     if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
-    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar' && e.type!=='wyvern')) return false;
+    if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar' && e.type!=='flying_drone')) return false;
     return true;
 }
 
@@ -2043,13 +2052,23 @@ function initBoard(stageType) {
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains') board[r2][c2]='nighttown_ground';
         }
-        // 列車レール (左col3 / 右col17): 駅+レール
-        board[2][3]='train_station'; board[18][3]='train_station'; // 駅A(上)/B(下)
-        board[2][17]='train_station'; board[18][17]='train_station'; // 駅C(上)/D(下)
-        for (let r2=3; r2<=17; r2++) {
-            if (r2 !== 10) { board[r2][3]='rail_tile'; board[r2][17]='rail_tile'; }
-            else { board[r2][3]='bridge'; board[r2][17]='bridge'; } // 川の上は橋で代替
+        // 列車レール ロ字型: 4角駅+4辺レール+4スイッチ
+        // 駅: A(上左)B(上右)C(下右)D(下左)
+        board[2][2]='train_station'; board[2][18]='train_station';
+        board[18][18]='train_station'; board[18][2]='train_station';
+        // 上辺 row3 col3-17, 下辺 row17 col3-17
+        for (let c2=3; c2<=17; c2++) {
+            board[3][c2]  = (c2===10) ? 'bridge' : 'rail_tile';
+            board[17][c2] = (c2===10) ? 'bridge' : 'rail_tile';
         }
+        // 左辺 col3 row3-17, 右辺 col17 row3-17
+        for (let r2=3; r2<=17; r2++) {
+            board[r2][3]  = (r2===10) ? 'bridge' : 'rail_tile';
+            board[r2][17] = (r2===10) ? 'bridge' : 'rail_tile';
+        }
+        // スイッチ (stepping toggles direction)
+        board[3][8]='train_switch'; board[8][17]='train_switch';
+        board[17][12]='train_switch'; board[12][3]='train_switch';
         // Goal tiles: player wins → row 0 cols 11-20; cpu wins → row 20 cols 0-9
         for (let c2=11; c2<SIZE; c2++) board[0][c2]='nighttown_goal';
         for (let c2=0; c2<=9; c2++) board[20][c2]='nighttown_goal';
@@ -2300,7 +2319,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2388,12 +2407,13 @@ function initEntities(pJob, difficulty = "1") {
     } else if (activeStage === 'mountain') {
         // Yeti spawns at turn 3 via startTurn
     } else if (activeStage === 'skyfort') {
-        // Wyverns on MAIN FLOORS (not island) — vehicle team, rideable
-        let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9},{r:3,c:20}];
+        // Flying Drones on MAIN FLOORS — vehicle team, rideable
+        let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9}];
         wPos.forEach((p,i)=>{
-            entities.push({id:'wyvern'+i, type:'wyvern', name:'ワイバーン', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+            entities.push({id:'fdrone'+i, type:'flying_drone', name:'飛行ドローン', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
-        skyfortLiftPos = 9;
+        // Collapsing bridges at rows 9-10, cols 13-14
+        for (let rr=9; rr<=10; rr++) for (let cc=13; cc<=14; cc++) board[rr][cc] = 'skyfort_bridge';
         // 4 power-up items on floating island (rows 7-13, cols 0-6)
         const islandItems = ['star','shoes','sword'];
         [{r:8,c:2},{r:8,c:4},{r:12,c:2},{r:12,c:4}].forEach(p => {
@@ -2411,10 +2431,9 @@ function initEntities(pJob, difficulty = "1") {
         if (c1) { c1.c = 20; c1.r = 0; }
         entities.push({id:'ntboat0', type:'boat', name:'小舟', team:'vehicle', r:10, c:6, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         entities.push({id:'ntboat1', type:'boat', name:'小舟', team:'vehicle', r:5, c:10, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
-        // 列車 NPC — 左路線(col 3)と右路線(col 17)に1台ずつ, 4ターンサイクル
-        entities.push({id:'nttrain0', type:'train', name:'🚂(左)', team:'npc', r:18, c:3, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0, trainDir:1, trainCol:3});
-        entities.push({id:'nttrain1', type:'train', name:'🚂(右)', team:'npc', r:18, c:17, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0, trainDir:1, trainCol:17});
-        nighttownCarTimer = 0;
+        // 列車 NPC — ロ字型1台, 8フェーズサイクル
+        entities.push({id:'nttrain', type:'train', name:'🚂', team:'npc', r:2, c:2, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0});
+        ntTrainPhase = 0; ntTrainClockwise = true;
     }
 }
 
@@ -2729,24 +2748,22 @@ function processTurnStartEffects(e) {
             }
         }
         let wg = e.waterGauge || 0;
-        // ゲージ=30: AP+2・ATK+2・HP+2/T (fullWaterBuff)
+        // ゲージ≥30: AP+2・ATK+2・全射程+2 (fullWaterBuff) — ゲージ20ボーナスの代わりに発動
         if (wg >= 30) {
             if (!e.fullWaterBuff) {
-                if (!e.highWaterBuff) { e.maxAp = Math.min(e.maxAp+1,6); e.atkBonus=(e.atkBonus||0)+1; e.highWaterBuff=true; }
-                e.maxAp = Math.min(e.maxAp+1,6); e.ap=Math.min(e.ap,e.maxAp); e.atkBonus=(e.atkBonus||0)+1; e.fullWaterBuff=true;
-                msg(`🌊 ${e.name}のゲージMAX(30)！AP+2・ATK+2・HP+2/T！`, true);
+                e.maxAp = Math.min(e.maxAp+2,6); e.ap=Math.min(e.ap,e.maxAp);
+                e.atkBonus=(e.atkBonus||0)+2;
+                e.rangeBonus=(e.rangeBonus||0)+2;
+                e.fullWaterBuff=true;
+                msg(`🌊 ${e.name}のゲージMAX(30)！AP+2・ATK+2・全射程+2！`, true);
             }
-            e.hp = Math.min(e.hp + 2, e.maxHp);
-        } else if (wg >= 20) {
-            if (e.fullWaterBuff) { e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp); e.atkBonus=Math.max(0,(e.atkBonus||0)-1); e.fullWaterBuff=false; }
-            if (!e.highWaterBuff) {
-                e.maxAp=Math.min(e.maxAp+1,6); e.ap=Math.min(e.ap+1,e.maxAp); e.atkBonus=(e.atkBonus||0)+1; e.highWaterBuff=true;
-                e.hp=Math.min(e.hp+1,e.maxHp);
-                msg(`🌊 ${e.name}のゲージ20以上！AP+1・ATK+1・HP+1/T！`, true);
-            } else { e.hp=Math.min(e.hp+1,e.maxHp); }
         } else {
-            if (e.fullWaterBuff) { e.maxAp=Math.max(1,e.maxAp-2); e.ap=Math.min(e.ap,e.maxAp); e.atkBonus=Math.max(0,(e.atkBonus||0)-2); e.fullWaterBuff=false; }
-            if (e.highWaterBuff) { e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp); e.atkBonus=Math.max(0,(e.atkBonus||0)-1); e.highWaterBuff=false; }
+            if (e.fullWaterBuff) {
+                e.maxAp=Math.max(1,e.maxAp-2); e.ap=Math.min(e.ap,e.maxAp);
+                e.atkBonus=Math.max(0,(e.atkBonus||0)-2);
+                e.rangeBonus=Math.max(0,(e.rangeBonus||0)-2);
+                e.fullWaterBuff=false;
+            }
         }
         // ゲージ≥15: ランダム3アビリティ回数+1（閾値超えたとき一度だけ）
         if (wg >= 15 && !e.midWaterBuff) {
@@ -2987,38 +3004,55 @@ function startTurn(team, skipEffects = false) {
                 msg("❄️ イエティが出現！猛烈に向かってくる！", true);
             }
         }
-        // Nighttown: 列車 4ターンサイクル
+        // Nighttown: ロ字列車 8フェーズサイクル
         if (activeStage === 'nighttown') {
-            nighttownCarTimer++;
-            let phase = nighttownCarTimer % 4; // 0=下駅待機 1=北進 2=上駅待機 3=南進
-            entities.filter(e => e.type === 'train' && e.team === 'npc' && e.hp > 0).forEach(train => {
-                let col = train.trainCol;
-                if (phase === 1) {
-                    // 北進: row 18→2、通過する各マスで衝突チェック
-                    msg(`🚂 列車(col${col})が発車！北向き走行中！`, true);
-                    for (let nr = train.r - 1; nr >= 2; nr--) {
-                        entities.filter(e => e.team!=='npc' && e.team!=='vehicle' && e.hp>0 && e.r===nr && e.c===col).forEach(t => {
-                            if (!t.invin) { t.hp -= 3; t.ap = Math.max(0, t.ap-1); knockback(t, 2, {r:nr+1, c:col}); }
-                            msg(`🚂 ${t.name}が列車に撥ねられた！3ダメ・AP-1・吹き飛び！`, true);
+            let train = entities.find(e => e.id === 'nttrain' && e.hp > 0);
+            if (train) {
+                // Phase data: [stationR, stationC, seg_fixed_axis, seg_fixed_val, seg_min, seg_max, destR, destC]
+                // CW: A→top→B→right→C→bottom→D→left→A
+                const CW = [
+                    [2,2,  'r',3,  3,17, 2,18],
+                    [2,18, 'c',17, 3,17, 18,18],
+                    [18,18,'r',17, 3,17, 18,2],
+                    [18,2, 'c',3,  3,17, 2,2],
+                ];
+                // CCW: A→left→D→bottom→C→right→B→top→A
+                const CCW = [
+                    [2,2,  'c',3,  3,17, 18,2],
+                    [18,2, 'r',17, 3,17, 18,18],
+                    [18,18,'c',17, 3,17, 2,18],
+                    [2,18, 'r',3,  3,17, 2,2],
+                ];
+                ntTrainPhase = (ntTrainPhase + 1) % 8;
+                let segIdx = Math.floor(ntTrainPhase / 2);
+                let pd = (ntTrainClockwise ? CW : CCW)[segIdx % 4];
+                if (ntTrainPhase % 2 === 0) {
+                    // Wait phase: position train at station, warn next segment
+                    train.r = pd[0]; train.c = pd[1];
+                    carWarnTiles = [];
+                    let [,, ax, fv, mn, mx] = pd;
+                    for (let v=mn; v<=mx; v++) carWarnTiles.push({ r: ax==='r'?fv:v, c: ax==='c'?fv:v });
+                    msg(`🚂 列車が停車中！${ntTrainClockwise?'時計回り':'反時計回り'}次のセグメントに注意！`, true);
+                } else {
+                    // Move phase: sweep segment, damage entities
+                    let [sr,sc,segAx,segFv,segMn,segMx,destRv,destCv] = pd;
+                    for (let v=segMn; v<=segMx; v++) {
+                        let tr = segAx==='r'?segFv:v, tc = segAx==='c'?segFv:v;
+                        entities.filter(e => e.team!=='npc' && e.team!=='vehicle' && e.hp>0 && e.r===tr && e.c===tc && !e.onTrain).forEach(t => {
+                            if (!t.invin) { t.hp -= 3; knockback(t, 2, {r:tr, c:tc}); }
+                            msg(`🚂 ${t.name}が列車に撥ねられた！3ダメ・吹き飛び！`, true);
                         });
                     }
-                    train.r = 2;
-                } else if (phase === 3) {
-                    // 南進: row 2→18
-                    msg(`🚂 列車(col${col})が発車！南向き走行中！`, true);
-                    for (let nr = train.r + 1; nr <= 18; nr++) {
-                        entities.filter(e => e.team!=='npc' && e.team!=='vehicle' && e.hp>0 && e.r===nr && e.c===col).forEach(t => {
-                            if (!t.invin) { t.hp -= 3; t.ap = Math.max(0, t.ap-1); knockback(t, 2, {r:nr-1, c:col}); }
-                            msg(`🚂 ${t.name}が列車に撥ねられた！3ダメ・AP-1・吹き飛び！`, true);
-                        });
-                    }
-                    train.r = 18;
-                } else if (phase === 0) {
-                    msg(`🚂 列車(col${col})が下駅待機中（次Tに発車）！col${col}に注意！`, true);
-                } else if (phase === 2) {
-                    msg(`🚂 列車(col${col})が上駅待機中（次Tに発車）！col${col}に注意！`, true);
+                    // Move passengers
+                    entities.filter(e => e.onTrain === 'nttrain' && e.hp > 0).forEach(t => {
+                        t.r = destRv; t.c = destCv; t.onTrain = null;
+                        msg(`🚂 ${t.name}が列車で${destRv===2?'上':'下'}駅に到着！`, true);
+                    });
+                    train.r = destRv; train.c = destCv;
+                    carWarnTiles = [];
+                    msg(`🚂 列車が発車！沿線に3ダメ！`, true);
                 }
-            });
+            }
         }
         // Underwater Temple: torpedo launcher firing every 3 turns
         if (activeStage === 'underwater' && turn >= 3 && turn % 3 === 0) {
@@ -3054,23 +3088,11 @@ function startTurn(team, skipEffects = false) {
                 msg("🐉 ドラゴンが出現！天空要塞が荒れ狂う！", true);
             }
         }
-        // Skyfort: floating lift (2x2 at cols 13-14) moves every 2 turns
-        if (activeStage === 'skyfort' && turn >= 2 && turn % 2 === 0) {
-            // Remove old lift
-            for (let rr=skyfortLiftPos; rr<=skyfortLiftPos+1; rr++) {
-                for (let cc=13; cc<=14; cc++) {
-                    if (board[rr]?.[cc] === 'fortress_floor') board[rr][cc] = 'sky_void';
-                }
+        // Skyfort: restore collapsed bridges at start of turn
+        if (activeStage === 'skyfort') {
+            for (let rr=9; rr<=10; rr++) for (let cc=13; cc<=14; cc++) {
+                if (board[rr]?.[cc] === 'fallen_floor') board[rr][cc] = 'skyfort_bridge';
             }
-            // Toggle: rows 9-10 (center) → rows 12-13 (player side) → rows 7-8 (cpu side)
-            skyfortLiftPos = skyfortLiftPos <= 9 ? 12 : 7;
-            // Place new lift
-            for (let rr=skyfortLiftPos; rr<=skyfortLiftPos+1; rr++) {
-                for (let cc=13; cc<=14; cc++) {
-                    if (board[rr]?.[cc] === 'sky_void') board[rr][cc] = 'fortress_floor';
-                }
-            }
-            msg(`🔲 リフトが移動した！（rows${skyfortLiftPos}〜${skyfortLiftPos+1}）`, true);
         }
 
         // Graveyard: bat/vampire/wolf/werewolf every 5 turns, soul+2 each
@@ -3199,7 +3221,7 @@ function startTurn(team, skipEffects = false) {
             if (e.abducted && e.hp > 0 && turn - (e.abductedTurn||0) >= 1) {
                 e.abducted = false;
                 // アビリティを帰還時に復元
-                if (e.abductedAbilities) { e.abilities = e.abductedAbilities; delete e.abductedAbilities; }
+                if (e.abductedAbilities) { Object.entries(e.abductedAbilities).forEach(([k,v]) => { e.abilities[k] = v; }); delete e.abductedAbilities; }
                 let placed = false;
                 for (let dr=-2; dr<=2 && !placed; dr++) for (let dc=-2; dc<=2 && !placed; dc++) {
                     let nr=(e.abductedR||0)+dr, nc=(e.abductedC||0)+dc;
@@ -3233,16 +3255,15 @@ function startTurn(team, skipEffects = false) {
             }
         }
 
-        // Skyfort: wyverns (vehicle) randomly walk 1 step, dragging any rider — only when NOT mounted
+        // Skyfort: flying drones (vehicle) randomly walk 1 step — only when no one mounted
         if (activeStage === 'skyfort') {
-            entities.filter(e => e.type === 'wyvern' && e.team === 'vehicle' && e.hp > 0).forEach(wyvern => {
-                // 騎乗者がいる場合はワイバーン自身は動かない
+            entities.filter(e => e.type === 'flying_drone' && e.team === 'vehicle' && e.hp > 0).forEach(wyvern => {
                 let hasMounted = entities.some(e => e.onWyvern === wyvern.id && e.hp > 0);
                 if (hasMounted) return;
                 let dirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}].sort(()=>Math.random()-0.5);
                 for (let {dr, dc} of dirs) {
                     let nr = wyvern.r + dr, nc = wyvern.c + dc;
-                    if (board[nr]?.[nc] === 'fortress_floor' && !entities.find(e => e.hp>0 && e.r===nr && e.c===nc && e.team!=='vehicle' && !e.onWyvern)) {
+                    if (['fortress_floor','skyfort_bridge'].includes(board[nr]?.[nc]) && !entities.find(e => e.hp>0 && e.r===nr && e.c===nc && e.team!=='vehicle' && !e.onWyvern)) {
                         wyvern.r = nr; wyvern.c = nc;
                         break;
                     }
@@ -3390,7 +3411,7 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station'];
+        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station','train_switch','skyfort_bridge'];
         return rockableGrounds.includes(board[r][c]) && !isNoRockZone(r, c) && !target;
     }
     // Stolen lock: prevents use for 1 turn after being stolen from
@@ -3413,7 +3434,7 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
-    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground') && !target;
+    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
     if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
@@ -3465,6 +3486,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'incinerate') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'recon_drone') return maxDist<=1 && isWalkable(r,c,true);
     if (mode === 'emp_field') return true;
+    if (mode === 'analysis') return maxDist<=2+(se.rangeBonus||0) && target && target !== se;
     // Macho
     if (mode === 'rock_hide') return true;
     if (mode === 'tsusembo') return true;
@@ -3753,6 +3775,9 @@ function checkTileEffects(entity) {
         let key = `${r},${c}`;
         let side = bridgeSwitchMap[key];
         if (side) toggleBridge(side);
+    } else if (board[r] && board[r][c] === 'train_switch' && activeStage === 'nighttown') {
+        ntTrainClockwise = !ntTrainClockwise;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + `🔀 列車スイッチ！進行方向が${ntTrainClockwise?'時計回り':'反時計回り'}に切り替わった！`;
     } else if (board[r] && (board[r][c] === 'whirlpool')) {
         if (isOceanUnit(entity)) {
             entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
@@ -3761,8 +3786,9 @@ function checkTileEffects(entity) {
             if (!entity.invin) { entity.hp -= 1; entity.ap = Math.max(0, entity.ap - 1); }
             eventMsg = "渦潮に飲み込まれた！HP-1、AP-1！";
         }
-    } else if (board[r] && board[r][c] === 'sea_floor' && activeStage === 'underwater' && isOceanUnit(entity)) {
-        entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 1);
+    } else if (board[r] && ['sea_floor','bubble_vent','oxygen_tile','sea_trench','coral_reef','golden_coral'].includes(board[r][c]) && isOceanUnit(entity)) {
+        entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
+        if (!eventMsg) eventMsg = "💧 深海タイル！海洋コマのゲージ+5！";
     } else if (board[r] && board[r][c] === 'shallow_water') {
         if (isOceanUnit(entity)) {
             entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
@@ -3874,12 +3900,17 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'church') {
         eventMsg = (eventMsg ? eventMsg + " " : "") + "⛪ 教会だ。浄化アビリティで魂を消化できる。";
     }
-    // Board onto a wyvern (auto-board; once mounted cannot dismount — like camel)
-    let wyvernHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type==='wyvern' && e.team==='vehicle');
+    // Skyfort: collapse bridge tile when stepped on
+    if (activeStage === 'skyfort' && board[r]?.[c] === 'skyfort_bridge') {
+        board[r][c] = 'fallen_floor';
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "💥 橋が崩落！次ターン開始時に復元する。";
+    }
+    // Board onto a flying drone (auto-board; once mounted cannot dismount)
+    let wyvernHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type==='flying_drone' && e.team==='vehicle');
     if (wyvernHere && !entity.onWyvern && (entity.team === 'player' || entity.team === 'cpu')) {
         entity.onWyvern = wyvernHere.id;
         entity.flying = true;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + "🐉 ワイバーンに乗った！飛行コマになった！（降りることはできない）";
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "🚁 飛行ドローンに搭乗！飛行コマになった！（降りることはできない）";
     }
     // Board onto a boat
     let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
@@ -4083,9 +4114,21 @@ function checkEnemyTerritory(entity) {
 
 // 行動力コストマップ（AP消費アビリティの最低AP要件）
 const ABILITY_AP_COSTS = {
-    power_charge: 1, jet_boost: 1, sweep: 1, emp_field: 1, fusion: 1,
+    power_charge: 1, jet_boost: 1, sweep: 1, emp_field: 1, fusion: 1, analysis: 1,
     incinerate: 2, meditation: 2, root_spread: 2, thunder_magic: 2
 };
+
+function plantLvUpOnce(se) {
+    se.maxHp = (se.maxHp||30) + 1; se.hp = Math.min(se.hp + 1, se.maxHp);
+    let randKeys = Object.keys(se.abilities).filter(k => k !== 'drop_rock' && k !== 'fusion' && se.abilities[k]!==999);
+    if (randKeys.length > 0) { let k = randKeys[Math.floor(Math.random()*randKeys.length)]; se.abilities[k] = (se.abilities[k]||0) + 1; }
+    if ((se.plantLevel||0) > 0 && (se.plantLevel||0) % 5 === 0) {
+        se.rangeBonus = (se.rangeBonus||0) + 1; se.atkBonus = (se.atkBonus||0) + 1;
+        se.maxAp = Math.min((se.maxAp||2) + 1, 6); se.ap = Math.min((se.ap||0) + 1, se.maxAp);
+        return true;
+    }
+    return false;
+}
 
 function triggerRockHideBreak(target, attacker) {
     if (!target || !target.rockHideActive || !target.invin) return false;
@@ -4114,9 +4157,15 @@ function handleAbilityTarget(r, c, targetEntity) {
     }
 
     // 行動力不足チェック（incinerate以外は各ハンドラ内で個別処理するが一括バリデーション）
-    const apNeeded = ABILITY_AP_COSTS[actionMode] || 0;
+    const rawApNeeded = ABILITY_AP_COSTS[actionMode] || 0;
+    let cancelledAp = 0;
+    if (rawApNeeded > 0 && (se.apCostCancel?.[actionMode]||0) > 0) {
+        cancelledAp = 1; se.apCostCancel[actionMode]--;
+        if (se.apCostCancel[actionMode] <= 0) delete se.apCostCancel[actionMode];
+    }
+    const apNeeded = rawApNeeded - cancelledAp;
     if (apNeeded > 0 && se.ap < apNeeded && actionMode !== 'incinerate') {
-        msg(`行動力が足りません！（${ABILITY_AP_COSTS[actionMode]}AP必要）`);
+        msg(`行動力が足りません！（${apNeeded}AP必要）`);
         return false;
     }
 
@@ -4630,10 +4679,36 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         msg(`⚡ 電磁パルスフィールド！半径5マスの敵${empHit}体にAP-1＋4アビリティ1T封印！`); used = true;
+    } else if (actionMode === 'analysis') {
+        se.abilities['analysis']--;
+        se.ap = Math.max(0, se.ap - 1);
+        let te = entities.find(e => e.hp>0 && e.r===r && e.c===c && e !== se);
+        if (!te) { msg('🔍 分析：対象コマが存在しません'); return false; }
+        if (te.team !== se.team) {
+            let pool = Object.keys(te.abilities).filter(k => k!=='drop_rock' && (te.abilities[k]||0)>0 && te.abilities[k]!==999 && !((te.sealedAbilities?.[k]||0)>0));
+            if (pool.length > 0) {
+                let k = pool[Math.floor(Math.random()*pool.length)];
+                if (!te.sealedAbilities) te.sealedAbilities = {};
+                te.sealedAbilities[k] = (te.sealedAbilities[k]||0) + 1;
+                if (!te.empSealTimer || te.empSealTimer < 1) te.empSealTimer = 1;
+                msg(`🔍 分析！${te.name}の[${ABILITY_NAMES[k]||k}]を1T封印！`);
+            } else { msg(`🔍 分析！${te.name}に封印できるアビリティがない！`); }
+        } else {
+            let pool2 = Object.keys(te.abilities).filter(k => (ABILITY_AP_COSTS[k]||0)>0 && (te.abilities[k]||0)>0);
+            if (pool2.length > 0) {
+                let k2 = pool2[Math.floor(Math.random()*pool2.length)];
+                if (!te.apCostCancel) te.apCostCancel = {};
+                te.apCostCancel[k2] = (te.apCostCancel[k2]||0) + 1;
+                msg(`🔍 分析！${te.name}の[${ABILITY_NAMES[k2]||k2}]のAPコスト1回無料化！`);
+            } else { msg(`🔍 分析！${te.name}にAPコスト打ち消し対象がない！`); }
+        }
+        used = true;
     } else if (actionMode === 'incinerate') {
-        if (se.ap < 2) { msg("🔥 焼却砲には行動力2が必要です！"); return false; }
+        let incCost = 2;
+        if ((se.apCostCancel?.incinerate||0) > 0) { incCost = 1; se.apCostCancel.incinerate--; }
+        if (se.ap < incCost) { msg(`🔥 焼却砲には行動力${incCost}が必要です！`); return false; }
         se.abilities['incinerate']--;
-        se.ap = Math.max(0, se.ap - 2);
+        se.ap = Math.max(0, se.ap - incCost);
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
         msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！AP-2消費・5ダメ・敵AP-2・2ターン燃焼ダメージ！'); used = true;
@@ -4644,8 +4719,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             id: 'drone_'+Date.now(), type: 'recon_drone_unit', name: '偵察ドローン',
             team: se.team, r: r, c: c,
             hp: 1, maxHp: 1, ap: 2, maxAp: 2,
-            abilities: { drone_ram: 999, power_supply_drone: 999 },
-            skillUsed: false, stealth: false, stealthTimer: 0,
+            abilities: { drone_ram: 999, power_supply_drone: 999, analysis: 2 },
+            skillUsed: true, stealth: false, stealthTimer: 0,
             invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, flying: true
         });
         msg(`🛸 偵察ドローン出撃！HP1/AP2/飛行！体当たり∞・電力補給∞。撃墜されると爆発＋罠設置！`); used = true;
@@ -4828,9 +4903,12 @@ function handleAbilityTarget(r, c, targetEntity) {
             targetEntity.abducted = true; targetEntity.abductedTurn = turn;
             targetEntity.abductedR = targetEntity.r; targetEntity.abductedC = targetEntity.c;
             // アビリティを全封印（帰還時に復元）
-            targetEntity.abductedAbilities = {...targetEntity.abilities};
-            targetEntity.abilities = {};
-            msg(`👽 アブダクション！${targetEntity.name}を2ダメ＋1ターン異空間に誘拐！アビリティ全封印！`);
+            // ランダム3種類のアビリティを封印（帰還時に復元）
+            let abductKeys = Object.keys(targetEntity.abilities).filter(k => targetEntity.abilities[k] > 0 && k !== 'drop_rock');
+            let abductPick = abductKeys.sort(()=>Math.random()-0.5).slice(0,3);
+            targetEntity.abductedAbilities = {};
+            abductPick.forEach(k => { targetEntity.abductedAbilities[k] = targetEntity.abilities[k]; targetEntity.abilities[k] = 0; });
+            msg(`👽 アブダクション！${targetEntity.name}を2ダメ＋1ターン異空間に誘拐！ランダム3アビリティ封印！`);
         } else { msg('👽 アブダクション！しかし無敵で防がれた！'); }
         used = true;
     } else if (actionMode === 'egg_place') {
@@ -4861,7 +4939,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['branch_whip']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
-        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) { se.plantLevel = (se.plantLevel||0) + 1; msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！`, true); }
+        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
+            se.plantLevel = (se.plantLevel||0) + 1;
+            let ms = plantLvUpOnce(se);
+            msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！HP+1！${ms?'🎉節目ボーナス：ATK/射程/AP+1！':''}`, true);
+        }
         msg(targetEntity?.invin ? '🌿 枝のムチ！しかし無敵で防がれた！' : '🌿 枝のムチ！1ダメ・吹き飛ばし！'); used = true;
     } else if (actionMode === 'seed_plant') {
         se.abilities['seed_plant']--;
@@ -4882,20 +4964,15 @@ function handleAbilityTarget(r, c, targetEntity) {
         let totalAbsorbed = seedCount + sproutCount + babyCount;
         if (totalAbsorbed > 0) {
             let prevLv = se.plantLevel || 0;
-            se.plantLevel = prevLv + lvGain;
-            // Per-level bonus: HP+1, all ability uses +1 (except fusion itself)
-            se.maxHp += lvGain; se.hp = Math.min(se.hp + lvGain, se.maxHp);
-            for (let k of Object.keys(se.abilities)) { if (k !== 'fusion' && se.abilities[k]!==999) se.abilities[k]+=lvGain; }
-            // Milestone bonuses at multiples of 5
             let milestones = 0;
-            for (let lv2=prevLv+1; lv2<=se.plantLevel; lv2++) { if (lv2%5===0) milestones++; }
+            for (let lv2 = prevLv + 1; lv2 <= prevLv + lvGain; lv2++) {
+                se.plantLevel = lv2;
+                if (plantLvUpOnce(se)) milestones++;
+            }
             if (milestones > 0) {
-                se.rangeBonus = (se.rangeBonus||0) + milestones;
-                se.atkBonus = (se.atkBonus||0) + milestones;
-                se.maxAp = Math.min(se.maxAp + milestones, 6); se.ap = Math.min(se.ap + milestones, se.maxAp);
-                msg(`🌿 融合！植物LV${se.plantLevel}！🎉 節目ボーナス×${milestones}：全射程+${milestones}・ATK+${milestones}・AP+${milestones}！`);
+                msg(`🌿 融合！植物LV${se.plantLevel}！🎉 節目ボーナス×${milestones}：ATK/射程/AP各+${milestones}！`);
             } else {
-                msg(`🌿 融合！${totalAbsorbed}体吸収(LV+${lvGain})！植物LV${se.plantLevel}！HP+${lvGain}・全アビリティ(fusion除)+${lvGain}！`);
+                msg(`🌿 融合！${totalAbsorbed}体吸収(LV+${lvGain})！植物LV${se.plantLevel}！HP+${lvGain}・ランダムアビリティ+${lvGain}！`);
             }
         } else { msg('🌿 融合！しかし半径1マス内に種/若芽/ベビーマンドレイクがいない！'); }
         used = true;
@@ -4903,7 +4980,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['seed_bazooka']--;
         if (targetEntity && !targetEntity.invin) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
-        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) { se.plantLevel = (se.plantLevel||0) + 1; msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！`, true); }
+        if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
+            se.plantLevel = (se.plantLevel||0) + 1;
+            let ms = plantLvUpOnce(se);
+            msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！HP+1！${ms?'🎉節目ボーナス：ATK/射程/AP+1！':''}`, true);
+        }
         // ダメージ後、敵の近辺ランダム1マスに種を設置
         if (targetEntity) {
             let seedCandidates = [];
@@ -5158,7 +5239,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'octopus_summon') {
         if (turn < 5) { msg("🐙 タコ召喚は5ターン経過後に使用可能！"); return; }
         se.abilities['octopus_summon']--;
-        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true });
+        entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true, waterGauge:10, maxWaterGauge:30 });
         msg("🐙 タコ召喚！(HP3/AP2/触手∞・水吐き3/海洋コマ)"); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
@@ -6438,7 +6519,7 @@ function updateUI() {
         list.appendChild(cb);
     }
 
-    if (!selectedEntity.skillUsed && !['slime','golem','wolf'].includes(selectedEntity.type)) {
+    if (!selectedEntity.skillUsed && ALL_JOBS.includes(selectedEntity.type)) {
         let sb = document.createElement('button');
         sb.className = 'ability-btn';
         sb.style.background = '#d35400'; sb.style.color = '#fff';
@@ -6504,20 +6585,38 @@ function updateUI() {
         }
     }
 
-    // Skyfort: Wyvern adjacent boarding
+    // Nighttown: Train boarding button
+    if (activeStage === 'nighttown' && selectedEntity && canIAct() && !selectedEntity.onTrain && selectedEntity.team === myTeam() && ntTrainPhase % 2 === 0) {
+        let train = entities.find(e => e.id === 'nttrain' && e.hp > 0 && e.r === selectedEntity.r && e.c === selectedEntity.c);
+        if (train) {
+            let tb = document.createElement('button');
+            tb.className = 'ability-btn';
+            tb.style.background = '#333300'; tb.style.color = '#ffff00';
+            tb.innerText = '🚂 列車に乗る（次の駅まで自動移動）';
+            tb.onclick = () => {
+                selectedEntity.onTrain = 'nttrain';
+                msg(`🚂 ${selectedEntity.name}が列車に乗った！次の発車で次の駅へ！`);
+                render(); updateUI();
+                if (isOnlineMode) syncState();
+            };
+            list.appendChild(tb);
+        }
+    }
+
+    // Skyfort: Flying Drone adjacent boarding
     if (activeStage === 'skyfort' && selectedEntity && canIAct() && !selectedEntity.onWyvern && (selectedEntity.team === myTeam())) {
-        let adjWyvern = entities.find(e => e.hp > 0 && e.type === 'wyvern' && e.team === 'vehicle' &&
+        let adjWyvern = entities.find(e => e.hp > 0 && e.type === 'flying_drone' && e.team === 'vehicle' &&
             Math.abs(e.r - selectedEntity.r) + Math.abs(e.c - selectedEntity.c) === 1);
         if (adjWyvern) {
             let wb = document.createElement('button');
             wb.className = 'ability-btn';
             wb.style.background = '#4a148c'; wb.style.color = '#fff';
-            wb.innerText = '🐉 騎乗 (隣のワイバーンに乗る / 飛行可)';
+            wb.innerText = '🚁 騎乗 (隣の飛行ドローンに乗る / 飛行可)';
             wb.onclick = () => {
                 selectedEntity.r = adjWyvern.r; selectedEntity.c = adjWyvern.c;
                 selectedEntity.onWyvern = adjWyvern.id;
                 selectedEntity.flying = true;
-                msg(`🐉 ${selectedEntity.name}がワイバーンに騎乗した！飛行コマになった！`);
+                msg(`🚁 ${selectedEntity.name}が飛行ドローンに騎乗した！飛行コマになった！`);
                 checkWin(); render(); updateUI();
                 if (isOnlineMode) syncState();
             };
