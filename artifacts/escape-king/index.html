@@ -724,6 +724,7 @@ let opponentRank = 1;
 let rankResultApplied = false;
 let turnTimerId = null;
 let turnTimeLeft = 80;
+let savedTurnTimeLeft = null; // preserved across reconnect
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
@@ -1105,6 +1106,10 @@ function attemptReconnect() {
     if (reconnecting) return;
     reconnecting = true;
     reconnectAttempts = 0;
+    // Save remaining time only if it's our timer (timer running = our turn)
+    if (turnTimerId !== null && turnTimeLeft > 0) {
+        savedTurnTimeLeft = turnTimeLeft;
+    }
     stopTurnTimer();
     showReconnectOverlay();
     tryReconnectOnce();
@@ -1271,6 +1276,7 @@ function handleWsMessage(event) {
         opponentRank = data.opponentRank || 1;
         onlineRoomCode = data.roomCode || onlineRoomCode;
         rankResultApplied = false;
+        savedTurnTimeLeft = null;
         document.getElementById('online-lobby').style.display = 'none';
 
         const settings = data.settings;
@@ -1331,7 +1337,8 @@ function handleWsMessage(event) {
             updateOnlineInfo();
             startClientPing(); // send immediate ping to refresh ms reading
         }, 3000);
-        msg("✅ 再接続しました。盤面を同期しています...");
+        const timerInfo = savedTurnTimeLeft != null ? `（残り${savedTurnTimeLeft}秒から再開）` : '';
+        msg(`✅ 再接続しました。盤面を同期しています...${timerInfo}`);
         return;
     }
 
@@ -1385,8 +1392,12 @@ function handleWsMessage(event) {
             const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
             document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
             msg("あなたのターンです！");
-            startTurnTimer();
+            // On reconnect resume from saved time; on normal sync start fresh
+            const resumeFrom = savedTurnTimeLeft;
+            savedTurnTimeLeft = null;
+            startTurnTimer(resumeFrom);
         } else {
+            savedTurnTimeLeft = null;
             stopTurnTimer();
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
             startOpponentTimer();
@@ -1558,11 +1569,11 @@ function cancelRankedSearch() {
 }
 
 // ---- Per-turn 80s timer (online only) ----
-function startTurnTimer() {
+function startTurnTimer(from) {
     stopTurnTimer();
     stopOpponentTimer();
     if (!isOnlineMode) return;
-    turnTimeLeft = 80;
+    turnTimeLeft = (from != null && from > 0) ? Math.min(from, 80) : 80;
     updateTurnTimerDisplay();
     turnTimerId = setInterval(() => {
         turnTimeLeft--;
