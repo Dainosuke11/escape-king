@@ -89,6 +89,27 @@
             display: flex; justify-content: space-between; width: 100%; 
             font-size: 20px; font-weight: bold; margin-bottom: 15px; color: var(--accent);
         }
+        /* ---- Turn timer countdown bar ---- */
+        #turn-timer-wrap {
+            display: none; width: 100%; margin-bottom: 8px;
+        }
+        #turn-timer-row {
+            display: flex; align-items: center; gap: 8px;
+        }
+        #turn-timer-label {
+            font-size: 13px; font-weight: bold; color: #f1c40f;
+            min-width: 58px; white-space: nowrap;
+        }
+        #turn-timer-track {
+            flex: 1; height: 7px; background: #2c3e50;
+            border-radius: 4px; overflow: hidden;
+        }
+        #turn-timer-bar {
+            height: 100%; width: 100%; background: #f1c40f;
+            border-radius: 4px; transition: width 0.8s linear, background 0.3s;
+        }
+        #turn-timer-wrap.urgent #turn-timer-label { color: #e74c3c; }
+        #turn-timer-wrap.urgent #turn-timer-bar { background: #e74c3c; }
         #board-container { display: flex; gap: 30px; align-items: flex-start; justify-content: center; width: 100%; }
         
         #board { 
@@ -580,6 +601,12 @@
         <div id="turn-indicator">Player's Turn (Turn: 1)</div>
         <div id="souls-indicator" style="color:#bb8fce; font-size:13px; display:none;"></div>
         <div id="status-message" style="color: #f1c40f;">準備完了</div>
+    </div>
+    <div id="turn-timer-wrap">
+        <div id="turn-timer-row">
+            <span id="turn-timer-label">⏱ 80秒</span>
+            <div id="turn-timer-track"><div id="turn-timer-bar"></div></div>
+        </div>
     </div>
     <div id="online-game-info"></div>
     <div id="board-container">
@@ -1551,8 +1578,8 @@ function startTurnTimer() {
 }
 function stopTurnTimer() {
     if (turnTimerId) { clearInterval(turnTimerId); turnTimerId = null; }
-    let el = document.getElementById('turn-timer');
-    if (el) el.style.display = 'none';
+    const wrap = document.getElementById('turn-timer-wrap');
+    if (wrap) wrap.style.display = 'none';
 }
 let opponentTimerId = null;
 let opponentTimeLeft = 80;
@@ -1585,17 +1612,15 @@ function updateOpponentTimerDisplay() {
     el.textContent = `⏱ 相手の残り ${Math.max(0, opponentTimeLeft)} 秒`;
 }
 function updateTurnTimerDisplay() {
-    let el = document.getElementById('turn-timer');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'turn-timer';
-        el.style.cssText = 'font-size:15px; font-weight:bold; margin-top:4px;';
-        const ind = document.getElementById('turn-indicator');
-        if (ind && ind.parentNode) ind.parentNode.insertBefore(el, ind.nextSibling);
-    }
-    el.style.display = 'block';
-    el.style.color = turnTimeLeft <= 10 ? '#e74c3c' : '#f1c40f';
-    el.textContent = `⏱ 残り ${Math.max(0, turnTimeLeft)} 秒`;
+    const wrap = document.getElementById('turn-timer-wrap');
+    const label = document.getElementById('turn-timer-label');
+    const bar = document.getElementById('turn-timer-bar');
+    if (!wrap || !label || !bar) return;
+    const t = Math.max(0, turnTimeLeft);
+    wrap.style.display = 'block';
+    wrap.classList.toggle('urgent', t <= 10);
+    label.textContent = `⏱ 残り ${t} 秒`;
+    bar.style.width = `${(t / 80) * 100}%`;
 }
 
 function getPlayerName() {
