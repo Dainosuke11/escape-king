@@ -228,6 +228,7 @@
         .skyfort_bridge { background: #7a6a3a; border: 2px solid #d4b060 !important; }
         .skyfort_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffe080; }
         .light_barrier_tile { background: rgba(255,255,200,0.45) !important; border: 1px solid #ffe080 !important; box-shadow: inset 0 0 6px rgba(255,255,180,0.6); }
+        .pentagram_tile { background: rgba(160,0,220,0.35) !important; border: 1px solid #cc66ff !important; box-shadow: inset 0 0 8px rgba(180,0,255,0.5); }
         /* Misty Lake */
         .lake_ground { background: #0a2a3d; }
         .lotus_pad { background: #2d6a4f; border: 2px solid #52b788 !important; }
@@ -409,6 +410,7 @@
             <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
             <option value="angel">👼 天使 (結界・バインド・堕天)</option>
             <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
+            <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
         </select>
     </div>
     <div class="select-group">
@@ -499,6 +501,7 @@
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
+                <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -532,6 +535,7 @@
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
+                <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
             </select>
         </div>
         <div class="select-group">
@@ -594,6 +598,7 @@
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
+                <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -650,6 +655,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×5】半径2味方バリア+HP3/正面5岩。【五芒星の陣×5】半径3結界1T/敵AP-1+全封印。【放魂術×5】半径3/威3+吹飛5+AP-1+封印+大悪霊召喚。【引魂術×5】半径5引寄せ/威3+AP-1+封印。【式神召喚×5(5T~)】狐火+鬼カラス+鬼蛇召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で青鬼・赤鬼・大鬼召喚＋半径5全敵を引き寄せor吹飛ばし。</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
@@ -747,6 +753,7 @@ let dungeonSwitchGroups = {};   // "r,c" → [{r,c}] array of tiles this switch 
 let dungeonTorches = [];        // [[r,c],...] torch positions that illuminate radius 5
 let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
 let lightBarrierZones = [];    // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
+let pentagramZones = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
 let bridgeSwitchMap = {};
@@ -1043,7 +1050,16 @@ const ABILITY_NAMES = {
     light_barrier: '光の結界(半径1/1T結界+バリア/敵AP-2+全封印/堕天+1)',
     sin_mark: '罪の刻印(半径2か5/AP-2/5封印/呪い/堕天+1)',
     death_scythe: 'デスサイズ(半径1か3全体/威2か3/吹飛/AP-1/5封印/堕天+1)',
-    balance_break: '均衡崩し(直線5か半径8+転送/自1ダメ/威2か4/吹飛/AP-2/5封印/堕天+1)'
+    balance_break: '均衡崩し(直線5か半径8+転送/自1ダメ/威2か4/吹飛/AP-2/5封印/堕天+1)',
+    oni_arm: '鬼腕解放(半径1/威2+吹飛+1T封印/封印不可/5封印以上でAoE半径2+50%+1回)',
+    divine_speed: '神速(半径3陸移動/通過1ダメ+狐火召喚/その後全アビ使用不可)',
+    talisman_barrier: '護符の結界(自/半径2味方+自バリア+HP+3/正面5岩次T消滅/全アビ使用不可)',
+    pentagram_formation: '五芒星の陣(半径3/1T結界:敵AP-1+全封印/全アビ使用不可)',
+    soul_release: '放魂術(半径3/威3+吹飛5+AP-1+1T封印+大悪霊召喚/全アビ使用不可)',
+    soul_pull: '引魂術(半径5/目の前引寄せ/威3+AP-1+1T封印/全アビ使用不可)',
+    shikigami_summon: '式神召喚(5T~/狐火+鬼カラス+鬼蛇/全アビ使用不可)',
+    charge: '突撃(半径1/威1+残AP分追加ダメ/全AP消費)',
+    poison_bite: '毒噛み(半径1/威1/毒付与3T)'
 };
 
 const ABILITY_TIPS = {
@@ -1202,7 +1218,8 @@ const JOB_DATA = {
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_head: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
-    world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 5 }, hp: 30, ap: 2 }
+    world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 5 }, hp: 30, ap: 2 },
+    onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 5, oni_arm: 10, divine_speed: 5, talisman_barrier: 5, pentagram_formation: 5, soul_release: 5, soul_pull: 5, shikigami_summon: 5 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1999,7 +2016,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','moving_train'];
 
 function resolveJob(job) {
@@ -2614,6 +2631,7 @@ function initEntities(pJob, difficulty = "1") {
     rollRockWarnTiles = [];
     cursedAbilities = {};
     lightBarrierZones = [];
+    pentagramZones = [];
     dungeonGoggles = 0;
     // Reset new stage globals
     fallenSkyfortBridges = [];
@@ -2762,6 +2780,11 @@ function processTurnStartEffects(e) {
         e.tsusemboRocks.forEach(pos => { if (board[pos.r]?.[pos.c] === 'rock') board[pos.r][pos.c] = defaultGround(); });
         e.tsusemboRocks = [];
     }
+    // 護符の結界 一時岩の除去 (陰陽師)
+    if (e.talismanRocks && e.talismanRocks.length > 0) {
+        e.talismanRocks.forEach(pos => { if (board[pos.r]?.[pos.c] === 'rock') board[pos.r][pos.c] = defaultGround(); });
+        e.talismanRocks = [];
+    }
     // rock_hide無敵切れ→後退+岩設置
     if (e.rockHideActive && !e.invin) {
         e.rockHideActive = false;
@@ -2837,6 +2860,19 @@ function processTurnStartEffects(e) {
     // Ocean unit on water tile: AP+1 bonus
     if (e.oceanUnit && ['shallow_water','deep_water','sea_trench','river','whirlpool'].includes(board[e.r]?.[e.c])) {
         e.ap = Math.min(e.ap + 1, e.maxAp + 2);
+    }
+    // 五芒星の陣：結界内にいる敵にAP-1＋全アビリティ封印
+    if (pentagramZones.length > 0 && board[e.r]?.[e.c] === 'pentagram_tile') {
+        let pgZone = pentagramZones.find(z => z.ownerTeam !== e.team && z.cells.some(cl => cl.r===e.r && cl.c===e.c));
+        if (pgZone) {
+            e.ap = Math.max(0, e.ap - 1);
+            if (!cursedAbilities[e.id]) cursedAbilities[e.id] = {};
+            Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock').forEach(k => {
+                cursedAbilities[e.id][k] = Math.max(cursedAbilities[e.id][k]||0, 1);
+            });
+            e.skillUsed = true;
+            msg(`🔮 ${e.name}は五芒星の結界でAP-1＋全アビリティ封印！`, true);
+        }
     }
     // Shoes item: expire the temporary AP boost
     if (e.shoesTimer > 0) {
@@ -3142,6 +3178,7 @@ function sealAbilities(target, keys, duration) {
                               && !(cursedAbilities[target.id]['harmonious_prayer'] > 0)
                               && keys.includes('harmonious_prayer');
     keys.forEach(k => {
+        if (k === 'oni_arm') return; // 鬼腕解放は封印不可
         cursedAbilities[target.id][k] = Math.max(cursedAbilities[target.id][k] || 0, duration);
     });
     if (harmoniousAvailable) triggerHarmoniousCounter(target);
@@ -3652,6 +3689,14 @@ function startTurn(team, skipEffects = false) {
             }
             return true;
         });
+        // 五芒星の陣タイルクリーンアップ
+        pentagramZones = pentagramZones.filter(zone => {
+            if (turn > zone.turnExpires) {
+                zone.cells.forEach(({r,c}) => { if (board[r]?.[c] === 'pentagram_tile') board[r][c] = (zone.origTile?.[`${r},${c}`]) || defaultGround(); });
+                return false;
+            }
+            return true;
+        });
         // Night town: vampire/wolf/werewolf every 3 turns
         if (activeStage === 'nighttown' && turn >= 3 && turn % 3 === 0) {
             const pool = ['vampire','wolf','werewolf'];
@@ -4084,6 +4129,20 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'sin_mark') { let smR=(se.fallenGauge||0)>=30?5:2; return maxDist>0&&maxDist<=smR+(se.rangeBonus||0)&&target&&target.team!==se.team; }
     if (mode === 'death_scythe') return maxDist===0;
     if (mode === 'balance_break') { if((se.fallenGauge||0)>=30) return maxDist>0&&maxDist<=8+(se.rangeBonus||0)&&target&&target.team!==se.team; return (se.r===r||se.c===c)&&maxDist>0&&maxDist<=5+(se.rangeBonus||0)&&target&&target.team!==se.team; }
+    // 陰陽師アビリティ
+    if (mode === 'oni_arm') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'divine_speed') {
+        const noLandT = ['deep_water','sea_trench','river','lava','sky_void','fallen_floor'];
+        return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && isWalkable(r,c) && !noLandT.includes(board[r]?.[c]) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    }
+    if (mode === 'talisman_barrier') return maxDist===0;
+    if (mode === 'pentagram_formation') return maxDist===0;
+    if (mode === 'soul_release') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'soul_pull') return maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'shikigami_summon') return maxDist===0 && turn >= 5;
+    // 式神用アビリティ
+    if (mode === 'charge') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'poison_bite') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     return false;
 }
 
@@ -4801,7 +4860,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     }
 
     // 岩隠れバリア初撃ブレーク: 攻撃系アビリティが敵のrockHideActiveに当たると即時破壊
-    const attackModes = ['sword','punch','spear','bow','magic','bite','throw_net','stone_punch','rock_throw','drop_rock_heavy','fire','fire_breath','hell_breath','ice_throw','dark_shot','tentacle','branch_whip','claw','dash_attack','wave_slash','rising_slash','cannon_shot','snipe','bomb','knife','knife_juggling','thunder','para_arrow','poison_arrow','net_arrow','vine_arrow','grapple','lasso','chain_pull','chain_sickle','ram','gore','trunk_slam','pounce','mow_down','seed_bazooka','multi_shot','acid_shot','drill','rocket_punch','roar'];
+    const attackModes = ['sword','punch','spear','bow','magic','bite','throw_net','stone_punch','rock_throw','drop_rock_heavy','fire','fire_breath','hell_breath','ice_throw','dark_shot','tentacle','branch_whip','claw','dash_attack','wave_slash','rising_slash','cannon_shot','snipe','bomb','knife','knife_juggling','thunder','para_arrow','poison_arrow','net_arrow','vine_arrow','grapple','lasso','chain_pull','chain_sickle','ram','gore','trunk_slam','pounce','mow_down','seed_bazooka','multi_shot','acid_shot','drill','rocket_punch','roar','charge','poison_bite','oni_arm','peck'];
     if (targetEntity && targetEntity.team !== se.team && targetEntity.rockHideActive && attackModes.includes(actionMode)) {
         if (triggerRockHideBreak(targetEntity, se)) {
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
@@ -5016,6 +5075,15 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['ice_magic']--; 
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 1 + (targetEntity.defDebuff||0); }
         msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(1)を与え行動力を奪った！"); used = true;
+    } else if (actionMode === 'peck') {
+        // つつき (鬼カラス・ハヤブサ等) — 半径1/威1/AP-1
+        if (se.abilities['peck'] !== 999) se.abilities['peck']--;
+        let peckDmg = 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= peckDmg; targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+        }
+        msg(targetEntity.invin ? '🐦 つつき！しかし無敵で防がれた！' : `🐦 つつき！${targetEntity.name}に${peckDmg}ダメ＋AP-1！`);
+        used = true;
     } else if (actionMode === 'sword' || actionMode === 'punch' || actionMode === 'bite') {
         if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--; 
         let atkName = actionMode === 'punch' ? 'ぶん殴り' : actionMode === 'bite' ? '噛みつき' : '剣撃';
@@ -6437,6 +6505,185 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
         msg(`⚖️ 均衡崩し！自1ダメ→${targetEntity.name}に${bbDmg}ダメ・吹飛・AP-2・5封印${bbGauge>=30?'・転送':''}！堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'charge') {
+        // 突撃：残りAP消費してダメージ追加 (式神狐火など)
+        let chDmg = se.ap + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (se.abilities['charge'] !== 999) se.abilities['charge']--;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= chDmg;
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+        }
+        se.ap = 0;
+        msg(targetEntity.invin ? `⚡ 突撃！しかし無敵で防がれた！` : `⚡ 突撃！${targetEntity.name}に${chDmg}ダメ(AP全消費)！`);
+        used = true;
+    } else if (actionMode === 'poison_bite') {
+        // 毒噛み (鬼蛇など)
+        if (se.abilities['poison_bite'] !== 999) se.abilities['poison_bite']--;
+        let pbDmg = 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= pbDmg;
+            targetEntity.poisonTimer = Math.max(targetEntity.poisonTimer||0, 3);
+            targetEntity.poisonStacks = (targetEntity.poisonStacks||0) + 1;
+        }
+        msg(targetEntity.invin ? `🐍 毒噛み！しかし無敵で防がれた！` : `🐍 毒噛み！${targetEntity.name}に${pbDmg}ダメ＋毒付与！`);
+        used = true;
+    } else if (actionMode === 'oni_arm') {
+        // 鬼腕解放 (陰陽師) — 封印不可 封印5以上でAoE
+        if (se.abilities['oni_arm'] !== 999) se.abilities['oni_arm']--;
+        let oniDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= oniDmg;
+            knockback(targetEntity, 1, se);
+            let oaKeys = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (oaKeys.length > 0) sealAbilities(targetEntity, [oaKeys[Math.floor(Math.random()*oaKeys.length)]], 1);
+        }
+        let ownSealed = Object.keys(cursedAbilities[se.id]||{}).filter(k=>k!=='drop_rock').length;
+        let aoeTxt = '';
+        if (ownSealed >= 5) {
+            let aoeHits = 0;
+            entities.forEach(t => {
+                if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2&&!t.invin) {
+                    t.hp -= 2 + (se.atkBonus||0) + (t.defDebuff||0); aoeHits++;
+                }
+            });
+            if (Math.random() < 0.5) {
+                if (se.abilities['oni_arm'] !== 999) se.abilities['oni_arm']++;
+                aoeTxt = `＋AoE半径2(命中${aoeHits})＋50%使用回数+1！`;
+            } else { aoeTxt = `＋AoE半径2(命中${aoeHits})！`; }
+        }
+        msg(targetEntity.invin ? '👹 鬼腕解放！しかし無敵で防がれた！' : `👹 鬼腕解放！${targetEntity.name}に${oniDmg}ダメ＋吹飛＋1T封印！${aoeTxt}`);
+        used = true;
+    } else if (actionMode === 'divine_speed') {
+        // 神速 (陰陽師) — 半径3陸移動、通過1ダメ、狐火召喚、全アビ使用不可
+        if (se.abilities['divine_speed'] !== 999) se.abilities['divine_speed']--;
+        let dsOldR = se.r, dsOldC = se.c;
+        let dsHitEnts = new Set();
+        let dsCR = dsOldR, dsCC = dsOldC;
+        while (dsCR !== r || dsCC !== c) {
+            dsCR += Math.sign(r - dsCR); dsCC += Math.sign(c - dsCC);
+            entities.forEach(t => {
+                if (t.hp>0&&t.team!==se.team&&!t.invin&&Math.max(Math.abs(t.r-dsCR),Math.abs(t.c-dsCC))<=1) dsHitEnts.add(t);
+            });
+        }
+        dsHitEnts.forEach(t => { t.hp -= 1 + (se.atkBonus||0); });
+        se.r = r; se.c = c;
+        // 旧位置付近に狐火召喚
+        let ffCands = [];
+        for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+            if(dr===0&&dc===0) continue;
+            let nr=dsOldR+dr, nc=dsOldC+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) ffCands.push({r:nr,c:nc});
+        }
+        if (ffCands.length > 0) {
+            let ffSp = ffCands[Math.floor(Math.random()*ffCands.length)];
+            let ffM = monsterTemplate('fox_fire', ffSp.r, ffSp.c);
+            ffM.id = 'ff_'+Date.now(); ffM.team = se.team;
+            entities.push(ffM);
+        }
+        se.ap = 0;
+        msg(`⚡ 神速！${dsHitEnts.size}体に1ダメ＋狐火召喚！残りアビリティ使用不可！`);
+        used = true;
+    } else if (actionMode === 'talisman_barrier') {
+        // 護符の結界 (陰陽師) — 半径2味方バリア+HP+3、正面5岩
+        if (se.abilities['talisman_barrier'] !== 999) se.abilities['talisman_barrier']--;
+        let tbCount = 0;
+        entities.forEach(ally => {
+            if (ally.hp>0 && ally.team===se.team && Math.max(Math.abs(ally.r-se.r),Math.abs(ally.c-se.c))<=2) {
+                ally.invin = true; ally.invinTimer = 1;
+                ally.hp = Math.min(ally.hp + 3, ally.maxHp + 3); tbCount++;
+            }
+        });
+        let tbFrontR = se.team === 'player' ? se.r - 1 : se.r + 1;
+        let tbRks = [];
+        for (let dc=-2; dc<=2; dc++) {
+            let tc = se.c + dc;
+            if (tc>=0&&tc<SIZE&&tbFrontR>=0&&tbFrontR<SIZE&&isWalkable(tbFrontR,tc)&&!entities.some(ev=>ev.hp>0&&ev.r===tbFrontR&&ev.c===tc)) {
+                board[tbFrontR][tc] = 'rock'; tbRks.push({r:tbFrontR,c:tc});
+            }
+        }
+        se.talismanRocks = tbRks;
+        se.ap = 0;
+        msg(`🔱 護符の結界！半径2味方${tbCount}体バリア＋HP+3！正面${tbRks.length}岩設置(次T消滅)！`);
+        used = true;
+    } else if (actionMode === 'pentagram_formation') {
+        // 五芒星の陣 (陰陽師) — 半径3に結界タイル展開
+        if (se.abilities['pentagram_formation'] !== 999) se.abilities['pentagram_formation']--;
+        let pgCs = [], pgOr = {};
+        for (let dr=-3;dr<=3;dr++) for (let dc=-3;dc<=3;dc++) {
+            let nr=se.r+dr, nc=se.c+dc;
+            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            if (!isWalkable(nr,nc,false,true)) continue;
+            pgCs.push({r:nr,c:nc});
+            pgOr[`${nr},${nc}`] = board[nr][nc];
+            board[nr][nc] = 'pentagram_tile';
+        }
+        pentagramZones.push({ownerTeam:se.team, ownerId:se.id, cells:pgCs, origTile:pgOr, turnExpires:turn+1});
+        se.ap = 0;
+        msg(`🔮 五芒星の陣！半径3マスが結界に！敵はターン開始時にAP-1＋全アビリティ封印！`);
+        used = true;
+    } else if (actionMode === 'soul_release') {
+        // 放魂術 (陰陽師) — 半径3、3ダメ+吹飛5+AP-1+1T封印+大悪霊召喚
+        if (se.abilities['soul_release'] !== 999) se.abilities['soul_release']--;
+        let srDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= srDmg;
+            knockback(targetEntity, 5, se);
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            let srKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (srKs.length>0) sealAbilities(targetEntity, [srKs[Math.floor(Math.random()*srKs.length)]], 1);
+            // 大悪霊召喚
+            let gsC = [];
+            for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
+                let nr=targetEntity.r+dr, nc=targetEntity.c+dc;
+                if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) gsC.push({r:nr,c:nc});
+            }
+            if (gsC.length>0) {
+                let gsSp=gsC[Math.floor(Math.random()*gsC.length)];
+                let gsM=monsterTemplate('great_spirit',gsSp.r,gsSp.c);
+                gsM.id='gs_'+Date.now(); gsM.team=se.team; entities.push(gsM);
+            }
+        }
+        se.ap = 0;
+        msg(targetEntity.invin ? `👻 放魂術！しかし無敵で防がれた！` : `👻 放魂術！${targetEntity.name}に${srDmg}ダメ＋吹飛5＋AP-1＋1T封印＋大悪霊召喚！`);
+        used = true;
+    } else if (actionMode === 'soul_pull') {
+        // 引魂術 (陰陽師) — 半径5、目の前引き寄せ、3ダメ+AP-1+1T封印
+        if (se.abilities['soul_pull'] !== 999) se.abilities['soul_pull']--;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let spFR = se.team==='player' ? se.r-1 : se.r+1, spFC = se.c;
+            let placed = false;
+            for (let ddc=-1; ddc<=1 && !placed; ddc++) {
+                let dr2=spFR, dc2=spFC+ddc;
+                if (dr2>=0&&dr2<SIZE&&dc2>=0&&dc2<SIZE&&isWalkable(dr2,dc2)&&!entities.some(ev=>ev.hp>0&&ev.r===dr2&&ev.c===dc2&&ev!==targetEntity)) {
+                    targetEntity.r=dr2; targetEntity.c=dc2; placed=true;
+                }
+            }
+            let spDmg=3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+            targetEntity.hp-=spDmg; targetEntity.ap=Math.max(0,targetEntity.ap-1);
+            let spKs=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if(spKs.length>0) sealAbilities(targetEntity,[spKs[Math.floor(Math.random()*spKs.length)]],1);
+            msg(`👻 引魂術！${targetEntity.name}を目の前に引き寄せ${spDmg}ダメ＋AP-1＋1T封印！`);
+        } else { msg(`👻 引魂術！しかし防がれた！`); }
+        se.ap = 0; used = true;
+    } else if (actionMode === 'shikigami_summon') {
+        // 式神召喚 (陰陽師) — 5T~、狐火+鬼カラス+鬼蛇召喚
+        if (turn < 5) { msg("🐦 式神召喚：5ターン目以降でないと使用できない！"); return; }
+        if (se.abilities['shikigami_summon'] !== 999) se.abilities['shikigami_summon']--;
+        let skC = [];
+        for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+            if(dr===0&&dc===0) continue;
+            let nr=se.r+dr, nc=se.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) skC.push({r:nr,c:nc});
+        }
+        ['fox_fire','oni_crow','oni_snake'].forEach((st,i) => {
+            if (skC[i]) {
+                let m=monsterTemplate(st,skC[i].r,skC[i].c);
+                m.id='sk_'+st+Date.now()+i; m.team=se.team; entities.push(m);
+            }
+        });
+        se.ap = 0;
+        msg(`🐦 式神召喚！狐火・鬼カラス・鬼蛇を召喚！残りアビリティ使用不可！`);
+        used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -6653,6 +6900,52 @@ function executeSkill(se) {
         se.abilities['balance_break'] = 1;
         se.abilities['grudge_strike'] = 999;
         msg(`😈 堕天発動！天使が堕天使に変身！AP+2・最大AP+2！「罪の刻印・デスサイズ・均衡崩し・怨みの打撃」追加！毎ターン自HP-1！`);
+        return true;
+    }
+    // ====== 陰陽師 スキル: 陰陽冥鬼 ======
+    if (se.type === 'onmyoji') {
+        let ownAbs = Object.keys(se.abilities||{}).filter(k => k !== 'drop_rock');
+        let sealedCount = ownAbs.filter(k => (se.abilities[k] === 0) || (cursedAbilities[se.id]?.[k] > 0)).length;
+        if (sealedCount < 5) {
+            msg(`☯️ 陰陽冥鬼：封印済み/回数0アビリティが5以上必要！(現在${sealedCount}/5)`);
+            return false;
+        }
+        // 青鬼・赤鬼・大鬼を周囲に召喚
+        let oniC = [];
+        for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+            if(dr===0&&dc===0) continue;
+            let nr=se.r+dr, nc=se.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) oniC.push({r:nr,c:nc});
+        }
+        ['blue_oni','red_oni','great_oni'].forEach((ot,i) => {
+            if (oniC[i]) {
+                let m=monsterTemplate(ot,oniC[i].r,oniC[i].c);
+                m.id='onmyo_'+ot+Date.now()+i; m.team=se.team; entities.push(m);
+            }
+        });
+        // 半径5の敵にランダムで引き寄せor吹飛ばし
+        let skillMsgs = [];
+        entities.forEach(t => {
+            if (t.hp<=0||t.team===se.team) return;
+            if (Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))>5) return;
+            if (Math.random() < 0.5) {
+                // 半径2目の前へ引き寄せ+3ダメ+AP-2
+                let frR=se.team==='player'?se.r-2:se.r+2, frC=se.c;
+                let placed=false;
+                for (let ddc=-1;ddc<=1&&!placed;ddc++) {
+                    let dr2=frR, dc2=frC+ddc;
+                    if(dr2>=0&&dr2<SIZE&&dc2>=0&&dc2<SIZE&&isWalkable(dr2,dc2)&&!entities.some(ev=>ev.hp>0&&ev.r===dr2&&ev.c===dc2&&ev!==t)) {
+                        if(!t.invin){t.r=dr2;t.c=dc2;t.hp-=3+(se.atkBonus||0)+(t.defDebuff||0);t.ap=Math.max(0,t.ap-2);}
+                        skillMsgs.push(`${t.name}引寄3ダメAP-2`); placed=true;
+                    }
+                }
+            } else {
+                // 吹飛5+3ダメ+AP-1
+                if(!t.invin){knockback(t,5,se);t.hp-=3+(se.atkBonus||0)+(t.defDebuff||0);t.ap=Math.max(0,t.ap-1);}
+                skillMsgs.push(`${t.name}吹飛3ダメAP-1`);
+            }
+        });
+        msg(`☯️ 陰陽冥鬼発動！青鬼・赤鬼・大鬼召喚！${skillMsgs.join('・')||'周囲に敵なし'}！`);
         return true;
     }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
@@ -6949,6 +7242,13 @@ function monsterTemplate(type, r, c) {
         case 'skeleton_soldier':return {...base, type, name:'スケルトンソルジャー', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{sword:999}, soulValue:1};
         case 'necro_chimera':   return {...base, type, name:'ネクロキメラ', hp:6, maxHp:6, ap:2, maxAp:2, abilities:{corpse_throw:999}, soulValue:3};
         case 'skull':           return {...base, type, name:'ドクロ', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{dark_magic:999}, soulValue:1};
+        // 陰陽師の式神・鬼
+        case 'fox_fire':     return {...base, type, name:'狐火', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{charge:999}, soulValue:1};
+        case 'oni_crow':     return {...base, type, name:'鬼カラス', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{peck:999}, flying:true, soulValue:1};
+        case 'oni_snake':    return {...base, type, name:'鬼蛇', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{poison_bite:999}, soulValue:1};
+        case 'blue_oni':     return {...base, type, name:'青鬼', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{punch:999}, soulValue:2};
+        case 'red_oni':      return {...base, type, name:'赤鬼', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{punch:999}, soulValue:2};
+        case 'great_oni':    return {...base, type, name:'大鬼(式)', hp:8, maxHp:8, ap:2, maxAp:2, abilities:{punch:999}, soulValue:3};
         default:             return {...base, type:'zombie', name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
     }
 }
@@ -8205,6 +8505,7 @@ function updateUI() {
             necromancer:  '霊魂放出',
             angel:        '堕天',
             world_manager: '世界の作り直し',
+            onmyoji: '陰陽冥鬼',
         };
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
