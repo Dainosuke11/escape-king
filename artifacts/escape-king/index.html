@@ -6911,11 +6911,24 @@ function cpuLogic() {
             // === SCAN: プレイヤー状態を把握 ===
             let playerMain = entities.find(e=>e.team==='player'&&e.hp>0);
             let playerShatters = playerMain ? (playerMain.abilities?.shatter||0) : 99;
-            // canReachBase: 敵陣(r≥17)に2手以内で到達できるかを経路探索で判定
+            // canReachBase: r≥16で即トリガー(仕様通り)、またはr≥17に1〜2手で到達可能
             let canReachBase = (function() {
-                if (cpu.r >= 17) return true;
-                let probe = findPath(cpu.r, cpu.c, SIZE-1, Math.round(SIZE/2));
-                return probe !== null && probe.length <= 2;
+                if (cpu.r >= 16) return true; // 仕様: r≥16で突破モード開始
+                // 1手圏内にr≥17の歩行可能セルがあるか
+                for (let [dr,dc] of [[1,0],[1,1],[1,-1],[0,1],[0,-1]]) {
+                    let nr=cpu.r+dr, nc=cpu.c+dc;
+                    if (nr>=17&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)) return true;
+                }
+                // 2手圏内にr≥17の歩行可能セルがあるか
+                for (let [dr,dc] of [[1,0],[0,1],[0,-1],[-1,0]]) {
+                    let nr=cpu.r+dr, nc=cpu.c+dc;
+                    if (nr<0||nr>=SIZE||nc<0||nc>=SIZE||!isWalkable(nr,nc)) continue;
+                    for (let [dr2,dc2] of [[1,0],[1,1],[1,-1],[0,1],[0,-1]]) {
+                        let nr2=nr+dr2, nc2=nc+dc2;
+                        if (nr2>=17&&nr2<SIZE&&nc2>=0&&nc2<SIZE&&isWalkable(nr2,nc2)) return true;
+                    }
+                }
+                return false;
             })();
 
             // === プレイヤーへの距離（kill checkはプレイヤー専用） ===
@@ -7073,9 +7086,12 @@ function cpuLogic() {
                 // 優先順位：プレイヤー進行方向前方→左右→斜め→後方（必ずplayerMain基準）
                 let hpm = playerMain;
                 let forwardR = hpm.r - 1; // 相手の前進方向（CPUベースへ向かう = 上方向）
+                // 仕様通りの優先順位: 前方 → 左右 → 斜め前 → 後方
                 let rockOrder = [
-                    {r:forwardR,c:hpm.c},{r:forwardR,c:hpm.c-1},{r:forwardR,c:hpm.c+1},
-                    {r:hpm.r,c:hpm.c-1},{r:hpm.r,c:hpm.c+1},{r:hpm.r+1,c:hpm.c}
+                    {r:forwardR,c:hpm.c},
+                    {r:hpm.r,c:hpm.c-1},{r:hpm.r,c:hpm.c+1},
+                    {r:forwardR,c:hpm.c-1},{r:forwardR,c:hpm.c+1},
+                    {r:hpm.r+1,c:hpm.c}
                 ];
                 for (let loc of rockOrder) {
                     if (loc.r<0||loc.r>=SIZE||loc.c<0||loc.c>=SIZE) continue;
