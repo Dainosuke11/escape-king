@@ -6911,50 +6911,59 @@ function cpuLogic() {
             // === SCAN: プレイヤー状態を把握 ===
             let playerMain = entities.find(e=>e.team==='player'&&e.hp>0);
             let playerShatters = playerMain ? (playerMain.abilities?.shatter||0) : 99;
-            let canReachBase = cpu.r >= 16; // CPUが敵陣最奥付近に到達
+            // canReachBase: 敵陣(r≥17)に2手以内で到達できるかを経路探索で判定
+            let canReachBase = (function() {
+                if (cpu.r >= 17) return true;
+                let probe = findPath(cpu.r, cpu.c, SIZE-1, Math.round(SIZE/2));
+                return probe !== null && probe.length <= 2;
+            })();
 
-            // === CPUが出せる推定最大ダメージ ===
+            // === プレイヤーへの距離（kill checkはプレイヤー専用） ===
+            let pkTarget = playerMain || p; // キルチェック・封鎖はプレイヤー優先
+            let pkDist = Math.max(Math.abs(cpu.r-pkTarget.r), Math.abs(cpu.c-pkTarget.c));
+
+            // === CPUが出せる推定最大ダメージ（対プレイヤー距離で計算） ===
             let cpuMaxDmg = 1;
-            if (cpu.abilities.smash_slash>0 && dist<=1) cpuMaxDmg=Math.max(cpuMaxDmg,4);
-            if ((cpu.abilities.spin_slash>0||cpu.abilities.poison_bow>0||cpu.abilities.rock_throw>0||cpu.abilities.spear>0||cpu.abilities.poison_dagger>0) && dist<=5) cpuMaxDmg=Math.max(cpuMaxDmg,2);
+            if (cpu.abilities.smash_slash>0 && pkDist<=1) cpuMaxDmg=Math.max(cpuMaxDmg,4);
+            if ((cpu.abilities.spin_slash>0||cpu.abilities.poison_bow>0||cpu.abilities.rock_throw>0||cpu.abilities.spear>0||cpu.abilities.poison_dagger>0) && pkDist<=5) cpuMaxDmg=Math.max(cpuMaxDmg,2);
 
             // ====================================================
-            // 優先度1: キルチェック — 今すぐ倒せるなら即攻撃
+            // 優先度1: キルチェック — プレイヤーを今すぐ倒せるなら即攻撃
             // ====================================================
-            let canKill = !p.invin && p.hp <= cpuMaxDmg;
+            let canKill = pkTarget && !pkTarget.invin && pkTarget.hp <= cpuMaxDmg;
 
-            if (canKill && !attacked && dist<=1 && cpu.abilities.smash_slash>0) {
+            if (canKill && !attacked && pkDist<=1 && cpu.abilities.smash_slash>0) {
                 cpu.abilities.smash_slash--;
-                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=4;msg(`⚔️ 敵がトドメの粉砕斬り！${p.name}に4ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=4;msg(`⚔️ 敵がトドメの粉砕斬り！${pkTarget.name}に4ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && dist<=1 && cpu.abilities.spin_slash>0) {
+            if (canKill && !attacked && pkDist<=1 && cpu.abilities.spin_slash>0) {
                 cpu.abilities.spin_slash--;
-                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);msg(`⚔️ 敵がトドメの回転斬り！${p.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;knockback(pkTarget,1,cpu);msg(`⚔️ 敵がトドメの回転斬り！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && cpu.abilities.poison_bow>0 && dist<=5 && getLoS(cpu,p)<99) {
+            if (canKill && !attacked && cpu.abilities.poison_bow>0 && pkDist<=5 && getLoS(cpu,pkTarget)<99) {
                 cpu.abilities.poison_bow--;
-                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);p.poisonTimer=3;msg(`🏹 敵がトドメの毒弓矢！${p.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;knockback(pkTarget,1,cpu);pkTarget.poisonTimer=3;msg(`🏹 敵がトドメの毒弓矢！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && cpu.abilities.poison_dagger>0 && dist<=1) {
+            if (canKill && !attacked && cpu.abilities.poison_dagger>0 && pkDist<=1) {
                 cpu.abilities.poison_dagger--;
-                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;p.poisonTimer=3;msg(`🗡️ 敵がトドメの毒剣刺し！${p.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;pkTarget.poisonTimer=3;msg(`🗡️ 敵がトドメの毒剣刺し！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && cpu.abilities.rock_throw>0 && dist<=2) {
+            if (canKill && !attacked && cpu.abilities.rock_throw>0 && pkDist<=2) {
                 cpu.abilities.rock_throw--;
-                if (!p.invin&&!necroShieldBlock(p)){p.hp-=2;msg(`🪨 敵がトドメの岩投げ！${p.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.hp-=2;msg(`🪨 敵がトドメの岩投げ！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && dist<=1) {
-                if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;msg(`⚔️ 敵がトドメの一撃！${p.name}に1ダメージ！`);}
+            if (canKill && !attacked && pkDist<=1) {
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.hp-=1;msg(`⚔️ 敵がトドメの一撃！${pkTarget.name}に1ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
 
             // ====================================================
-            // 優先度2: 陣地突破 — 敵陣最奥(r≥16)に到達したら一気に突破
+            // 優先度2: 陣地突破 — 敵陣(r≥17)に1〜2手で到達できるなら突破優先
             // ====================================================
             if (!attacked && canReachBase) {
                 let basePath = findPath(cpu.r, cpu.c, SIZE-1, Math.round(SIZE/2));
@@ -6970,11 +6979,11 @@ function cpuLogic() {
             }
 
             // ====================================================
-            // 優先度3: 岩砕き消耗戦略 — shatter残数が0〜1なら徹底封鎖
+            // 優先度3: 岩砕き消耗戦略 — shatter残数が0〜1ならプレイヤーを徹底封鎖
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerShatters<=1) {
-                // 上下左右→斜め順で囲む（封鎖優先度高）
-                let trapped = dropRockAround(p,
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerShatters<=1 && playerMain) {
+                // 上下左右→斜め順で囲む（封鎖対象は必ずプレイヤー本体）
+                let trapped = dropRockAround(playerMain,
                     [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[-1,-1],[1,1],[1,-1]],
                     `💀 敵が岩砕きの底をついたと判断！岩で封鎖してきた！`);
                 if (trapped) attacked=true;
@@ -7058,14 +7067,15 @@ function cpuLogic() {
             }
 
             // ====================================================
-            // 優先度7: 岩ハラスメント — 毎ターン必ず実行（r≤10制限撤廃）
+            // 優先度7: 岩ハラスメント — 毎ターン必ず実行（r≤10制限撤廃・対象はプレイヤー本体）
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && p.team==='player') {
-                // 優先順位：プレイヤー進行方向前方→左右→斜め→後方
-                let forwardR = p.r - 1; // 相手の前進方向（CPUベースへ向かう）
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerMain) {
+                // 優先順位：プレイヤー進行方向前方→左右→斜め→後方（必ずplayerMain基準）
+                let hpm = playerMain;
+                let forwardR = hpm.r - 1; // 相手の前進方向（CPUベースへ向かう = 上方向）
                 let rockOrder = [
-                    {r:forwardR,c:p.c},{r:forwardR,c:p.c-1},{r:forwardR,c:p.c+1},
-                    {r:p.r,c:p.c-1},{r:p.r,c:p.c+1},{r:p.r+1,c:p.c}
+                    {r:forwardR,c:hpm.c},{r:forwardR,c:hpm.c-1},{r:forwardR,c:hpm.c+1},
+                    {r:hpm.r,c:hpm.c-1},{r:hpm.r,c:hpm.c+1},{r:hpm.r+1,c:hpm.c}
                 ];
                 for (let loc of rockOrder) {
                     if (loc.r<0||loc.r>=SIZE||loc.c<0||loc.c>=SIZE) continue;
@@ -7134,7 +7144,8 @@ function cpuLogic() {
             // それ以外 → 通常の敵追跡
             // ====================================================
             if (!attacked) {
-                let goToBase = (cpu.hp < p.hp*0.6 || playerShatters >= 4) && cpu.r < 14;
+                // 仕様通り: cpu.hp < playerMain.hp OR playerShatters >= 3 のとき陣地突破を狙う
+                let goToBase = playerMain && (cpu.hp < playerMain.hp || playerShatters >= 3);
                 let moved = false;
                 if (goToBase) {
                     let basePath = findPath(cpu.r, cpu.c, SIZE-2, Math.round(SIZE/2));
