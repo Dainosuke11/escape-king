@@ -7160,35 +7160,76 @@ function cpuLogic() {
             // それ以外 → 通常の敵追跡
             // ====================================================
             if (!attacked) {
-                // 仕様通り: cpu.hp < playerMain.hp OR playerShatters >= 3 のとき陣地突破を狙う
-                let goToBase = playerMain && (cpu.hp < playerMain.hp || playerShatters >= 3);
-                let moved = false;
-                if (goToBase) {
-                    let basePath = findPath(cpu.r, cpu.c, SIZE-2, Math.round(SIZE/2));
-                    if (basePath && basePath.length > 0) {
-                        let next = basePath[0];
-                        if (isWalkable(next.r,next.c)&&!entities.some(e=>e.hp>0&&e.r===next.r&&e.c===next.c&&e!==cpu)){
-                            msg("💨 敵が戦闘を避けて敵陣を狙う！"); cpuMoveTo(next.r,next.c); moved=true;
+                // ====================================================
+                // 包囲脱出チェック — 全8方向が通れない場合、shatterで岩を砕いて脱出を試みる
+                // shatterもなく4方向が岩なら isTrapped()→checkWin() でゲームオーバー
+                // ====================================================
+                {
+                    let escapeDirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
+                    let canMove = escapeDirs.some(([dr,dc]) => isWalkable(cpu.r+dr, cpu.c+dc));
+                    if (!canMove && (cpu.abilities.shatter||0) > 0) {
+                        let shatterCandidates = escapeDirs
+                            .map(([dr,dc]) => ({r: cpu.r+dr, c: cpu.c+dc}))
+                            .filter(({r,c}) => r>=0&&r<SIZE&&c>=0&&c<SIZE && ['rock','mine','volcano','gravestone'].includes(board[r][c]))
+                            .sort((a,b) => Math.max(Math.abs(a.r-p.r),Math.abs(a.c-p.c)) - Math.max(Math.abs(b.r-p.r),Math.abs(b.c-p.c)));
+                        if (shatterCandidates.length > 0) {
+                            let {r: sr, c: sc} = shatterCandidates[0];
+                            board[sr][sc] = defaultGround();
+                            cpu.abilities.shatter--;
+                            cpu.ap--;
+                            msg(`🪨 敵が岩砕きで包囲を突破しようとしている！`);
+                            attacked = true;
                         }
                     }
                 }
-                if (!moved) {
-                    let path = findPath(cpu.r, cpu.c, p.r, p.c);
-                    if (path && path.length > 0) {
-                        let next = path[0];
-                        if (isWalkable(next.r,next.c)) cpuMoveTo(next.r,next.c);
-                        else cpu.ap--;
-                    } else {
-                        if (isWalkable(cpu.r+1,cpu.c)) cpuMoveTo(cpu.r+1,cpu.c);
-                        else cpu.ap--;
+
+                // 仕様通り: cpu.hp < playerMain.hp OR playerShatters >= 3 のとき陣地突破を狙う
+                if (!attacked) {
+                    let goToBase = playerMain && (cpu.hp < playerMain.hp || playerShatters >= 3);
+                    let moved = false;
+                    if (goToBase) {
+                        let basePath = findPath(cpu.r, cpu.c, SIZE-2, Math.round(SIZE/2));
+                        if (basePath && basePath.length > 0) {
+                            let next = basePath[0];
+                            if (isWalkable(next.r,next.c)&&!entities.some(e=>e.hp>0&&e.r===next.r&&e.c===next.c&&e!==cpu)){
+                                msg("💨 敵が戦闘を避けて敵陣を狙う！"); cpuMoveTo(next.r,next.c); moved=true;
+                            }
+                        }
+                    }
+                    if (!moved) {
+                        let path = findPath(cpu.r, cpu.c, p.r, p.c);
+                        if (path && path.length > 0) {
+                            let next = path[0];
+                            if (isWalkable(next.r,next.c)) cpuMoveTo(next.r,next.c);
+                            else cpu.ap--;
+                        } else {
+                            if (isWalkable(cpu.r+1,cpu.c)) cpuMoveTo(cpu.r+1,cpu.c);
+                            else cpu.ap--;
+                        }
                     }
                 }
             }
 
         } else {
-            // ターゲットなし：ひたすら前進
-            if (isWalkable(cpu.r+1,cpu.c)) cpuMoveTo(cpu.r+1,cpu.c);
-            else cpu.ap--;
+            // ターゲットなし：前進、または包囲されていれば岩砕きで脱出
+            let escapeDirsNoTarget = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
+            let canMoveNoTarget = escapeDirsNoTarget.some(([dr,dc]) => isWalkable(cpu.r+dr, cpu.c+dc));
+            if (!canMoveNoTarget && (cpu.abilities.shatter||0) > 0) {
+                let sc_list = escapeDirsNoTarget
+                    .map(([dr,dc]) => ({r: cpu.r+dr, c: cpu.c+dc}))
+                    .filter(({r,c}) => r>=0&&r<SIZE&&c>=0&&c<SIZE && ['rock','mine','volcano','gravestone'].includes(board[r][c]));
+                if (sc_list.length > 0) {
+                    let {r: sr, c: sc} = sc_list[0];
+                    board[sr][sc] = defaultGround();
+                    cpu.abilities.shatter--;
+                    cpu.ap--;
+                    msg(`🪨 敵が岩砕きで包囲を突破しようとしている！`);
+                }
+            } else if (isWalkable(cpu.r+1,cpu.c)) {
+                cpuMoveTo(cpu.r+1,cpu.c);
+            } else {
+                cpu.ap--;
+            }
         }
 
         checkWin();
