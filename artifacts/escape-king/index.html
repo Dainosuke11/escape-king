@@ -6858,228 +6858,312 @@ function findPath(sr, sc, tr, tc) {
 function cpuLogic() {
     let cpuEntities = entities.filter(e => e.team === 'cpu' && e.hp > 0 && e.ap > 0);
     let targets = entities.filter(e => e.team !== 'cpu' && e.team !== 'vehicle' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
-    
+
     if (cpuEntities.length > 0) {
         let cpu = cpuEntities[0];
 
+        // Helper: move cpu to next cell and handle tile effects
+        function cpuMoveTo(nr, nc) {
+            cpu.r = nr; cpu.c = nc; cpu.ap--;
+            let t = board[nr]?.[nc];
+            if (t === 'trap') {
+                let tKey = `${nr},${nc}`;
+                if (!cpu.flying && trapOwnerMap[tKey] !== cpu.team) {
+                    board[nr][nc] = 'plains'; delete trapOwnerMap[tKey];
+                    if (!cpu.invin) {
+                        let hits = 0;
+                        entities.forEach(e => { if(e.hp>0&&e.team!==cpu.team&&Math.max(Math.abs(e.r-nr),Math.abs(e.c-nc))<=1&&!e.invin){e.hp-=1;e.ap=Math.max(0,e.ap-2);hits++;} });
+                        cpu.hp-=1; cpu.ap=Math.max(0,cpu.ap-2); cpu.trapHitPenalty=1;
+                        msg(`敵が罠を踏んだ！3×3爆発！周囲${hits}体も巻き込み！`);
+                    }
+                }
+            } else if (t === 'magic_circle') { board[nr][nc]='plains'; msg("敵が魔法陣を踏み消した！");
+            } else if (t === 'item_tile') {
+                let itm=itemTileMap[`${nr},${nc}`]; board[nr][nc]=defaultGround(); delete itemTileMap[`${nr},${nc}`]; applyItem(cpu,itm); msg("敵がアイテムを取得！");
+            } else if (t === 'forest') { msg("敵が森の中に潜伏し、姿を消した…！"); }
+        }
+
+        // Helper: drop rock at best candidate around target entity
+        function dropRockAround(target, dirs, message) {
+            for (let [dr,dc] of dirs) {
+                let lr=target.r+dr, lc=target.c+dc;
+                if (lr<0||lr>=SIZE||lc<0||lc>=SIZE) continue;
+                let bt=board[lr]?.[lc];
+                if ((bt==='plains'||bt==='desert'||bt==='forest') && !isNoRockZone(lr,lc) && !entities.some(e=>e.r===lr&&e.c===lc&&e.hp>0)) {
+                    board[lr][lc]='rock'; cpu.ap--;
+                    msg(message); return true;
+                }
+            }
+            return false;
+        }
+
         if (targets.length > 0) {
             targets.sort((a,b) => {
-                let d1 = Math.max(Math.abs(cpu.r - a.r), Math.abs(cpu.c - a.c)) - (a.team === 'player' ? 2 : 0);
-                let d2 = Math.max(Math.abs(cpu.r - b.r), Math.abs(cpu.c - b.c)) - (b.team === 'player' ? 2 : 0);
-                return d1 - d2;
+                let d1 = Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-(a.team==='player'?2:0);
+                let d2 = Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c))-(b.team==='player'?2:0);
+                return d1-d2;
             });
-            
+
             let p = targets[0];
-            let dist = Math.max(Math.abs(cpu.r - p.r), Math.abs(cpu.c - p.c));
+            let dist = Math.max(Math.abs(cpu.r-p.r), Math.abs(cpu.c-p.c));
             let attacked = false;
 
-            if (!cpu.skillUsed && !['slime','golem','wolf'].includes(cpu.type)) {
-                if (cpu.type === 'knight') {
-                    let rDiff = p.r - cpu.r, cDiff = p.c - cpu.c;
-                    if ((rDiff === 0 || cDiff === 0) && dist <= 5 && dist > 1) {
-                        let stepR = Math.sign(rDiff), stepC = Math.sign(cDiff);
-                        let targetR = p.r - stepR, targetC = p.c - stepC;
-                        if (targetR !== cpu.r || targetC !== cpu.c) {
-                            executeRushSkill(cpu, targetR, targetC, `skill_${cpu.type}`);
-                            cpu.ap--;
-                            attacked = true; 
-                        }
-                    }
-                } else if (cpu.type === 'king') {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
-                } else if (cpu.type === 'assassin') {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
-                } else if (cpu.type === 'infantry' && turn >= 5) {
-                    if (executeSkill(cpu)) { cpu.skillUsed = true; cpu.ap--; attacked = true; }
-                } else if (cpu.type === 'mage' && dist <= 5) {
-                    executeRushSkill(cpu, p.r, p.c, 'skill_mage');
-                    cpu.ap--;
-                    attacked = true;
-                }
+            // === SCAN: プレイヤー状態を把握 ===
+            let playerMain = entities.find(e=>e.team==='player'&&e.hp>0);
+            let playerShatters = playerMain ? (playerMain.abilities?.shatter||0) : 99;
+            let canReachBase = cpu.r >= 16; // CPUが敵陣最奥付近に到達
+
+            // === CPUが出せる推定最大ダメージ ===
+            let cpuMaxDmg = 1;
+            if (cpu.abilities.smash_slash>0 && dist<=1) cpuMaxDmg=Math.max(cpuMaxDmg,4);
+            if ((cpu.abilities.spin_slash>0||cpu.abilities.poison_bow>0||cpu.abilities.rock_throw>0||cpu.abilities.spear>0||cpu.abilities.poison_dagger>0) && dist<=5) cpuMaxDmg=Math.max(cpuMaxDmg,2);
+
+            // ====================================================
+            // 優先度1: キルチェック — 今すぐ倒せるなら即攻撃
+            // ====================================================
+            let canKill = !p.invin && p.hp <= cpuMaxDmg;
+
+            if (canKill && !attacked && dist<=1 && cpu.abilities.smash_slash>0) {
+                cpu.abilities.smash_slash--;
+                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=4;msg(`⚔️ 敵がトドメの粉砕斬り！${p.name}に4ダメージ！`);}
+                attacked=true; cpu.ap--;
+            }
+            if (canKill && !attacked && dist<=1 && cpu.abilities.spin_slash>0) {
+                cpu.abilities.spin_slash--;
+                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);msg(`⚔️ 敵がトドメの回転斬り！${p.name}に2ダメージ！`);}
+                attacked=true; cpu.ap--;
+            }
+            if (canKill && !attacked && cpu.abilities.poison_bow>0 && dist<=5 && getLoS(cpu,p)<99) {
+                cpu.abilities.poison_bow--;
+                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);p.poisonTimer=3;msg(`🏹 敵がトドメの毒弓矢！${p.name}に2ダメージ！`);}
+                attacked=true; cpu.ap--;
+            }
+            if (canKill && !attacked && cpu.abilities.poison_dagger>0 && dist<=1) {
+                cpu.abilities.poison_dagger--;
+                if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;p.poisonTimer=3;msg(`🗡️ 敵がトドメの毒剣刺し！${p.name}に2ダメージ！`);}
+                attacked=true; cpu.ap--;
+            }
+            if (canKill && !attacked && cpu.abilities.rock_throw>0 && dist<=2) {
+                cpu.abilities.rock_throw--;
+                if (!p.invin&&!necroShieldBlock(p)){p.hp-=2;msg(`🪨 敵がトドメの岩投げ！${p.name}に2ダメージ！`);}
+                attacked=true; cpu.ap--;
+            }
+            if (canKill && !attacked && dist<=1) {
+                if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;msg(`⚔️ 敵がトドメの一撃！${p.name}に1ダメージ！`);}
+                attacked=true; cpu.ap--;
             }
 
-            // Priority: block player pieces that have crossed the center (r≤9)
-            if (!attacked && cpu.ap >= 1 && cpu.abilities.drop_rock > 0) {
-                let crossedPlayers = entities.filter(e => e.team === 'player' && e.hp > 0 && e.r <= 9);
-                outer: for (let cp of crossedPlayers) {
-                    for (let [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]) {
-                        let lr=cp.r+dr, lc=cp.c+dc;
-                        if (lr>=0&&lr<SIZE&&lc>=0&&lc<SIZE && (board[lr]?.[lc]==='plains'||board[lr]?.[lc]==='desert') && !isNoRockZone(lr,lc) && !entities.some(en=>en.r===lr&&en.c===lc&&en.hp>0)) {
-                            board[lr][lc]='rock'; cpu.ap--;
-                            msg("敵が岩落としで中央越えを阻止！");
-                            attacked=true; break outer;
-                        }
-                    }
-                }
-            }
-
-            if (!attacked && cpu.abilities.summon_magic > 0 && turn >= 5) {
-                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                for(let d of dirs) {
-                    if(isWalkable(cpu.r+d[0], cpu.c+d[1])) {
-                        doSummon(cpu, cpu.r+d[0], cpu.c+d[1]);
-                        attacked = true; cpu.ap--; break;
-                    }
-                }
-            }
-
-            if (!attacked && cpu.abilities.summon_archer > 0 && turn >= 5) {
-                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                for(let d of dirs) {
-                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
-                    if(isWalkable(nr, nc)) {
-                        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: cpu.team, r: nr, c: nc, hp: 3, maxHp: 3, ap: 0, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-                        cpu.abilities.summon_archer--;
-                        msg("敵が弓兵を召喚した！");
-                        attacked = true; cpu.ap--; break;
+            // ====================================================
+            // 優先度2: 陣地突破 — 敵陣最奥(r≥16)に到達したら一気に突破
+            // ====================================================
+            if (!attacked && canReachBase) {
+                let basePath = findPath(cpu.r, cpu.c, SIZE-1, Math.round(SIZE/2));
+                if (basePath && basePath.length > 0) {
+                    let next = basePath[0];
+                    if (isWalkable(next.r,next.c) && !entities.some(e=>e.hp>0&&e.r===next.r&&e.c===next.c&&e!==cpu)) {
+                        msg("⚡ 敵が敵陣深くへ侵攻！"); cpuMoveTo(next.r, next.c); attacked=true;
                     }
                 }
+                if (!attacked && isWalkable(cpu.r+1,cpu.c)) {
+                    msg("⚡ 敵が突破口を狙って前進！"); cpuMoveTo(cpu.r+1, cpu.c); attacked=true;
+                }
             }
 
-            if (!attacked && cpu.abilities.summon_lancer > 0 && turn >= 5) {
-                let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                for(let d of dirs) {
-                    let nr = cpu.r+d[0], nc = cpu.c+d[1];
-                    if(isWalkable(nr, nc)) {
-                        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: cpu.team, r: nr, c: nc, hp: 5, maxHp: 5, ap: 0, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-                        cpu.abilities.summon_lancer--;
-                        msg("敵が槍兵を召喚した！");
-                        attacked = true; cpu.ap--; break;
+            // ====================================================
+            // 優先度3: 岩砕き消耗戦略 — shatter残数が0〜1なら徹底封鎖
+            // ====================================================
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerShatters<=1) {
+                // 上下左右→斜め順で囲む（封鎖優先度高）
+                let trapped = dropRockAround(p,
+                    [[0,1],[0,-1],[-1,0],[1,0],[-1,1],[-1,-1],[1,1],[1,-1]],
+                    `💀 敵が岩砕きの底をついたと判断！岩で封鎖してきた！`);
+                if (trapped) attacked=true;
+            }
+
+            // ====================================================
+            // 優先度4: スキル使用
+            // ====================================================
+            if (!attacked && !cpu.skillUsed && !['slime','golem','wolf'].includes(cpu.type)) {
+                if (cpu.type==='knight') {
+                    let rDiff=p.r-cpu.r, cDiff=p.c-cpu.c;
+                    if ((rDiff===0||cDiff===0) && dist<=5 && dist>1) {
+                        let stepR=Math.sign(rDiff), stepC=Math.sign(cDiff);
+                        let tR=p.r-stepR, tC=p.c-stepC;
+                        if (tR!==cpu.r||tC!==cpu.c){executeRushSkill(cpu,tR,tC,`skill_${cpu.type}`);cpu.ap--;attacked=true;}
+                    }
+                } else if (cpu.type==='king') {
+                    if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
+                } else if (cpu.type==='assassin') {
+                    if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
+                } else if (cpu.type==='infantry' && turn>=5) {
+                    if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
+                } else if (cpu.type==='mage' && dist<=5) {
+                    executeRushSkill(cpu,p.r,p.c,'skill_mage'); cpu.ap--;attacked=true;
+                }
+            }
+
+            // ====================================================
+            // 優先度5: 中央越えプレイヤーを岩で阻止（既存ロジック維持）
+            // ====================================================
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0) {
+                let crossedPlayers = entities.filter(e=>e.team==='player'&&e.hp>0&&e.r<=9);
+                outerBlock: for (let cp of crossedPlayers) {
+                    let blocked = dropRockAround(cp,
+                        [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+                        "🪨 敵が岩落としで中央越えを阻止！");
+                    if (blocked){attacked=true; break outerBlock;}
+                }
+            }
+
+            // ====================================================
+            // 優先度6: 召喚
+            // ====================================================
+            if (!attacked && cpu.abilities.summon_magic>0 && turn>=5) {
+                for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    if (isWalkable(cpu.r+dr,cpu.c+dc)){doSummon(cpu,cpu.r+dr,cpu.c+dc);attacked=true;cpu.ap--;break;}
+                }
+            }
+            if (!attacked && cpu.abilities.summon_archer>0 && turn>=5) {
+                for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    let nr=cpu.r+dr,nc=cpu.c+dc;
+                    if (isWalkable(nr,nc)){
+                        entities.push({id:'archer'+Date.now(),type:'archer',name:'弓兵',team:cpu.team,r:nr,c:nc,hp:3,maxHp:3,ap:0,maxAp:2,abilities:{bow:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
+                        cpu.abilities.summon_archer--;msg("敵が弓兵を召喚した！");attacked=true;cpu.ap--;break;
+                    }
+                }
+            }
+            if (!attacked && cpu.abilities.summon_lancer>0 && turn>=5) {
+                for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    let nr=cpu.r+dr,nc=cpu.c+dc;
+                    if (isWalkable(nr,nc)){
+                        entities.push({id:'lancer'+Date.now(),type:'lancer',name:'槍兵',team:cpu.team,r:nr,c:nc,hp:5,maxHp:5,ap:0,maxAp:2,abilities:{spear:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
+                        cpu.abilities.summon_lancer--;msg("敵が槍兵を召喚した！");attacked=true;cpu.ap--;break;
                     }
                 }
             }
 
-
-            if (!attacked && dist <= 1) {
-                if (cpu.abilities.smash_slash > 0) {
-                    cpu.abilities.smash_slash--; 
-                    if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 4; msg(`敵の粉砕斬り！${p.name}が4ダメージを受けた！`); }
-                    else { msg(`敵の粉砕斬り！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
-                } else if (cpu.abilities.spin_slash > 0) {
-                    cpu.abilities.spin_slash--; 
-                    if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 2; knockback(p, 1, cpu); msg(`敵の回転斬り！${p.name}が2ダメージと吹き飛ばし！`); }
-                    else { msg(`敵の回転斬り！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
+            // 近接強攻撃（dist=1）
+            if (!attacked && dist<=1) {
+                if (cpu.abilities.smash_slash>0){
+                    cpu.abilities.smash_slash--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=4;msg(`敵の粉砕斬り！${p.name}が4ダメージを受けた！`);}
+                    else{msg(`敵の粉砕斬り！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
+                } else if (cpu.abilities.spin_slash>0){
+                    cpu.abilities.spin_slash--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);msg(`敵の回転斬り！${p.name}が2ダメージと吹き飛ばし！`);}
+                    else{msg(`敵の回転斬り！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
                 }
             }
 
-            if (!attacked && p.team === 'player' && p.r <= 10 && cpu.ap >= 1 && cpu.abilities.drop_rock > 0) {
-                let rockCandidates = [
-                    {r: p.r-1, c: p.c}, {r: p.r-1, c: p.c-1}, {r: p.r-1, c: p.c+1},
-                    {r: p.r, c: p.c-1}, {r: p.r, c: p.c+1}
+            // ====================================================
+            // 優先度7: 岩ハラスメント — 毎ターン必ず実行（r≤10制限撤廃）
+            // ====================================================
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && p.team==='player') {
+                // 優先順位：プレイヤー進行方向前方→左右→斜め→後方
+                let forwardR = p.r - 1; // 相手の前進方向（CPUベースへ向かう）
+                let rockOrder = [
+                    {r:forwardR,c:p.c},{r:forwardR,c:p.c-1},{r:forwardR,c:p.c+1},
+                    {r:p.r,c:p.c-1},{r:p.r,c:p.c+1},{r:p.r+1,c:p.c}
                 ];
-                for (let loc of rockCandidates) {
-                    if (loc.r>=0 && loc.r<SIZE && loc.c>=0 && loc.c<SIZE) {
-                        if (board[loc.r] && (board[loc.r][loc.c] === 'plains' || board[loc.r][loc.c] === 'desert') && !isNoRockZone(loc.r, loc.c) && !entities.some(e=>e.r===loc.r && e.c===loc.c)) {
-                            board[loc.r][loc.c] = 'rock';
-                            cpu.ap--;
-                            msg("敵が岩落としで進路を妨害してきた！");
-                            attacked = true; break;
-                        }
+                for (let loc of rockOrder) {
+                    if (loc.r<0||loc.r>=SIZE||loc.c<0||loc.c>=SIZE) continue;
+                    let bt=board[loc.r]?.[loc.c];
+                    if ((bt==='plains'||bt==='desert')&&!isNoRockZone(loc.r,loc.c)&&!entities.some(e=>e.r===loc.r&&e.c===loc.c&&e.hp>0)){
+                        board[loc.r][loc.c]='rock';cpu.ap--;
+                        msg("🪨 敵が岩を落として進路を塞いだ！");attacked=true;break;
                     }
                 }
             }
 
+            // ====================================================
+            // 優先度8: 遠距離・近接攻撃アビリティ
+            // ====================================================
             if (!attacked) {
-                if (board[cpu.r][cpu.c] === 'cannon' && dist <= 8) { 
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; knockback(p, 1, cpu); msg(`敵が大砲を使用！${p.name}に1ダメージ！`); }
-                    else { msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`); }
-                    board[cpu.r][cpu.c] = 'cannon_cd_2';
-                    attacked = true; cpu.ap--;
-                } else if (cpu.abilities.poison_bow > 0 && dist <= 5 && getLoS(cpu, p) < 99) {
-                    cpu.abilities.poison_bow--; 
-                    if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 2; knockback(p, 1, cpu); p.poisonTimer = 3; msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`); }
-                    else { msg(`敵の毒弓矢！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
-                } else if (cpu.abilities.spear > 0 && dist <= 2 && (cpu.r === p.r || cpu.c === p.c)) {
-                    if (cpu.abilities.spear !== 999) cpu.abilities.spear--;
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 2; msg(`敵の槍攻撃！${p.name}に2ダメージ！`); }
-                    else { msg(`敵の槍攻撃！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
-                } else if (cpu.abilities.bow > 0 && dist <= 5 && (cpu.r === p.r || cpu.c === p.c)) {
-                    if (cpu.abilities.bow !== 999) cpu.abilities.bow--;
-                    if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の弓撃！${p.name}に1ダメージ！`); }
-                    else { msg(`敵の弓撃！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
-                } else if (cpu.abilities.rock_throw > 0 && dist <= 2) {
-                    cpu.abilities.rock_throw--; 
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 2; msg(`敵の岩投げ！${p.name}に2ダメージ！`); }
-                    else { msg(`敵の岩投げ！しかし${p.name}は無敵で防いだ！`); }
-                    attacked = true; cpu.ap--;
-                } else if (dist <= 1) {
-                    if (cpu.abilities.poison_dagger > 0) {
-                        cpu.abilities.poison_dagger--; 
-                        if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 2; p.poisonTimer = 3; msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`); }
-                        else { msg(`敵の毒剣刺し！しかし${p.name}は無敵で防いだ！`); }
-                        attacked = true; cpu.ap--;
-                    } else if (cpu.abilities.sword > 0 || cpu.abilities.punch > 0 || cpu.abilities.bite > 0) {
-                        let usesPunch = cpu.abilities.punch > 0;
-                        let usesBite = !usesPunch && (cpu.abilities.bite > 0);
+                if (board[cpu.r]?.[cpu.c]==='cannon' && dist<=8) {
+                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;knockback(p,1,cpu);msg(`敵が大砲を使用！${p.name}に1ダメージ！`);}
+                    else{msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`);}
+                    board[cpu.r][cpu.c]='cannon_cd_2';attacked=true;cpu.ap--;
+                } else if (cpu.abilities.poison_bow>0 && dist<=5 && getLoS(cpu,p)<99) {
+                    cpu.abilities.poison_bow--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);p.poisonTimer=3;msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`);}
+                    else{msg(`敵の毒弓矢！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
+                } else if (cpu.abilities.spear>0 && dist<=2 && (cpu.r===p.r||cpu.c===p.c)) {
+                    if (cpu.abilities.spear!==999) cpu.abilities.spear--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=2;msg(`敵の槍攻撃！${p.name}に2ダメージ！`);}
+                    else{msg(`敵の槍攻撃！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
+                } else if (cpu.abilities.bow>0 && dist<=5 && (cpu.r===p.r||cpu.c===p.c)) {
+                    if (cpu.abilities.bow!==999) cpu.abilities.bow--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=1;knockback(p,1,cpu);msg(`敵の弓撃！${p.name}に1ダメージ！`);}
+                    else{msg(`敵の弓撃！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
+                } else if (cpu.abilities.rock_throw>0 && dist<=2) {
+                    cpu.abilities.rock_throw--;
+                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=2;msg(`敵の岩投げ！${p.name}に2ダメージ！`);}
+                    else{msg(`敵の岩投げ！しかし${p.name}は無敵で防いだ！`);}
+                    attacked=true;cpu.ap--;
+                } else if (dist<=1) {
+                    if (cpu.abilities.poison_dagger>0){
+                        cpu.abilities.poison_dagger--;
+                        if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;p.poisonTimer=3;msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`);}
+                        else{msg(`敵の毒剣刺し！しかし${p.name}は無敵で防いだ！`);}
+                        attacked=true;cpu.ap--;
+                    } else if (cpu.abilities.sword>0||cpu.abilities.punch>0||cpu.abilities.bite>0) {
+                        let usesPunch=cpu.abilities.punch>0, usesBite=!usesPunch&&cpu.abilities.bite>0;
                         if (usesPunch) cpu.abilities.punch--;
-                        else if (usesBite && cpu.abilities.bite !== 999) cpu.abilities.bite--;
-                        else if (!usesBite && cpu.abilities.sword !== 999) cpu.abilities.sword--;
-                        let atkName = usesPunch ? 'ぶん殴り' : usesBite ? '噛みつき' : '剣撃';
-                        if (!p.invin && !necroShieldBlock(p)) { p.ap--; p.hp -= 1; knockback(p, 1, cpu); msg(`敵の${atkName}！${p.name}に1ダメージ！`); }
-                        else { msg(`敵の${atkName}！しかし${p.name}は無敵で防いだ！`); }
-                        attacked = true; cpu.ap--;
+                        else if (usesBite&&cpu.abilities.bite!==999) cpu.abilities.bite--;
+                        else if (!usesBite&&cpu.abilities.sword!==999) cpu.abilities.sword--;
+                        let atkName=usesPunch?'ぶん殴り':usesBite?'噛みつき':'剣撃';
+                        if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=1;knockback(p,1,cpu);msg(`敵の${atkName}！${p.name}に1ダメージ！`);}
+                        else{msg(`敵の${atkName}！しかし${p.name}は無敵で防いだ！`);}
+                        attacked=true;cpu.ap--;
                     } else {
-                        if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; msg(`敵の近接攻撃！${p.name}に1ダメージ！`); }
-                        else { msg(`敵の近接攻撃！しかし${p.name}は無敵で防いだ！`); }
-                        attacked = true; cpu.ap--;
+                        if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;msg(`敵の近接攻撃！${p.name}に1ダメージ！`);}
+                        else{msg(`敵の近接攻撃！しかし${p.name}は無敵で防いだ！`);}
+                        attacked=true;cpu.ap--;
                     }
                 }
             }
 
+            // ====================================================
+            // 優先度9: 戦略的移動
+            // 自分がHP不利 or 相手の岩砕きが豊富 → 陣地突破を狙う
+            // それ以外 → 通常の敵追跡
+            // ====================================================
             if (!attacked) {
-                let path = findPath(cpu.r, cpu.c, p.r, p.c);
-                if (path && path.length > 0) {
-                    let next = path[0];
-                    if (isWalkable(next.r, next.c)) { cpu.r = next.r; cpu.c = next.c; }
-                } else {
-                    if (isWalkable(cpu.r+1, cpu.c)) cpu.r++;
-                }
-                cpu.ap--;
-                if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
-                    let tKey = `${cpu.r},${cpu.c}`;
-                    if (!cpu.flying && trapOwnerMap[tKey] !== cpu.team) {
-                        board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey];
-                        if (!cpu.invin) {
-                            let cpuTrapHits = 0;
-                            entities.forEach(t => { if (t.hp>0&&t.team!==cpu.team&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin){t.hp-=1;t.ap=Math.max(0,t.ap-2);cpuTrapHits++;} });
-                            cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; msg(`敵が罠を踏んだ！3×3爆発！周囲${cpuTrapHits}体も巻き込み！`);
+                let goToBase = (cpu.hp < p.hp*0.6 || playerShatters >= 4) && cpu.r < 14;
+                let moved = false;
+                if (goToBase) {
+                    let basePath = findPath(cpu.r, cpu.c, SIZE-2, Math.round(SIZE/2));
+                    if (basePath && basePath.length > 0) {
+                        let next = basePath[0];
+                        if (isWalkable(next.r,next.c)&&!entities.some(e=>e.hp>0&&e.r===next.r&&e.c===next.c&&e!==cpu)){
+                            msg("💨 敵が戦闘を避けて敵陣を狙う！"); cpuMoveTo(next.r,next.c); moved=true;
                         }
                     }
-                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
-                    board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
-                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'item_tile') {
-                    let item = itemTileMap[`${cpu.r},${cpu.c}`];
-                    board[cpu.r][cpu.c] = defaultGround();
-                    delete itemTileMap[`${cpu.r},${cpu.c}`];
-                    applyItem(cpu, item);
-                    msg("敵がアイテムを取得！");
-                } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
-                    msg("敵が森の中に潜伏し、姿を消した…！");
+                }
+                if (!moved) {
+                    let path = findPath(cpu.r, cpu.c, p.r, p.c);
+                    if (path && path.length > 0) {
+                        let next = path[0];
+                        if (isWalkable(next.r,next.c)) cpuMoveTo(next.r,next.c);
+                        else cpu.ap--;
+                    } else {
+                        if (isWalkable(cpu.r+1,cpu.c)) cpuMoveTo(cpu.r+1,cpu.c);
+                        else cpu.ap--;
+                    }
                 }
             }
+
         } else {
-            if (isWalkable(cpu.r+1, cpu.c)) cpu.r++;
-            cpu.ap--;
-            if (board[cpu.r] && board[cpu.r][cpu.c] === 'trap') {
-                let tKey2 = `${cpu.r},${cpu.c}`;
-                if (!cpu.flying && trapOwnerMap[tKey2] !== cpu.team) {
-                    board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey2];
-                    if (!cpu.invin) {
-                        entities.forEach(t => { if (t.hp>0&&t.team!==cpu.team&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin){t.hp-=1;t.ap=Math.max(0,t.ap-2);} });
-                        cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; }
-                }
-            } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
-                board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
-            } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'forest') {
-                msg("敵が森の中に潜伏し、姿を消した…！");
-            }
+            // ターゲットなし：ひたすら前進
+            if (isWalkable(cpu.r+1,cpu.c)) cpuMoveTo(cpu.r+1,cpu.c);
+            else cpu.ap--;
         }
-        
+
         checkWin();
         setTimeout(cpuLogic, 300);
     } else {
