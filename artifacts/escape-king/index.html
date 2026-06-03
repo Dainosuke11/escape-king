@@ -695,7 +695,7 @@ let itemTileMap = {};      // "r,c" -> 'star'|'shoes'|'sword'
 let fallingWarn = [];      // [{r,c}] tiles warned to fall next turn
 let resolvedStage = '';    // actual stage after resolving 'random'
 // Dungeon stage
-let dungeonGoggles = false;
+let dungeonGoggles = 0;  // 0=none, 1+=count (view radius = 9+count)
 let dungeonSwitchGroups = {};   // "r,c" → [{r,c}] array of tiles this switch controls
 let dungeonTorches = [];        // [[r,c],...] torch positions that illuminate radius 5
 let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
@@ -929,7 +929,19 @@ const ABILITY_NAMES = {
     monkey_present_set: 'プレゼント設置(敵爆発/味方アイテム)',
     coffin_break: '棺桶壊し(隣接味方を解放)',
     drone_ram: '体当たり(威1/∞)',
-    power_supply_drone: '電力補給(HP+5/半径8機械兵+5)'
+    power_supply_drone: '電力補給(HP+5/半径8機械兵+5)',
+    duel: '決闘(直線3/敵に接近/射程3↑アビリティ封印1T)',
+    heavy_armor: '重装化(AP-0/バリア1T/騎乗と排他)',
+    mount_horse: '騎乗(AP+1/移動時半径1敵に1ダメ/重装化と排他)',
+    graceful_rest: '優雅な休息(ランダム4アビリティ+1/HP+1)',
+    royal_dignity: '王の威厳(半径3/敵AP-1/5アビリティ封印1T)',
+    bombardment: '砲撃指令(足元に大砲/味方攻撃ダメ+1×1T)',
+    curved_shot: '曲射(半径3/貫通岩/威1/吹飛)',
+    rapid_shot: '速射(直線5/威1×2/吹飛×2)',
+    long_snipe: '遠距離狙撃(直線8/威4/吹飛/AP-1)',
+    charge_formation: '突撃陣形(半径1に槍兵+弓兵召喚/次T消滅)',
+    coordinated_atk: '連携攻撃(半径2味方全員AP+1/ATK+1×1T)',
+    scouting: '偵察(直線8/敵AP-1/5アビリティ封印/1T潜伏)'
 };
 
 const ABILITY_TIPS = {
@@ -1037,19 +1049,31 @@ const ABILITY_TIPS = {
     monkey_present_set: '隣接マスにプレゼント箱を設置。敵が半径1マス以内に来ると爆発(威1/吹飛)。味方が踏むとランダムアイテム獲得。',
     coffin_break: '隣接1マスに棺桶に閉じ込められた味方コマがいれば解放する。',
     drone_ram: '隣接した敵に体当たり。ダメージ1。回数無制限。',
-    power_supply_drone: 'AP-1消費。ドローン自身のHP+5・半径8マス内の機械兵のHP+5を回復する。回数無制限。'
+    power_supply_drone: 'AP-1消費。ドローン自身のHP+5・半径8マス内の機械兵のHP+5を回復する。回数無制限。',
+    duel: '正々堂々と試合を申し込む。直線3マスの敵の目の前へ移動し、その敵の射程3マス以上のアビリティを1ターン全て封印する。回数1。',
+    heavy_armor: '鎧をつける。バリア(1T無敵)を得る。騎乗を使用したターンは使用不可。回数1。',
+    mount_horse: '騎士が馬に乗る。このターンのみ行動力+1。移動した先の半径1マスに敵がいたら馬が蹴り飛ばし1ダメージ。重装化を使用したターンは使用不可。回数1。',
+    graceful_rest: '王の岩落としと優雅な休息以外のランダム4アビリティの使用回数+1・HP+1。回数1。',
+    royal_dignity: '半径3マス内の全敵のAP-1・1ターン間ランダム5アビリティを封印する。',
+    bombardment: '王の足元に大砲マスを設置。1ターン中に味方コマが敵に与えるダメージ全てに+1する。',
+    curved_shot: '岩の裏にいる敵でも射抜く。射程半径3マス。ダメージ1・後方吹き飛ばし。直線射程不要で岩越し可能。回数2。',
+    rapid_shot: '弓の2連撃。直線5マスの敵に1ダメ・吹き飛ばしを2回繰り返す。回数1。',
+    long_snipe: '一撃必殺の狙撃。直線8マス。攻撃力4・後方吹き飛ばし。AP-1消費が必要。回数1。',
+    charge_formation: '半径1マスに槍兵と弓兵を召喚する。召喚されたコマは次のターンに自動消滅する。回数1。',
+    coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
+    scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。'
 };
 
 const JOB_DATA = {
-    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1 }, hp: 30, ap: 2 },
-    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1 }, hp: 30, ap: 2 },
-    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1 }, hp: 30, ap: 2 },
-    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2 }, hp: 30, ap: 2 },
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1, graceful_rest: 1, royal_dignity: 1, bombardment: 1 }, hp: 30, ap: 2 },
+    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1, duel: 1, heavy_armor: 1, mount_horse: 1 }, hp: 30, ap: 2 },
+    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 1, long_snipe: 1 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
-    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2, analysis: 2 }, hp: 30, ap: 2 },
+    cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 5, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
@@ -1792,7 +1816,7 @@ function isRockSurrounded(r, c) {
     });
 }
 
-function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=false) {
+function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=false, ignoreVoid=false) {
     if (r<0 || r>=SIZE || c<0 || c>=SIZE) return false;
     if (!board[r]) return false;
     let t = board[r][c];
@@ -1804,6 +1828,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
     let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'golden_coral', 'lava', 'torpedo_launcher'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
+    if (ignoreVoid && ['sky_void', 'fallen_floor'].includes(t)) blockedByTerrain = false;
     if (blockedByTerrain) return false;
     if (!ignoreEntities && entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type!=='boat' && e.type!=='warship' && e.type!=='cablecar' && e.type!=='flying_drone')) return false;
     return true;
@@ -2005,9 +2030,9 @@ function initBoard(stageType) {
             avA++;
         }
         // Cable cars (直線: 乗り場から山頂中央まで直通・約5マス)
-        // Enemy side: boarding at (6,9) → straight down into summit (11,9)
-        board[6][9]='cable_board';
-        [[7,9],[8,9],[9,9],[10,9],[11,9]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
+        // Enemy side: boarding at (2,9) → straight down into summit (7,9) [4マス上方向に移動]
+        board[2][9]='cable_board';
+        [[3,9],[4,9],[5,9],[6,9],[7,9]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
         // Player side: boarding at (18,9) → straight up into summit (13,9)
         board[18][9]='cable_board';
         [[17,9],[16,9],[15,9],[14,9],[13,9]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
@@ -2101,9 +2126,8 @@ function initBoard(stageType) {
         board[18][8]='cannon'; board[18][16]='cannon';
         board[16][12]='volcano';
         board[19][5]='magic_circle'; board[19][15]='magic_circle'; board[15][19]='magic_circle';
-        // Floating 2×2 lift between bridges (cols 13-14, rows 9-10 initially)
-        board[9][13]='fortress_floor'; board[9][14]='fortress_floor';
-        board[10][13]='fortress_floor'; board[10][14]='fortress_floor';
+        // Floating 1×7 collapsible bridge at col 13, rows 7-13 (connecting upper/lower fortress)
+        for (let rr=7; rr<=13; rr++) board[rr][13]='skyfort_bridge';
     } else if (stageType === 'chaos') {
         // === CHAOS STAGE === all gimmicks mixed. Desert patches + sandworm + floor disappear.
         placeRandom('magic_circle', 3, 1, 8, true);
@@ -2176,12 +2200,12 @@ function initBoard(stageType) {
         { let tp=[]; for(let r2=1;r2<SIZE-1;r2++) for(let c2=1;c2<SIZE-1;c2++) if(board[r2][c2]==='dungeon_ground') tp.push([r2,c2]);
           dungShuffle(tp).slice(0,5).forEach(([r2,c2]) => { board[r2][c2]='dungeon_torch'; }); }
 
-        // === ランダムスイッチ 5個 ===
+        // === ランダムスイッチ 6個 ===
         dungeonSwitchGroups = {};
-        dungeonGoggles = false;
+        dungeonGoggles = 0;
         { let sp=[]; for(let r2=1;r2<SIZE-1;r2++) for(let c2=1;c2<SIZE-1;c2++) if(board[r2][c2]==='dungeon_ground') sp.push([r2,c2]);
           dungShuffle(sp).forEach(([sr,sc]) => {
-              if (Object.keys(dungeonSwitchGroups).length >= 5) return;
+              if (Object.keys(dungeonSwitchGroups).length >= 6) return;
               let doors=[[sr-1,sc],[sr+1,sc],[sr,sc-1],[sr,sc+1]].filter(([dr,dc])=>board[dr]?.[dc]==='mine');
               if (doors.length>0) { board[sr][sc]='dungeon_switch'; dungeonSwitchGroups[`${sr},${sc}`]=doors.map(([dr,dc])=>({r:dr,c:dc})); }
           }); }
@@ -2408,16 +2432,21 @@ function initEntities(pJob, difficulty = "1") {
     rollRockPending = null;
     rollRockWarnTiles = [];
     cursedAbilities = {};
-    dungeonGoggles = false;
+    dungeonGoggles = 0;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
+        // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
+
         let boatPos = [{r:6,c:4},{r:6,c:16},{r:14,c:4},{r:14,c:16}];
         boatPos.forEach((p,i) => {
             entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'vehicle', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         });
         // Warship: random shore placement (col 1-4, river row)
-        let wsCol = 1 + Math.floor(Math.random() * 19); // 1-19, random position on river
-        entities.push({id:'warship', type:'warship', name:'大型船', team:'vehicle', r:10, c:wsCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        // 2 warships: CPU side (row6, adjacent to row5 land) + player side (row14, adjacent to row15 land)
+        let wsCpuCol = 2 + Math.floor(Math.random() * 17); // col 2-18
+        let wsPlayerCol = 2 + Math.floor(Math.random() * 17);
+        entities.push({id:'warship0', type:'warship', name:'大型船', team:'vehicle', r:6, c:wsCpuCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        entities.push({id:'warship1', type:'warship', name:'大型船', team:'vehicle', r:14, c:wsPlayerCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
         stageKrakenSpawned = false;
     } else if (activeStage === 'mountain') {
         // Yeti spawns at turn 3 via startTurn
@@ -2427,8 +2456,7 @@ function initEntities(pJob, difficulty = "1") {
         wPos.forEach((p,i)=>{
             entities.push({id:'fdrone'+i, type:'flying_drone', name:'飛行ドローン', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
         });
-        // Collapsing bridges at rows 9-10, cols 13-14
-        for (let rr=9; rr<=10; rr++) for (let cc=13; cc<=14; cc++) board[rr][cc] = 'skyfort_bridge';
+        // Collapsing bridge already set in board setup (col 13, rows 7-13)
         // 4 power-up items on floating island (rows 7-13, cols 0-6)
         const islandItems = ['star','shoes','sword'];
         [{r:8,c:2},{r:8,c:4},{r:12,c:2},{r:12,c:4}].forEach(p => {
@@ -2609,6 +2637,10 @@ function processTurnStartEffects(e) {
     if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(board[e.r]?.[e.c])) {
         e.ap = e.maxAp + 2;
     }
+    // Ocean unit on water tile: AP+1 bonus
+    if (e.oceanUnit && ['shallow_water','deep_water','sea_trench','river','whirlpool'].includes(board[e.r]?.[e.c])) {
+        e.ap = Math.min(e.ap + 1, e.maxAp + 2);
+    }
     // Shoes item: expire the temporary AP boost
     if (e.shoesTimer > 0) {
         e.shoesTimer--;
@@ -2643,10 +2675,11 @@ function processTurnStartEffects(e) {
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
-        let stacks = e.poisonStacks || 1;
-        if (!e.invin) e.hp -= stacks;
-        if (Math.random() < 0.5) e.ap = Math.max(0, e.ap - 1);
-        if (e.poisonTimer <= 0) e.poisonStacks = 0;
+        let isSever = (e.poisonStacks || 0) >= 2;
+        let dmg = isSever ? 2 : 1;
+        if (!e.invin) e.hp -= dmg;
+        // No random AP loss — pure HP damage only
+        if (e.poisonTimer <= 0) { e.poisonStacks = 0; }
     }
     if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
     if (e.stealthTimer > 0) { 
@@ -2684,6 +2717,25 @@ function processTurnStartEffects(e) {
     if (e.trapHitPenalty > 0) {
         e.trapHitPenalty--;
         e.ap = Math.max(0, e.ap - 1);
+    }
+    // Coordinated attack buff: expires after 1 turn
+    if ((e.coordBuff||0) > 0) {
+        e.coordBuff--;
+        if (e.coordBuff <= 0) {
+            e.atkBonus = Math.max(0, (e.atkBonus||0) - 1);
+        }
+    }
+    // Clear per-turn knight flags
+    e.mountHorseThisTurn = false;
+    e.heavyArmorThisTurn = false;
+    if (e.mountHorseActive) {
+        // Apply kick to adjacent enemies
+        entities.forEach(t => {
+            if (t.hp>0 && t.team!==e.team && Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c))<=1 && !t.invin) {
+                t.hp -= 1; knockback(t, 1, e);
+            }
+        });
+        e.mountHorseActive = false;
     }
     if ((e.dopingTimer||0) > 0) {
         e.dopingTimer--;
@@ -3061,7 +3113,8 @@ function startTurn(team, skipEffects = false) {
                     // Move passengers
                     entities.filter(e => e.onTrain === 'nttrain' && e.hp > 0).forEach(t => {
                         t.r = destRv; t.c = destCv; t.onTrain = null;
-                        msg(`🚂 ${t.name}が列車で${destRv===2?'上':'下'}駅に到着！`, true);
+                        t.invin = false; t.invinTimer = 0; // 降車で無敵解除
+                        msg(`🚂 ${t.name}が列車で${destRv===2?'上':'下'}駅に到着！無敵解除！`, true);
                     });
                     train.r = destRv; train.c = destCv;
                     carWarnTiles = [];
@@ -3529,6 +3582,19 @@ function isValidTarget(se, r, c, mode) {
     // Ryujin
     if (mode === 'flying_kick') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'rapid_strikes') return true;
+    // 新アビリティ (騎士・王・暗殺者・歩兵)
+    if (mode === 'duel') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'heavy_armor') return r===se.r && c===se.c;
+    if (mode === 'mount_horse') return r===se.r && c===se.c;
+    if (mode === 'graceful_rest') return r===se.r && c===se.c;
+    if (mode === 'royal_dignity') return r===se.r && c===se.c;
+    if (mode === 'bombardment') return r===se.r && c===se.c;
+    if (mode === 'curved_shot') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'rapid_shot') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5 && target && target.team!==se.team;
+    if (mode === 'long_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
+    if (mode === 'charge_formation') return r===se.r && c===se.c;
+    if (mode === 'coordinated_atk') return r===se.r && c===se.c;
+    if (mode === 'scouting') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
     if (mode === 'flame_breath') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'tail_swing') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'counter') return true;
@@ -3573,7 +3639,7 @@ function render() {
     let fogSet = new Set();
     if (activeStage === 'dungeon') {
         let playerEnt = entities.find(e => e.hp > 0 && e.team === myTeam() && JOB_DATA[e.type]);
-        let viewR = dungeonGoggles ? 10 : 4;
+        let viewR = dungeonGoggles > 0 ? 9 + dungeonGoggles : 4;
         if (playerEnt) {
             for (let rr=0; rr<SIZE; rr++) for (let cc=0; cc<SIZE; cc++) {
                 let inPlayerView = Math.max(Math.abs(rr - playerEnt.r), Math.abs(cc - playerEnt.c)) <= viewR;
@@ -3681,8 +3747,8 @@ function render() {
             si.textContent = `👻 魂 — あなた:${mine} / 相手:${foe}（教会で浄化／橋で悪霊召喚）`;
         } else if (activeStage === 'dungeon') {
             si.style.display = 'block';
-            let vr = dungeonGoggles ? 8 : 3;
-            si.textContent = `🥽 視界: 半径${vr}マス${dungeonGoggles ? '（ゴーグル装備中）' : '（暗視ゴーグルで拡張可）'}`;
+            let vr = dungeonGoggles > 0 ? 8 + dungeonGoggles : 3;
+            si.textContent = `🥽 視界: 半径${vr}マス${dungeonGoggles > 0 ? `（ゴーグル${dungeonGoggles}個装備）` : '（暗視ゴーグルで拡張可）'}`;
         } else {
             si.style.display = 'none';
         }
@@ -3778,6 +3844,9 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
+    } else if (board[r] && board[r][c] === 'cable_board' && activeStage === 'mountain' && !entity.onCableCar) {
+        entity.onCableCar = true;
+        eventMsg = "🚡 ケーブルカーに乗った！AP+2ボーナス！";
     } else if (board[r] && board[r][c] === 'camel_tile') {
         board[r][c] = 'desert';
         entity.hasCamel = true;
@@ -3997,10 +4066,11 @@ function handleTileClick(vr, c) {
                     canMove = true;
                 }
             }
-            // Flying units pass through rocks, water, and other obstacles (not occupied tiles)
+            // Flying units pass through rocks, water, voids, and other obstacles (not occupied tiles)
             if (!canMove && selectedEntity.flying && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
                 let t = board[r]?.[c];
-                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea', 'deep_water'].includes(t) &&
+                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea', 'deep_water',
+                     'sky_void', 'fallen_floor', 'lava', 'sea_trench', 'coral_reef', 'golden_coral'].includes(t) &&
                     !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) canMove = true;
             }
             // Ocean units can swim in water tiles
@@ -4085,10 +4155,17 @@ function handleTileClick(vr, c) {
                             board[r][c] = defaultGround();
                             delete trapOwnerMap[tKey];
                             if (!selectedEntity.invin) {
+                                // 3×3 area effect: AP-2 + 1 damage to all enemies in range
+                                let trapHits = 0;
+                                entities.forEach(t => {
+                                    if (t.hp>0 && t.team!==trapOwnerMap[tKey]&&t.team!==selectedEntity.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
+                                        if (!t.invin) { t.hp -= 1; t.ap = Math.max(0, t.ap - 2); trapHits++; }
+                                    }
+                                });
                                 selectedEntity.hp -= 1;
                                 selectedEntity.ap = Math.max(0, selectedEntity.ap - 2);
                                 selectedEntity.trapHitPenalty = 1;
-                                msg("罠を踏んだ！ダメージ(1)・AP-2、次のターン開始にAP-1ペナルティ！");
+                                msg(`罠を踏んだ！3×3範囲爆発！ダメージ(1)・AP-2！範囲内${trapHits}体も巻き込み！`);
                             } else {
                                 msg("罠を踏んだが、無敵状態により無効化！");
                             }
@@ -4130,8 +4207,9 @@ function checkEnemyTerritory(entity) {
 
 // 行動力コストマップ（AP消費アビリティの最低AP要件）
 const ABILITY_AP_COSTS = {
-    power_charge: 1, jet_boost: 1, sweep: 1, emp_field: 1, fusion: 1, analysis: 1,
-    incinerate: 2, meditation: 2, root_spread: 2, thunder_magic: 2, barrier_magic: 1
+    power_charge: 1, jet_boost: 1, sweep: 1, emp_field: 1, fusion: 1,
+    incinerate: 2, meditation: 2, root_spread: 2,
+    power_supply_drone: 1, long_snipe: 1
 };
 
 function plantLvUpOnce(se) {
@@ -4240,7 +4318,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         if (isOceanUnit(se) && se.waterMode && !isWaterTile(board[r]?.[c])) se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
-        se.r = r; se.c = c; used = true; 
+        se.r = r; se.c = c; used = true;
+        if (se.onWyvern) {
+            let wy = entities.find(e => e.id === se.onWyvern && e.hp > 0);
+            if (wy) { wy.r = r; wy.c = c; }
+        }
         let eventMsg = checkTileEffects(se);
         if (board[r] && board[r][c] === 'forest') eventMsg = (eventMsg ? eventMsg + " " : "") + "森の木々に身を隠した！";
         msg("ダッシュで移動！" + (eventMsg ? " " + eventMsg : "")); 
@@ -4250,8 +4332,11 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'bow') {
         se.abilities['bow']--; 
         let _bowSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
-        if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + _bowSB + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${1+_bowSB})！`); used = true;
+        if (!targetEntity.invin) {
+            targetEntity.ap--; targetEntity.hp -= 1 + _bowSB + (targetEntity.defDebuff||0) + (se.atkBonus||0); knockback(targetEntity, 1, se);
+            if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+        }
+        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${1+_bowSB})${se.poisonWeapon?'・毒':''}！`); used = true;
     } else if (actionMode === 'poison_bow') {
         se.abilities['poison_bow']--; 
         if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; knockback(targetEntity, 1, se); }
@@ -4402,16 +4487,20 @@ function handleAbilityTarget(r, c, targetEntity) {
             let stealthBonus = (se.type === 'assassin' && se.stealth) ? 1 : 0;
             let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0) + stealthBonus;
             if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= dmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
+            if (se.poisonWeapon && !targetEntity.invin) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
             if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
             let bonus = stealthBonus > 0 ? '【潜伏ボーナス+1】' : '';
-            msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${bonus}${atkName}命中！ダメージ(${dmg})を与えAPを奪い吹き飛ばした！`); used = true;
+            msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${bonus}${atkName}命中！ダメージ(${dmg})${se.poisonWeapon?'・毒付与':''}を与えAPを奪い吹き飛ばした！`); used = true;
         }
     } else if (actionMode === 'dagger') {
         se.abilities['dagger']--; 
         let _dagSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
         if (meleeDodged(targetEntity)) { msg("短剣刺し！しかし飛行コマに回避された！"); }
-        else if (!targetEntity.invin) { targetEntity.ap--; targetEntity.hp -= 1 + _dagSB + (se.atkBonus||0) + (targetEntity.defDebuff||0); }
-        msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : `${_dagSB?'【潜伏ボーナス+1】':''}短剣刺し！近接ダメージ(${1+_dagSB})を与え行動力減少！`); used = true;
+        else if (!targetEntity.invin) {
+            targetEntity.ap--; targetEntity.hp -= 1 + _dagSB + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+        }
+        msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : `${_dagSB?'【潜伏ボーナス+1】':''}短剣刺し！近接ダメージ(${1+_dagSB})${se.poisonWeapon?'・毒':''}を与え行動力減少！`); used = true;
     } else if (actionMode === 'poison_dagger') {
         se.abilities['poison_dagger']--; 
         let _pdSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
@@ -4597,19 +4686,140 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`⚡ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2！`); used = true;
     } else if (actionMode === 'barrier_magic') {
         se.abilities['barrier_magic']--;
-        se.ap = Math.max(0, se.ap - 1);
         let bHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=5) {
                 t.invin=true; t.invinTimer=1; bHit++;
             }
         });
-        msg(`🔮 障壁魔法！半径5マスの味方${bHit}体に1T無敵バリアを付与！`); used = true;
+        msg(`🔮 障壁魔法！AP消費なし！半径5マスの味方${bHit}体に1T無敵バリアを付与！`); used = true;
     } else if (actionMode === 'meditation') {
         se.abilities['meditation']--;
         se.ap = Math.max(0, se.ap - 2);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k]++; }
         msg('🧘 瞑想！AP-2して全アビリティの使用回数を+1！'); used = true;
+    } else if (actionMode === 'duel') {
+        se.abilities['duel']--;
+        // Move to adjacent cell to target (straight line, stop 1 cell away)
+        let dr = Math.sign(r - se.r), dc = Math.sign(c - se.c);
+        let nr = r - dr, nc = c - dc;
+        if (isWalkable(nr, nc, false, true)) { se.r = nr; se.c = nc; }
+        // Seal target's long-range abilities (range 3+) for 1 turn
+        let sealCount = 0;
+        let longRangeAbilities = ['bow','spear','cannon','great_fireball','harpoon','water_cutter','magic_bullet','long_snipe','rapid_shot','rock_avalanche'];
+        longRangeAbilities.forEach(ab => {
+            if (targetEntity.abilities?.[ab] !== undefined) {
+                if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
+                targetEntity.stolenLock[ab] = turn + 1; sealCount++;
+            }
+        });
+        msg(`⚔️ 決闘！敵に接近し、射程3以上の${sealCount}アビリティを1T封印！`); used = true;
+    } else if (actionMode === 'heavy_armor') {
+        if (se.mountHorseThisTurn) { msg("騎乗使用ターンは重装化不可！"); return false; }
+        se.abilities['heavy_armor']--;
+        se.invin = true; se.invinTimer = 1; se.heavyArmorThisTurn = true;
+        msg(`🛡️ 重装化！1ターン無敵バリア！`); used = true;
+    } else if (actionMode === 'mount_horse') {
+        if (se.heavyArmorThisTurn) { msg("重装化使用ターンは騎乗不可！"); return false; }
+        se.abilities['mount_horse']--;
+        se.ap = Math.min(se.ap + 1, se.maxAp + 1); se.mountHorseThisTurn = true;
+        // Will apply 1 damage to radius-1 enemies after movement — flagged
+        se.mountHorseActive = true;
+        msg(`🐎 騎乗！AP+1！移動先半径1マスに馬蹴り1ダメ！`); used = true;
+    } else if (actionMode === 'graceful_rest') {
+        se.abilities['graceful_rest']--;
+        // +1 HP
+        se.hp = Math.min(se.hp + 1, se.maxHp);
+        // +1 to 4 random non-special abilities
+        let keys = Object.keys(se.abilities).filter(k => k !== 'drop_rock' && k !== 'graceful_rest' && se.abilities[k] !== 999);
+        keys.sort(() => Math.random() - 0.5).slice(0, 4).forEach(k => se.abilities[k]++);
+        msg(`👑 優雅な休息！HP+1！ランダム4アビリティ+1！`); used = true;
+    } else if (actionMode === 'royal_dignity') {
+        se.abilities['royal_dignity']--;
+        let affectedEnemies = 0, sealedAbils = 0;
+        entities.forEach(t => {
+            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=3) {
+                t.ap = Math.max(0, t.ap - 1); affectedEnemies++;
+                // Seal 5 random abilities for 1 turn
+                let ks = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock').sort(()=>Math.random()-0.5).slice(0,5);
+                if (!t.stolenLock) t.stolenLock = {};
+                ks.forEach(k => { t.stolenLock[k] = turn + 1; sealedAbils++; });
+            }
+        });
+        msg(`👑 王の威厳！半径3マス内の${affectedEnemies}体にAP-1・${sealedAbils}アビリティ1T封印！`); used = true;
+    } else if (actionMode === 'bombardment') {
+        se.abilities['bombardment']--;
+        // Place a cannon tile at se's position and grant king atkBonus+1 for 1 turn
+        if (!isNoRockZone(se.r, se.c)) board[se.r][se.c] = 'cannon';
+        se.atkBonus = (se.atkBonus||0) + 1;
+        tempRocks.push({r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: 'plains'});
+        msg(`💣 砲撃指令！足元に大砲設置・このターン攻撃力+1！`); used = true;
+    } else if (actionMode === 'curved_shot') {
+        se.abilities['curved_shot']--;
+        // Radius 3, can hit through rocks — no LoS check needed
+        if (!targetEntity.invin) {
+            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
+        }
+        msg(targetEntity.invin ? "曲射！無敵で防がれた！" : "🏹 曲射！岩の裏からも射抜く！1ダメ・吹飛！"); used = true;
+    } else if (actionMode === 'rapid_shot') {
+        se.abilities['rapid_shot']--;
+        // 2 hits on same target
+        for (let hit = 1; hit <= 2; hit++) {
+            if (targetEntity.hp > 0 && !targetEntity.invin) {
+                targetEntity.hp -= 1 + (se.atkBonus||0); knockback(targetEntity, 1, se);
+            }
+        }
+        msg(targetEntity.invin ? "速射！無敵で防がれた！" : "🏹 速射！2連射！合計2ダメ・2回吹飛！"); used = true;
+    } else if (actionMode === 'long_snipe') {
+        se.abilities['long_snipe']--;
+        se.ap = Math.max(0, se.ap - 1);
+        if (!targetEntity.invin) {
+            targetEntity.hp -= 4 + (se.atkBonus||0); knockback(targetEntity, 2, se);
+        }
+        msg(targetEntity.invin ? "遠距離狙撃！無敵で防がれた！" : "🎯 遠距離狙撃！AP-1消費！威力4・大吹飛！"); used = true;
+    } else if (actionMode === 'charge_formation') {
+        se.abilities['charge_formation']--;
+        // Summon a lancer and an archer adjacent to se
+        let spawned = 0;
+        const dirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+        const summonTypes = [
+            {type:'lancer',name:'槍兵',abils:{spear:5,drop_rock:999}},
+            {type:'archer',name:'弓兵',abils:{bow:5,drop_rock:999}}
+        ];
+        for (let {type:st, name:sn, abils:sa} of summonTypes) {
+            for (let {dr,dc} of dirs) {
+                let nr=se.r+dr, nc=se.c+dc;
+                if (isWalkable(nr,nc) && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
+                    entities.push({id:st+Date.now(), type:st, name:sn, team:se.team, r:nr, c:nc, hp:5, maxHp:5, ap:1, maxAp:1, abilities:{...sa}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+2});
+                    spawned++; break;
+                }
+            }
+        }
+        msg(`🪖 突撃陣形！${spawned}体召喚（次ターン消滅）！`); used = true;
+    } else if (actionMode === 'coordinated_atk') {
+        se.abilities['coordinated_atk']--;
+        let boosted = 0;
+        entities.forEach(t => {
+            if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
+                t.ap = Math.min(t.ap + 1, t.maxAp + 1);
+                t.atkBonus = (t.atkBonus||0) + 1;
+                if (!t.coordBuff) t.coordBuff = 1;
+                boosted++;
+            }
+        });
+        msg(`🪖 連携攻撃！半径2マスの味方${boosted}体にAP+1・ATK+1×1T！`); used = true;
+    } else if (actionMode === 'scouting') {
+        se.abilities['scouting']--;
+        // Seal 5 random abilities, AP-1
+        if (targetEntity.hp > 0) {
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            let ks = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock').sort(()=>Math.random()-0.5).slice(0,5);
+            if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
+            ks.forEach(k => { targetEntity.stolenLock[k] = turn + 1; });
+        }
+        // This turn: stealth
+        se.stealth = true; se.stealthTimer = 1;
+        msg(`🕵️ 偵察！敵AP-1・5アビリティ封印・このターン潜伏！`); used = true;
     } else if (actionMode === 'fortify') {
         se.abilities['fortify']--;
         let rocksPlaced = 0;
@@ -4745,7 +4955,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             id: 'drone_'+Date.now(), type: 'recon_drone_unit', name: '偵察ドローン',
             team: se.team, r: r, c: c,
             hp: 1, maxHp: 1, ap: 2, maxAp: 2,
-            abilities: { drone_ram: 999, power_supply_drone: 999, analysis: 2 },
+            abilities: { drone_ram: 999, power_supply_drone: 999 },
             skillUsed: true, stealth: false, stealthTimer: 0,
             invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, flying: true
         });
@@ -5404,11 +5614,10 @@ function executeSkill(se) {
     }
     
     if (se.type === 'assassin') { 
-        se.stealth = true; se.stealthTimer = 2; 
-        se.maxAp = 3; se.ap = 3;
-        if (se.abilities.bow !== undefined) { se.abilities.poison_bow = se.abilities.bow; delete se.abilities.bow; }
-        if (se.abilities.dagger !== undefined) { se.abilities.poison_dagger = se.abilities.dagger; delete se.abilities.dagger; }
-        msg("暗殺者の隠匿！2ターン隠密化し、行動力が増加(AP3)！武器に毒を塗った！"); 
+        se.stealth = true; se.stealthTimer = 2;
+        se.ap = Math.min(se.ap + 1, (se.maxAp||2) + 1);
+        se.poisonWeapon = true; // permanent: all attacks apply poison
+        msg("隠伏天誅！2ターン隠密化・AP+1！永続的に武器が毒武器化！"); 
         return true; 
     }
     
@@ -5804,8 +6013,8 @@ function applyItem(entity, item) {
         entity.atkBonus = (entity.atkBonus || 0) + 1;
         return "⚔️ 鋼の剣！ゲーム終了まで攻撃力+1！";
     } else if (item === 'goggles') {
-        dungeonGoggles = true;
-        return "🥽 暗視ゴーグルを入手！視界が半径10マスに広がった！";
+        dungeonGoggles = dungeonGoggles > 0 ? dungeonGoggles + 1 : 6;
+        return `🥽 暗視ゴーグルを入手！視界が半径${9+dungeonGoggles}マスに広がった！（累計${dungeonGoggles}個）`;
     }
     return "アイテムを拾った！";
 }
@@ -6094,7 +6303,11 @@ function cpuLogic() {
                     let tKey = `${cpu.r},${cpu.c}`;
                     if (!cpu.flying && trapOwnerMap[tKey] !== cpu.team) {
                         board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey];
-                        if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; msg("敵が罠を踏んだ！"); }
+                        if (!cpu.invin) {
+                            let cpuTrapHits = 0;
+                            entities.forEach(t => { if (t.hp>0&&t.team!==cpu.team&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin){t.hp-=1;t.ap=Math.max(0,t.ap-2);cpuTrapHits++;} });
+                            cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; msg(`敵が罠を踏んだ！3×3爆発！周囲${cpuTrapHits}体も巻き込み！`);
+                        }
                     }
                 } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
                     board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
@@ -6115,7 +6328,9 @@ function cpuLogic() {
                 let tKey2 = `${cpu.r},${cpu.c}`;
                 if (!cpu.flying && trapOwnerMap[tKey2] !== cpu.team) {
                     board[cpu.r][cpu.c] = 'plains'; delete trapOwnerMap[tKey2];
-                    if (!cpu.invin) { cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; }
+                    if (!cpu.invin) {
+                        entities.forEach(t => { if (t.hp>0&&t.team!==cpu.team&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin){t.hp-=1;t.ap=Math.max(0,t.ap-2);} });
+                        cpu.hp -= 1; cpu.ap = Math.max(0, cpu.ap - 2); cpu.trapHitPenalty = 1; }
                 }
             } else if (board[cpu.r] && board[cpu.r][cpu.c] === 'magic_circle') {
                 board[cpu.r][cpu.c] = 'plains'; msg("敵が魔法陣を踏み消した！");
@@ -6563,7 +6778,7 @@ function updateUI() {
             thief:        'コピー',
             beastmaster:  'ドラゴン召喚',
             macho:        'ドーピング',
-            assassin:     '暗殺者の隠匿',
+            assassin:     '隠伏天誅',
             infantry:     '分隊召喚',
             cyborg:       'リミッター解除',
             alien:        'マインドコントロール',
@@ -6647,7 +6862,8 @@ function updateUI() {
             tb.innerText = '🚂 列車に乗る（次の駅まで自動移動）';
             tb.onclick = () => {
                 selectedEntity.onTrain = 'nttrain';
-                msg(`🚂 ${selectedEntity.name}が列車に乗った！次の発車で次の駅へ！`);
+                selectedEntity.invin = true; selectedEntity.invinTimer = 999; // 乗車中は無敵
+                msg(`🚂 ${selectedEntity.name}が列車に乗った！次の発車で次の駅へ！乗車中は無敵！`);
                 render(); updateUI();
                 if (isOnlineMode) syncState();
             };
