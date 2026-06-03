@@ -227,6 +227,26 @@
         .flying_drone_vehicle { background: #554400; border: 2px solid #ffdd00 !important; border-radius: 50%; }
         .skyfort_bridge { background: #7a6a3a; border: 2px solid #d4b060 !important; }
         .skyfort_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffe080; }
+        /* Misty Lake */
+        .lake_ground { background: #0a2a3d; }
+        .lotus_pad { background: #2d6a4f; border: 2px solid #52b788 !important; }
+        .lotus_pad::after { content: "🌸"; font-size: calc(var(--tile-size)*0.38); }
+        .lotus_sunken { background: #1a3d5c; }
+        .lotus_sunken::after { content: "〜"; font-size: calc(var(--tile-size)*0.28); color: #74b9ff; }
+        .lake_island { background: #5a4a20; border: 1px solid #8b7355 !important; }
+        /* Colosseum */
+        .arena_floor { background: #b8860b; }
+        .arena_goal { background: #8b0000; border: 2px solid #ff4444 !important; }
+        .arena_goal::after { content: "🚩"; font-size: calc(var(--tile-size)*0.4); }
+        /* Moving Train stage */
+        .train_ground { background: #2c2c2c; }
+        .track_tile { background: #1a1a1a; border: 1px solid #555 !important; }
+        .track_tile::after { content: ""; display: block; width: 4px; height: 70%; background: #888; margin: auto; margin-top: 15%; }
+        .crossing_gate { background: #3a0000; border: 2px solid #cc0000 !important; }
+        .crossing_gate::after { content: "🚧"; font-size: calc(var(--tile-size)*0.38); }
+        /* Swamp tile (Necromancer) */
+        .swamp_tile { background: #1a120a; border: 1px solid #3a2a0a !important; }
+        .swamp_tile::after { content: "☠"; font-size: calc(var(--tile-size)*0.38); color: #7a5a1a; }
         /* Lava Land */
         .lava_ground { background: #1e0a05; }
         .lava { background: #cc3300; }
@@ -385,6 +405,7 @@
             <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+            <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
         </select>
     </div>
     <div class="select-group">
@@ -405,6 +426,9 @@
             <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
             <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
             <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
+            <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
+            <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
+            <option value="moving_train">🚃 走る列車 (移動する列車・急行化)</option>
         </select>
     </div>
     <div class="select-group">
@@ -464,6 +488,7 @@
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+                <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -494,6 +519,7 @@
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+                <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
             </select>
         </div>
         <div class="select-group">
@@ -514,6 +540,9 @@
                 <option value="dungeon">地下迷宮 (霧・スイッチ・宝箱)</option>
                 <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
                 <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
+                <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
+                <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
+                <option value="moving_train">🚃 走る列車 (移動する列車・急行化)</option>
             </select>
         </div>
         <div class="select-group">
@@ -550,6 +579,7 @@
                 <option value="ryujin">竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
+                <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -585,6 +615,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🐲 竜人族 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / ぶん殴り10 / 跳び蹴り1 / 乱打3<br>火炎ブレス2 / テイルスイング3 / カウンター3 / 変身2 / 残像1 / スキル:ドラゴンインパクト</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ戦士 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / モリで刺す10 / ウォーターカッター3<br>水流噴火1 / 潜水1 / 変身(水中)∞ / 波乗り2 / 渦潮1 / タコ召喚1<br>ウォーターゲージ制：ゲージ15~で変身・20~でバフ獲得</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🎪 ピエロ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ナイフジャグリング3 / 恐怖の笑顔3 / 玉乗り5<br>アクロバット2 / 空中ブランコ2 / 爆弾クラッカー1 / サル召喚1<br>スキル:棺桶ナイフ(対象を3T行動不能＋毎T2ダメ)<br>隣接敵が封じられると他コマに棺桶壊し(解放)が出現</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">💀 死霊術師 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / テレポート3 / 闇魔法5(範囲3/威3/封印) / 沼魔法1(周囲3×3沼化)<br>魂吸収1(ソウル数×HP回復) / 骨の鎧1(1T無敵) / 頭蓋調教1(骸骨を隣接召喚)<br>死霊縛り1(範囲3/2ダメ+行動封印) / 骸骨召喚3(骸骨/骸骨兵) / 不死の群れ1(配下強化)<br>死体融合1(隣接アンデッド合体→キメラ)<br>スキル:霊魂放出(範囲3/威3+ソウル数→全消費)</div></div>
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
         <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/潜伏/ナイフ)</div></div>
@@ -720,6 +751,19 @@ let tideTurn = 0;
 // Lava Land
 let lavaBridgeCollapsed = false;
 let lavaSpreadTimer = 0;
+// Misty Lake
+let mistyLakeWindTimer = 0;
+let mistyLakeFogCleared = false;
+let lotusPadSteps = {};   // "r,c" → step count (sinks after 2 steps)
+// Colosseum
+let colosseumPoints = { player: 0, cpu: 0 };
+let colosseumGoalSpawned = { player: false, cpu: false };
+let colosseumLastScoreTurn = { player: -1, cpu: -1 };
+// Moving Train stage
+let movingTrainRow = 3;
+let movingTrainDir = 1;  // 1=down, -1=up
+// Necromancer / Skyfort bridges
+let fallenSkyfortBridges = [];  // [{r,c}] skyfort_bridge tiles that collapsed (restored next turn)
 
 // ============================================================
 //  ONLINE MODE STATE
@@ -941,7 +985,16 @@ const ABILITY_NAMES = {
     long_snipe: '遠距離狙撃(直線8/威4/吹飛/AP-1)',
     charge_formation: '突撃陣形(半径1に槍兵+弓兵召喚/次T消滅)',
     coordinated_atk: '連携攻撃(半径2味方全員AP+1/ATK+1×1T)',
-    scouting: '偵察(直線8/敵AP-1/5アビリティ封印/1T潜伏)'
+    scouting: '偵察(直線8/敵AP-1/5アビリティ封印/1T潜伏)',
+    dark_magic: '闇魔法(半径3/威3/AP-1/1アビリティ封印)',
+    swamp_magic: '沼魔法(周囲3×3を沼マスに変換/敵AP-1/毎T)',
+    soul_absorb: '魂吸収(ソウル数分HP回復/ソウルリセット)',
+    bone_armor: '骨の鎧(1T無敵バリア)',
+    skull_tame: '頭蓋調教(隣接マスに骸骨を召喚)',
+    necro_bind: '死霊縛り(半径3/2ダメ+1T行動封印)',
+    necro_summon: '骸骨召喚(隣接マスに骸骨/骸骨兵をランダム召喚)',
+    undead_party: '不死の群れ(配下アンデッド全員HP+2/AP+1)',
+    corpse_fusion: '死体融合(隣接アンデッド味方2体をキメラに合体)'
 };
 
 const ABILITY_TIPS = {
@@ -1061,7 +1114,16 @@ const ABILITY_TIPS = {
     long_snipe: '一撃必殺の狙撃。直線8マス。攻撃力4・後方吹き飛ばし。AP-1消費が必要。回数1。',
     charge_formation: '半径1マスに槍兵と弓兵を召喚する。召喚されたコマは次のターンに自動消滅する。回数1。',
     coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
-    scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。'
+    scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。',
+    dark_magic: '闇の力で対象に3ダメ＋AP-1＋ランダム1アビリティを1T封印する遠距離攻撃(半径3)。回数5。',
+    swamp_magic: '足元3×3を沼マスに変換。沼マスを踏んだ非飛行の敵はAP-1される。回数1。',
+    soul_absorb: '溜めたソウル数分のHPを回復し、ソウルをリセットする。ソウルは倒された敵から自動で溜まる。回数1。',
+    bone_armor: '1ターン間、全ダメージを無効にする無敵バリアを展開する。回数1。',
+    skull_tame: '隣接した空マスに骸骨または骸骨兵を召喚し仲間にする。回数1。',
+    necro_bind: '対象に2ダメ＋対象の全アビリティを1T封印する死霊呪縛(半径3)。回数1。',
+    necro_summon: '隣接した空マスに骸骨または骸骨兵をランダムで召喚する。回数3。',
+    undead_party: '配下のアンデッド(骸骨/骸骨兵/キメラ/ゾンビ等)全員のHP+2・AP+1を強化する。回数1。',
+    corpse_fusion: '隣接するアンデッド味方2体を消費し、強力なネクロキメラ(HP6)に合体させる。回数1。'
 };
 
 const JOB_DATA = {
@@ -1078,7 +1140,8 @@ const JOB_DATA = {
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 5, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, bite: 5, throw_net: 1, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
-    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 }
+    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
+    necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_tame: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 }
 };
 
 // ============================================================
@@ -1873,8 +1936,8 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior'];
-const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer'];
+const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','moving_train'];
 
 function resolveJob(job) {
     return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
@@ -2112,8 +2175,8 @@ function initBoard(stageType) {
         }
         // Void notches near island (row 6 cols 0-7, row 14 cols 0-7)
         for (let c2=0; c2<=7; c2++) { board[6][c2]='sky_void'; board[14][c2]='sky_void'; }
-        // Two bridges at col 11 and col 17
-        for (let r2=7; r2<=13; r2++) { board[r2][11]='bridge'; board[r2][17]='bridge'; }
+        // Two bridges at col 11 and col 17 — collapsible skyfort bridges
+        for (let r2=7; r2<=13; r2++) { board[r2][11]='skyfort_bridge'; board[r2][17]='skyfort_bridge'; }
         // Floating island: rows 7-13, cols 0-6 (7×7 — no magic circles)
         for (let r2=7; r2<=13; r2++) for (let c2=0; c2<=6; c2++) board[r2][c2]='fortress_floor';
         board[10][3]='cannon';
@@ -2339,6 +2402,61 @@ function initBoard(stageType) {
         lavaBridgeCollapsed = false; lavaSpreadTimer = 0;
         return;
 
+    } else if (stageType === 'misty_lake') {
+        // === MISTY LAKE ===
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='lake_ground';
+        }
+        // Center lake zone (shallow water)
+        for (let r2=7; r2<=13; r2++) for (let c2=4; c2<=16; c2++) {
+            if (board[r2][c2]==='lake_ground') board[r2][c2]='shallow_water';
+        }
+        // Cross-lake bridge
+        board[10][10]='bridge';
+        // Lotus pads scattered around lake edges
+        const lotusCandidates = [];
+        for (let r2=5; r2<=15; r2++) for (let c2=2; c2<=18; c2++) {
+            if (board[r2][c2]==='lake_ground') lotusCandidates.push([r2,c2]);
+        }
+        lotusCandidates.sort(()=>Math.random()-0.5);
+        lotusCandidates.slice(0,22).forEach(([r2,c2]) => { board[r2][c2]='lotus_pad'; });
+        // Lake islands (solid ground)
+        [[3,4],[3,16],[17,4],[17,16],[5,10],[15,10]].forEach(([r2,c2]) => {
+            if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&board[r2][c2]==='lake_ground') board[r2][c2]='lake_island';
+        });
+        lotusPadSteps = {}; mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
+    } else if (stageType === 'colosseum') {
+        // === COLOSSEUM ===
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='arena_floor';
+        }
+        // Outer arena walls (circular)
+        for (let c2=3; c2<=17; c2++) { if(!isNoRockZone(4,c2)) board[4][c2]='rock'; if(!isNoRockZone(16,c2)) board[16][c2]='rock'; }
+        for (let r2=5; r2<=15; r2++) { if(!isNoRockZone(r2,3)) board[r2][3]='rock'; if(!isNoRockZone(r2,17)) board[r2][17]='rock'; }
+        // Gate openings in outer walls
+        board[4][10]='arena_floor'; board[16][10]='arena_floor';
+        board[10][3]='arena_floor'; board[10][17]='arena_floor';
+        // Inner pillars
+        [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
+        colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1};
+    } else if (stageType === 'moving_train') {
+        // === MOVING TRAIN ===
+        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='train_ground';
+        }
+        // Rail tracks at col 6 and col 14
+        for (let r2=0; r2<SIZE; r2++) {
+            if (!isNoRockZone(r2,6)) board[r2][6]='track_tile';
+            if (!isNoRockZone(r2,14)) board[r2][14]='track_tile';
+        }
+        // Level crossing gates
+        [[4,6],[4,14],[16,6],[16,14]].forEach(([r2,c2]) => { board[r2][c2]='crossing_gate'; });
+        // Central walkable bridge
+        board[10][10]='bridge';
+        movingTrainRow = 3; movingTrainDir = 1;
     } else {
         let placed = false;
         while (!placed) {
@@ -2358,7 +2476,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','train_ground','track_tile','crossing_gate','swamp_tile'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2433,6 +2551,14 @@ function initEntities(pJob, difficulty = "1") {
     rollRockWarnTiles = [];
     cursedAbilities = {};
     dungeonGoggles = 0;
+    // Reset new stage globals
+    fallenSkyfortBridges = [];
+    mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
+    lotusPadSteps = {};
+    colosseumPoints = {player:0,cpu:0};
+    colosseumGoalSpawned = {player:false,cpu:false};
+    colosseumLastScoreTurn = {player:-1,cpu:-1};
+    movingTrainRow = 3; movingTrainDir = 1;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -2465,6 +2591,9 @@ function initEntities(pJob, difficulty = "1") {
         });
     } else if (activeStage === 'chaos') {
         // Yeti spawns at turn 3 via startTurn
+    } else if (activeStage === 'moving_train') {
+        // Spawn the moving train entity
+        entities.push({id:'mt_train', type:'moving_train_entity', name:'🚃列車', team:'vehicle', r:3, c:6, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0});
     }
     // Night town: diagonal corner starts + boats in river
     if (activeStage === 'nighttown') {
@@ -3182,9 +3311,10 @@ function startTurn(team, skipEffects = false) {
         }
         // Skyfort: restore collapsed bridges at start of turn
         if (activeStage === 'skyfort') {
-            for (let rr=9; rr<=10; rr++) for (let cc=13; cc<=14; cc++) {
-                if (board[rr]?.[cc] === 'fallen_floor') board[rr][cc] = 'skyfort_bridge';
-            }
+            fallenSkyfortBridges.forEach(({r:rr, c:cc}) => {
+                if (board[rr]?.[cc] === 'fallen_floor') { board[rr][cc] = 'skyfort_bridge'; }
+            });
+            fallenSkyfortBridges = [];
         }
 
         // Graveyard: bat/vampire/wolf/werewolf every 5 turns, soul+2 each
@@ -3344,6 +3474,79 @@ function startTurn(team, skipEffects = false) {
                     entities.push({id:'npcwolf'+Date.now(), type:'wolf', name:'オオカミ', team:'npc', r:spot.r, c:spot.c, hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1});
                 } else spawnAt(t, spot.r, spot.c);
                 msg(`🌙 夜の街に魔物が現れた！`, true);
+            }
+        }
+
+        // ===== NEW STAGES =====
+        // Misty Lake events
+        if (activeStage === 'misty_lake') {
+            mistyLakeWindTimer++;
+            if (mistyLakeWindTimer >= 3) {
+                mistyLakeFogCleared = true; mistyLakeWindTimer = 0;
+                msg("💨 湖に風が吹いた！霧が晴れる！(1ターン)", true);
+            } else { mistyLakeFogCleared = false; }
+            // lotus_sunken → shallow_water and damage entities on top
+            for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+                if (board[r2][c2] === 'lotus_sunken') {
+                    entities.forEach(e => {
+                        if (e.hp>0 && e.r===r2 && e.c===c2 && !e.flying && !isOceanUnit(e) && !e.invin) {
+                            e.hp -= 2; msg(`💧 ${e.name}が沼に落ちた！2ダメージ！`, true);
+                            const dirs=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+                            for (let {dr,dc} of dirs) { let nr=e.r+dr,nc=e.c+dc; if(isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)){e.r=nr;e.c=nc;break;} }
+                        }
+                    });
+                    board[r2][c2] = 'shallow_water';
+                }
+            }
+            if (turn >= 4 && turn % 4 === 0) {
+                let spot = randomEmptyCells(1)[0];
+                if (spot) { spawnAt(Math.random()<0.5?'shark':'eel', spot.r, spot.c); msg(`🐟 湖の魔物が出現！`, true); }
+            }
+        }
+        // Colosseum events
+        if (activeStage === 'colosseum') {
+            entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc' && e.lastAttackTeam).forEach(e => {
+                e.colossCounted = true;
+                colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + 1;
+                msg(`⚔️ 撃破！得点→ あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
+            });
+            if (turn % 3 === 0) {
+                let spot = randomEmptyCells(1)[0];
+                if (spot) { entities.push({id:'gladiator'+Date.now(), type:'gladiator', name:'剣闘士', team:'npc', r:spot.r, c:spot.c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{sword:999, punch:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1}); msg("⚔️ 剣闘士が入場！", true); }
+            }
+            ['player','cpu'].forEach(team => {
+                if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
+                    colosseumGoalSpawned[team] = true;
+                    let goalRow = team==='player' ? 0 : SIZE-1;
+                    for (let c2=8; c2<=12; c2++) { if(['arena_floor','rock'].includes(board[goalRow][c2])) board[goalRow][c2]='arena_goal'; }
+                    msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！敵陣に旗が出現！`, true);
+                }
+            });
+        }
+        // Moving Train events
+        if (activeStage === 'moving_train') {
+            let trainEnt = entities.find(e => e.id==='mt_train');
+            if (!trainEnt) {
+                trainEnt = {id:'mt_train', type:'moving_train_entity', name:'🚃列車', team:'vehicle', r:movingTrainRow, c:6, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0};
+                entities.push(trainEnt);
+            }
+            let speed = turn >= 10 ? 2 : 1;
+            for (let step=0; step<speed; step++) {
+                let nextRow = trainEnt.r + movingTrainDir;
+                if (nextRow < 0 || nextRow >= SIZE) { movingTrainDir *= -1; nextRow = trainEnt.r + movingTrainDir; }
+                entities.forEach(e => { if (e.hp>0 && e.r===nextRow && e.c===trainEnt.c && e!==trainEnt && !e.invin) { e.hp-=3; knockback(e,2,trainEnt); msg(`🚃 列車が${e.name}を轢いた！3ダメ！`, true); } });
+                movingTrainRow = nextRow; trainEnt.r = nextRow;
+            }
+            if (turn === 10) msg("🚃 列車が急行モードに突入！速度2倍！", true);
+        }
+        // Necromancer: accumulate souls from all dead entities
+        {
+            let allNecros = entities.filter(e => e.type==='necromancer' && e.hp>0);
+            if (allNecros.length > 0) {
+                entities.filter(e => e.hp<=0 && !e.necroSoulCounted).forEach(e => {
+                    e.necroSoulCounted = true;
+                    allNecros.forEach(n => { n.soulCount = (n.soulCount||0) + 1; });
+                });
             }
         }
 
@@ -3515,6 +3718,9 @@ function isValidTarget(se, r, c, mode) {
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
         if (dist === 0 || dist > 2) return false;
         if (!isWalkable(r, c)) return false;
+        // Bug fix: cannot dash from void/fallen tiles
+        let srcTile = board[se.r]?.[se.c];
+        if (srcTile === 'sky_void' || srcTile === 'fallen_floor') return false;
         let rawDr = r - se.r, rawDc = c - se.c;
         if (rawDr !== 0 && rawDc === 0 && Math.abs(rawDr) === 2) {
             let midR = se.r + Math.sign(rawDr), midC = se.c;
@@ -3646,6 +3852,17 @@ function isValidTarget(se, r, c, mode) {
     // ドローン
     if (mode === 'drone_ram') return maxDist===1 && target && target.team!==se.team;
     if (mode === 'power_supply_drone') return true;
+    // 死霊術師 (Necromancer)
+    if (mode === 'dark_magic') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'swamp_magic') return r===se.r && c===se.c;
+    if (mode === 'soul_absorb') return r===se.r && c===se.c;
+    if (mode === 'bone_armor') return r===se.r && c===se.c;
+    if (mode === 'skull_tame') return maxDist===1 && isWalkable(r,c) && !target;
+    if (mode === 'necro_bind') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'necro_summon') return maxDist===1 && isWalkable(r,c) && !target;
+    if (mode === 'undead_party') return r===se.r && c===se.c;
+    if (mode === 'corpse_fusion') return maxDist===1 && target && target.team===se.team && ['skeleton','skeleton_soldier','necro_chimera'].includes(target.type);
+    if (mode === 'skill_necro_release') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
     return false;
 }
 
@@ -3659,7 +3876,7 @@ function render() {
     // Demon stage: change plains to light purple via CSS class
     b.classList.toggle('demon-stage', activeStage === 'demon');
 
-    // Fog of war for dungeon stage
+    // Fog of war for dungeon stage + misty_lake
     let fogSet = new Set();
     if (activeStage === 'dungeon') {
         let playerEnt = entities.find(e => e.hp > 0 && e.team === myTeam() && JOB_DATA[e.type]);
@@ -3669,6 +3886,13 @@ function render() {
                 let inPlayerView = Math.max(Math.abs(rr - playerEnt.r), Math.abs(cc - playerEnt.c)) <= viewR;
                 let inTorchView = dungeonTorches.some(([tr,tc]) => Math.max(Math.abs(rr-tr), Math.abs(cc-tc)) <= 5);
                 if (!inPlayerView && !inTorchView) fogSet.add(`${rr},${cc}`);
+            }
+        }
+    } else if (activeStage === 'misty_lake' && !mistyLakeFogCleared) {
+        let playerEnt = entities.find(e => e.hp > 0 && e.team === myTeam() && JOB_DATA[e.type]);
+        if (playerEnt) {
+            for (let rr=0; rr<SIZE; rr++) for (let cc=0; cc<SIZE; cc++) {
+                if (Math.max(Math.abs(rr - playerEnt.r), Math.abs(cc - playerEnt.c)) > 4) fogSet.add(`${rr},${cc}`);
             }
         }
     }
@@ -3761,7 +3985,7 @@ function render() {
         }
     });
 
-    // Soul counter (graveyard / nighttown / chaos)
+    // Soul counter (graveyard / nighttown / chaos / colosseum) + necromancer soulCount
     let si = document.getElementById('souls-indicator');
     if (si) {
         if (['graveyard','nighttown','chaos'].includes(activeStage)) {
@@ -3773,8 +3997,25 @@ function render() {
             si.style.display = 'block';
             let vr = dungeonGoggles > 0 ? 8 + dungeonGoggles : 3;
             si.textContent = `🥽 視界: 半径${vr}マス${dungeonGoggles > 0 ? `（ゴーグル${dungeonGoggles}個装備）` : '（暗視ゴーグルで拡張可）'}`;
+        } else if (activeStage === 'colosseum') {
+            si.style.display = 'block';
+            si.textContent = `⚔️ 得点 — あなた:${colosseumPoints[myTeam()]||0} / 相手:${colosseumPoints[enemyTeam()]||0}（先に10点で旗が出現）`;
+        } else if (activeStage === 'misty_lake') {
+            si.style.display = 'block';
+            si.textContent = `🌫️ 霧の湖 — 風${mistyLakeFogCleared ? '（晴れ！）' : `(あと${3 - ((turn-1)%3)}T)`}`;
+        } else if (activeStage === 'moving_train') {
+            let trainEnt = entities.find(e => e.id === 'mt_train' && e.hp > 0);
+            si.style.display = 'block';
+            si.textContent = `🚃 列車位置 — row${trainEnt ? trainEnt.r : '?'} col${trainEnt ? trainEnt.c : '?'}${turn >= 10 ? ' 【急行モード】' : ''}`;
         } else {
-            si.style.display = 'none';
+            // Show necromancer soul count if applicable
+            let myNecro = entities.find(e => e.type === 'necromancer' && e.team === myTeam() && e.hp > 0);
+            if (myNecro) {
+                si.style.display = 'block';
+                si.textContent = `💀 ソウル — ${myNecro.soulCount||0}（霊魂放出の威力に加算）`;
+            } else {
+                si.style.display = 'none';
+            }
         }
     }
 
@@ -4011,8 +4252,24 @@ function checkTileEffects(entity) {
     }
     // Skyfort: collapse bridge tile when stepped on
     if (activeStage === 'skyfort' && board[r]?.[c] === 'skyfort_bridge') {
+        fallenSkyfortBridges.push({r, c});
         board[r][c] = 'fallen_floor';
         eventMsg = (eventMsg ? eventMsg + " " : "") + "💥 橋が崩落！次ターン開始時に復元する。";
+    }
+    // Misty Lake: lotus_pad sinks when stepped on (by non-flying/non-ocean)
+    if (activeStage === 'misty_lake' && board[r]?.[c] === 'lotus_pad' && !entity.flying && !isOceanUnit(entity)) {
+        lotusPadSteps[`${r},${c}`] = (lotusPadSteps[`${r},${c}`] || 0) + 1;
+        if (lotusPadSteps[`${r},${c}`] >= 2) {
+            board[r][c] = 'lotus_sunken';
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉が沈み始めた！次ターン開始時に沈没！";
+        } else {
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉がゆらゆらしている！";
+        }
+    }
+    // Swamp tile: slow non-flying entities
+    if (board[r]?.[c] === 'swamp_tile' && !entity.flying && !isOceanUnit(entity)) {
+        entity.ap = Math.max(0, entity.ap - 1);
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "🌊 沼に足がとられた！AP-1";
     }
     // Board onto a flying drone (auto-board; once mounted cannot dismount)
     let wyvernHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && e.type==='flying_drone' && e.team==='vehicle');
@@ -5511,6 +5768,71 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['octopus_summon']--;
         entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true, waterGauge:10, maxWaterGauge:30 });
         msg("🐙 タコ召喚！(HP3/AP2/触手∞・水吐き3/海洋コマ)"); used = true;
+    // ====== 死霊術師アビリティ ======
+    } else if (actionMode === 'dark_magic') {
+        se.abilities['dark_magic']--;
+        if (targetEntity && !targetEntity.invin) {
+            targetEntity.hp -= 3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            let ks = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock');
+            if (ks.length) { if(!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id]={}; cursedAbilities[targetEntity.id][ks[Math.floor(Math.random()*ks.length)]] = 1; }
+        }
+        msg(`💀 闇魔法！${targetEntity?.name}に3ダメ+AP-1+1アビリティ封印！`); used = true;
+    } else if (actionMode === 'swamp_magic') {
+        se.abilities['swamp_magic']--;
+        let swampCount = 0;
+        for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+            let nr=se.r+dr, nc=se.c+dc;
+            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            if (isGroundTile(board[nr][nc]) && board[nr][nc]!=='swamp_tile') { board[nr][nc]='swamp_tile'; swampCount++; }
+            let hit = entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team&&!e.flying&&!e.invin);
+            if (hit) hit.ap = Math.max(0, hit.ap-1);
+        }
+        msg(`🌊 沼魔法！周囲3×3が沼化(${swampCount}マス)！敵AP-1！`); used = true;
+    } else if (actionMode === 'soul_absorb') {
+        se.abilities['soul_absorb']--;
+        let sc = se.soulCount || 0;
+        if (sc <= 0) { msg("💀 魂吸収：ソウルがありません！"); return; }
+        se.hp = Math.min(se.maxHp, se.hp + sc);
+        se.soulCount = 0;
+        msg(`💀 魂吸収！ソウル${sc}消費→HP+${sc}回復！`); used = true;
+    } else if (actionMode === 'bone_armor') {
+        se.abilities['bone_armor']--;
+        se.invin = true; se.invinTimer = 1;
+        msg(`💀 骨の鎧！1ターン無敵バリア！`); used = true;
+    } else if (actionMode === 'skull_tame') {
+        se.abilities['skull_tame']--;
+        let skType = Math.random() < 0.5 ? 'skeleton' : 'skeleton_soldier';
+        let sk = spawnAt(skType, r, c); sk.team = se.team; sk.soulCount = 0;
+        msg(`💀 頭蓋調教！${sk.name}を召喚・仲間にした！`); used = true;
+    } else if (actionMode === 'necro_bind') {
+        se.abilities['necro_bind']--;
+        if (targetEntity && !targetEntity.invin) {
+            targetEntity.hp -= 2+(se.atkBonus||0);
+            if(!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id]={};
+            Object.keys(targetEntity.abilities||{}).forEach(k=>{ cursedAbilities[targetEntity.id][k]=1; });
+        }
+        msg(`💀 死霊縛り！${targetEntity?.name}に2ダメ+全アビリティ1T封印！`); used = true;
+    } else if (actionMode === 'necro_summon') {
+        se.abilities['necro_summon']--;
+        let nsType = Math.random() < 0.5 ? 'skeleton' : 'skeleton_soldier';
+        let ns = spawnAt(nsType, r, c); ns.team = se.team;
+        msg(`💀 骸骨召喚！${ns.name}(${ns.hp}HP)が出現！`); used = true;
+    } else if (actionMode === 'undead_party') {
+        se.abilities['undead_party']--;
+        let buffed = 0;
+        entities.filter(e=>e.hp>0&&e.team===se.team&&['skeleton','skeleton_soldier','necro_chimera','zombie','frankenstein'].includes(e.type)).forEach(e=>{ e.hp=Math.min(e.maxHp,e.hp+2); e.maxAp=Math.min(e.maxAp+1,4); e.ap=Math.min(e.ap+1,e.maxAp); buffed++; });
+        msg(`💀 不死の群れ！配下アンデッド${buffed}体 HP+2/AP+1強化！`); used = true;
+    } else if (actionMode === 'corpse_fusion') {
+        se.abilities['corpse_fusion']--;
+        let fused = entities.find(e=>e.hp>0&&e.r===r&&e.c===c&&e.team===se.team&&['skeleton','skeleton_soldier','necro_chimera'].includes(e.type));
+        if (!fused) { msg("💀 死体融合：対象がいません"); return; }
+        // Find second adjacent undead
+        let second = entities.find(e=>e.hp>0&&e.team===se.team&&['skeleton','skeleton_soldier','necro_chimera'].includes(e.type)&&e!==fused&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
+        if (!second) { msg("💀 死体融合：隣接アンデッドが2体必要です！"); return; }
+        fused.hp=-1; second.hp=-1; // kill both
+        let chimera = spawnAt('necro_chimera', r, c); chimera.team = se.team;
+        msg(`💀 死体融合！${fused.name}と${second.name}がキメラに合体！(HP6/強力な拳/魂3値)`); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -5700,6 +6022,12 @@ function executeSkill(se) {
         msg("⚰️ 棺桶ナイフ！閉じ込める敵(半径2マス以内)を選んでください！");
         actionMode = 'skill_coffin'; render(); return false;
     }
+    // ====== 死霊術師 スキル: 霊魂放出 ======
+    if (se.type === 'necromancer') {
+        let sc = se.soulCount || 0;
+        msg(`💀 霊魂放出！(威力${3+sc}) ターゲット(半径3マス以内の敵)を選んでください！ソウル${sc}消費`);
+        actionMode = 'skill_necro_release'; render(); return false;
+    }
     return false;
 }
 
@@ -5732,6 +6060,19 @@ function executeRushSkill(se, targetR, targetC, mode) {
             }
         }
         msg(`💦 ハイドロポンプ発射！ゲージ${gauge}・射程${range}・威力${dmg}・幅${width}(命中${hits}体)！通過マスが浅瀬化！`);
+        se.skillUsed = true;
+        return;
+    }
+    if (mode === 'skill_necro_release') {
+        let sc = se.soulCount || 0;
+        let dmg = 3 + sc;
+        let target = entities.find(e => e.r === targetR && e.c === targetC && e.hp > 0 && e.team !== se.team);
+        if (target && !target.invin) {
+            target.hp -= dmg + (se.atkBonus||0) + (target.defDebuff||0);
+            knockback(target, 2, se);
+        }
+        se.soulCount = 0;
+        msg(target?.invin ? `💀 霊魂放出！しかし無敵で防がれた！` : `💀 霊魂放出！${target?.name}にダメージ${dmg}(ソウル${sc}消費)＋吹飛ばし！`);
         se.skillUsed = true;
         return;
     }
@@ -5936,7 +6277,10 @@ function monsterTemplate(type, r, c) {
         case 'vampire':      return {...base, type, name:'ヴァンパイア', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{drain:999}, soulValue:2};
         case 'shark':        return {...base, type, name:'サメ', hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}, soulValue:1};
         case 'eel':          return {...base, type, name:'ウツボ', hp:2, maxHp:2, ap:2, maxAp:2, abilities:{bite:999}, soulValue:1};
-        case 'salamander':   return {...base, type, name:'サラマンダー', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{bite:999}, lavaWalker:true, soulValue:1};
+        case 'salamander':      return {...base, type, name:'サラマンダー', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{bite:999}, lavaWalker:true, soulValue:1};
+        case 'skeleton':        return {...base, type, name:'骸骨', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{punch:999}, soulValue:1};
+        case 'skeleton_soldier':return {...base, type, name:'骸骨兵', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{sword:2}, soulValue:1};
+        case 'necro_chimera':   return {...base, type, name:'ネクロキメラ', hp:6, maxHp:6, ap:2, maxAp:2, abilities:{punch:999}, soulValue:3};
         default:             return {...base, type:'zombie', name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
     }
 }
@@ -6002,7 +6346,7 @@ function resolveFallingFloors() {
     // In chaos stage, bridges are safe (not collapsible)
     let empty = [], occupied = [];
     for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
-        let isCollapsible = board[r][c] === 'fortress_floor' || (board[r][c] === 'bridge' && activeStage !== 'chaos');
+        let isCollapsible = board[r][c] === 'fortress_floor' || (board[r][c] === 'bridge' && activeStage !== 'chaos') || (board[r][c] === 'skyfort_bridge' && activeStage === 'skyfort');
         if (isCollapsible) {
             if (entities.some(e=>e.hp>0&&e.r===r&&e.c===c)) occupied.push({r,c});
             else empty.push({r,c});
@@ -6809,6 +7153,8 @@ function updateUI() {
             mandrake:     '根っこバインド',
             ryujin:       'ドラゴンインパクト',
             shark_warrior:'ハイドロポンプ',
+            clown:        '棺桶ナイフ',
+            necromancer:  '霊魂放出',
         };
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
