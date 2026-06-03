@@ -631,7 +631,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🎪 ピエロ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ナイフジャグリング3 / 恐怖の笑顔3 / 玉乗り5<br>アクロバット2 / 空中ブランコ2 / 爆弾クラッカー1 / サル召喚1<br>スキル:棺桶ナイフ(対象を3T行動不能＋毎T2ダメ)<br>隣接敵が封じられると他コマに棺桶壊し(解放)が出現</div></div>
         <div class="guide-job-card"><div class="guide-job-name">💀 死霊術師 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / テレポート3 / 闇魔法5(範囲2/威1/毒) / 沼魔法1(範囲2/威2/毒沼1T)<br>魂吸収1(半径1味方全破壊→HP+アビリティ+魂+5) / ボーンアーマー1(魂消費+味方破壊→1T無敵+ATK+1)<br>スカルヘッド1(魂消費→ドクロ召喚) / ネクロバインド1(魂消費/範囲3/AP-1+封印+ゾンビ)<br>ネクロサモン3(5T後/魂消費で上位) / アンデットパーティ1(魂3消費/7種召喚)<br>死体融合1(魂3消費/味方全破壊→キメラ)　スキル:霊魂放出(範囲3/威3+魂)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">👼 天使 (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 光のムチ5(直線2/威1/AP-1) / フェザーダッシュ5(ダッシュ+隣接AP-1/堕天+1)<br>バインドアロー3(直線5/威1/AP-2/5封印/堕天+1) / 光の呪縛3(半径2全体/AP-2/5封印/堕天+1)<br>光の結界3(半径1/1T結界+無敵/敵AP-2+封印/堕天+1)<br>スキル:堕天(ゲージ≥15/AP+2/罪の刻印・デスサイズ・均衡崩し・怨みの打撃追加/毎T自1ダメ)<br>堕天使追加技：罪の刻印1(呪い付与) / デスサイズ∞(半径AoE) / 均衡崩し1(強力貫通) / 怨みの打撃∞(半径1/被弾強化/ゲージ30強化)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⚖️ 世界の管理者 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ダッシュ3 / 天秤5(HP≤15で半径3/威1+被弾で強化/全アビ+1)<br>均衡の調整5(魔法弾/半径2/敵ゴール有利で+3ダメ+AP-2+封印/全アビ+1) / 調停の裁き5(落雷/半径3/敵コマ多数で全体攻撃/全アビ+1)<br>秩序の修正5(半径4/後吹飛/敵3マス移動で結界+AP-2+封印+バリア/全アビ+1) / 不平等への怒り5(炎/半径5/残りアビ1以下があれば+3ダメ+AP-2+半径3全体2ダメ/全アビ+1)<br>均等の一撃5(超能力/半径3/後吹飛+前岩/前T敵スキル使用で+3ダメ+AP-2+封印/全アビ+1)<br>スキル:世界の作り直し(5T以降/半径5全敵5マス後吹飛+近傍岩5個/次相手ターン後地震/8マス以上遠距離敵で+3ダメ+AP-2+1T封印+全アビ+1)</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">⚖️ 世界の管理者 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ダッシュ3 / 天秤5(HP≤15で半径3/威1+被弾で強化/全アビ+1)<br>均衡の調整5(魔法弾/半径2/敵ゴール有利で+3ダメ+AP-2+封印/全アビ+1) / 調停の裁き5(落雷/半径3/敵コマ多数で全体攻撃/全アビ+1)<br>秩序の修正5(半径4/後吹飛/敵3マス移動で結界+AP-2+封印+バリア/全アビ+1) / 不平等への怒り5(炎/半径5/残りアビ1以下があれば+3ダメ+AP-2+半径3全体2ダメ/全アビ+1)<br>均等の一撃5(超能力/半径3/後吹飛+前岩/前T敵スキル使用で+3ダメ+AP-2+封印/全アビ+1)<br>スキル:世界の作り直し(5T以降/半径5全敵5マス後吹飛+近傍岩5個/次相手ターン後地震/8マス以上遠距離敵で全敵AP-2+1T全封印+全アビ+1)</div></div>
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
         <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/潜伏/ナイフ)</div></div>
@@ -6636,12 +6636,6 @@ function executeSkill(se) {
                 if (!t.invin && !necroShieldBlock(t)) {
                     if (wmDmgBonus > 0) {
                         t.hp -= wmDmgBonus + (t.defDebuff||0);
-                        t.ap = Math.max(0, t.ap - 2);
-                        if (!cursedAbilities[t.id]) cursedAbilities[t.id] = {};
-                        Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock').forEach(k=>{
-                            cursedAbilities[t.id][k] = Math.max(cursedAbilities[t.id][k]||0, 1);
-                        });
-                        t.skillUsed = true;
                     }
                     knockback(t, 5, se);
                     wmHitCount++;
@@ -6656,9 +6650,22 @@ function executeSkill(se) {
                 }
             }
         });
+        // 遠距離敵検知ボーナス: ステージ全体の敵コマにAP-2+1T封印
+        if (wmFarEnemy) {
+            entities.forEach(t => {
+                if (t.hp>0 && t.team!==se.team) {
+                    t.ap = Math.max(0, t.ap - 2);
+                    if (!cursedAbilities[t.id]) cursedAbilities[t.id] = {};
+                    Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock').forEach(k=>{
+                        cursedAbilities[t.id][k] = Math.max(cursedAbilities[t.id][k]||0, 1);
+                    });
+                    t.skillUsed = true;
+                }
+            });
+            incrementManagerAbilities(se);
+        }
         pendingEarthquake = { castTurn: turn, ownerTeam: se.team };
-        if (wmFarEnemy) incrementManagerAbilities(se);
-        msg(`🌍 世界の作り直し！半径5の敵${wmHitCount}体を5マス後吹飛ばし＋近傍岩落とし！` + (wmDmgBonus > 0 ? '(8マス以上遠距離敵検知！+3ダメ+AP-2+1T封印！全アビ+1)' : '') + ' 次の相手ターン終了後に地震発動！');
+        msg(`🌍 世界の作り直し！半径5の敵${wmHitCount}体を5マス後吹飛ばし＋近傍岩落とし！` + (wmFarEnemy ? `(8マス以上遠距離敵検知！全敵AP-2+1T封印+${wmDmgBonus > 0 ? '+3ダメ' : ''}全アビ+1)` : '') + ' 次の相手ターン終了後に地震発動！');
         return true;
     }
     return false;
