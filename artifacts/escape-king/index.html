@@ -3132,10 +3132,13 @@ function incrementManagerAbilities(e) {
 }
 
 // 封印統一ヘルパー: targetのkeys配列をdurationターン封印し、調和の祈りカウンターを検知
+let _harmoniousCounterFiring = false;
+
 function sealAbilities(target, keys, duration) {
     if (!keys || keys.length === 0) return;
     if (!cursedAbilities[target.id]) cursedAbilities[target.id] = {};
-    let harmoniousAvailable = target.abilities && (target.abilities['harmonious_prayer'] > 0 || target.abilities['harmonious_prayer'] === 999)
+    let harmoniousAvailable = !_harmoniousCounterFiring
+                              && target.abilities && (target.abilities['harmonious_prayer'] > 0 || target.abilities['harmonious_prayer'] === 999)
                               && !(cursedAbilities[target.id]['harmonious_prayer'] > 0)
                               && keys.includes('harmonious_prayer');
     keys.forEach(k => {
@@ -3145,6 +3148,7 @@ function sealAbilities(target, keys, duration) {
 }
 
 function triggerHarmoniousCounter(manager) {
+    _harmoniousCounterFiring = true;
     delete cursedAbilities[manager.id];
     manager.skillUsed = false;
     entities.forEach(e => {
@@ -3159,6 +3163,7 @@ function triggerHarmoniousCounter(manager) {
     });
     incrementManagerAbilities(manager);
     manager.pendingApBonus = (manager.pendingApBonus || 0) + 1;
+    _harmoniousCounterFiring = false;
     msg(`⚖️✨ 調和の祈りカウンター！封印を全解除・全敵を1T全封印・AP-2！次ターンAP+1・全アビ+1！`, true);
 }
 
