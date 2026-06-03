@@ -3001,8 +3001,8 @@ function processTurnStartEffects(e) {
             }
         }
         let wg = e.waterGauge || 0;
-        // ゲージ≥30: AP+2・ATK+2・全射程+2 (fullWaterBuff)
-        if (wg >= 30) {
+        // ゲージ>29: AP+2・ATK+2・全射程+2 (fullWaterBuff)
+        if (wg > 29) {
             if (!e.fullWaterBuff) {
                 // Remove highWaterBuff (+1) first if active, then apply full (+2)
                 if (e.highWaterBuff) {
@@ -3013,7 +3013,7 @@ function processTurnStartEffects(e) {
                 e.atkBonus=(e.atkBonus||0)+2;
                 e.rangeBonus=(e.rangeBonus||0)+2;
                 e.fullWaterBuff=true;
-                msg(`🌊 ${e.name}のゲージMAX(30)！AP+2・ATK+2・全射程+2！`, true);
+                msg(`🌊 ${e.name}のゲージ29超え！AP+2・ATK+2・全射程+2！`, true);
             }
         } else if (wg >= 20) {
             // ゲージ≥20: AP+1・ATK+1 (highWaterBuff)
