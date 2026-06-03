@@ -993,7 +993,7 @@ const ABILITY_NAMES = {
     skull_tame: '頭蓋調教(隣接マスに骸骨を召喚)',
     necro_bind: '死霊縛り(半径3/2ダメ+1T行動封印)',
     necro_summon: '骸骨召喚(隣接マスに骸骨/骸骨兵をランダム召喚)',
-    undead_party: '不死の群れ(配下アンデッド全員HP+2/AP+1)',
+    undead_party: '不死の群れ(ソウル6消費/配下アンデッド全員HP+2/AP+1)',
     corpse_fusion: '死体融合(隣接アンデッド味方2体をキメラに合体)'
 };
 
@@ -1122,7 +1122,7 @@ const ABILITY_TIPS = {
     skull_tame: '隣接した空マスに骸骨または骸骨兵を召喚し仲間にする。回数1。',
     necro_bind: '対象に2ダメ＋対象の全アビリティを1T封印する死霊呪縛(半径3)。回数1。',
     necro_summon: '隣接した空マスに骸骨または骸骨兵をランダムで召喚する。回数3。',
-    undead_party: '配下のアンデッド(骸骨/骸骨兵/キメラ/ゾンビ等)全員のHP+2・AP+1を強化する。回数1。',
+    undead_party: '配下のアンデッド(骸骨/骸骨兵/キメラ/ゾンビ等)全員のHP+2・AP+1を強化する。ソウル6消費が必要。回数1。',
     corpse_fusion: '隣接するアンデッド味方2体を消費し、強力なネクロキメラ(HP6)に合体させる。回数1。'
 };
 
@@ -5819,10 +5819,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         let ns = spawnAt(nsType, r, c); ns.team = se.team;
         msg(`💀 骸骨召喚！${ns.name}(${ns.hp}HP)が出現！`); used = true;
     } else if (actionMode === 'undead_party') {
+        if ((se.soulCount||0) < 6) { msg("💀 不死の群れ：ソウルが6必要です！(現在" + (se.soulCount||0) + ")"); return; }
         se.abilities['undead_party']--;
+        se.soulCount -= 6;
         let buffed = 0;
         entities.filter(e=>e.hp>0&&e.team===se.team&&['skeleton','skeleton_soldier','necro_chimera','zombie','frankenstein'].includes(e.type)).forEach(e=>{ e.hp=Math.min(e.maxHp,e.hp+2); e.maxAp=Math.min(e.maxAp+1,4); e.ap=Math.min(e.ap+1,e.maxAp); buffed++; });
-        msg(`💀 不死の群れ！配下アンデッド${buffed}体 HP+2/AP+1強化！`); used = true;
+        msg(`💀 不死の群れ！ソウル6消費→配下アンデッド${buffed}体 HP+2/AP+1強化！`); used = true;
     } else if (actionMode === 'corpse_fusion') {
         se.abilities['corpse_fusion']--;
         let fused = entities.find(e=>e.hp>0&&e.r===r&&e.c===c&&e.team===se.team&&['skeleton','skeleton_soldier','necro_chimera'].includes(e.type));
