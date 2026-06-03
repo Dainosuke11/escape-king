@@ -6855,6 +6855,60 @@ function findPath(sr, sc, tr, tc) {
     return null; 
 }
 
+// 岩を透過した理想パス計算（岩・鉱山・火山を無視してBFS）
+function findPathIgnoreRock(sr, sc, tr, tc) {
+    let q = [{r: sr, c: sc, path: []}];
+    let visited = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+    visited[sr][sc] = true;
+    let dirs = [[0,1],[1,0],[0,-1],[-1,0]];
+    while (q.length > 0) {
+        let curr = q.shift();
+        if (curr.r === tr && curr.c === tc) return curr.path;
+        for (let d of dirs) {
+            let nr = curr.r + d[0], nc = curr.c + d[1];
+            let isTarget = (nr === tr && nc === tc);
+            if (nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && !visited[nr][nc]) {
+                if (isTarget || isWalkable(nr, nc, false, false, true)) {
+                    visited[nr][nc] = true;
+                    q.push({r: nr, c: nc, path: [...curr.path, {r: nr, c: nc}]});
+                }
+            }
+        }
+    }
+    return null;
+}
+
+// 岩を砕いた後に「新たに開通するマス数」を返す（深さ制限付きBFS）
+// 岩マス自体・CPUの居場所はカウントに含めない（既にアクセス可能なマスを除外）
+function countCellsAfterShatter(rockR, rockC, cpuR, cpuC, maxDepth=5) {
+    let count = 0;
+    let dirs = [[0,1],[1,0],[0,-1],[-1,0]];
+    // 岩マスを起点にBFS（岩マス自体はカウントしない）
+    let q = [{r: rockR, c: rockC, d: 0}];
+    let visited = new Set([`${rockR},${rockC}`]);
+    // CPUの居場所も訪問済みとしてカウント対象から除外
+    visited.add(`${cpuR},${cpuC}`);
+    while (q.length > 0) {
+        let {r, c, d} = q.shift();
+        if (d > maxDepth) continue;
+        // 岩マス自体はカウントしない（起点として使うだけ）
+        if (!(r === rockR && c === rockC)) count++;
+        if (d >= maxDepth) continue;
+        for (let [dr, dc] of dirs) {
+            let nr = r+dr, nc = c+dc;
+            let key = `${nr},${nc}`;
+            if (!visited.has(key)) {
+                // 砕いた岩マス自体は通行可とみなし、それ以外はエンティティを無視して地形のみ判定
+                if ((nr===rockR&&nc===rockC) || isWalkable(nr, nc, false, true)) {
+                    visited.add(key);
+                    q.push({r: nr, c: nc, d: d+1});
+                }
+            }
+        }
+    }
+    return count;
+}
+
 function cpuLogic() {
     let cpuEntities = entities.filter(e => e.team === 'cpu' && e.hp > 0 && e.ap > 0);
     let targets = entities.filter(e => e.team !== 'cpu' && e.team !== 'vehicle' && e.hp > 0 && !(e.stealth || (board[e.r] && board[e.r][e.c] === 'forest')));
@@ -7202,10 +7256,45 @@ function cpuLogic() {
                     let escapeDirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
                     let canMove = escapeDirs.some(([dr,dc]) => isWalkable(cpu.r+dr, cpu.c+dc));
                     if (!canMove && (cpu.abilities.shatter||0) > 0) {
-                        let shatterCandidates = escapeDirs
+                        // 岩を無視した理想パスを計算し、どの方向を砕くと実際に開通するかを評価
+                        let idealPath = findPathIgnoreRock(cpu.r, cpu.c, p.r, p.c);
+                        let idealNextCell = idealPath && idealPath.length > 0 ? idealPath[0] : null;
+
+                        const SHATTER_OPEN_THRESHOLD = 2; // 砕いた先にこのマス数以上開通しなければ行き止まりとみなす
+                        let allShatterCandidates = escapeDirs
                             .map(([dr,dc]) => ({r: cpu.r+dr, c: cpu.c+dc}))
                             .filter(({r,c}) => r>=0&&r<SIZE&&c>=0&&c<SIZE && ['rock','mine','volcano','gravestone'].includes(board[r][c]))
-                            .sort((a,b) => Math.max(Math.abs(a.r-p.r),Math.abs(a.c-p.c)) - Math.max(Math.abs(b.r-p.r),Math.abs(b.c-p.c)));
+                            .map(cand => {
+                                // 砕いた後に開通する「新規」マス数（岩マス自体とCPU居場所を除外）
+                                let openCells = countCellsAfterShatter(cand.r, cand.c, cpu.r, cpu.c);
+                                // 理想パスの次セルと一致するか（最短脱出方向）
+                                let onIdealPath = !!(idealNextCell && cand.r === idealNextCell.r && cand.c === idealNextCell.c);
+                                // プレイヤーへのChebyshev距離
+                                let distToPlayer = Math.max(Math.abs(cand.r-p.r), Math.abs(cand.c-p.c));
+                                // 開通路か行き止まりかを明示的に分類
+                                let isOpening = openCells >= SHATTER_OPEN_THRESHOLD;
+                                return {...cand, openCells, onIdealPath, distToPlayer, isOpening};
+                            });
+
+                        // 「開通路」候補と「行き止まり」候補に分離し、開通路を優先
+                        let openingCandidates = allShatterCandidates.filter(c => c.isOpening);
+                        let deadEndCandidates = allShatterCandidates.filter(c => !c.isOpening);
+
+                        function sortCandidates(arr) {
+                            return arr.sort((a, b) => {
+                                // 1. 理想パス上のセルを最優先
+                                if (a.onIdealPath !== b.onIdealPath) return a.onIdealPath ? -1 : 1;
+                                // 2. 砕いた後の開通マス数が多い方を優先
+                                if (b.openCells !== a.openCells) return b.openCells - a.openCells;
+                                // 3. プレイヤーに近い方向を優先
+                                return a.distToPlayer - b.distToPlayer;
+                            });
+                        }
+
+                        // 開通路があればそちらのみ使用、なければ行き止まりにフォールバック
+                        let shatterCandidates = openingCandidates.length > 0
+                            ? sortCandidates(openingCandidates)
+                            : sortCandidates(deadEndCandidates);
                         if (shatterCandidates.length > 0) {
                             let {r: sr, c: sc} = shatterCandidates[0];
                             board[sr][sc] = defaultGround();
