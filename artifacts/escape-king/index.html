@@ -6945,7 +6945,11 @@ function executeSkill(se) {
                 skillMsgs.push(`${t.name}吹飛3ダメAP-1`);
             }
         });
-        msg(`☯️ 陰陽冥鬼発動！青鬼・赤鬼・大鬼召喚！${skillMsgs.join('・')||'周囲に敵なし'}！`);
+        // 自分の全アビリティ封印を解除
+        if (cursedAbilities[se.id]) {
+            delete cursedAbilities[se.id];
+        }
+        msg(`☯️ 陰陽冥鬼発動！青鬼・赤鬼・大鬼召喚！全封印解除！${skillMsgs.join('・')||'周囲に敵なし'}！`);
         return true;
     }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
