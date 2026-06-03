@@ -227,6 +227,7 @@
         .flying_drone_vehicle { background: #554400; border: 2px solid #ffdd00 !important; border-radius: 50%; }
         .skyfort_bridge { background: #7a6a3a; border: 2px solid #d4b060 !important; }
         .skyfort_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffe080; }
+        .light_barrier_tile { background: rgba(255,255,200,0.45) !important; border: 1px solid #ffe080 !important; box-shadow: inset 0 0 6px rgba(255,255,180,0.6); }
         /* Misty Lake */
         .lake_ground { background: #0a2a3d; }
         .lotus_pad { background: #2d6a4f; border: 2px solid #52b788 !important; }
@@ -406,6 +407,7 @@
 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
             <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
             <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
+            <option value="angel">👼 天使 (結界・バインド・堕天)</option>
         </select>
     </div>
     <div class="select-group">
@@ -489,6 +491,7 @@
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
+                <option value="angel">👼 天使 (結界・バインド・堕天)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -520,6 +523,7 @@
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
+                <option value="angel">👼 天使 (結界・バインド・堕天)</option>
             </select>
         </div>
         <div class="select-group">
@@ -580,6 +584,7 @@
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (魂吸収・骸骨召喚・霊魂放出)</option>
+                <option value="angel">👼 天使 (結界・バインド・堕天)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -616,6 +621,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ戦士 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / モリで刺す10 / ウォーターカッター3<br>水流噴火1 / 潜水1 / 変身(水中)∞ / 波乗り2 / 渦潮1 / タコ召喚1<br>ウォーターゲージ制：ゲージ15~で変身・20~でバフ獲得</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🎪 ピエロ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ナイフジャグリング3 / 恐怖の笑顔3 / 玉乗り5<br>アクロバット2 / 空中ブランコ2 / 爆弾クラッカー1 / サル召喚1<br>スキル:棺桶ナイフ(対象を3T行動不能＋毎T2ダメ)<br>隣接敵が封じられると他コマに棺桶壊し(解放)が出現</div></div>
         <div class="guide-job-card"><div class="guide-job-name">💀 死霊術師 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / テレポート3 / 闇魔法5(範囲3/威3/封印) / 沼魔法1(周囲3×3沼化)<br>魂吸収1(ソウル数×HP回復) / 骨の鎧1(1T無敵) / 頭蓋調教1(骸骨を隣接召喚)<br>死霊縛り1(範囲3/2ダメ+行動封印) / 骸骨召喚3(骸骨/骸骨兵) / 不死の群れ1(配下強化)<br>死体融合1(隣接アンデッド合体→キメラ)<br>スキル:霊魂放出(範囲3/威3+ソウル数→全消費)</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">👼 天使 (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 光のムチ5(直線2/威1/AP-1) / フェザーダッシュ5(ダッシュ+隣接AP-1/堕天+1)<br>バインドアロー3(直線5/威1/AP-2/5封印/堕天+1) / 光の呪縛3(半径2全体/AP-2/5封印/堕天+1)<br>天秤3(半径1/敵HP>自HP/3ダメ+3回復/堕天+1) / 光の結界3(半径1/1T結界+無敵/敵AP-2+封印/堕天+1)<br>スキル:堕天(ゲージ≥15/AP+2/罪の刻印・デスサイズ・均衡崩し追加/毎T自1ダメ)<br>堕天使追加技：罪の刻印1(呪い付与) / デスサイズ∞(半径AoE) / 均衡崩し1(強力貫通)</div></div>
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
         <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/潜伏/ナイフ)</div></div>
@@ -730,6 +736,7 @@ let dungeonGoggles = 0;  // 0=none, 1+=count (view radius = 9+count)
 let dungeonSwitchGroups = {};   // "r,c" → [{r,c}] array of tiles this switch controls
 let dungeonTorches = [];        // [[r,c],...] torch positions that illuminate radius 5
 let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
+let lightBarrierZones = [];    // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
 let bridgeSwitchMap = {};
@@ -994,7 +1001,16 @@ const ABILITY_NAMES = {
     necro_bind: '死霊縛り(半径3/2ダメ+1T行動封印)',
     necro_summon: '骸骨召喚(隣接マスに骸骨/骸骨兵をランダム召喚)',
     undead_party: '不死の群れ(ソウル6消費/配下アンデッド全員HP+2/AP+1)',
-    corpse_fusion: '死体融合(隣接アンデッド味方2体をキメラに合体)'
+    corpse_fusion: '死体融合(隣接アンデッド味方2体をキメラに合体)',
+    light_whip: '光のムチ(直線2/威1/AP-1)',
+    feather_dash: 'フェザーダッシュ(ダッシュ+隣接AP-1/堕天+1)',
+    bind_arrow: 'バインドアロー(直線5/威1/AP-2/5封印/堕天+1)',
+    light_bind: '光の呪縛(半径2全体/AP-2/5封印/堕天+1)',
+    scales: '天秤(半径1/敵HP>自HP/3ダメ+3回復/堕天+1)',
+    light_barrier: '光の結界(半径1/1T結界+バリア/敵AP-2+全封印/堕天+1)',
+    sin_mark: '罪の刻印(半径2か5/AP-2/5封印/呪い/堕天+1)',
+    death_scythe: 'デスサイズ(半径1か3全体/威2か3/吹飛/AP-1/5封印/堕天+1)',
+    balance_break: '均衡崩し(直線5か半径8+転送/自1ダメ/威2か4/吹飛/AP-2/5封印/堕天+1)'
 };
 
 const ABILITY_TIPS = {
@@ -1123,7 +1139,16 @@ const ABILITY_TIPS = {
     necro_bind: '対象に2ダメ＋対象の全アビリティを1T封印する死霊呪縛(半径3)。回数1。',
     necro_summon: '隣接した空マスに骸骨または骸骨兵をランダムで召喚する。回数3。',
     undead_party: '配下のアンデッド(骸骨/骸骨兵/キメラ/ゾンビ等)全員のHP+2・AP+1を強化する。ソウル6消費が必要。回数1。',
-    corpse_fusion: '隣接するアンデッド味方2体を消費し、強力なネクロキメラ(HP6)に合体させる。回数1。'
+    corpse_fusion: '隣接するアンデッド味方2体を消費し、強力なネクロキメラ(HP6)に合体させる。回数1。',
+    light_whip: '直線2マス内の敵に1ダメ・AP-1を与える光の鞭攻撃。回数5。',
+    feather_dash: 'ダッシュ移動した後、移動先の隣接敵全員のAPを-1する。さらに堕天ゲージ+1。回数5。',
+    bind_arrow: '直線5マス内の敵に1ダメ・AP-2・ランダム5アビリティを1T封印する光の矢。堕天ゲージ+1。回数3。',
+    light_bind: '足元を中心に半径2マスの全敵にAP-2・ランダム5アビリティを1T封印する光の拘束。堕天ゲージ+1。回数3。',
+    scales: '半径1マスの敵HP>自HPの時のみ発動：対象に3ダメ・自HP+3を回復する因果の天秤。堕天ゲージ+1。回数3。',
+    light_barrier: '足元半径1マスに1ターン光の結界を展開：自分に無敵バリア付与、内部の敵にAP-2+全アビリティ封印。堕天ゲージ+1。回数3。',
+    sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数1。',
+    death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
+    balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数1。'
 };
 
 const JOB_DATA = {
@@ -1141,7 +1166,8 @@ const JOB_DATA = {
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, bite: 5, throw_net: 1, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
-    necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_tame: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 }
+    necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_tame: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
+    angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, scales: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true }
 };
 
 // ============================================================
@@ -1936,7 +1962,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','moving_train'];
 
 function resolveJob(job) {
@@ -2539,8 +2565,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -2550,6 +2576,7 @@ function initEntities(pJob, difficulty = "1") {
     rollRockPending = null;
     rollRockWarnTiles = [];
     cursedAbilities = {};
+    lightBarrierZones = [];
     dungeonGoggles = 0;
     // Reset new stage globals
     fallenSkyfortBridges = [];
@@ -2614,8 +2641,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -2704,6 +2731,12 @@ function scatterRocks(tr, tc, count) {
     }
 }
 
+function getStageHeatLevel() {
+    if (activeStage === 'lavaland' || activeStage === 'desert') return 3;
+    if (activeStage === 'underwater' || activeStage === 'mountain') return 1;
+    return 2;
+}
+
 function processTurnStartEffects(e) {
     if (e.hp <= 0) return;
     // Frozen yeti does not act
@@ -2759,6 +2792,29 @@ function processTurnStartEffects(e) {
         if (e.empSealTimer <= 0 && e.sealedAbilities) {
             e.sealedAbilities = {};
             msg(`⚡ ${e.name}の電磁封印が解除された！`, true);
+        }
+    }
+    // 天使 / 堕天使: 堕天ゲージ管理・毎ターン自傷
+    if (e.type === 'angel') {
+        if (e._prevHp !== undefined && e.hp < e._prevHp) {
+            e.fallenGauge = (e.fallenGauge||0) + 1;
+        }
+        e.fallenGauge = (e.fallenGauge||0) + 1;
+        if (!e.fallen && e.fallenGauge === 15) msg(`⚠️ ${e.name}の堕天ゲージが15に達した！スキル「堕天」が発動可能！`, true);
+        if (e.fallen && e.fallenGauge === 30) msg(`😈 ${e.name}の堕天ゲージ30！デスサイズ・罪の刻印・均衡崩しが強化された！`, true);
+        if (e.fallen && !e.invin) { e.hp = Math.max(0, e.hp - 1); msg(`😈 ${e.name}の堕落の業苦：HP-1！`, true); }
+        e._prevHp = e.hp;
+    }
+    // 罪の刻印チェック：印のある敵が堕天使から遠ざかったら1ダメ
+    if (e.sinMark && e.hp > 0) {
+        let sAngel = entities.find(a => a.id === e.sinMark.angelId && a.hp > 0);
+        if (!sAngel) { delete e.sinMark; }
+        else {
+            let curSinDist = Math.max(Math.abs(e.r - sAngel.r), Math.abs(e.c - sAngel.c));
+            if (e.sinMark.lastDist !== undefined && curSinDist > e.sinMark.lastDist && !e.invin && !necroShieldBlock(e)) {
+                e.hp -= 1; msg(`🔱 罪の刻印！${e.name}が堕天使から遠ざかった！1ダメ！`, true);
+            }
+            e.sinMark.lastDist = curSinDist;
         }
     }
     e.ap = e.maxAp;
@@ -2936,7 +2992,8 @@ function processTurnStartEffects(e) {
         let tile = board[e.r]?.[e.c];
         let onWater = isWaterTile(tile);
         if (!onWater) {
-            let drain = (tile === 'desert' || tile === 'lava' || tile === 'lava_ground') ? 2 : 1;
+            let heatBonus = getStageHeatLevel() >= 3 ? 1 : 0;
+            let drain = ((tile === 'desert' || tile === 'lava' || tile === 'lava_ground') ? 2 : 1) + heatBonus;
             e.waterGauge = Math.max(0, (e.waterGauge||0) - drain);
             if (e.waterGauge <= 0 && !e.invin) {
                 e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
@@ -3475,6 +3532,14 @@ function startTurn(team, skipEffects = false) {
                 if (Object.keys(cursedAbilities[eid]).length === 0) delete cursedAbilities[eid];
             }
         }
+        // 光の結界タイルクリーンアップ
+        lightBarrierZones = lightBarrierZones.filter(zone => {
+            if (turn > zone.turnExpires) {
+                zone.cells.forEach(({r,c}) => { if (board[r]?.[c] === 'light_barrier_tile') board[r][c] = (zone.origTile?.[`${r},${c}`]) || defaultGround(); });
+                return false;
+            }
+            return true;
+        });
         // Night town: vampire/wolf/werewolf every 3 turns
         if (activeStage === 'nighttown' && turn >= 3 && turn % 3 === 0) {
             const pool = ['vampire','wolf','werewolf'];
@@ -3874,6 +3939,26 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'undead_party') return r===se.r && c===se.c;
     if (mode === 'corpse_fusion') return maxDist===1 && target && target.team===se.team && ['skeleton','skeleton_soldier','necro_chimera'].includes(target.type);
     if (mode === 'skill_necro_release') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    // 天使
+    if (mode === 'light_whip') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'feather_dash') {
+        let canPhaseA = se.flying || se.invin;
+        if (canPhaseA) return dist>0 && dist<=2 && isWalkable(r,c,true);
+        if (dist===0||dist>2) return false;
+        if (!isWalkable(r,c)) return false;
+        let srcTA=board[se.r]?.[se.c]; if(srcTA==='sky_void'||srcTA==='fallen_floor') return false;
+        let fdr=r-se.r, fdc=c-se.c;
+        if(fdr!==0&&fdc===0&&Math.abs(fdr)===2){let mR=se.r+Math.sign(fdr),mC=se.c;if(!isWalkable(mR,mC)||entities.some(e=>e.hp>0&&e.r===mR&&e.c===mC))return false;}
+        if(fdr===0&&fdc!==0&&Math.abs(fdc)===2){let mR=se.r,mC=se.c+Math.sign(fdc);if(!isWalkable(mR,mC)||entities.some(e=>e.hp>0&&e.r===mR&&e.c===mC))return false;}
+        return true;
+    }
+    if (mode === 'bind_arrow') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'light_bind') return maxDist===0;
+    if (mode === 'scales') return maxDist===1 && target && target.team!==se.team && target.hp>se.hp;
+    if (mode === 'light_barrier') return maxDist===0;
+    if (mode === 'sin_mark') { let smR=(se.fallenGauge||0)>=30?5:2; return maxDist>0&&maxDist<=smR+(se.rangeBonus||0)&&target&&target.team!==se.team; }
+    if (mode === 'death_scythe') return maxDist===0;
+    if (mode === 'balance_break') { if((se.fallenGauge||0)>=30) return maxDist>0&&maxDist<=8+(se.rangeBonus||0)&&target&&target.team!==se.team; return (se.r===r||se.c===c)&&maxDist>0&&maxDist<=5+(se.rangeBonus||0)&&target&&target.team!==se.team; }
     return false;
 }
 
@@ -4144,6 +4229,13 @@ function checkTileEffects(entity) {
     } else if (board[r] && board[r][c] === 'train_switch' && activeStage === 'nighttown') {
         ntTrainClockwise = !ntTrainClockwise;
         eventMsg = (eventMsg ? eventMsg + " " : "") + `🔀 列車スイッチ！進行方向が${ntTrainClockwise?'時計回り':'反時計回り'}に切り替わった！`;
+    } else if (board[r] && board[r][c] === 'light_barrier_tile') {
+        // 敵コマが光の結界に進入 → AP-2
+        let zoneOwner = lightBarrierZones.find(z => z.cells.some(cl => cl.r===r && cl.c===c));
+        if (zoneOwner && entity.team !== zoneOwner.ownerTeam && !entity.invin) {
+            entity.ap = Math.max(0, entity.ap - 2);
+            eventMsg = "✨ 光の結界に踏み込んだ！AP-2！";
+        }
     } else if (board[r] && (board[r][c] === 'whirlpool')) {
         if (isOceanUnit(entity)) {
             entity.waterGauge = Math.min(entity.maxWaterGauge||30, (entity.waterGauge||0) + 5);
@@ -5851,6 +5943,143 @@ function handleAbilityTarget(r, c, targetEntity) {
         fused.hp=-1; second.hp=-1; // kill both
         let chimera = spawnAt('necro_chimera', r, c); chimera.team = se.team;
         msg(`💀 死体融合！${fused.name}と${second.name}がキメラに合体！(HP6/強力な拳/魂3値)`); used = true;
+    // ====== 天使 / 堕天使アビリティ ======
+    } else if (actionMode === 'light_whip') {
+        se.abilities['light_whip']--;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+        }
+        msg(`✨ 光のムチ！${targetEntity.name}に1ダメ・AP-1！`); used = true;
+    } else if (actionMode === 'feather_dash') {
+        if (se.abilities['feather_dash'] !== 999) se.abilities['feather_dash']--;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c;
+        if (se.onWyvern) { let wy=entities.find(ev=>ev.id===se.onWyvern&&ev.hp>0); if(wy){wy.r=r;wy.c=c;} }
+        let fdEvent = checkTileEffects(se);
+        let fdHits = 0;
+        entities.forEach(adj => {
+            if (adj.hp>0&&adj.team!==se.team&&Math.max(Math.abs(adj.r-se.r),Math.abs(adj.c-se.c))===1&&!adj.invin) {
+                adj.ap = Math.max(0, adj.ap - 1); fdHits++;
+            }
+        });
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`🪶 フェザーダッシュ！移動${fdHits>0?`・隣接${fdHits}体AP-1`:''}！堕天ゲージ${se.fallenGauge}` + (fdEvent ? ' ' + fdEvent : ''));
+        checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'bind_arrow') {
+        se.abilities['bind_arrow']--;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.ap = Math.max(0, targetEntity.ap - 2);
+            let baKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
+            baKs.sort(()=>Math.random()-0.5).slice(0,5).forEach(k=>{ cursedAbilities[targetEntity.id][k]=1; });
+            targetEntity.skillUsed = true;
+        }
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`🏹 バインドアロー！${targetEntity.name}に1ダメ・AP-2・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'light_bind') {
+        se.abilities['light_bind']--;
+        let lbdHits = 0;
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
+                if (!t.invin && !necroShieldBlock(t)) {
+                    t.ap = Math.max(0, t.ap - 2);
+                    let lbKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]>0||t.abilities[k]===999));
+                    if (!cursedAbilities[t.id]) cursedAbilities[t.id] = {};
+                    lbKs.sort(()=>Math.random()-0.5).slice(0,5).forEach(k=>{ cursedAbilities[t.id][k]=1; });
+                    t.skillUsed = true; lbdHits++;
+                }
+            }
+        });
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`✨ 光の呪縛！半径2の敵${lbdHits}体にAP-2・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'scales') {
+        se.abilities['scales']--;
+        if (targetEntity.hp > se.hp && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            se.hp = Math.min(se.maxHp, se.hp + 3);
+            se.fallenGauge = (se.fallenGauge||0) + 1;
+            msg(`⚖️ 天秤！${targetEntity.name}に3ダメ・自HP+3回復！堕天ゲージ${se.fallenGauge}`);
+        } else { msg(`⚖️ 天秤：敵HP≤自HPのため発動不可！`); return; }
+        used = true;
+    } else if (actionMode === 'light_barrier') {
+        se.abilities['light_barrier']--;
+        se.invin = true; se.invinTimer = 1;
+        let lbrCells = []; let lbrOrig = {}; let lbrEnemies = 0;
+        for (let ldr=-1; ldr<=1; ldr++) for (let ldc=-1; ldc<=1; ldc++) {
+            let br=se.r+ldr, bc=se.c+ldc;
+            if (br<0||br>=SIZE||bc<0||bc>=SIZE) continue;
+            lbrOrig[`${br},${bc}`] = board[br][bc];
+            board[br][bc] = 'light_barrier_tile';
+            lbrCells.push({r:br, c:bc});
+            let lbrEnemy = entities.find(ev=>ev.hp>0&&ev.r===br&&ev.c===bc&&ev.team!==se.team);
+            if (lbrEnemy && !lbrEnemy.invin) {
+                lbrEnemy.ap = Math.max(0, lbrEnemy.ap - 2);
+                if (!cursedAbilities[lbrEnemy.id]) cursedAbilities[lbrEnemy.id] = {};
+                Object.keys(lbrEnemy.abilities||{}).filter(k=>k!=='drop_rock').forEach(k=>{ cursedAbilities[lbrEnemy.id][k]=1; });
+                lbrEnemy.skillUsed = true; lbrEnemies++;
+            }
+        }
+        lightBarrierZones.push({ownerTeam:se.team, ownerId:se.id, cells:lbrCells, origTile:lbrOrig, turnExpires:turn+1});
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`✨ 光の結界！半径1に結界展開・1T無敵バリア！${lbrEnemies>0?`敵${lbrEnemies}体AP-2+全封印！`:''}堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'sin_mark') {
+        se.abilities['sin_mark']--;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.ap = Math.max(0, targetEntity.ap - 2);
+            let smKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
+            smKs.sort(()=>Math.random()-0.5).slice(0,5).forEach(k=>{ cursedAbilities[targetEntity.id][k]=1; });
+            targetEntity.skillUsed = true;
+            targetEntity.sinMark = { angelId: se.id, lastDist: Math.max(Math.abs(targetEntity.r-se.r),Math.abs(targetEntity.c-se.c)) };
+        }
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`🔱 罪の刻印！${targetEntity.name}にAP-2・5封印・罪の呪い付与！堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'death_scythe') {
+        if (se.abilities['death_scythe'] !== 999) se.abilities['death_scythe']--;
+        let dsGauge = se.fallenGauge || 0;
+        let dsRange = dsGauge >= 30 ? 3 : 1;
+        let dsDmg = dsGauge >= 30 ? 3 : 2;
+        let dsHits = 0;
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=dsRange) {
+                if (!t.invin && !necroShieldBlock(t)) {
+                    t.hp -= dsDmg + (se.atkBonus||0) + (t.defDebuff||0);
+                    t.ap = Math.max(0, t.ap - 1);
+                    knockback(t, 1, se);
+                    let dsKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]>0||t.abilities[k]===999));
+                    if (!cursedAbilities[t.id]) cursedAbilities[t.id] = {};
+                    dsKs.sort(()=>Math.random()-0.5).slice(0,5).forEach(k=>{ cursedAbilities[t.id][k]=1; });
+                    t.skillUsed = true; dsHits++;
+                }
+            }
+        });
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`💀 デスサイズ！半径${dsRange}の敵${dsHits}体に${dsDmg}ダメ・吹飛・AP-1・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+    } else if (actionMode === 'balance_break') {
+        se.abilities['balance_break']--;
+        let bbGauge = se.fallenGauge || 0;
+        let bbDmg = bbGauge >= 30 ? 4 : 2;
+        if (!se.invin) se.hp = Math.max(0, se.hp - 1);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= bbDmg + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.ap = Math.max(0, targetEntity.ap - 2);
+            knockback(targetEntity, 1, se);
+            let bbKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
+            bbKs.sort(()=>Math.random()-0.5).slice(0,5).forEach(k=>{ cursedAbilities[targetEntity.id][k]=1; });
+            targetEntity.skillUsed = true;
+            if (bbGauge >= 30) {
+                let bbSpots = [];
+                for (let pr=0;pr<SIZE;pr++) for (let pc=0;pc<SIZE;pc++) {
+                    if (isWalkable(pr,pc,true)&&!entities.some(ev=>ev.hp>0&&ev.r===pr&&ev.c===pc)) bbSpots.push({r:pr,c:pc});
+                }
+                if (bbSpots.length>0) { let bbs=bbSpots[Math.floor(Math.random()*bbSpots.length)]; targetEntity.r=bbs.r; targetEntity.c=bbs.c; }
+            }
+        }
+        se.fallenGauge = (se.fallenGauge||0) + 1;
+        msg(`⚖️ 均衡崩し！自1ダメ→${targetEntity.name}に${bbDmg}ダメ・吹飛・AP-2・5封印${bbGauge>=30?'・転送':''}！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -6045,6 +6274,19 @@ function executeSkill(se) {
         let sc = se.soulCount || 0;
         msg(`💀 霊魂放出！(威力${3+sc}) ターゲット(半径3マス以内の敵)を選んでください！ソウル${sc}消費`);
         actionMode = 'skill_necro_release'; render(); return false;
+    }
+    // ====== 天使 スキル: 堕天 ======
+    if (se.type === 'angel') {
+        let gauge = se.fallenGauge || 0;
+        if (gauge < 15) { msg(`👼 堕天：堕天ゲージが足りません！(${gauge}/15) ゲージはターン開始時・ダメージ時に+1`); return false; }
+        se.fallen = true;
+        se.name = '堕天使';
+        se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
+        se.abilities['sin_mark'] = 1;
+        se.abilities['death_scythe'] = 999;
+        se.abilities['balance_break'] = 1;
+        msg(`😈 堕天発動！天使が堕天使に変身！AP+2・最大AP+2！「罪の刻印・デスサイズ・均衡崩し」追加！毎ターン自HP-1！`);
+        return true;
     }
     return false;
 }
@@ -7173,6 +7415,7 @@ function updateUI() {
             shark_warrior:'ハイドロポンプ',
             clown:        '棺桶ナイフ',
             necromancer:  '霊魂放出',
+            angel:        '堕天',
         };
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
