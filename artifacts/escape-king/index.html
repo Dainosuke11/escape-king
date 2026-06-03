@@ -6862,6 +6862,40 @@ function cpuLogic() {
     if (cpuEntities.length > 0) {
         let cpu = cpuEntities[0];
 
+        // ====================================================
+        // 協調コンテキスト — 全CPUコマの役割を毎ターン明示的に計画する
+        //
+        // 役割定義:
+        //   'leader'           — 最前線（最もr座標が高い）コマ。通常の追跡・攻撃を担う。
+        //   'flanker'          — 2体目以降のコマ。リードコマの反対側からプレイヤーを挟む。
+        //   'summoner-retreat' — 召喚アビリティ持ちで前衛コマが存在する。後退して前衛を盾にする。
+        //
+        // 設計方針: cpuLogic() は1回の呼び出しで1体のコマが1AP消費する。
+        // cpuEntities はAP残量でフィルタされるため、各コマは順番にAPを使い切り、
+        // 最終的に全コマが行動してから startTurn('npc') に移行する。
+        // 役割は能力・位置から毎回計算するため外部状態に依存しない。
+        // ====================================================
+        let allCpuAlive = entities.filter(e => e.team === 'cpu' && e.hp > 0);
+
+        // チーム内に前衛コマ（弓兵・槍兵・歩兵等）が1体でも生存しているか
+        let hasFrontliners = allCpuAlive.some(e =>
+            e !== cpu && ['archer','lancer','infantry','knight','assassin','wolf'].includes(e.type)
+        );
+
+        // リードコマ: チーム全体で最もr座標が高いコマ（敵陣に最も近い = 最前線）
+        let leadCpu = allCpuAlive.reduce((best, e) => (!best || e.r > best.r) ? e : best, null);
+
+        // 現在行動するコマの役割を決定
+        let isSummonerType = (cpu.abilities.summon_magic > 0 || cpu.abilities.summon_archer > 0 || cpu.abilities.summon_lancer > 0);
+        let cpuRole;
+        if (leadCpu && cpu.id === leadCpu.id) {
+            cpuRole = 'leader';
+        } else if (isSummonerType && hasFrontliners) {
+            cpuRole = 'summoner-retreat';
+        } else {
+            cpuRole = 'flanker';
+        }
+
         // Helper: move cpu to next cell and handle tile effects
         function cpuMoveTo(nr, nc) {
             cpu.r = nr; cpu.c = nc; cpu.ap--;
@@ -7181,6 +7215,54 @@ function cpuLogic() {
                             attacked = true;
                         }
                     }
+                }
+
+                // ====================================================
+                // 協調移動A: サマナー後退 [role: summoner-retreat]
+                // 召喚アビリティを持つコマは前衛コマが存在するとき後退して盾にする
+                // ====================================================
+                if (!attacked && cpuRole === 'summoner-retreat') {
+                    let fleeTarget = playerMain || p;
+                    // プレイヤーから遠ざかる方向（斜め後退 → 側方 → 真後ろ の優先順）
+                    let retreatR = Math.max(0, Math.min(SIZE-1, cpu.r - Math.sign(fleeTarget.r - cpu.r)));
+                    let retreatC = Math.max(0, Math.min(SIZE-1, cpu.c - Math.sign(fleeTarget.c - cpu.c)));
+                    if (isWalkable(retreatR, retreatC) && !entities.some(e=>e.hp>0&&e.r===retreatR&&e.c===retreatC&&e!==cpu)) {
+                        msg("🛡️ サマナーが召喚コマを盾に後退！");
+                        cpuMoveTo(retreatR, retreatC); attacked = true;
+                    } else if (isWalkable(cpu.r, retreatC) && !entities.some(e=>e.hp>0&&e.r===cpu.r&&e.c===retreatC&&e!==cpu)) {
+                        msg("🛡️ サマナーが側方へ退避！");
+                        cpuMoveTo(cpu.r, retreatC); attacked = true;
+                    } else if (isWalkable(retreatR, cpu.c) && !entities.some(e=>e.hp>0&&e.r===retreatR&&e.c===cpu.c&&e!==cpu)) {
+                        msg("🛡️ サマナーが後方へ退避！");
+                        cpuMoveTo(retreatR, cpu.c); attacked = true;
+                    }
+                    // 退避できない場合でもここでフォールスルーし、通常移動（陣地突破等）を試みる
+                }
+
+                // ====================================================
+                // 協調移動B: フランク（挟み撃ち）[role: flanker]
+                // リードコマと反対側からプレイヤーへ接近して挟み撃ちを狙う
+                // ====================================================
+                if (!attacked && cpuRole === 'flanker' && playerMain && leadCpu) {
+                    // リードコマからプレイヤーへの方向ベクトルを計算
+                    let ldR = leadCpu.r - playerMain.r;
+                    let ldC = leadCpu.c - playerMain.c;
+                    // フランク目標: プレイヤーの「リードコマと反対側」2マス先
+                    let flankR = Math.max(0, Math.min(SIZE-1, playerMain.r - Math.sign(ldR) * 2));
+                    let flankC = Math.max(0, Math.min(SIZE-1, playerMain.c - Math.sign(ldC) * 2));
+                    // リードコマと同じセルに重ならないよう微調整
+                    if (flankR === leadCpu.r && flankC === leadCpu.c) {
+                        flankC = Math.max(0, Math.min(SIZE-1, flankC + (ldC === 0 ? 1 : 0)));
+                    }
+                    let flankPath = findPath(cpu.r, cpu.c, flankR, flankC);
+                    if (flankPath && flankPath.length > 0) {
+                        let next = flankPath[0];
+                        if (isWalkable(next.r, next.c) && !entities.some(e=>e.hp>0&&e.r===next.r&&e.c===next.c&&e!==cpu)) {
+                            msg("🔀 CPUが挟み撃ちポジションへ移動！");
+                            cpuMoveTo(next.r, next.c); attacked = true;
+                        }
+                    }
+                    // フランクパスが取れない場合は通常移動（陣地突破等）にフォールスルー
                 }
 
                 // 仕様通り: cpu.hp < playerMain.hp OR playerShatters >= 3 のとき陣地突破を狙う
