@@ -7307,6 +7307,54 @@ function cpuLogic() {
                 }
 
                 // ====================================================
+                // 予防的岩砕き: AP余裕あり & 迂回コストが高い場合に前方の岩を先読みで除去
+                // 条件: shatter残量あり, AP >= 2, 実パス長 - 理想パス長 >= 閾値
+                // ====================================================
+                if (!attacked && (cpu.abilities.shatter||0) > 0 && cpu.ap >= 2) {
+                    const PROACTIVE_DETOUR_THRESHOLD = 3; // 実パスが理想パスより何マス以上長ければ検討するか
+                    const PROACTIVE_OPEN_THRESHOLD = 2;   // 砕いた先に最低このマス数以上開通しなければスキップ
+
+                    let proIdealPath = findPathIgnoreRock(cpu.r, cpu.c, p.r, p.c);
+                    let proRealPath  = findPath(cpu.r, cpu.c, p.r, p.c);
+                    let proIdealLen  = proIdealPath ? proIdealPath.length : 0;
+                    let proRealLen   = proRealPath  ? proRealPath.length  : Infinity;
+
+                    if (proIdealLen > 0 && (proRealLen - proIdealLen) >= PROACTIVE_DETOUR_THRESHOLD) {
+                        // 理想パス上で CPU に隣接している岩マスを探す（先頭から順に評価）
+                        let proShatterCandidates = [];
+                        for (let cell of proIdealPath) {
+                            let cellType = board[cell.r] && board[cell.r][cell.c];
+                            if (['rock','mine','volcano','gravestone'].includes(cellType)) {
+                                // shatter は隣接マスのみ対象（Chebyshev距離 1）
+                                let dist = Math.max(Math.abs(cell.r - cpu.r), Math.abs(cell.c - cpu.c));
+                                if (dist <= 1) {
+                                    let openCells = countCellsAfterShatter(cell.r, cell.c, cpu.r, cpu.c);
+                                    if (openCells >= PROACTIVE_OPEN_THRESHOLD) {
+                                        proShatterCandidates.push({
+                                            r: cell.r, c: cell.c,
+                                            openCells,
+                                            detourSaved: proRealLen - proIdealLen
+                                        });
+                                    }
+                                }
+                                // 理想パス上の最初の岩障害物のみ評価（それより奥は隣接外）
+                                break;
+                            }
+                        }
+                        if (proShatterCandidates.length > 0) {
+                            proShatterCandidates.sort((a, b) => b.openCells - a.openCells);
+                            let {r: psr, c: psc, detourSaved} = proShatterCandidates[0];
+                            board[psr][psc] = defaultGround();
+                            cpu.abilities.shatter--;
+                            cpu.ap--;
+                            let savedStr = isFinite(detourSaved) ? `迂回 ${detourSaved} マス節約` : '通路開通';
+                            msg(`🪨 敵が迂回路を切り開くため岩を砕いた！（${savedStr}）`);
+                            attacked = true;
+                        }
+                    }
+                }
+
+                // ====================================================
                 // 協調移動A: サマナー後退 [role: summoner-retreat]
                 // 召喚アビリティを持つコマは前衛コマが存在するとき後退して盾にする
                 // ====================================================
