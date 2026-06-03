@@ -437,17 +437,21 @@
         <label>難易度選択:</label>
         <select id="difficulty-select">
             <option value="1">レベル1 (ハンデ無し)</option>
-            <option value="2">レベル2 (敵に1体追加)</option>
-            <option value="3">レベル3 (敵に2体追加)</option>
-            <option value="4">レベル4 (敵に3体追加)</option>
-            <option value="5">レベル5 (敵に4体追加)</option>
-            <option value="6">レベル6 (敵に5体追加)</option>
-            <option value="7">レベル7 (敵に6体追加・重複なし)</option>
-            <option value="8">レベル8 (敵に7体追加・重複なし)</option>
-            <option value="9">レベル9 (モンスター7種 ＋ 役職コマ2種)</option>
-            <option value="10">レベル10 (モンスター7種 ＋ 役職コマ3種)</option>
-            <option value="11">レベル11 (モンスター7種 ＋ 役職コマ4種)</option>
-            <option value="12">レベル12 (モンスター7種 ＋ 役職コマ5種)</option>
+            <option value="2">レベル2 (役職コマ1体)</option>
+            <option value="3">レベル3 (役職コマ2体)</option>
+            <option value="4">レベル4 (役職コマ3体)</option>
+            <option value="5">レベル5 (役職コマ4体)</option>
+            <option value="6">レベル6 (役職コマ5体)</option>
+            <option value="7">レベル7 (役職コマ6体)</option>
+            <option value="8">レベル8 (役職コマ7体)</option>
+            <option value="9">レベル9 (役職コマ8体)</option>
+            <option value="10">レベル10 (役職コマ9体)</option>
+            <option value="11">レベル11 (役職コマ10体)</option>
+            <option value="12">レベル12 (役職コマ11体)</option>
+            <option value="13">レベル13 (役職コマ12体)</option>
+            <option value="14">レベル14 (役職コマ13体)</option>
+            <option value="15">レベル15 (役職コマ14体)</option>
+            <option value="16">レベル16 (役職コマ15体・全ジョブ)</option>
         </select>
     </div>
     <button id="btn-start" class="btn" style="padding: 15px; font-size: 18px; background: var(--accent); margin-bottom: 10px;">CPU対戦スタート</button>
@@ -466,6 +470,7 @@
 
     <div id="ranked-panel">
         <div id="rank-display" style="text-align:center; font-size:18px; font-weight:bold; color:var(--accent); margin:10px 0;"></div>
+        <div id="badge-display" style="text-align:center; font-size:13px; color:#f39c12; margin:-4px 0 8px;"></div>
         <div class="select-group" style="margin-bottom:10px;">
             <label>プレイヤー名:</label>
             <input type="text" id="player-name-input" maxlength="16" placeholder="名前を入力..." 
@@ -553,8 +558,8 @@
             <label>難易度 (NPCモンスター数):</label>
             <select id="ol-difficulty-select">
                 <option value="1">レベル1 (NPCなし)</option>
-                <option value="2">レベル2 (NPC 1体)</option>
-                <option value="3">レベル3 (NPC 2体)</option>
+                <option value="2">レベル2 (役職コマ1体)</option>
+                <option value="3">レベル3 (役職コマ2体)</option>
             </select>
         </div>
         <div id="create-waiting" style="display:none;">
@@ -816,6 +821,18 @@ function getUserId() {
     return id;
 }
 function isRankedUnlocked() { return true; }
+
+const LEVEL_BADGES = {
+    1:'🌱 新米冒険者', 2:'⚔️ 見習い戦士', 3:'🛡️ 一人前の戦士',
+    4:'💪 勇者', 5:'🔥 猛者', 6:'👑 強者', 7:'🌟 英雄',
+    8:'💎 伝説の戦士', 9:'🏆 王者', 10:'⭐ 無双',
+    11:'🌙 覇者', 12:'🌠 鬼神', 13:'🦅 剣聖', 14:'🔱 武神',
+    15:'⚡ 覇王', 16:'👼 天の剣',
+};
+function getEarnedBadges() { try { return JSON.parse(localStorage.getItem('ek_badges') || '[]'); } catch { return []; } }
+function earnBadge(lv) { let b=getEarnedBadges(); if(!b.includes(lv)){b.push(lv);localStorage.setItem('ek_badges',JSON.stringify(b));} }
+function getHighestBadge() { let b=getEarnedBadges(); return b.length?Math.max(...b):0; }
+function getBadgeDisplayText() { let h=getHighestBadge(); return h?'🎖️ CPU称号: '+(LEVEL_BADGES[h]||''):''; }
 function getRank() { return parseInt(localStorage.getItem('ek_rank') || '1', 10); }
 function getRP() { return parseInt(localStorage.getItem('ek_rp') || '0', 10); }
 function setRank(r) { localStorage.setItem('ek_rank', String(Math.max(1, r))); }
@@ -1785,6 +1802,8 @@ function refreshRankDisplay() {
         let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10);
         el.textContent = `${name} — 初心者（シングルプレイ勝利 ${Math.min(wins,8)}/8 でランクマッチ解放）`;
     }
+    let bdEl = document.getElementById('badge-display');
+    if (bdEl) bdEl.textContent = getBadgeDisplayText();
 }
 
 function updateOnlineInfo() {
@@ -2651,71 +2670,38 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
 }
 
 function addExtraEnemies(difficulty) {
-    const types = ['slime', 'golem', 'wolf', 'big', 'red', 'blue', 'small'];
-    const names = { slime:'スライム', golem:'ゴーレム', wolf:'オオカミ', big:'大鬼', red:'赤鬼', blue:'青鬼', small:'小鬼' };
-    
-    let extraCount = 0;
-    let jobCount = 0;
-    let isHighLevel = false;
     let diffNum = parseInt(difficulty);
-    
-    if (diffNum >= 9) {
-        extraCount = 7;
-        jobCount = diffNum - 7;
-        isHighLevel = true;
-    } else if (diffNum === 7) { extraCount = 6; isHighLevel = true; }
-    else if (diffNum === 8) { extraCount = 7; isHighLevel = true; }
-    else { extraCount = diffNum - 1; }
+    let extraCount = Math.max(0, diffNum - 1); // Lv1=0体, Lv2=1体, Lv3=2体 …
+    if (extraCount === 0) return;
 
-    let pool = [...types];
-    if (isHighLevel) pool.sort(() => Math.random() - 0.5);
+    // c1・p1のジョブは除外して被りなし
+    let usedJobs = new Set(
+        entities.filter(e => e.id === 'c1' || e.id === 'p1').map(e => e.type)
+    );
+    let available = ALL_JOBS.filter(j => !usedJobs.has(j))
+                            .sort(() => Math.random() - 0.5);
+    let count = Math.min(extraCount, available.length);
 
-    for (let i = 0; i < extraCount; i++) {
-        let t = isHighLevel ? pool[i] : types[Math.floor(Math.random() * types.length)];
-        let r, c;
-        let attempts = 0;
+    for (let i = 0; i < count; i++) {
+        let t = available[i];
+        let r, c, attempts = 0;
         do {
             r = Math.floor(Math.random() * 4);
             c = Math.floor(Math.random() * SIZE);
             attempts++;
         } while (attempts < 100 && !isWalkable(r, c));
-        
-        let m = {
-            id: 'extra' + i, type: t, name: names[t], team: 'cpu',
-            r: r, c: c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, 
-            abilities: { sword: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0
-        };
 
-        if (t === 'golem') { m.abilities = { punch: 999, rock_throw: 999 }; m.hp = 3; }
-        else if (t === 'slime') { m.hp = 1; }
-        else if (t === 'wolf') { m.hp = 2; m.ap = 3; m.maxAp = 3; }
-        else if (t === 'big') { m.hp = 3; m.abilities = { drop_rock: 99, sword: 999 }; }
-        else if (t === 'red') { m.hp = 2; m.abilities = { fireball: 99, sword: 999 }; }
-        else if (t === 'blue') { m.hp = 2; m.ap = 3; m.maxAp = 3; m.abilities = { throwing_knife: 99, sword: 999 }; }
-        else if (t === 'small') { m.hp = 1; m.stealth = true; m.stealthTimer = 4; m.abilities = { throwing_knife: 99 }; }
-
-        entities.push(m);
-    }
-
-    if (jobCount > 0) {
-        let cpuJobs = [...ALL_JOBS].sort(() => Math.random() - 0.5);
-        for (let i = 0; i < jobCount; i++) {
-            let t = cpuJobs[i];
-            let r, c;
-            let attempts = 0;
-            do {
-                r = Math.floor(Math.random() * 4);
-                c = Math.floor(Math.random() * SIZE);
-                attempts++;
-            } while (attempts < 100 && !isWalkable(r, c));
-            
-            let jd = JOB_DATA[t];
-            entities.push({ 
-                id: 'extra_job_' + i, type: t, name: jd.name, team: 'cpu',
-                r: r, c: c, hp: jd.hp, maxHp: jd.hp, ap: jd.ap, maxAp: jd.ap,
-                abilities: {...jd.abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0
-            });
-        }
+        let jd = JOB_DATA[t];
+        entities.push({
+            id: 'extra_job_' + i, type: t, name: jd.name, team: 'cpu',
+            r, c, hp: jd.hp, maxHp: jd.hp, ap: jd.ap, maxAp: jd.ap,
+            abilities: {...jd.abilities}, skillUsed: false,
+            stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0,
+            atkBonus: 0, shoesTimer: 0,
+            ...(jd.oceanUnit ? {oceanUnit:true, waterGauge:jd.waterGauge||10, maxWaterGauge:jd.maxWaterGauge||30} : {}),
+            ...(jd.flying ? {flying:true} : {}),
+            ...(t === 'angel' ? {fallenGauge:0, fallen:false} : {}),
+        });
     }
 }
 
@@ -7306,14 +7292,23 @@ function checkWin() {
             }
         } else {
             // Single-player: count victories; unlock ranked at 8 wins.
-            if (iWon && !isRankedUnlocked()) {
-                let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10) + 1;
-                localStorage.setItem('ek_spwins', String(wins));
-                if (wins >= 8) {
-                    unlockRanked();
-                    title += '\n🎖️ レベル8到達！ランクマッチが解放されました！';
+            if (iWon) {
+                if (!isRankedUnlocked()) {
+                    let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10) + 1;
+                    localStorage.setItem('ek_spwins', String(wins));
+                    if (wins >= 8) {
+                        unlockRanked();
+                        title += '\n🎖️ ランクマッチが解放されました！';
+                    }
+                    syncPlayerToServer();
                 }
-                syncPlayerToServer();
+                // CPU難易度に応じた称号を付与
+                let diff = parseInt(document.getElementById('difficulty-select')?.value || '1');
+                let wasNew = !getEarnedBadges().includes(diff);
+                earnBadge(diff);
+                if (wasNew && LEVEL_BADGES[diff]) {
+                    title += '\n🎖️ 新称号獲得: ' + LEVEL_BADGES[diff] + '！';
+                }
             }
         }
         document.getElementById('result-title').innerText = title;
