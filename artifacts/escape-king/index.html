@@ -1069,6 +1069,7 @@ const ABILITY_NAMES = {
     charge: '突撃(半径1/威1+残AP分追加ダメ/全AP消費)',
     poison_bite: '毒噛み(半径1/威1/毒付与3T)',
     combo_slash: '連続斬り(半径1/威1/次T連続斬り+1/50%回数+1)',
+    retreat: '撤退',
     escape_dash: '逃げ足(移動+元の場所に罠)',
     rock_dash: '退路を断ち走る(移動+元の場所に岩)',
     claw_slash: '爪で切り裂く(半径1/威1/敵バフ時+2+吹飛+AP-1)',
@@ -1221,6 +1222,7 @@ const ABILITY_TIPS = {
     death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
     balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数1。',
     combo_slash: '半径1マスの敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
+    retreat: '自分に1Tバリアを付与。バリアが解けた次のターン開始時に後方1マスへ自動後退し、元の場所に罠を設置する。回数3。',
     escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
     rock_dash: '2マス以内のマスへ高速移動。元いた場所に岩を設置する。回数5。',
     claw_slash: '半径1マスの敵に1ダメ。対象が体力・攻撃力・アビリティを今ターンか前ターンに回復・増加させていた場合、追加2ダメ＋吹き飛ばし＋AP-1。回数10。',
@@ -1238,7 +1240,7 @@ const JOB_DATA = {
     king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1, graceful_rest: 1, royal_dignity: 1, bombardment: 1, combo_slash: 2 }, hp: 30, ap: 2 },
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1, duel: 1, heavy_armor: 1, mount_horse: 1, combo_slash: 2 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 1, long_snipe: 1 }, hp: 30, ap: 2 },
-    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
@@ -2986,6 +2988,24 @@ function processTurnStartEffects(e) {
         if (e.poisonTimer <= 0) { e.poisonStacks = 0; }
     }
     if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
+    // 撤退：バリアが解けたターン開始時に後退＋罠設置
+    if (!e.invin && e.retreatPending) {
+        let rp = e.retreatPending;
+        delete e.retreatPending;
+        let backR = e.team === 'player' ? e.r + 1 : e.r - 1;
+        if (backR >= 0 && backR < SIZE && isWalkable(backR, e.c) && !entities.some(ev => ev.hp > 0 && ev.r === backR && ev.c === e.c && ev !== e)) {
+            let oldR = e.r, oldC = e.c;
+            e.r = backR;
+            if (['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground'].includes(board[oldR]?.[oldC])) {
+                board[oldR][oldC] = 'trap'; trapOwnerMap[`${oldR},${oldC}`] = e.team;
+                msg(`🛡️ ${e.name}のバリアが解け、後退して罠を設置！`, true);
+            } else {
+                msg(`🛡️ ${e.name}のバリアが解け、後退した！`, true);
+            }
+        } else {
+            msg(`🛡️ ${e.name}のバリアが解けた！（後退スペースなし）`, true);
+        }
+    }
     // Bone armor expiry
     if (e.boneArmorBuff && turn > (e.boneArmorExpiry||0)) {
         e.atkBonus = Math.max(0, (e.atkBonus||0) - 1);
@@ -4117,6 +4137,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'thunder_magic') return maxDist > 0 && maxDist <= 2+(se.rangeBonus||0) && target && target.team !== se.team;
     if (mode === 'meditation') return true;
     if (mode === 'fortify') return true;
+    if (mode === 'retreat') return true;
     if (mode === 'unwavering_stance') return true;
     // Cyborg
     if (mode === 'power_charge') return true;
@@ -5531,6 +5552,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         // This turn: stealth
         se.stealth = true; se.stealthTimer = 1;
         msg(`🕵️ 偵察！敵AP-1・5アビリティ封印・このターン潜伏！`); used = true;
+    } else if (actionMode === 'retreat') {
+        if (se.abilities['retreat'] !== 999) se.abilities['retreat']--;
+        se.invin = true; se.invinTimer = 1;
+        se.retreatPending = true;
+        se.ap = 0;
+        msg(`🛡️ 撤退！1Tバリアを張った！次のターン開始時に後退して罠を設置！`); used = true;
     } else if (actionMode === 'fortify') {
         se.abilities['fortify']--;
         let rocksPlaced = 0;
