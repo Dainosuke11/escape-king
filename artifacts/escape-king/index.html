@@ -788,7 +788,8 @@ let lavaSpreadTimer = 0;
 // Misty Lake
 let mistyLakeWindTimer = 0;
 let mistyLakeFogCleared = false;
-let lotusPadSteps = {};   // "r,c" → step count (sinks after 3 steps)
+let lotusPadSteps = {};   // "r,c" → step count (sinks after 2 steps)
+let lotusSunkenTimers = {}; // "r,c" → turn when lotus_sunken revives to lotus_pad
 let tempSwamps = [];     // [{r,c,origTile,expiresAt}] temporary swamp tiles
 // Colosseum
 let colosseumPoints = { player: 0, cpu: 0 };
@@ -1083,7 +1084,8 @@ const ABILITY_NAMES = {
     fate_choice: '運命の選択(半径3/敵を自陣方向3マス+5ダメ+AP-2)',
     gold_addiction: '金依存症(半径2/威2+吹飛/前方3岩/後方4鉱山/毒+全封印1T)',
     fun_present: 'お楽しみのプレゼント(半径3/威2/周辺プレゼント設置)',
-    lifespan_advance: '寿命の前借り(半径2暗黒フィールド/敵HP+5AP-2/次T10ダメ+AP-1+全封印)'
+    lifespan_advance: '寿命の前借り(半径2暗黒フィールド/敵HP+5AP-1/次T10ダメ+AP-1+全封印)',
+    beast_fuse: '獣融合'
 };
 
 const ABILITY_TIPS = {
@@ -1258,7 +1260,7 @@ const JOB_DATA = {
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_head: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
-    world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 5 }, hp: 30, ap: 2 },
+    world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 1 }, hp: 30, ap: 2 },
     onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 3, oni_arm: 10, divine_speed: 5, talisman_barrier: 3, pentagram_formation: 3, soul_release: 3, soul_pull: 3, shikigami_summon: 3 }, hp: 30, ap: 2 },
     devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true }
 };
@@ -2546,7 +2548,7 @@ function initBoard(stageType) {
         [[3,4],[3,16],[17,4],[17,16],[5,10],[15,10]].forEach(([r2,c2]) => {
             if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&board[r2][c2]==='lake_ground') board[r2][c2]='lake_island';
         });
-        lotusPadSteps = {}; tempSwamps = []; mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
+        lotusPadSteps = {}; lotusSunkenTimers = {}; tempSwamps = []; mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
     } else if (stageType === 'colosseum') {
         // === COLOSSEUM ===
         for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
@@ -2681,7 +2683,7 @@ function initEntities(pJob, difficulty = "1") {
     worldManagerHitFromAfar = false;
     pendingEarthquake = null;
     mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
-    lotusPadSteps = {};
+    lotusPadSteps = {}; lotusSunkenTimers = {};
     colosseumPoints = {player:0,cpu:0};
     colosseumGoalSpawned = {player:false,cpu:false};
     colosseumLastScoreTurn = {player:-1,cpu:-1};
@@ -2869,7 +2871,9 @@ function processTurnStartEffects(e) {
     // ターン開始時の位置・行動記録（世界の管理者の条件判定用）
     e._prevTurnR = e.r;
     e._prevTurnC = e.c;
+    e._tookDamageThisTurn = (e.hp < (e._prevTurnHp || e.hp));
     e._prevTurnHp = e.hp;
+    e._prevTurnAp = e.ap;
     e._usedAbilityThisTurn = false;
     if (e.type === 'world_manager') {
         e._managerDmgCountPrev = e._managerDmgCount || 0;
@@ -3152,10 +3156,13 @@ function processTurnStartEffects(e) {
         e.burnTimer--;
         if (!e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は燃焼中！1ダメージ！(残${e.burnTimer}T)`, true); }
     }
-    // リミッター解除 毎ターン自傷
+    // リミッター解除 毎ターン自傷・APコスト-1補填
     if (e.limiterReleased && !e.invin) {
         e.hp -= 3;
         msg(`⚙️ ${e.name}はリミッター解除の反動で3ダメージ！`, true);
+    }
+    if (e.limiterApCostReduction && e.type === 'cyborg') {
+        e.ap = Math.min(e.ap + 1, e.maxAp);
     }
     // 変身クールダウン
     if ((e.transformCooldownLeft||0) > 0) {
@@ -3189,11 +3196,13 @@ function processTurnStartEffects(e) {
             if (!e.fullWaterBuff) {
                 if (e.highWaterBuff) {
                     // +1→+2へアップグレード（差分+1ずつ追加）
-                    e.maxAp = Math.min(e.maxAp+1,6); e.ap=Math.min(e.ap,e.maxAp);
+                    e.maxAp = Math.min(e.maxAp+1,6);
+                    e.ap = Math.min(e.ap+1, e.maxAp);
                     e.atkBonus=(e.atkBonus||0)+1;
                     e.highWaterBuff=false;
                 } else {
-                    e.maxAp = Math.min(e.maxAp+2,6); e.ap=Math.min(e.ap,e.maxAp);
+                    e.maxAp = Math.min(e.maxAp+2,6);
+                    e.ap = Math.min(e.ap+2, e.maxAp);
                     e.atkBonus=(e.atkBonus||0)+2;
                 }
                 e.fullWaterBuff=true;
@@ -3208,7 +3217,8 @@ function processTurnStartEffects(e) {
                 e.fullWaterBuff=false; e.highWaterBuff=true;
                 msg(`🌊 ${e.name}のゲージ29未満！AP+1・ATK+1に戻った！`, true);
             } else if (!e.highWaterBuff) {
-                e.maxAp = Math.min(e.maxAp+1,5); e.ap=Math.min(e.ap,e.maxAp);
+                e.maxAp = Math.min(e.maxAp+1,5);
+                e.ap = Math.min(e.ap+1, e.maxAp);
                 e.atkBonus=(e.atkBonus||0)+1;
                 e.highWaterBuff=true;
                 msg(`🌊 ${e.name}のゲージ20以上！AP+1・ATK+1！`, true);
@@ -3828,7 +3838,7 @@ function startTurn(team, skipEffects = false) {
                 mistyLakeFogCleared = true; mistyLakeWindTimer = 0;
                 msg("💨 湖に風が吹いた！霧が晴れる！(1ターン)", true);
             } else { mistyLakeFogCleared = false; }
-            // lotus_sunken → shallow_water and damage entities on top
+            // lotus_sunken: damage entities on top, then check revival timer
             for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
                 if (board[r2][c2] === 'lotus_sunken') {
                     entities.forEach(e => {
@@ -3838,7 +3848,14 @@ function startTurn(team, skipEffects = false) {
                             for (let {dr,dc} of dirs) { let nr=e.r+dr,nc=e.c+dc; if(isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)){e.r=nr;e.c=nc;break;} }
                         }
                     });
-                    board[r2][c2] = 'shallow_water';
+                    // 2ターン後に蓮の葉として復活
+                    let lsKey = `${r2},${c2}`;
+                    if (lotusSunkenTimers[lsKey] && turn >= lotusSunkenTimers[lsKey]) {
+                        board[r2][c2] = 'lotus_pad';
+                        lotusPadSteps[lsKey] = 0;
+                        delete lotusSunkenTimers[lsKey];
+                        msg(`🌸 蓮の葉が復活した！`, true);
+                    }
                 }
             }
             if (turn >= 4 && turn % 4 === 0) {
@@ -3848,14 +3865,69 @@ function startTurn(team, skipEffects = false) {
         }
         // Colosseum events
         if (activeStage === 'colosseum') {
+            // スコア集計 — NPC撃破得点をコマ強さで決める
+            const colossStrengthPts = (e) => {
+                if (e.type === 'knight' || e.type === 'cyborg') return 4;
+                if (e.type === 'archer' || e.type === 'lancer') return 3;
+                if (e.type === 'monk' || e.type === 'wizard') return 3;
+                return 1;
+            };
             entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc' && e.lastAttackTeam).forEach(e => {
                 e.colossCounted = true;
-                colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + 1;
-                msg(`⚔️ 撃破！得点→ あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
+                let pts = colossStrengthPts(e);
+                colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + pts;
+                msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
             });
-            if (turn % 3 === 0) {
+            // 敵陣ゾーン(相手の半面)に入った場合 +10点(1回/ターン)
+            ['player','cpu'].forEach(team => {
+                let lastSc = colosseumLastScoreTurn[team] || -1;
+                if (turn > lastSc) {
+                    let foeHalf = team==='player' ? (r2) => r2<=8 : (r2) => r2>=12;
+                    let main = entities.find(e=>e.hp>0&&e.team===team&&(e.id==='p1'||e.id==='c1'));
+                    if (main && foeHalf(main.r)) {
+                        colosseumPoints[team] = (colosseumPoints[team]||0) + 10;
+                        colosseumLastScoreTurn[team] = turn;
+                        msg(`⚔️ ${team==='player'?'あなた':'相手'}が敵陣突入！+10点！得点→ あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
+                    }
+                }
+            });
+            // ターン経過で壁を縮める（5ターンごとにアリーナ縮小）
+            if (turn >= 5 && turn % 5 === 0) {
+                let shrinkMargin = Math.floor(turn / 5);
+                let minR = 4 + shrinkMargin, maxR = 16 - shrinkMargin;
+                let minC = 3 + shrinkMargin, maxC = 17 - shrinkMargin;
+                if (minR <= maxR && minC <= maxC) {
+                    [minR, maxR].forEach(row => {
+                        for (let c2=minC; c2<=maxC; c2++) {
+                            if(board[row]?.[c2]==='arena_floor' && !isNoRockZone(row,c2) && !entities.some(e=>e.hp>0&&e.r===row&&e.c===c2)) {
+                                board[row][c2]='rock';
+                            }
+                        }
+                    });
+                    [minC, maxC].forEach(col => {
+                        for (let r2=minR; r2<=maxR; r2++) {
+                            if(board[r2]?.[col]==='arena_floor' && !isNoRockZone(r2,col) && !entities.some(e=>e.hp>0&&e.r===r2&&e.c===col)) {
+                                board[r2][col]='rock';
+                            }
+                        }
+                    });
+                    msg(`⚔️ アリーナが縮小した！`, true);
+                }
+            }
+            // 複数のモンスタータイプをランダム召喚
+            if (turn % 2 === 0) {
                 let spot = randomEmptyCells(1)[0];
-                if (spot) { entities.push({id:'gladiator'+Date.now(), type:'gladiator', name:'剣闘士', team:'npc', r:spot.r, c:spot.c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{sword:999, punch:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1}); msg("⚔️ 剣闘士が入場！", true); }
+                if (spot) {
+                    const colossTypes = [
+                        {type:'gladiator',name:'剣闘士',hp:3,ap:2,ab:{sword:999,punch:999},pts:1},
+                        {type:'archer',   name:'弓闘士',hp:2,ap:2,ab:{bow:999},           pts:3},
+                        {type:'lancer',   name:'槍闘士',hp:4,ap:2,ab:{spear:999},          pts:3},
+                        {type:'monk',     name:'拳闘士',hp:3,ap:2,ab:{punch:999,smash_slash:3},pts:3}
+                    ];
+                    let ct = colossTypes[Math.floor(Math.random()*colossTypes.length)];
+                    entities.push({id:ct.type+Date.now(), type:ct.type, name:ct.name, team:'npc', r:spot.r, c:spot.c, hp:ct.hp, maxHp:ct.hp, ap:ct.ap, maxAp:ct.ap, abilities:{...ct.ab}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1, _colossPts:ct.pts});
+                    msg(`⚔️ ${ct.name}が入場！`, true);
+                }
             }
             ['player','cpu'].forEach(team => {
                 if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
@@ -4098,8 +4170,8 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
-    // 潜伏中の敵は単体遠距離攻撃では補足できない（AoEは別処理で当たる）
-    if (target && target.team !== se.team && (target.stealth || board[target.r]?.[target.c] === 'forest')) return false;
+    // 潜伏中の敵は近接以外では補足できない（AoEは別処理で当たる）
+    if (dist > 1 && target && target.team !== se.team && (target.stealth || board[target.r]?.[target.c] === 'forest')) return false;
     if (mode === 'combo_slash') return dist === 1 && target && target.team !== se.team;
     if (mode === 'claw_slash') return dist === 1 && target && target.team !== se.team;
     if (mode === 'sweet_honey') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
@@ -4119,6 +4191,8 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
+    if (mode === 'drain') return dist === 1 && target && target.team !== se.team;
+    if (mode === 'dark_magic') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'shark_charge') return maxDist === 1 && target && target.team !== se.team && (se.waterMode || false);
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
@@ -4413,8 +4487,10 @@ function render() {
         if (['graveyard','nighttown','chaos'].includes(activeStage)) {
             let mine = souls[myTeam()] || 0;
             let foe = souls[enemyTeam()] || 0;
+            let myNecro = entities.find(e => e.type === 'necromancer' && e.team === myTeam() && e.hp > 0);
+            let necroTxt = myNecro ? `  💀ネクロ魂:${myNecro.soulCount||0}` : '';
             si.style.display = 'block';
-            si.textContent = `👻 魂 — あなた:${mine} / 相手:${foe}（教会で浄化／橋で悪霊召喚）`;
+            si.textContent = `👻 魂 — あなた:${mine} / 相手:${foe}（教会で浄化／橋で悪霊召喚）${necroTxt}`;
         } else if (activeStage === 'dungeon') {
             si.style.display = 'block';
             let vr = dungeonGoggles > 0 ? 8 + dungeonGoggles : 3;
@@ -4644,10 +4720,20 @@ function checkTileEffects(entity) {
         oxygenMap[entity.id] = Math.min(15, (oxygenMap[entity.id]||0) + 8);
         eventMsg = (eventMsg ? eventMsg + " " : "") + "💨 気泡噴出口！酸素が全回復！";
     }
-    // Lava: deals 3 damage when stepped on voluntarily (non-lavaWalker)
+    // Lava: deals 2 damage when stepped on voluntarily, then push to adjacent land
     if (board[r] && board[r][c] === 'lava' && !entity.lavaWalker) {
-        if (!entity.invin) entity.hp -= 3;
-        eventMsg = (eventMsg ? eventMsg + " " : "") + "🔥 溶岩を踏んだ！HP-3！";
+        if (!entity.invin) entity.hp -= 2;
+        eventMsg = (eventMsg ? eventMsg + " " : "") + "🔥 溶岩を踏んだ！HP-2！";
+        // 隣接する歩行可能なマスへ強制移動
+        const lavaDirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+        for (let {dr,dc} of lavaDirs) {
+            let nr=entity.r+dr, nc=entity.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x!==entity&&x.r===nr&&x.c===nc)){
+                entity.r=nr; entity.c=nc;
+                eventMsg += "陸地へ退避！";
+                break;
+            }
+        }
     }
     // Dungeon: 踏んで松明を点灯
     if (board[r] && board[r][c] === 'dungeon_torch' && activeStage === 'dungeon') {
@@ -4690,18 +4776,20 @@ function checkTileEffects(entity) {
         board[r][c] = 'fallen_floor';
         eventMsg = (eventMsg ? eventMsg + " " : "") + "💥 橋が崩落！次ターン開始時に復元する。";
     }
-    // Misty Lake: lotus_pad sinks after 3 distinct steps (same entity staying doesn't count)
+    // Misty Lake: lotus_pad sinks after 2 distinct steps (same entity staying doesn't count)
     if (activeStage === 'misty_lake' && board[r]?.[c] === 'lotus_pad' && !entity.flying && !isOceanUnit(entity)) {
         let lKey = `${r},${c}`;
         if (entity._lastLotusKey !== lKey) {
             entity._lastLotusKey = lKey;
             lotusPadSteps[lKey] = (lotusPadSteps[lKey] || 0) + 1;
-            if (lotusPadSteps[lKey] >= 3) {
+            if (lotusPadSteps[lKey] >= 2) {
                 board[r][c] = 'lotus_sunken';
+                lotusSunkenTimers = lotusSunkenTimers || {};
+                lotusSunkenTimers[lKey] = turn + 2; // 2ターン後に復活
                 delete entity._lastLotusKey;
-                eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉が沈んだ！";
+                eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉が沈んだ！(2T後復活)";
             } else {
-                eventMsg = (eventMsg ? eventMsg + " " : "") + `🌸 蓮の葉がゆらゆら…(${lotusPadSteps[lKey]}/3)`;
+                eventMsg = (eventMsg ? eventMsg + " " : "") + `🌸 蓮の葉がゆらゆら…(${lotusPadSteps[lKey]}/2)`;
             }
         } else {
             eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉の上で静止中…";
@@ -6765,11 +6853,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         dsHitEnts.forEach(t => { t.hp -= 1 + (se.atkBonus||0); });
         se.r = r; se.c = c;
-        // 旧位置付近に狐火召喚
+        // 移動先付近に狐火召喚（目的地(r,c)の隣接マス）
         let ffCands = [];
         for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
             if(dr===0&&dc===0) continue;
-            let nr=dsOldR+dr, nc=dsOldC+dc;
+            let nr=r+dr, nc=c+dc;
             if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) ffCands.push({r:nr,c:nc});
         }
         if (ffCands.length > 0) {
@@ -6779,6 +6867,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             entities.push(ffM);
         }
         se.ap = 0;
+        // 陰陽師: 全アビリティ1T封印（oni_arm・drop_rock除く）
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`⚡ 神速！${dsHitEnts.size}体に1ダメ＋狐火召喚！残りアビリティ使用不可！`);
         used = true;
     } else if (actionMode === 'talisman_barrier') {
@@ -6801,6 +6891,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         se.talismanRocks = tbRks;
         se.ap = 0;
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`🔱 護符の結界！半径2味方${tbCount}体バリア＋HP+1！正面${tbRks.length}岩設置(次T消滅)！`);
         used = true;
     } else if (actionMode === 'pentagram_formation') {
@@ -6817,6 +6908,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         pentagramZones.push({ownerTeam:se.team, ownerId:se.id, cells:pgCs, origTile:pgOr, turnExpires:turn+1});
         se.ap = 0;
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`🔮 五芒星の陣！半径3マスが結界に！敵はターン開始時にAP-1＋全アビリティ封印！`);
         used = true;
     } else if (actionMode === 'soul_release') {
@@ -6842,6 +6934,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         }
         se.ap = 0;
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(targetEntity.invin ? `👻 放魂術！しかし無敵で防がれた！` : `👻 放魂術！${targetEntity.name}に${srDmg}ダメ＋吹飛5＋AP-1＋1T封印＋悪霊召喚！`);
         used = true;
     // ====== デビル ======
@@ -6891,7 +6984,8 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'claw_slash') {
         if (se.abilities['claw_slash'] !== 999) se.abilities['claw_slash']--;
         let csDmg = 1 + (se.atkBonus||0);
-        let csBonus = ((targetEntity._prevTurnHp||0) < targetEntity.hp) || (targetEntity.atkBonus||0) > 0;
+        let csBonus = ((targetEntity._prevTurnHp||0) < targetEntity.hp) || (targetEntity.atkBonus||0) > 0 ||
+            (targetEntity.ap||0) > (targetEntity._prevTurnAp||0) || (targetEntity.ap||0) < (targetEntity._prevTurnAp||targetEntity.maxAp||0);
         if (csBonus) csDmg += 2;
         if (meleeDodged(targetEntity)) { msg(`🔥 爪で切り裂く！しかし飛行コマに回避された！`); used = true; }
         else {
@@ -7017,7 +7111,9 @@ function handleAbilityTarget(r, c, targetEntity) {
             if(spKs.length>0) sealAbilities(targetEntity,[spKs[Math.floor(Math.random()*spKs.length)]],1);
             msg(`👻 引魂術！${targetEntity.name}を目の前に引き寄せ${spDmg}ダメ＋AP-1＋1T封印！`);
         } else { msg(`👻 引魂術！しかし防がれた！`); }
-        se.ap = 0; used = true;
+        se.ap = 0;
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
+        used = true;
     } else if (actionMode === 'shikigami_summon') {
         // 式神召喚 (陰陽師) — 5T~、狐火+鬼カラス+鬼蛇召喚
         if (turn < 5) { msg("🐦 式神召喚：5ターン目以降でないと使用できない！"); return; }
@@ -7035,6 +7131,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         se.ap = 0;
+        { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`🐦 式神召喚！狐火・大鬼を召喚！残りアビリティ使用不可！`);
         used = true;
     } else if (actionMode.startsWith('skill_')) {
@@ -7196,10 +7293,11 @@ function executeSkill(se) {
         se.maxHp += 10;
         se.hp = Math.min(se.maxHp, se.hp + 10);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
-        se.maxAp = Math.min(se.maxAp + 1, 5); se.ap = Math.min(se.ap + 1, se.maxAp);
         se.atkBonus = (se.atkBonus||0) + 1;
         se.limiterReleased = true;
-        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・AP上限+1・攻撃力+1！毎ターン3ダメージ！"); return true;
+        // リミッター解除中：アビリティ発動コストを-1（最低0）
+        se.limiterApCostReduction = true;
+        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・攻撃力+1・アビリティコスト-1！毎ターン3ダメージ！"); return true;
     }
     // ====== エイリアン スキル: マインドコントロール ======
     if (se.type === 'alien') {
@@ -7321,8 +7419,8 @@ function executeSkill(se) {
             if (t.hp<=0||t.team===se.team) return;
             if (dfCells.some(cl=>cl.r===t.r&&cl.c===t.c)) {
                 t.hp = Math.min(t.maxHp+5, t.hp+5);
-                t.ap = Math.max(0, t.ap-2);
-                dfHealMsgs.push(`${t.name}HP+5・AP-2`);
+                t.ap = Math.max(0, t.ap-1);
+                dfHealMsgs.push(`${t.name}HP+5・AP-1`);
             }
         });
         msg(`💀 寿命の前借り！半径2暗黒フィールド展開！${dfHealMsgs.length>0?'敵:'+dfHealMsgs.join('・')+'！':''}次Tフィールド内の敵に10ダメ+AP-1+全封印！`);
@@ -7590,11 +7688,20 @@ function knockback(target, dist, source) {
     for (let i=0; i<dist; i++) {
         let nr = target.r + dr;
         let nc = target.c + dc;
-        // Lava: instant death when knocked in
+        // Lava: 2 damage when knocked in, then land on adjacent tile
         if (board[nr]?.[nc] === 'lava' && !target.lavaWalker) {
-            target.r = nr; target.c = nc;
-            if (!target.invin) { target.hp = 0; }
-            msg(`🔥 ${target.name}が溶岩に叩き込まれた！即死！`, true);
+            if (!target.invin) target.hp -= 2;
+            msg(`🔥 ${target.name}が溶岩に叩き込まれた！2ダメ！`, true);
+            // 隣接陸地へ押し出す
+            const lavaBumpDirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+            let landed = false;
+            for (let {dr: bdr, dc: bdc} of lavaBumpDirs) {
+                let br=nr+bdr, bc=nc+bdc;
+                if(br>=0&&br<SIZE&&bc>=0&&bc<SIZE&&isWalkable(br,bc)&&!entities.some(x=>x.hp>0&&x!==target&&x.r===br&&x.c===bc)){
+                    target.r=br; target.c=bc; landed=true; break;
+                }
+            }
+            if (!landed) { target.r=nr; target.c=nc; }
             break;
         } else if (isWalkable(nr, nc)) {
             target.r = nr; target.c = nc;
@@ -8026,7 +8133,7 @@ function cpuLogic() {
                 if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=4;msg(`⚔️ 敵がトドメの粉砕斬り！${pkTarget.name}に4ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
-            if (canKill && !attacked && pkDist<=1 && cpu.abilities.spin_slash>0) {
+            if (canKill && !attacked && pkDist<=1 && cpu.abilities.spin_slash>0 && !(cursedAbilities[cpu.id]?.['spin_slash'] > 0)) {
                 cpu.abilities.spin_slash--;
                 if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;knockback(pkTarget,1,cpu);msg(`⚔️ 敵がトドメの回転斬り！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
@@ -8147,7 +8254,7 @@ function cpuLogic() {
                     if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=4;msg(`敵の粉砕斬り！${p.name}が4ダメージを受けた！`);}
                     else{msg(`敵の粉砕斬り！しかし${p.name}は無敵で防いだ！`);}
                     attacked=true;cpu.ap--;
-                } else if (cpu.abilities.spin_slash>0){
+                } else if (cpu.abilities.spin_slash>0 && !(cursedAbilities[cpu.id]?.['spin_slash'] > 0)){
                     cpu.abilities.spin_slash--;
                     if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);msg(`敵の回転斬り！${p.name}が2ダメージと吹き飛ばし！`);}
                     else{msg(`敵の回転斬り！しかし${p.name}は無敵で防いだ！`);}
@@ -8806,16 +8913,40 @@ function isAbilityConditionMet(key, se) {
     if (!se) return false;
     // 連続斬り: 1回以上使用済みで攻撃力スタックがある
     if (key === 'combo_slash') return (se.comboSlashBonus||0) > 0;
-    // 爪で切り裂く: 隣接敵がバフ中（atkBonus>0 or 回復済み）
+    // 爪で切り裂く: 隣接敵がバフ中（atkBonus>0 or AP変化 or 回復済み）
     if (key === 'claw_slash') {
         return entities.some(e => e.team !== se.team && e.hp > 0 &&
             Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) === 1 &&
-            ((e.atkBonus||0) > 0 || (e._prevTurnHp||0) < e.hp || (e.whistleBuff||0) > 0));
+            ((e.atkBonus||0) > 0 || (e._prevTurnHp||0) < e.hp || (e.whistleBuff||0) > 0 ||
+             (e.ap||0) > (e._prevTurnAp||0) || (e.ap||0) < (e._prevTurnAp||e.maxAp||0)));
     }
     // 堕天ゲージ≥30で強化されるアビリティ
     if (['death_scythe','sin_mark','balance_break','scales'].includes(key)) return (se.fallenGauge||0) >= 30;
     // 潜伏中: 弓や短剣が潜伏ボーナス発動
     if (['bow','dagger','poison_dagger'].includes(key)) return se.stealth === true;
+    // 怨みの打撃: 自分がこのターン被弾した
+    if (key === 'grudge_strike') return se._tookDamageThisTurn === true;
+    // 世界の管理者: 各アビリティの発動条件
+    if (key === 'scales') return se.hp <= 15;
+    if (key === 'balance_adjust') {
+        let myGoals = entities.filter(e=>e.hp>0&&e.team===se.team&&e.r===(se.team==='player'?0:SIZE-1)).length;
+        let foeGoals = entities.filter(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&e.r===(se.team==='player'?SIZE-1:0)).length;
+        return foeGoals > myGoals;
+    }
+    if (key === 'mediation_judgment') {
+        let myCount = entities.filter(e=>e.hp>0&&e.team===se.team).length;
+        let foeCount = entities.filter(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc').length;
+        return foeCount > myCount;
+    }
+    if (key === 'order_correction') {
+        return entities.some(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&(e._movedDistThisTurn||0)>=3);
+    }
+    if (key === 'inequality_anger') {
+        return se.abilities && Object.values(se.abilities).some(v=>v!==999&&v<=1&&v>0);
+    }
+    if (key === 'equal_strike') {
+        return entities.some(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&e._usedAbilityLastTurn===true);
+    }
     return false;
 }
 
@@ -8985,9 +9116,10 @@ function updateUI() {
         }
     }
 
-    // Nighttown: Train boarding button
+    // Nighttown: Train boarding button (adjacent tile or same tile when train at station)
     if (activeStage === 'nighttown' && selectedEntity && canIAct() && !selectedEntity.onTrain && selectedEntity.team === myTeam() && ntTrainPhase % 2 === 0) {
-        let train = entities.find(e => e.id === 'nttrain' && e.hp > 0 && e.r === selectedEntity.r && e.c === selectedEntity.c);
+        let train = entities.find(e => e.id === 'nttrain' && e.hp > 0 &&
+            Math.abs(e.r - selectedEntity.r) + Math.abs(e.c - selectedEntity.c) <= 1);
         if (train) {
             let tb = document.createElement('button');
             tb.className = 'ability-btn';
