@@ -7253,10 +7253,10 @@ function executeSkill(se) {
         se.hp = Math.min(se.maxHp, se.hp + 10);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
         se.atkBonus = (se.atkBonus||0) + 1;
-        se.limiterReleased = 3;
+        se.limiterReleased = 2;
         // リミッター解除中：アビリティ発動コストを-1（最低0）
         se.limiterApCostReduction = true;
-        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・攻撃力+1・アビリティコスト-1！3ターン継続・毎ターン3自傷！"); return true;
+        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・攻撃力+1・アビリティコスト-1！2ターン継続・毎ターン3自傷！"); return true;
     }
     // ====== エイリアン スキル: マインドコントロール ======
     if (se.type === 'alien') {
@@ -9223,30 +9223,27 @@ function updateUI() {
 
 <div id="kofi-section" style="
     width: 100%;
-    margin-top: 16px;
-    padding: 14px 20px;
+    margin-top: 8px;
+    padding: 8px 20px;
     background: #1a1a2e;
     border-top: 1px solid #2a2a44;
     text-align: center;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
 ">
-    <p style="
-        margin: 0 0 16px 0;
-        font-size: 13px;
-        color: #888;
-        line-height: 1.7;
-        max-width: 480px;
-        margin-left: auto;
-        margin-right: auto;
-    ">☕ このゲームを楽しんでいただけたら、コーヒー一杯の応援をいただけると嬉しいです</p>
+    <span style="font-size: 12px; color: #888;">☕ 楽しんでいただけたら応援お願いします</span>
     <a href="https://ko-fi.com/dainosukegame" target="_blank" rel="noopener" style="
         display: inline-block;
         background: #FF5E5B;
         color: #fff;
         text-decoration: none;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
-        padding: 10px 24px;
+        padding: 6px 18px;
         border-radius: 6px;
         letter-spacing: 0.03em;
         transition: background 0.2s;
