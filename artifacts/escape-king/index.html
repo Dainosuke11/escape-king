@@ -241,12 +241,6 @@
         .arena_floor { background: #b8860b; }
         .arena_goal { background: #8b0000; border: 2px solid #ff4444 !important; }
         .arena_goal::after { content: "🚩"; font-size: calc(var(--tile-size)*0.4); }
-        /* Moving Train stage */
-        .train_ground { background: #2c2c2c; }
-        .track_tile { background: #1a1a1a; border: 1px solid #555 !important; }
-        .track_tile::after { content: ""; display: block; width: 4px; height: 70%; background: #888; margin: auto; margin-top: 15%; }
-        .crossing_gate { background: #3a0000; border: 2px solid #cc0000 !important; }
-        .crossing_gate::after { content: "🚧"; font-size: calc(var(--tile-size)*0.38); }
         /* Swamp tile (Necromancer) */
         .swamp_tile { background: #1a120a; border: 1px solid #3a2a0a !important; }
         .swamp_tile::after { content: "☠"; font-size: calc(var(--tile-size)*0.38); color: #7a5a1a; }
@@ -437,7 +431,7 @@
             <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
             <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
             <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
-            <option value="moving_train">🚃 走る列車 (移動する列車・急行化)</option>
+
         </select>
     </div>
     <div class="select-group">
@@ -564,7 +558,7 @@
                 <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
                 <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
                 <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
-                <option value="moving_train">🚃 走る列車 (移動する列車・急行化)</option>
+    
             </select>
         </div>
         <div class="select-group">
@@ -795,9 +789,6 @@ let tempSwamps = [];     // [{r,c,origTile,expiresAt}] temporary swamp tiles
 let colosseumPoints = { player: 0, cpu: 0 };
 let colosseumGoalSpawned = { player: false, cpu: false };
 let colosseumLastScoreTurn = { player: -1, cpu: -1 };
-// Moving Train stage
-let movingTrainRow = 3;
-let movingTrainDir = 1;  // 1=down, -1=up
 // Necromancer / Skyfort bridges
 let fallenSkyfortBridges = [];  // [{r,c}] skyfort_bridge tiles that collapsed (restored next turn)
 let worldManagerHitFromAfar = false; // 世界の管理者: 遠距離(4マス以上)から被弾フラグ
@@ -2060,7 +2051,7 @@ function getLoS(a, targetPos) {
 }
 
 const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil'];
-const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','moving_train'];
+const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum'];
 
 function resolveJob(job) {
     return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
@@ -2564,22 +2555,6 @@ function initBoard(stageType) {
         // Inner pillars
         [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
         colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1};
-    } else if (stageType === 'moving_train') {
-        // === MOVING TRAIN ===
-        for (let c2=0; c2<SIZE; c2++) if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
-        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
-            if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='train_ground';
-        }
-        // Rail tracks at col 6 and col 14
-        for (let r2=0; r2<SIZE; r2++) {
-            if (!isNoRockZone(r2,6)) board[r2][6]='track_tile';
-            if (!isNoRockZone(r2,14)) board[r2][14]='track_tile';
-        }
-        // Level crossing gates
-        [[4,6],[4,14],[16,6],[16,14]].forEach(([r2,c2]) => { board[r2][c2]='crossing_gate'; });
-        // Central walkable bridge
-        board[10][10]='bridge';
-        movingTrainRow = 3; movingTrainDir = 1;
     } else {
         let placed = false;
         while (!placed) {
@@ -2599,7 +2574,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','train_ground','track_tile','crossing_gate','swamp_tile'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','swamp_tile'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2687,7 +2662,6 @@ function initEntities(pJob, difficulty = "1") {
     colosseumPoints = {player:0,cpu:0};
     colosseumGoalSpawned = {player:false,cpu:false};
     colosseumLastScoreTurn = {player:-1,cpu:-1};
-    movingTrainRow = 3; movingTrainDir = 1;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -2720,9 +2694,6 @@ function initEntities(pJob, difficulty = "1") {
         });
     } else if (activeStage === 'chaos') {
         // Yeti spawns at turn 3 via startTurn
-    } else if (activeStage === 'moving_train') {
-        // Spawn the moving train entity
-        entities.push({id:'mt_train', type:'moving_train_entity', name:'🚃列車', team:'vehicle', r:3, c:6, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0});
     }
     // Night town: diagonal corner starts + boats in river
     if (activeStage === 'nighttown') {
@@ -3938,22 +3909,6 @@ function startTurn(team, skipEffects = false) {
                 }
             });
         }
-        // Moving Train events
-        if (activeStage === 'moving_train') {
-            let trainEnt = entities.find(e => e.id==='mt_train');
-            if (!trainEnt) {
-                trainEnt = {id:'mt_train', type:'moving_train_entity', name:'🚃列車', team:'vehicle', r:movingTrainRow, c:6, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0};
-                entities.push(trainEnt);
-            }
-            let speed = turn >= 10 ? 2 : 1;
-            for (let step=0; step<speed; step++) {
-                let nextRow = trainEnt.r + movingTrainDir;
-                if (nextRow < 0 || nextRow >= SIZE) { movingTrainDir *= -1; nextRow = trainEnt.r + movingTrainDir; }
-                entities.forEach(e => { if (e.hp>0 && e.r===nextRow && e.c===trainEnt.c && e!==trainEnt && !e.invin) { e.hp-=3; knockback(e,2,trainEnt); msg(`🚃 列車が${e.name}を轢いた！3ダメ！`, true); } });
-                movingTrainRow = nextRow; trainEnt.r = nextRow;
-            }
-            if (turn === 10) msg("🚃 列車が急行モードに突入！速度2倍！", true);
-        }
         // Temp swamp cleanup
         tempSwamps = tempSwamps.filter(sw => {
             if (turn > sw.expiresAt) { if (board[sw.r]?.[sw.c]==='swamp_tile') board[sw.r][sw.c]=sw.origTile; return false; }
@@ -4501,10 +4456,6 @@ function render() {
         } else if (activeStage === 'misty_lake') {
             si.style.display = 'block';
             si.textContent = `🌫️ 霧の湖 — 風${mistyLakeFogCleared ? '（晴れ！）' : `(あと${3 - ((turn-1)%3)}T)`}`;
-        } else if (activeStage === 'moving_train') {
-            let trainEnt = entities.find(e => e.id === 'mt_train' && e.hp > 0);
-            si.style.display = 'block';
-            si.textContent = `🚃 列車位置 — row${trainEnt ? trainEnt.r : '?'} col${trainEnt ? trainEnt.c : '?'}${turn >= 10 ? ' 【急行モード】' : ''}`;
         } else {
             // Show necromancer soul count if applicable
             let myNecro = entities.find(e => e.type === 'necromancer' && e.team === myTeam() && e.hp > 0);
