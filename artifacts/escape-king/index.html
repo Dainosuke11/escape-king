@@ -3024,7 +3024,6 @@ function processTurnStartEffects(e) {
         if (e.stealthTimer <= 0) { 
             e.stealth = false; 
             if (e.type === 'assassin') { e.maxAp = 2; if (e.ap > 2) e.ap = 2; }
-            if (e.type === 'small') msg("小鬼の潜伏状態が解除された！", true);
         } 
     }
     if (e.whistleBuff > 0) {
@@ -3509,8 +3508,7 @@ function startTurn(team, skipEffects = false) {
                     }
                 }
             }
-            if (spawnedSmall) msg("🔯 魔法陣からモンスターが出現！小鬼が潜伏状態に入った！(4ターン)", true);
-            else msg("🔯 魔法陣からモンスターが出現！", true);
+            msg("🔯 魔法陣からモンスターが出現！", true);
         }
 
         // Big River: Kraken spawns at turn 3, then every 5 turns (3, 8, 13, ...)
@@ -7724,7 +7722,7 @@ function spawnMonster(r, c) {
     if (rand < 0.1) { m.type = 'big'; m.name = '大鬼'; m.hp = 3; m.maxHp = 3; m.abilities.fireball = 99; m.abilities.drop_rock = 99; }
     else if (rand < 0.35) { m.type = 'red'; m.name = '赤鬼'; m.hp = 2; m.maxHp = 2; m.abilities.fireball = 99; }
     else if (rand < 0.6) { m.type = 'blue'; m.name = '青鬼'; m.hp = 2; m.maxHp = 2; m.ap=3; m.maxAp=3; m.abilities.throwing_knife = 99; }
-    else { m.type = 'small'; m.name = '小鬼'; m.hp = 1; m.maxHp = 1; m.abilities.throwing_knife = 99; m.stealth = true; m.stealthTimer = 4; }
+    else { m.type = 'small'; m.name = '小鬼'; m.hp = 1; m.maxHp = 1; m.abilities.throwing_knife = 99; }
     entities.push({...m, id: 'npc'+Date.now()});
     return m.type;
 }
