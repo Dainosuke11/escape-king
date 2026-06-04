@@ -3184,28 +3184,54 @@ function processTurnStartEffects(e) {
             }
         }
         let wg = e.waterGauge || 0;
-        // ゲージ≥29: AP+2・ATK+2 (fullWaterBuff) — ターン開始時に毎回評価
+        // ゲージ≥29: AP+2・ATK+2 (fullWaterBuff) — ≥20の+1の代わりに+2
         if (wg >= 29) {
             if (!e.fullWaterBuff) {
-                e.maxAp = Math.min(e.maxAp+2,6); e.ap=Math.min(e.ap,e.maxAp);
-                e.atkBonus=(e.atkBonus||0)+2;
+                if (e.highWaterBuff) {
+                    // +1→+2へアップグレード（差分+1ずつ追加）
+                    e.maxAp = Math.min(e.maxAp+1,6); e.ap=Math.min(e.ap,e.maxAp);
+                    e.atkBonus=(e.atkBonus||0)+1;
+                    e.highWaterBuff=false;
+                } else {
+                    e.maxAp = Math.min(e.maxAp+2,6); e.ap=Math.min(e.ap,e.maxAp);
+                    e.atkBonus=(e.atkBonus||0)+2;
+                }
                 e.fullWaterBuff=true;
                 msg(`🌊 ${e.name}のゲージ29以上！AP+2・ATK+2！`, true);
             }
+        } else if (wg >= 20) {
+            // ゲージ≥20: AP+1・ATK+1 (highWaterBuff)
+            if (e.fullWaterBuff) {
+                // +2→+1へダウングレード（差分-1ずつ戻す）
+                e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp);
+                e.atkBonus=Math.max(0,(e.atkBonus||0)-1);
+                e.fullWaterBuff=false; e.highWaterBuff=true;
+                msg(`🌊 ${e.name}のゲージ29未満！AP+1・ATK+1に戻った！`, true);
+            } else if (!e.highWaterBuff) {
+                e.maxAp = Math.min(e.maxAp+1,5); e.ap=Math.min(e.ap,e.maxAp);
+                e.atkBonus=(e.atkBonus||0)+1;
+                e.highWaterBuff=true;
+                msg(`🌊 ${e.name}のゲージ20以上！AP+1・ATK+1！`, true);
+            }
         } else {
+            // バフ解除
             if (e.fullWaterBuff) {
                 e.maxAp=Math.max(1,e.maxAp-2); e.ap=Math.min(e.ap,e.maxAp);
-                e.atkBonus=Math.max(0,(e.atkBonus||0)-2);
-                e.fullWaterBuff=false;
+                e.atkBonus=Math.max(0,(e.atkBonus||0)-2); e.fullWaterBuff=false;
+            }
+            if (e.highWaterBuff) {
+                e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp);
+                e.atkBonus=Math.max(0,(e.atkBonus||0)-1); e.highWaterBuff=false;
             }
         }
-        // ゲージ≥15: ランダム3アビリティ回数+1（閾値超えたとき一度だけ）
+        // ゲージ=15到達時(一度だけ): HP+1・ランダム3アビリティ回数+1
         if (wg >= 15 && !e.midWaterBuff) {
+            e.hp = Math.min(e.hp + 1, e.maxHp);
             let abilKeys = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]||0)>0&&e.abilities[k]!==999);
             let picks = abilKeys.sort(()=>Math.random()-0.5).slice(0,3);
             picks.forEach(k=>{ if((e.abilities[k]||0)!==999) e.abilities[k]++; });
             e.midWaterBuff = true;
-            if (picks.length > 0) msg(`🌊 ${e.name}ゲージ15以上！${picks.join('・')}回数+1！`, true);
+            msg(`🌊 ${e.name}ゲージ15以上！HP+1${picks.length>0?'・'+picks.join('・')+'回数+1':''}！`, true);
         } else if (wg < 15) { e.midWaterBuff = false; }
         // ゲージ≤3危険（0より大きい場合）
         if (wg <= 3 && wg > 0 && !e.invin) {
@@ -7196,10 +7222,13 @@ function executeSkill(se) {
         if (gauge <= 0) { msg("💧 ウォーターゲージがない！水マスに入ってゲージを溜めよう！"); return false; }
         se.hydroPumpGauge = gauge;
         se.waterGauge = 0;
-        // ハイドロポンプでゲージを全消費 → fullWaterBuff解除
+        // ハイドロポンプでゲージを全消費 → バフ解除
         if (se.fullWaterBuff) {
             se.maxAp = Math.max(1, se.maxAp - 2); se.ap = Math.min(se.ap, se.maxAp);
             se.atkBonus = Math.max(0, (se.atkBonus||0) - 2); se.fullWaterBuff = false;
+        } else if (se.highWaterBuff) {
+            se.maxAp = Math.max(1, se.maxAp - 1); se.ap = Math.min(se.ap, se.maxAp);
+            se.atkBonus = Math.max(0, (se.atkBonus||0) - 1); se.highWaterBuff = false;
         }
         let rd = gauge <= 5 ? "直線3・威力3" : gauge <= 15 ? "直線5・威力4" : gauge <= 25 ? "直線8・幅3・威力5" : "端まで・幅3・威力6";
         msg(`💦 ハイドロポンプ！ゲージ${gauge}消費(${rd})！方向を選んでください！`);
