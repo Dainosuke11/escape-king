@@ -3127,10 +3127,18 @@ function processTurnStartEffects(e) {
         e.burnTimer--;
         if (!e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は燃焼中！1ダメージ！(残${e.burnTimer}T)`, true); }
     }
-    // リミッター解除 毎ターン自傷・APコスト-1補填
-    if (e.limiterReleased && !e.invin) {
-        e.hp -= 3;
-        msg(`⚙️ ${e.name}はリミッター解除の反動で3ダメージ！`, true);
+    // リミッター解除 毎ターン自傷・APコスト-1補填（3ターン）
+    if ((e.limiterReleased||0) > 0) {
+        if (!e.invin) { e.hp -= 3; msg(`⚙️ ${e.name}はリミッター解除の反動で3ダメージ！(残${e.limiterReleased}T)`, true); }
+        e.limiterReleased--;
+        if (e.limiterReleased <= 0) {
+            e.limiterReleased = 0;
+            e.limiterApCostReduction = false;
+            e.atkBonus = Math.max(0, (e.atkBonus||0) - 1);
+            e.maxHp = Math.max(1, e.maxHp - 10);
+            if (e.hp > e.maxHp) e.hp = e.maxHp;
+            msg(`⚙️ ${e.name}のリミッター解除が終了！効果が解除された！`, true);
+        }
     }
     if (e.limiterApCostReduction && e.type === 'cyborg') {
         e.ap = Math.min(e.ap + 1, e.maxAp);
@@ -7239,16 +7247,16 @@ function executeSkill(se) {
     }
     // ====== 機械兵 スキル: リミッター解除 ======
     if (se.type === 'cyborg') {
-        if (se.limiterReleased) { msg("⚙️ リミッター解除は既に発動中！"); return false; }
+        if ((se.limiterReleased||0) > 0) { msg("⚙️ リミッター解除は既に発動中！"); return false; }
         if (turn < 2) { msg("⚙️ リミッター解除は2ターン目から使用可能！"); return false; }
         se.maxHp += 10;
         se.hp = Math.min(se.maxHp, se.hp + 10);
         for (let k of Object.keys(se.abilities)) { if (se.abilities[k]!==999) se.abilities[k]++; }
         se.atkBonus = (se.atkBonus||0) + 1;
-        se.limiterReleased = true;
+        se.limiterReleased = 3;
         // リミッター解除中：アビリティ発動コストを-1（最低0）
         se.limiterApCostReduction = true;
-        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・攻撃力+1・アビリティコスト-1！毎ターン3ダメージ！"); return true;
+        msg("⚙️ リミッター解除！体力上限+10・HP+10・全アビリティ+1・攻撃力+1・アビリティコスト-1！3ターン継続・毎ターン3自傷！"); return true;
     }
     // ====== エイリアン スキル: マインドコントロール ======
     if (se.type === 'alien') {
@@ -9187,8 +9195,8 @@ function updateUI() {
         };
         if ((selectedEntity.burnTimer||0) > 0)
             addStatus(`🔥 燃焼中！残り${selectedEntity.burnTimer}ターン(毎ターン1ダメ)`, '#c0392b');
-        if (selectedEntity.limiterReleased)
-            addStatus('⚙️ リミッター解除中！毎ターン3自傷ダメージ', '#8e44ad');
+        if ((selectedEntity.limiterReleased||0) > 0)
+            addStatus(`⚙️ リミッター解除中！残り${selectedEntity.limiterReleased}ターン・毎ターン3自傷`, '#8e44ad');
         if (selectedEntity.counterBarrierActive)
             addStatus(`⚡ カウンターバリア発動中！全ダメ無効＋反射`, '#d35400');
         if ((selectedEntity.transformCooldownLeft||0) > 0)
