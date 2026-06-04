@@ -3873,10 +3873,43 @@ function startTurn(team, skipEffects = false) {
                     }
                 }
             });
-            // === 毎ターン外周1マス縮小＋押し込み ===
-            colosseumShrinkLayer++;
-            {
+            // === 2ターンに1度 外周縮小＋押し込み（前レイヤー修復付き）===
+            if (turn % 2 === 0) {
+                colosseumShrinkLayer++;
                 let sl = colosseumShrinkLayer;
+
+                // --- 前レイヤーの壁を修復（岩砕きで壊された穴を塞ぐ）---
+                const pushOffRepaired = (r2, c2) => {
+                    let onIt = entities.filter(e => e.hp > 0 && e.r === r2 && e.c === c2);
+                    onIt.forEach(e => {
+                        let dr = e.r < 10 ? 1 : e.r > 10 ? -1 : 0;
+                        let dc = e.c < 10 ? 1 : e.c > 10 ? -1 : 0;
+                        if (dr === 0 && dc === 0) dc = 1;
+                        for (let step = 1; step <= 6; step++) {
+                            let nr = e.r + dr * step, nc = e.c + dc * step;
+                            if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) break;
+                            if (board[nr]?.[nc] !== 'rock' && isWalkable(nr, nc) &&
+                                !entities.some(o => o.hp > 0 && o.r === nr && o.c === nc && o !== e)) {
+                                e.r = nr; e.c = nc; break;
+                            }
+                        }
+                        if (!e.invin) e.hp = Math.max(0, e.hp - 1);
+                    });
+                };
+                if (sl > 1) {
+                    let ps = sl - 1;
+                    let pTop = 4 + ps, pBot = 16 - ps, pLeft = 3 + ps, pRight = 17 - ps;
+                    for (let c2 = pLeft; c2 <= pRight; c2++) {
+                        if (board[pTop]?.[c2] !== 'rock') { pushOffRepaired(pTop, c2); board[pTop][c2] = 'rock'; }
+                        if (board[pBot]?.[c2] !== 'rock') { pushOffRepaired(pBot, c2); board[pBot][c2] = 'rock'; }
+                    }
+                    for (let r2 = pTop + 1; r2 < pBot; r2++) {
+                        if (board[r2]?.[pLeft]  !== 'rock') { pushOffRepaired(r2, pLeft);  board[r2][pLeft]  = 'rock'; }
+                        if (board[r2]?.[pRight] !== 'rock') { pushOffRepaired(r2, pRight); board[r2][pRight] = 'rock'; }
+                    }
+                }
+
+                // --- 新レイヤー境界を押し込み＋岩化 ---
                 let newTopRow = 4 + sl, newBotRow = 16 - sl;
                 let newLeftCol = 3 + sl, newRightCol = 17 - sl;
                 if (newTopRow < newBotRow && newLeftCol < newRightCol) {
@@ -3886,7 +3919,6 @@ function startTurn(team, skipEffects = false) {
                             ((e.r === newTopRow || e.r === newBotRow) && e.c >= newLeftCol && e.c <= newRightCol) ||
                             ((e.c === newLeftCol || e.c === newRightCol) && e.r > newTopRow && e.r < newBotRow);
                         if (!onWall) return;
-                        // 中心(10,10)方向へ押し込み
                         let dr = e.r < 10 ? 1 : e.r > 10 ? -1 : 0;
                         let dc = e.c < 10 ? 1 : e.c > 10 ? -1 : 0;
                         if (dr === 0 && dc === 0) dc = 1;
@@ -3902,7 +3934,6 @@ function startTurn(team, skipEffects = false) {
                         if (!e.invin) e.hp = Math.max(0, e.hp - 1);
                         pushMsgs.push(e.name);
                     });
-                    // 新しい境界を岩に変換
                     for (let c2 = newLeftCol; c2 <= newRightCol; c2++) {
                         if (['arena_floor','arena_goal'].includes(board[newTopRow]?.[c2])) board[newTopRow][c2] = 'rock';
                         if (['arena_floor','arena_goal'].includes(board[newBotRow]?.[c2])) board[newBotRow][c2] = 'rock';
@@ -3911,7 +3942,7 @@ function startTurn(team, skipEffects = false) {
                         if (['arena_floor','arena_goal'].includes(board[r2]?.[newLeftCol])) board[r2][newLeftCol] = 'rock';
                         if (['arena_floor','arena_goal'].includes(board[r2]?.[newRightCol])) board[r2][newRightCol] = 'rock';
                     }
-                    let shrinkMsg = `⚔️ 壁が迫る！アリーナが縮小！`;
+                    let shrinkMsg = `⚔️ 壁が迫る！アリーナが縮小！（岩砕きで壊した壁は修復された）`;
                     if (pushMsgs.length > 0) shrinkMsg += ` ${pushMsgs.join('・')}が押し込まれ1ダメ！`;
                     msg(shrinkMsg, true);
                 }
