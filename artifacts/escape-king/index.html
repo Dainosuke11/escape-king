@@ -791,6 +791,7 @@ let tempSwamps = [];     // [{r,c,origTile,expiresAt}] temporary swamp tiles
 let colosseumPoints = { player: 0, cpu: 0 };
 let colosseumGoalSpawned = { player: false, cpu: false };
 let colosseumLastScoreTurn = { player: -1, cpu: -1 };
+let colosseumShrinkLayer = 0;
 // Necromancer / Skyfort bridges
 let fallenSkyfortBridges = [];  // [{r,c}] skyfort_bridge tiles that collapsed (restored next turn)
 let worldManagerHitFromAfar = false; // 世界の管理者: 遠距離(4マス以上)から被弾フラグ
@@ -2556,7 +2557,7 @@ function initBoard(stageType) {
         board[10][3]='arena_floor'; board[10][17]='arena_floor';
         // Inner pillars
         [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
-        colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1};
+        colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1}; colosseumShrinkLayer = 0;
     } else {
         let placed = false;
         while (!placed) {
@@ -2664,6 +2665,7 @@ function initEntities(pJob, difficulty = "1") {
     colosseumPoints = {player:0,cpu:0};
     colosseumGoalSpawned = {player:false,cpu:false};
     colosseumLastScoreTurn = {player:-1,cpu:-1};
+    colosseumShrinkLayer = 0;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -3846,11 +3848,12 @@ function startTurn(team, skipEffects = false) {
         }
         // Colosseum events
         if (activeStage === 'colosseum') {
-            // スコア集計 — NPC撃破得点をコマ強さで決める
+            // スコア集計 — _colossPts優先、なければタイプ別
             const colossStrengthPts = (e) => {
-                if (e.type === 'knight' || e.type === 'cyborg') return 4;
-                if (e.type === 'archer' || e.type === 'lancer') return 3;
-                if (e.type === 'monk' || e.type === 'wizard') return 3;
+                if (e._colossPts) return e._colossPts;
+                if (e.type === 'knight' || e.type === 'cyborg' || e.type === 'werewolf') return 4;
+                if (e.type === 'archer' || e.type === 'lancer' || e.type === 'monk' || e.type === 'blue_oni' || e.type === 'red_oni') return 3;
+                if (e.type === 'frankenstein' || e.type === 'vampire' || e.type === 'salamander' || e.type === 'shark' || e.type === 'skeleton_soldier') return 2;
                 return 1;
             };
             entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc' && e.lastAttackTeam).forEach(e => {
@@ -3872,43 +3875,85 @@ function startTurn(team, skipEffects = false) {
                     }
                 }
             });
-            // ターン経過で壁を縮める（5ターンごとにアリーナ縮小）
-            if (turn >= 5 && turn % 5 === 0) {
-                let shrinkMargin = Math.floor(turn / 5);
-                let minR = 4 + shrinkMargin, maxR = 16 - shrinkMargin;
-                let minC = 3 + shrinkMargin, maxC = 17 - shrinkMargin;
-                if (minR <= maxR && minC <= maxC) {
-                    [minR, maxR].forEach(row => {
-                        for (let c2=minC; c2<=maxC; c2++) {
-                            if(board[row]?.[c2]==='arena_floor' && !isNoRockZone(row,c2) && !entities.some(e=>e.hp>0&&e.r===row&&e.c===c2)) {
-                                board[row][c2]='rock';
+            // === 毎ターン外周1マス縮小＋押し込み ===
+            colosseumShrinkLayer++;
+            {
+                let sl = colosseumShrinkLayer;
+                let newTopRow = 4 + sl, newBotRow = 16 - sl;
+                let newLeftCol = 3 + sl, newRightCol = 17 - sl;
+                if (newTopRow < newBotRow && newLeftCol < newRightCol) {
+                    let pushMsgs = [];
+                    entities.filter(e => e.hp > 0).forEach(e => {
+                        let onWall =
+                            ((e.r === newTopRow || e.r === newBotRow) && e.c >= newLeftCol && e.c <= newRightCol) ||
+                            ((e.c === newLeftCol || e.c === newRightCol) && e.r > newTopRow && e.r < newBotRow);
+                        if (!onWall) return;
+                        // 中心(10,10)方向へ押し込み
+                        let dr = e.r < 10 ? 1 : e.r > 10 ? -1 : 0;
+                        let dc = e.c < 10 ? 1 : e.c > 10 ? -1 : 0;
+                        if (dr === 0 && dc === 0) dc = 1;
+                        let pushed = false;
+                        for (let step = 1; step <= 6 && !pushed; step++) {
+                            let nr = e.r + dr * step, nc = e.c + dc * step;
+                            if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) break;
+                            if (board[nr]?.[nc] !== 'rock' && isWalkable(nr, nc) &&
+                                !entities.some(o => o.hp > 0 && o.r === nr && o.c === nc && o !== e)) {
+                                e.r = nr; e.c = nc; pushed = true;
                             }
                         }
+                        if (!e.invin) e.hp = Math.max(0, e.hp - 1);
+                        pushMsgs.push(e.name);
                     });
-                    [minC, maxC].forEach(col => {
-                        for (let r2=minR; r2<=maxR; r2++) {
-                            if(board[r2]?.[col]==='arena_floor' && !isNoRockZone(r2,col) && !entities.some(e=>e.hp>0&&e.r===r2&&e.c===col)) {
-                                board[r2][col]='rock';
-                            }
-                        }
-                    });
-                    msg(`⚔️ アリーナが縮小した！`, true);
+                    // 新しい境界を岩に変換
+                    for (let c2 = newLeftCol; c2 <= newRightCol; c2++) {
+                        if (['arena_floor','arena_goal'].includes(board[newTopRow]?.[c2])) board[newTopRow][c2] = 'rock';
+                        if (['arena_floor','arena_goal'].includes(board[newBotRow]?.[c2])) board[newBotRow][c2] = 'rock';
+                    }
+                    for (let r2 = newTopRow + 1; r2 < newBotRow; r2++) {
+                        if (['arena_floor','arena_goal'].includes(board[r2]?.[newLeftCol])) board[r2][newLeftCol] = 'rock';
+                        if (['arena_floor','arena_goal'].includes(board[r2]?.[newRightCol])) board[r2][newRightCol] = 'rock';
+                    }
+                    let shrinkMsg = `⚔️ 壁が迫る！アリーナが縮小！`;
+                    if (pushMsgs.length > 0) shrinkMsg += ` ${pushMsgs.join('・')}が押し込まれ1ダメ！`;
+                    msg(shrinkMsg, true);
                 }
             }
-            // 複数のモンスタータイプをランダム召喚
-            if (turn % 2 === 0) {
-                let spot = randomEmptyCells(1)[0];
-                if (spot) {
-                    const colossTypes = [
-                        {type:'gladiator',name:'剣闘士',hp:3,ap:2,ab:{sword:999,punch:999},pts:1},
-                        {type:'archer',   name:'弓闘士',hp:2,ap:2,ab:{bow:999},           pts:3},
-                        {type:'lancer',   name:'槍闘士',hp:4,ap:2,ab:{spear:999},          pts:3},
-                        {type:'monk',     name:'拳闘士',hp:3,ap:2,ab:{punch:999,smash_slash:3},pts:3}
-                    ];
-                    let ct = colossTypes[Math.floor(Math.random()*colossTypes.length)];
-                    entities.push({id:ct.type+Date.now(), type:ct.type, name:ct.name, team:'npc', r:spot.r, c:spot.c, hp:ct.hp, maxHp:ct.hp, ap:ct.ap, maxAp:ct.ap, abilities:{...ct.ab}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:1, _colossPts:ct.pts});
+            // === 3ターンに1度、各ステージのランダムキャラ2体を召喚 ===
+            if (turn % 3 === 0) {
+                const allColossMobs = [
+                    {type:'gladiator',    name:'剣闘士',          hp:3,ap:2,ab:{sword:999,punch:999},     pts:1},
+                    {type:'archer',       name:'弓闘士',           hp:2,ap:2,ab:{bow:999},                pts:3},
+                    {type:'lancer',       name:'槍闘士',           hp:4,ap:2,ab:{spear:999},              pts:3},
+                    {type:'monk',         name:'拳闘士',           hp:3,ap:2,ab:{punch:999,smash_slash:3},pts:3},
+                    {type:'wolf',         name:'オオカミ',         hp:2,ap:3,ab:{bite:999},               pts:1},
+                    {type:'zombie',       name:'ゾンビ',           hp:1,ap:2,ab:{bite:999},               pts:1},
+                    {type:'frankenstein', name:'フランケン',       hp:3,ap:2,ab:{punch:999},              pts:2},
+                    {type:'bat',          name:'コウモリ',         hp:1,ap:3,ab:{bite:999},               pts:1,flying:true},
+                    {type:'werewolf',     name:'オオカミ男',       hp:5,ap:3,ab:{bite:999},               pts:4},
+                    {type:'vampire',      name:'ヴァンパイア',     hp:3,ap:2,ab:{drain:999},              pts:2},
+                    {type:'salamander',   name:'サラマンダー',     hp:3,ap:2,ab:{bite:999},               pts:2},
+                    {type:'shark',        name:'サメ',             hp:2,ap:3,ab:{bite:999},               pts:2},
+                    {type:'eel',          name:'ウツボ',           hp:2,ap:2,ab:{bite:999},               pts:1},
+                    {type:'skeleton_soldier',name:'スケルトン騎士',hp:3,ap:2,ab:{sword:999},              pts:2},
+                    {type:'blue_oni',     name:'青鬼',             hp:5,ap:2,ab:{punch:999},              pts:3},
+                    {type:'red_oni',      name:'赤鬼',             hp:5,ap:2,ab:{punch:999},              pts:3},
+                ];
+                let spots = randomEmptyCells(2);
+                spots.forEach(spot => {
+                    let ct = allColossMobs[Math.floor(Math.random() * allColossMobs.length)];
+                    entities.push({
+                        id: ct.type + Date.now() + Math.floor(Math.random()*9999),
+                        type: ct.type, name: ct.name, team: 'npc',
+                        r: spot.r, c: spot.c,
+                        hp: ct.hp, maxHp: ct.hp, ap: ct.ap, maxAp: ct.ap,
+                        abilities: {...ct.ab},
+                        skillUsed: true, stealth: false, stealthTimer: 0,
+                        invin: false, invinTimer: 0, poisonTimer: 0,
+                        soulValue: 1, _colossPts: ct.pts,
+                        ...(ct.flying ? {flying: true} : {})
+                    });
                     msg(`⚔️ ${ct.name}が入場！`, true);
-                }
+                });
             }
             ['player','cpu'].forEach(team => {
                 if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
