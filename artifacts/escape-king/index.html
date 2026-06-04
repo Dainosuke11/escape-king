@@ -660,7 +660,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×5】半径2味方バリア+HP1/正面5岩。【五芒星の陣×5】半径3結界1T/敵AP-1+全封印。【放魂術×5】半径3/威3+吹飛5+AP-1+封印+悪霊召喚。【引魂術×5】半径5引寄せ/威3+AP-1+封印。【式神召喚×5(5T~)】狐火+大鬼召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で半径5全敵を引き寄せor吹飛ばし＋全封印解除。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×3】半径2味方バリア+HP1/正面5岩。【五芒星の陣×3】半径3結界1T/敵AP-1+全封印。【放魂術×3】半径3/威3+吹飛5+AP-1+封印+悪霊召喚。【引魂術×3】半径5引寄せ/威3+AP-1+封印。【式神召喚×3(5T~)】狐火+大鬼召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で半径5全敵を引き寄せor吹飛ばし＋全封印解除。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">😈 デビル (HP30/AP2/飛行)</div><div class="guide-job-desc">【爪で切り裂く×10】半径1/威1。敵がバフ取得済みなら+2ダメ+吹飛+AP-1。【じわじわ攻める×5】2マスダッシュ＋元の場所に岩。【甘い蜜×3】半径2/敵HP+2+バリア付与。バリア中全アビ封印+AP-1。【活性化の呪い×3】半径3/2T呪い:AP+1・移動ごと1ダメ。【ご褒美の罠×3】半径2/前方3岩・後方アイテム・全封印1T。【コウモリ潜入×2】半径5/3ダメ＋周囲にコウモリ召喚→1T後ヴァンパイア味方化。【運命の選択×3】半径3/敵を自陣方向3マス移動＋5ダメ+AP-2。【金依存症×3】半径2/2ダメ+吹飛/前3岩/後4鉱山/毒+全封印。【お楽しみのプレゼント×1】半径3/2ダメ+周辺プレゼント。★スキル「寿命の前借り」：半径2に暗黒フィールド/フィールド内の敵HP+5・AP-2→次T10ダメ+AP-1+全封印。</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
@@ -1252,7 +1252,7 @@ const JOB_DATA = {
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_head: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
     world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 5 }, hp: 30, ap: 2 },
-    onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 5, oni_arm: 10, divine_speed: 5, talisman_barrier: 5, pentagram_formation: 5, soul_release: 5, soul_pull: 5, shikigami_summon: 5 }, hp: 30, ap: 2 },
+    onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 3, oni_arm: 10, divine_speed: 5, talisman_barrier: 3, pentagram_formation: 3, soul_release: 3, soul_pull: 3, shikigami_summon: 3 }, hp: 30, ap: 2 },
     devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true }
 };
 
