@@ -255,6 +255,23 @@
         /* Curse tile (demon stage) */
         .curse_tile { background: #3b0060; }
         .curse_tile::after { content: "💀"; font-size: calc(var(--tile-size) * 0.45); }
+        /* Factory stage */
+        .factory_furnace { background: linear-gradient(135deg, #b71c1c, #e64a19, #ff6f00); border: 1px solid #ff3d00 !important; }
+        .factory_furnace::after { content: "🔥"; font-size: calc(var(--tile-size)*0.45); }
+        .factory_goal { background: #1b5e20; border: 2px solid #76ff03 !important; }
+        .factory_goal::after { content: "🚩"; font-size: calc(var(--tile-size)*0.4); }
+        .factory_conveyor { background: #37474f; }
+        .factory_conveyor.lane-fast::after { content: "◀◀"; font-size: calc(var(--tile-size)*0.28); color: #ff5252; animation: conv-fast 0.4s linear infinite; }
+        .factory_conveyor.lane-normal::after { content: "◀"; font-size: calc(var(--tile-size)*0.32); color: #ffeb3b; animation: conv-norm 0.8s linear infinite; }
+        .factory_conveyor.lane-stop::after { content: "■"; font-size: calc(var(--tile-size)*0.25); color: #78909c; }
+        .factory_conveyor.lane-boosted { border: 1px solid #ff1744 !important; }
+        .factory_conveyor.lane-boosted.lane-fast::after { animation-duration: 0.2s; color: #ff1744; }
+        .factory_conveyor.lane-boosted.lane-normal::after { animation-duration: 0.4s; color: #ff6d00; content: "◀◀"; }
+        .factory_conveyor.lane-boosted.lane-stop::after { content: "◀"; color: #ffab40; animation: conv-norm 0.8s linear infinite; }
+        @keyframes conv-fast { 0% { opacity:1; } 50% { opacity:0.4; } 100% { opacity:1; } }
+        @keyframes conv-norm { 0% { opacity:1; } 50% { opacity:0.5; } 100% { opacity:1; } }
+        .press-warn { background-color: rgba(100, 181, 246, 0.55) !important; border: 2px dashed #1565c0 !important; z-index: 5; }
+        .press-attack { background-color: #1565c0 !important; }
         /* Fog of war */
         .fog-tile { background: #08080f !important; border-color: #08080f !important; }
         .fog-tile::after { content: "" !important; }
@@ -433,6 +450,7 @@
             <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
             <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
             <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
+            <option value="factory">🏭 工場 (コンベアベルト・溶鉱炉・プレス機)</option>
 
         </select>
     </div>
@@ -560,6 +578,7 @@
                 <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
                 <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
                 <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
+            <option value="factory">🏭 工場 (コンベアベルト・溶鉱炉・プレス機)</option>
     
             </select>
         </div>
@@ -797,6 +816,10 @@ let colosseumShrinkLayer = 0;
 let fallenSkyfortBridges = [];  // [{r,c}] skyfort_bridge tiles that collapsed (restored next turn)
 let worldManagerHitFromAfar = false; // 世界の管理者: 遠距離(4マス以上)から被弾フラグ
 let pendingEarthquake = null;         // 世界の作り直し: 遅延地震 {castTurn, ownerTeam}
+// Factory stage
+let laneSpeedMap = [];        // [0..20] each row's lane speed: 'fast'|'normal'|'stop'
+let factoryPressTarget = null; // {r,c} center of press warning
+let factoryPressWarning = false; // true = warning shown this turn, will hit next even turn
 
 // ============================================================
 //  ONLINE MODE STATE
@@ -1433,7 +1456,10 @@ function getGameState() {
         souls: { player: souls.player, cpu: souls.cpu },
         nighttownCarTimer,
         carWarnTiles: JSON.parse(JSON.stringify(carWarnTiles)),
-        itemTileMap: JSON.parse(JSON.stringify(itemTileMap))
+        itemTileMap: JSON.parse(JSON.stringify(itemTileMap)),
+        laneSpeedMap: [...laneSpeedMap],
+        factoryPressTarget: factoryPressTarget ? {...factoryPressTarget} : null,
+        factoryPressWarning
     };
 }
 
@@ -1454,6 +1480,9 @@ function applyGameState(state) {
     if (state.nighttownCarTimer != null) nighttownCarTimer = state.nighttownCarTimer;
     if (state.carWarnTiles) carWarnTiles = state.carWarnTiles;
     if (state.itemTileMap) itemTileMap = state.itemTileMap;
+    if (state.laneSpeedMap) laneSpeedMap = state.laneSpeedMap;
+    if (state.factoryPressTarget !== undefined) factoryPressTarget = state.factoryPressTarget;
+    if (state.factoryPressWarning !== undefined) factoryPressWarning = state.factoryPressWarning;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -2055,7 +2084,7 @@ function getLoS(a, targetPos) {
 }
 
 const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil'];
-const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum'];
+const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory'];
 
 function resolveJob(job) {
     return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
@@ -2559,6 +2588,45 @@ function initBoard(stageType) {
         // Inner pillars
         [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
         colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1}; colosseumShrinkLayer = 0;
+    } else if (stageType === 'factory') {
+        // === FACTORY STAGE ===
+        // Clear base setup
+        for (let c2=0; c2<SIZE; c2++) {
+            if (board[10][c2]==='river'||board[10][c2]==='bridge') board[10][c2]='plains';
+            if (board[8]?.[c2]==='cannon') board[8][c2]='plains';
+            if (board[12]?.[c2]==='cannon') board[12][c2]='plains';
+        }
+        // Convert all plains to conveyor tiles
+        for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
+            if (['plains','volcano','mine','river','bridge','cannon'].includes(board[r2][c2])) board[r2][c2]='factory_conveyor';
+        }
+        // Col 0 = furnace
+        for (let r2=0; r2<SIZE; r2++) board[r2][0]='factory_furnace';
+        // Goal tiles: player goal row 0 cols 19-20, cpu goal row 20 cols 19-20
+        board[0][19]='factory_goal'; board[0][20]='factory_goal';
+        board[20][19]='factory_goal'; board[20][20]='factory_goal';
+        // Lane speed map: rows 0-6 fast, 7-13 normal, 14-20 stop
+        laneSpeedMap = [];
+        for (let r2=0; r2<SIZE; r2++) {
+            if (r2 <= 6) laneSpeedMap.push('fast');
+            else if (r2 <= 13) laneSpeedMap.push('normal');
+            else laneSpeedMap.push('stop');
+        }
+        // Initial scatter: some mines, volcanoes, item tiles on conveyor belt (cols 4-18)
+        let factoryItems = ['mine','mine','volcano','volcano','item_tile','item_tile'];
+        factoryItems.forEach(ti => {
+            for (let att=0; att<50; att++) {
+                let fr=1+Math.floor(Math.random()*(SIZE-2)), fc=4+Math.floor(Math.random()*15);
+                if (board[fr][fc]==='factory_conveyor' && !entities.some(e=>e.hp>0&&e.r===fr&&e.c===fc)) {
+                    board[fr][fc]=ti;
+                    if (ti==='item_tile') { const its=['star','shoes','sword']; itemTileMap[`${fr},${fc}`]=its[Math.floor(Math.random()*3)]; }
+                    break;
+                }
+            }
+        });
+        factoryPressTarget = null; factoryPressWarning = false;
+        return; // skip placeChurchesAndItems (factory handles items itself)
+>>>>>>> b604678 (Add Factory stage to Escape the King)
     } else {
         let placed = false;
         while (!placed) {
@@ -2578,7 +2646,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','swamp_tile'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','swamp_tile','factory_conveyor','factory_goal'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -2667,6 +2735,7 @@ function initEntities(pJob, difficulty = "1") {
     colosseumGoalSpawned = {player:false,cpu:false};
     colosseumLastScoreTurn = {player:-1,cpu:-1};
     colosseumShrinkLayer = 0;
+    laneSpeedMap = []; factoryPressTarget = null; factoryPressWarning = false;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -2699,6 +2768,23 @@ function initEntities(pJob, difficulty = "1") {
         });
     } else if (activeStage === 'chaos') {
         // Yeti spawns at turn 3 via startTurn
+    }
+    // Factory: scatter entities near col 3-5, row edges
+    if (activeStage === 'factory') {
+        let p1 = entities.find(e => e.id === 'p1');
+        let c1 = entities.find(e => e.id === 'c1');
+        // Player team → bottom edge rows 17-20, cols 3-5
+        if (p1) { p1.r = 19; p1.c = 3; }
+        // CPU team → top edge rows 0-3, cols 3-5
+        if (c1) { c1.r = 1; c1.c = 4; }
+        // Scatter any extra CPU entities
+        entities.filter(e => e.team === 'cpu' && e.id !== 'c1').forEach((e, i) => {
+            e.r = Math.min(2, i); e.c = 3 + (i % 3);
+        });
+        entities.filter(e => e.team === 'player' && e.id !== 'p1').forEach((e, i) => {
+            e.r = 19 - (i % 3); e.c = 3 + (i % 3);
+        });
+        factoryPressTarget = null; factoryPressWarning = false;
     }
     // Night town: diagonal corner starts + boats in river
     if (activeStage === 'nighttown') {
@@ -2879,6 +2965,8 @@ function processTurnStartEffects(e) {
         }
     }
     e.ap = e.maxAp;
+    // Factory press AP-1 penalty: consumed here so it survives the AP reset above
+    if (e._pressedThisTurn) { e.ap = Math.max(0, e.ap - 1); e._pressedThisTurn = false; }
     // 調和の祈り：保留中のAPボーナスを適用
     if ((e.pendingApBonus || 0) > 0) { e.ap += e.pendingApBonus; e.pendingApBonus = 0; }
     // Ocean unit on water tile: AP+1 bonus
@@ -3994,6 +4082,174 @@ function startTurn(team, skipEffects = false) {
                 }
             });
         }
+        // ===== FACTORY STAGE events =====
+        if (activeStage === 'factory') {
+            const boosted = turn >= 10;
+            const speedVal = (row) => {
+                const s = laneSpeedMap[row] || 'stop';
+                if (!boosted) return s === 'fast' ? 2 : s === 'normal' ? 1 : 0;
+                return s === 'fast' ? 4 : s === 'normal' ? 2 : 1;
+            };
+
+            // --- Press machine gimmick (every odd turn: warn; every even turn: attack) ---
+            if (turn % 2 === 1) {
+                // Warn: pick a live entity (prefer player/cpu, any)
+                let candidates = entities.filter(e => e.hp > 0);
+                if (candidates.length > 0) {
+                    let t = candidates[Math.floor(Math.random() * candidates.length)];
+                    factoryPressTarget = { r: t.r, c: t.c };
+                    factoryPressWarning = true;
+                    msg(`⚙️ プレス機が頭上に！次のターン開始時に9x9マスで落下する！`, true);
+                }
+            } else {
+                // Attack (even turn): hit before conveyor move
+                factoryPressWarning = false;
+                if (factoryPressTarget) {
+                    let hitNames = [];
+                    entities.forEach(e => {
+                        if (e.hp > 0 && !e.invin && Math.max(Math.abs(e.r - factoryPressTarget.r), Math.abs(e.c - factoryPressTarget.c)) <= 4) {
+                            e.hp -= 2;
+                            e._pressedThisTurn = true;
+                            hitNames.push(e.name);
+                        }
+                    });
+                    msg(`🏭 プレス機作動！${hitNames.length > 0 ? hitNames.join('・') + 'に2ダメ＋行動力-1！' : '(命中なし)'}`, true);
+                    checkWin();
+                    factoryPressTarget = null;
+                }
+            }
+
+            // --- Lane speed shuffle every 2 turns ---
+            if (turn > 1 && turn % 2 === 0) {
+                const groups = [[0,6],[7,13],[14,20]];
+                const speeds = ['fast','normal','stop'];
+                speeds.sort(() => Math.random() - 0.5);
+                groups.forEach(([from, to], i) => {
+                    for (let r2=from; r2<=to; r2++) laneSpeedMap[r2] = speeds[i];
+                });
+                msg(`⚙️ レーン変速！速度がシャッフルされた！`, true);
+            }
+
+            // --- Conveyor belt: move entities left based on lane speed ---
+            // Process rows separately; within each row move from col 1 upward (left-first)
+            let furnaceHitNames = [];
+            // Collect (entity, steps) pairs
+            let convMoves = [];
+            entities.filter(e => e.hp > 0).forEach(e => {
+                let steps = speedVal(e.r);
+                if (steps > 0) convMoves.push({ e, steps });
+            });
+            // Sort by column ascending (leftmost first to avoid chaining)
+            convMoves.sort((a, b) => a.e.c - b.e.c);
+            convMoves.forEach(({ e, steps }) => {
+                let newC = e.c - steps;
+                if (newC < 0) {
+                    // Pushed into furnace (col 0 or beyond) — 30 damage
+                    e.c = 0;
+                    if (!e.invin) {
+                        e.hp -= 30;
+                        furnaceHitNames.push(e.name);
+                    }
+                } else {
+                    // Try to move as far left as possible
+                    let destC = e.c;
+                    for (let step = 0; step < steps; step++) {
+                        let nc = destC - 1;
+                        if (nc < 1) { // col 0 is furnace — don't land there; damage instead
+                            e.hp -= 30;
+                            furnaceHitNames.push(e.name);
+                            destC = 0;
+                            break;
+                        }
+                        let blocked = entities.find(x => x !== e && x.hp > 0 && x.r === e.r && x.c === nc);
+                        if (blocked || !isGroundTile(board[e.r]?.[nc])) break;
+                        destC = nc;
+                    }
+                    e.c = destC;
+                }
+            });
+            // --- Conveyor belt: shift board tiles (item_tile, mine, volcano) left ---
+            const movableTiles = ['item_tile', 'mine', 'volcano'];
+            for (let r2 = 0; r2 < SIZE; r2++) {
+                let steps = speedVal(r2);
+                if (steps === 0) continue;
+                // Collect movable tiles in this row, process left-to-right
+                let tilesToMove = [];
+                for (let c2 = 1; c2 < SIZE; c2++) {
+                    if (movableTiles.includes(board[r2][c2])) {
+                        tilesToMove.push({ c: c2, tile: board[r2][c2] });
+                    }
+                }
+                tilesToMove.sort((a, b) => a.c - b.c); // left-first prevents overwrite conflicts
+                for (const { c: srcC, tile } of tilesToMove) {
+                    // Slide left up to steps, stop at first non-factory_conveyor or board edge
+                    let destC = srcC;
+                    let hitFurnace = false;
+                    for (let step = 0; step < steps; step++) {
+                        let nc = destC - 1;
+                        if (nc < 1) { hitFurnace = true; break; }
+                        if (board[r2][nc] !== 'factory_conveyor') break;
+                        destC = nc;
+                    }
+                    if (srcC === destC && !hitFurnace) continue;
+                    // Capture item value before clearing source
+                    const savedItemVal = (tile === 'item_tile') ? itemTileMap[`${r2},${srcC}`] : null;
+                    // Clear source
+                    board[r2][srcC] = 'factory_conveyor';
+                    if (tile === 'item_tile') delete itemTileMap[`${r2},${srcC}`];
+                    if (hitFurnace) {
+                        // Tile consumed by furnace — side effects
+                        if (tile === 'mine') {
+                            // Mine explodes near col 0
+                            for (let er = r2 - 1; er <= r2 + 1; er++) {
+                                entities.forEach(e => {
+                                    if (e.hp > 0 && e.r === er && e.c <= 1 && !e.invin) e.hp -= 3;
+                                });
+                            }
+                        }
+                        // item_tile and volcano just vanish into the furnace
+                    } else {
+                        // Place at destination if still factory_conveyor
+                        if (board[r2][destC] === 'factory_conveyor') {
+                            board[r2][destC] = tile;
+                            if (tile === 'item_tile' && savedItemVal) {
+                                itemTileMap[`${r2},${destC}`] = savedItemVal;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (furnaceHitNames.length > 0) msg(`🔥 溶鉱炉に飲み込まれた！${furnaceHitNames.join('・')} に30ダメ！`, true);
+            checkWin();
+
+            // --- Boost notice at turn 10 ---
+            if (turn === 10) msg(`⚠️ コンベアが加速した！速度が2倍になった！`, true);
+
+            // --- Right-edge spawns every turn: 1-2 objects at col 20 ---
+            let spawnCount = 1 + (Math.random() < 0.5 ? 1 : 0);
+            for (let i = 0; i < spawnCount; i++) {
+                let sr = 1 + Math.floor(Math.random() * (SIZE - 2));
+                if (board[sr]?.[20] === 'factory_conveyor' && !entities.some(e => e.hp > 0 && e.r === sr && e.c === 20)) {
+                    let rv = Math.random();
+                    if (rv < 0.20) {
+                        board[sr][20] = 'item_tile';
+                        const its = ['star','shoes','sword'];
+                        itemTileMap[`${sr},20`] = its[Math.floor(Math.random()*3)];
+                    } else if (rv < 0.35) {
+                        board[sr][20] = 'mine';
+                    } else if (rv < 0.45) {
+                        board[sr][20] = 'volcano';
+                    } else if (rv < 0.55) {
+                        // Purple NPC goblin
+                        entities.push({id:'factgob'+Date.now(), type:'goblin_small', name:'🟣工場ゴブリン', team:'npc',
+                            r:sr, c:20, hp:2, maxHp:2, ap:2, maxAp:2,
+                            abilities:{sword:999}, skillUsed:true, stealth:false, stealthTimer:0,
+                            invin:false, invinTimer:0, poisonTimer:0});
+                    }
+                }
+            }
+        }
         // Temp swamp cleanup
         tempSwamps = tempSwamps.filter(sw => {
             if (turn > sw.expiresAt) { if (board[sw.r]?.[sw.c]==='swamp_tile') board[sw.r][sw.c]=sw.origTile; return false; }
@@ -4463,6 +4719,18 @@ function render() {
             }
             if (activeStage === 'mountain' && rollRockWarnTiles.some(w => w.r === ar && w.c === c)) {
                 d.classList.add('sandworm-warn');
+            }
+            // Factory: lane speed classes + press warning/attack
+            if (activeStage === 'factory' && tileType === 'factory_conveyor') {
+                const ls = laneSpeedMap[ar] || 'stop';
+                d.classList.add(`lane-${ls}`);
+                if (turn >= 10) d.classList.add('lane-boosted');
+            }
+            if (activeStage === 'factory' && factoryPressTarget) {
+                if (Math.max(Math.abs(ar - factoryPressTarget.r), Math.abs(c - factoryPressTarget.c)) <= 4) {
+                    if (factoryPressWarning) d.classList.add('press-warn');
+                    else d.classList.add('press-attack');
+                }
             }
             if (fogSet.has(`${ar},${c}`)) d.classList.add('fog-tile');
 
@@ -7869,6 +8137,7 @@ function defaultGround() {
     if (activeStage === 'dungeon') return 'dungeon_ground';
     if (activeStage === 'underwater') return 'sea_floor';
     if (activeStage === 'lavaland') return 'lava_ground';
+    if (activeStage === 'factory') return 'factory_conveyor';
     return 'plains';
 }
 
@@ -8977,6 +9246,10 @@ function checkWin() {
         // Nighttown: player wins row 0 cols 11-20; cpu wins row 20 cols 0-9
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0 && e.c >= 11) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1 && e.c <= 9) || pTrapped;
+    } else if (activeStage === 'factory') {
+        // Factory: player wins row 0 cols 19-20; cpu wins row 20 cols 19-20
+        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && e.c >= 19) || cTrapped;
+        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && e.c >= 19) || pTrapped;
     } else {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
