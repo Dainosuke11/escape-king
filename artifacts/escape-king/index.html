@@ -2524,22 +2524,22 @@ function initBoard(stageType) {
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='lake_ground';
         }
-        // Center lake zone (expanded: radius+2)
-        for (let r2=5; r2<=15; r2++) for (let c2=2; c2<=18; c2++) {
+        // 湖ゾーン拡大：上下+3行(5→2, 15→18)、左右+1列(2→1, 18→19)
+        for (let r2=2; r2<=18; r2++) for (let c2=1; c2<=19; c2++) {
             if (board[r2][c2]==='lake_ground') board[r2][c2]='shallow_water';
         }
         // Cross-lake bridge
         board[10][10]='bridge';
-        // Lotus pads: only on shallow_water tiles (lake interior), creating traversal paths
+        // 蓮の葉：湖内のshallow_waterの90%をlotus_padに
         const lotusCandidates = [];
-        for (let r2=5; r2<=15; r2++) for (let c2=2; c2<=18; c2++) {
+        for (let r2=2; r2<=18; r2++) for (let c2=1; c2<=19; c2++) {
             if (board[r2][c2]==='shallow_water') lotusCandidates.push([r2,c2]);
         }
         lotusCandidates.sort(()=>Math.random()-0.5);
-        lotusCandidates.slice(0,40).forEach(([r2,c2]) => { board[r2][c2]='lotus_pad'; });
-        // Lake islands (solid ground)
+        lotusCandidates.slice(0, Math.floor(lotusCandidates.length * 0.9)).forEach(([r2,c2]) => { board[r2][c2]='lotus_pad'; });
+        // 湖の島（陸地）— 湖ゾーン内なので強制配置
         [[3,4],[3,16],[17,4],[17,16],[5,10],[15,10]].forEach(([r2,c2]) => {
-            if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE&&board[r2][c2]==='lake_ground') board[r2][c2]='lake_island';
+            if (r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE) board[r2][c2]='lake_island';
         });
         lotusPadSteps = {}; lotusSunkenTimers = {}; tempSwamps = []; mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
     } else if (stageType === 'colosseum') {
