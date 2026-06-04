@@ -974,7 +974,7 @@ const ABILITY_NAMES = {
     decoy: 'デコイ人形',
     smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
     wolf_summon: 'オオカミ召喚(5T~)', tame: 'テイム(5T~)', falcon_summon: 'ハヤブサ召喚(5T~)',
-    healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', dig: '地面掘り', hole_move: '穴移動',
+    healing_flute: '癒しの笛(HP+1)', charge_order: '追い風の笛(2T/AP+1)', howl: '遠吠え(味方ATK+1/敵AP-1+3封印)', snake_summon: '毒蛇召喚', constrict: '締め上げる(AP-1)', dig: '地面掘り', hole_move: '穴移動',
     rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)',
     rock_hide: '岩隠れ(1T無敵バリア/剥がれたら後退+岩)', tsusembo: '通せんぼ(正面3岩/次T消滅)', golem_create: 'ゴーレム制作(半径1岩消費/HP=岩数×2/5T~)',
     staff_hit: '杖で殴る(威1)', heal_ally: '治癒(HP+1)', doping: 'ドーピング(スキル)',
@@ -1122,6 +1122,9 @@ const ABILITY_TIPS = {
     healing_flute: '半径8マス内の味方全員のHPを1回復。回数3回。',
     charge_order: '追い風の笛を鳴らして半径8マス内の獣使いを除く味方コマ全員のAPを2ターン間+1する。',
     beast_fuse: '半径1の味方1体を1T間融合吸収。HP上限・AP上限・ATK+1、アビリティ引き継ぎ。次ターン終了時に解放。',
+    howl: '遠吠えを上げる。半径2マス以内の味方コマ数ぶん射程が伸びる。射程内の味方コマのATKを1ターン+1、敵コマのAPを-1しランダム3アビリティを封印。回数1。',
+    snake_summon: '隣接マスに毒蛇(HP1/AP2/毒噛みつき∞・締め上げ∞)を召喚する。回数1。',
+    constrict: '半径1マスの敵を体に巻きつく。APを-1する。回数無制限。',
     rock_avalanche: '半径3マス内の敵1体に2ダメージ。命中後、対象周辺半径2マスにランダムで岩を3個降らす。',
     drop_rock_heavy: '半径2マスの敵1体に2ダメージ＋AP-1＋吹き飛ばし。吹き飛ばした後、敵の隣接マスに岩を1個設置。',
     rock_hide: '1ターン無敵バリアを張る。バリアが破られたとき、1マス後退してバリアがあった場所に岩を置く。',
@@ -1243,7 +1246,7 @@ const JOB_DATA = {
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1, snake_summon: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
@@ -3072,6 +3075,12 @@ function processTurnStartEffects(e) {
         e.ap = Math.max(0, e.ap - 1);
     }
     // Coordinated attack buff: expires after 1 turn
+    if ((e.howlBuff||0) > 0) {
+        e.howlBuff--;
+        if (e.howlBuff <= 0) {
+            e.atkBonus = Math.max(0, (e.atkBonus||0) - 1);
+        }
+    }
     if ((e.coordBuff||0) > 0) {
         e.coordBuff--;
         if (e.coordBuff <= 0) {
@@ -4121,11 +4130,12 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'smokescreen') return maxDist === 0;
     if (mode === 'charge_order') return maxDist === 0;
     if (mode === 'healing_flute') return maxDist === 0;
+    if (mode === 'howl') return maxDist === 0;
     if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'bite') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'throw_net') return maxDist <= 2 + (se.rangeBonus||0) && target && target.team !== se.team;
-    if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon') return maxDist === 1 && isWalkable(r, c);
+    if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon' || mode === 'snake_summon') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'dig') return maxDist === 1 && (board[r]?.[c] === 'plains' || board[r]?.[c] === 'desert') && !target;
     if (mode === 'hole_move') return board[r]?.[c] === 'hole' && !target && !(se.r === r && se.c === c);
     if (mode === 'tame') return maxDist <= 2 && target && target.team !== se.team && !isJobPiece(target);
@@ -4270,6 +4280,7 @@ function isValidTarget(se, r, c, mode) {
     // 式神用アビリティ
     if (mode === 'charge') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'poison_bite') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'constrict') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     return false;
 }
 
@@ -5367,6 +5378,39 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         msg(`🎵 笛を鳴らした！半径8マス内の味方${buffed}体が2ターン間AP+1！`); used = true;
+    } else if (actionMode === 'howl') {
+        se.abilities['howl']--;
+        // 射程：2 + 半径2マス内の味方コマ数
+        let allyNearby = entities.filter(e => e.hp > 0 && e.team === se.team && e !== se && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 2).length;
+        let howlRange = 2 + allyNearby;
+        let allyBuffed = 0, enemyHit = 0;
+        entities.forEach(e => {
+            if (e.hp <= 0) return;
+            let dist = Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c));
+            if (dist > howlRange) return;
+            if (e.team === se.team) {
+                if (!(e.howlBuff > 0)) e.atkBonus = (e.atkBonus||0) + 1;
+                e.howlBuff = 1;
+                allyBuffed++;
+            } else {
+                e.ap = Math.max(0, e.ap - 1);
+                let ks = Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock').sort(() => Math.random() - 0.5).slice(0, 3);
+                if (!e.stolenLock) e.stolenLock = {};
+                ks.forEach(k => { e.stolenLock[k] = turn + 1; });
+                enemyHit++;
+            }
+        });
+        msg(`🐺 遠吠え！射程${howlRange}マス内の味方${allyBuffed}体ATK+1・敵${enemyHit}体AP-1+3封印！`); used = true;
+    } else if (actionMode === 'snake_summon') {
+        se.abilities['snake_summon']--;
+        entities.push({ id: 'snake'+Date.now(), type: 'snake', name: '毒蛇', team: se.team, r, c, hp: 1, maxHp: 1, ap: 2, maxAp: 2, abilities: { poison_bite: 999, constrict: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, turnBorn: turn });
+        msg("🐍 毒蛇を召喚！(HP1/AP2/毒噛みつき∞・締め上げ∞)"); used = true;
+    } else if (actionMode === 'constrict') {
+        if (se.abilities['constrict'] !== 999) se.abilities['constrict']--;
+        if (targetEntity && targetEntity.hp > 0) {
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            msg(`🐍 ${se.name}が締め上げた！${targetEntity.name}のAP-1！`); used = true;
+        }
     } else if (actionMode === 'unwavering_stance') {
         se.abilities['unwavering_stance']--;
         // 騎士自身：受けるダメージ+1（defDebuff）を1ターン付与
