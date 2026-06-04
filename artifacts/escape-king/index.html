@@ -229,6 +229,7 @@
         .skyfort_bridge::after { content: "橋"; font-size: calc(var(--tile-size)*0.28); color: #ffe080; }
         .light_barrier_tile { background: rgba(255,255,200,0.45) !important; border: 1px solid #ffe080 !important; box-shadow: inset 0 0 6px rgba(255,255,180,0.6); }
         .pentagram_tile { background: rgba(160,0,220,0.35) !important; border: 1px solid #cc66ff !important; box-shadow: inset 0 0 8px rgba(180,0,255,0.5); }
+        .darkness_tile { background: rgba(10,0,20,0.75) !important; border: 1px solid #440055 !important; box-shadow: inset 0 0 10px rgba(80,0,120,0.9); }
         /* Misty Lake */
         .lake_ground { background: #0a2a3d; }
         .lotus_pad { background: #2d6a4f; border: 2px solid #52b788 !important; }
@@ -411,6 +412,7 @@
             <option value="angel">👼 天使 (結界・バインド・堕天)</option>
             <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
             <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
+            <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
         </select>
     </div>
     <div class="select-group">
@@ -502,6 +504,7 @@
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
+                <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -536,6 +539,7 @@
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
+                <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
             </select>
         </div>
         <div class="select-group">
@@ -599,6 +603,7 @@
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
+                <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -655,7 +660,8 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×5】半径2味方バリア+HP3/正面5岩。【五芒星の陣×5】半径3結界1T/敵AP-1+全封印。【放魂術×5】半径3/威3+吹飛5+AP-1+封印+大悪霊召喚。【引魂術×5】半径5引寄せ/威3+AP-1+封印。【式神召喚×5(5T~)】狐火+鬼カラス+鬼蛇召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で青鬼・赤鬼・大鬼召喚＋半径5全敵を引き寄せor吹飛ばし。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×5】半径2味方バリア+HP3/正面5岩。【五芒星の陣×5】半径3結界1T/敵AP-1+全封印。【放魂術×5】半径3/威3+吹飛5+AP-1+封印+悪霊召喚。【引魂術×5】半径5引寄せ/威3+AP-1+封印。【式神召喚×5(5T~)】狐火+大鬼召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で半径5全敵を引き寄せor吹飛ばし＋全封印解除。</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">😈 デビル (HP30/AP2/飛行)</div><div class="guide-job-desc">【爪で切り裂く×10】半径1/威1。敵がバフ取得済みなら+2ダメ+吹飛+AP-1。【じわじわ攻める×5】2マスダッシュ＋元の場所に岩。【甘い蜜×3】半径2/敵HP+2+バリア付与。バリア中全アビ封印+AP-1。【活性化の呪い×3】半径3/2T呪い:AP+1・移動ごと1ダメ。【ご褒美の罠×3】半径2/前方3岩・後方アイテム・全封印1T。【コウモリ潜入×2】半径5/3ダメ＋周囲にコウモリ召喚→1T後ヴァンパイア味方化。【運命の選択×3】半径3/敵を自陣方向3マス移動＋5ダメ+AP-2。【金依存症×3】半径2/2ダメ+吹飛/前3岩/後4鉱山/毒+全封印。【お楽しみのプレゼント×1】半径3/2ダメ+周辺プレゼント。★スキル「寿命の前借り」：半径2に暗黒フィールド/フィールド内の敵HP+5・AP-2→次T10ダメ+AP-1+全封印。</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
@@ -754,6 +760,8 @@ let dungeonTorches = [];        // [[r,c],...] torch positions that illuminate r
 let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
 let lightBarrierZones = [];    // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 let pentagramZones = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
+let darknessFields = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
+let copperForcedMines = new Set(); // positions "r,c" forced to yield copper
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
 let bridgeSwitchMap = {};
@@ -1055,11 +1063,24 @@ const ABILITY_NAMES = {
     divine_speed: '神速(半径3陸移動/通過1ダメ+狐火召喚/その後全アビ使用不可)',
     talisman_barrier: '護符の結界(自/半径2味方+自バリア+HP+3/正面5岩次T消滅/全アビ使用不可)',
     pentagram_formation: '五芒星の陣(半径3/1T結界:敵AP-1+全封印/全アビ使用不可)',
-    soul_release: '放魂術(半径3/威3+吹飛5+AP-1+1T封印+大悪霊召喚/全アビ使用不可)',
+    soul_release: '放魂術(半径3/威3+吹飛5+AP-1+1T封印+悪霊召喚/全アビ使用不可)',
     soul_pull: '引魂術(半径5/目の前引寄せ/威3+AP-1+1T封印/全アビ使用不可)',
-    shikigami_summon: '式神召喚(5T~/狐火+鬼カラス+鬼蛇/全アビ使用不可)',
+    shikigami_summon: '式神召喚(5T~/狐火+大鬼/全アビ使用不可)',
     charge: '突撃(半径1/威1+残AP分追加ダメ/全AP消費)',
-    poison_bite: '毒噛み(半径1/威1/毒付与3T)'
+    poison_bite: '毒噛み(半径1/威1/毒付与3T)',
+    combo_slash: '連続斬り(半径1/威1/次T連続斬り+1/50%回数+1)',
+    escape_dash: '逃げ足(移動+元の場所に罠)',
+    rock_dash: '退路を断ち走る(移動+元の場所に岩)',
+    claw_slash: '爪で切り裂く(半径1/威1/敵バフ時+2+吹飛+AP-1)',
+    slow_assault: 'じわじわ攻める(移動+元の場所に岩)',
+    sweet_honey: '甘い蜜(半径2/敵HP+2+バリア/バリア中全封印+AP-1)',
+    activation_curse: '活性化の呪い(半径3/2T呪い:AP+1/移動ごと1ダメ)',
+    reward_trap: 'ご褒美の罠(半径2/後方アイテム+前方3岩+全封印1T)',
+    bat_infiltration: 'コウモリ潜入(半径5/3ダメ/コウモリ→1T後ヴァンパイア味方化)',
+    fate_choice: '運命の選択(半径3/敵を自陣方向3マス+5ダメ+AP-2)',
+    gold_addiction: '金依存症(半径2/威2+吹飛/前方3岩/後方4鉱山/毒+全封印1T)',
+    fun_present: 'お楽しみのプレゼント(半径3/威2/周辺プレゼント設置)',
+    lifespan_advance: '寿命の前借り(半径2暗黒フィールド/敵HP+5AP-2/次T10ダメ+AP-1+全封印)'
 };
 
 const ABILITY_TIPS = {
@@ -1114,7 +1135,7 @@ const ABILITY_TIPS = {
     peck: '隣接した敵をつつく。攻撃力1。回数無限。',
     hell_breath: '半径3マス内の全敵に3ダメージ＋AP-1＋吹き飛ばし。ドラゴンNPCに1回付与。',
     thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
-    meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
+    meditation: 'AP-2して全アビリティ使用回数を+2する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
     jet_boost: 'AP-1・HP-1して半径2マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
     laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
@@ -1198,18 +1219,30 @@ const ABILITY_TIPS = {
     light_barrier: '足元半径1マスに1ターン光の結界を展開：自分に無敵バリア付与、内部の敵にAP-2+全アビリティ封印。堕天ゲージ+1。回数3。',
     sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数1。',
     death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
-    balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数1。'
+    balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数1。',
+    combo_slash: '半径1マスの敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
+    escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
+    rock_dash: '2マス以内のマスへ高速移動。元いた場所に岩を設置する。回数5。',
+    claw_slash: '半径1マスの敵に1ダメ。対象が体力・攻撃力・アビリティを今ターンか前ターンに回復・増加させていた場合、追加2ダメ＋吹き飛ばし＋AP-1。回数10。',
+    slow_assault: '2マス以内のマスへ移動。元いた場所に岩を設置する。回数5。',
+    sweet_honey: '半径2マスの敵の体力を2回復させ1ターンバリアを付与。バリア中、全アビリティ封印＋AP-1。回数3。',
+    activation_curse: '半径3マスの敵に2T呪いをかける。呪い中はターン開始時にAP+1。ただし1マス移動するごとに1ダメージ。回数3。',
+    reward_trap: '半径2マスの敵の後方2マスにアイテム設置(40%罠/60%パワーアップ)。前方幅3マスに岩設置。全アビリティ1T封印。回数3。',
+    bat_infiltration: '半径5マスの敵に3ダメ。敵の周囲に赤コマのコウモリを召喚。1ターン後コウモリがヴァンパイアに進化して味方コマになる。回数2。',
+    fate_choice: '半径3マスの敵を自陣方向3マスへ移動させる。5ダメ＋AP-2。回数3。',
+    gold_addiction: '半径2マスの敵に2ダメ＋吹き飛ばし。前方幅3マスに岩設置。後方に鉱山マス4つ設置(3つは銅確定)。毒付与＋岩砕き以外全封印1T。回数3。',
+    fun_present: '半径3マスの敵に2ダメ。敵の周辺にプレゼント箱を1個設置。回数1。'
 };
 
 const JOB_DATA = {
-    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1, graceful_rest: 1, royal_dignity: 1, bombardment: 1 }, hp: 30, ap: 2 },
-    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1, duel: 1, heavy_armor: 1, mount_horse: 1 }, hp: 30, ap: 2 },
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1, graceful_rest: 1, royal_dignity: 1, bombardment: 1, combo_slash: 2 }, hp: 30, ap: 2 },
+    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1, duel: 1, heavy_armor: 1, mount_horse: 1, combo_slash: 2 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 1, long_snipe: 1 }, hp: 30, ap: 2 },
-    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 3, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
-    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
+    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1 }, hp: 30, ap: 2 },
-    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
+    macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 5, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
@@ -1219,7 +1252,8 @@ const JOB_DATA = {
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_head: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
     world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 5 }, hp: 30, ap: 2 },
-    onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 5, oni_arm: 10, divine_speed: 5, talisman_barrier: 5, pentagram_formation: 5, soul_release: 5, soul_pull: 5, shikigami_summon: 5 }, hp: 30, ap: 2 }
+    onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 5, oni_arm: 10, divine_speed: 5, talisman_barrier: 5, pentagram_formation: 5, soul_release: 5, soul_pull: 5, shikigami_summon: 5 }, hp: 30, ap: 2 },
+    devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true }
 };
 
 // ============================================================
@@ -2016,7 +2050,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','moving_train'];
 
 function resolveJob(job) {
@@ -2632,6 +2666,8 @@ function initEntities(pJob, difficulty = "1") {
     cursedAbilities = {};
     lightBarrierZones = [];
     pentagramZones = [];
+    darknessFields = [];
+    copperForcedMines = new Set();
     dungeonGoggles = 0;
     // Reset new stage globals
     fallenSkyfortBridges = [];
@@ -2826,6 +2862,7 @@ function processTurnStartEffects(e) {
     // ターン開始時の位置・行動記録（世界の管理者の条件判定用）
     e._prevTurnR = e.r;
     e._prevTurnC = e.c;
+    e._prevTurnHp = e.hp;
     e._usedAbilityThisTurn = false;
     if (e.type === 'world_manager') {
         e._managerDmgCountPrev = e._managerDmgCount || 0;
@@ -2872,6 +2909,40 @@ function processTurnStartEffects(e) {
             });
             e.skillUsed = true;
             msg(`🔮 ${e.name}は五芒星の結界でAP-1＋全アビリティ封印！`, true);
+        }
+    }
+    // 暗黒フィールド：フィールド内の敵に10ダメ+AP-1+全封印
+    if (darknessFields.length > 0 && board[e.r]?.[e.c] === 'darkness_tile') {
+        let dfZone = darknessFields.find(z => z.ownerTeam !== e.team && z.cells.some(cl => cl.r===e.r && cl.c===e.c));
+        if (dfZone && !e.invin && !necroShieldBlock(e)) {
+            e.hp -= 10; e.ap = Math.max(0, e.ap - 1);
+            if (!cursedAbilities[e.id]) cursedAbilities[e.id] = {};
+            Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock').forEach(k => {
+                cursedAbilities[e.id][k] = Math.max(cursedAbilities[e.id][k]||0, 1);
+            });
+            e.skillUsed = true;
+            msg(`💀 ${e.name}は暗黒フィールドの代償を払った！10ダメ+AP-1+全封印！`, true);
+        }
+    }
+    // 活性化の呪い：移動ごとに1ダメ＋AP+1
+    if (e.activationCurse && e.activationCurse.timer > 0) {
+        let acDist = Math.abs(e.r - e.activationCurse.prevR) + Math.abs(e.c - e.activationCurse.prevC);
+        if (acDist > 0 && !e.invin) { e.hp -= acDist; msg(`😈 活性化の呪い！${e.name}が${acDist}マス移動した代償で${acDist}ダメ！`, true); }
+        e.ap = Math.min(e.ap + 1, e.maxAp + 2);
+        e.activationCurse.timer--;
+        e.activationCurse.prevR = e.r; e.activationCurse.prevC = e.c;
+        if (e.activationCurse.timer <= 0) { delete e.activationCurse; msg(`😈 ${e.name}の活性化の呪いが解けた！`, true); }
+    }
+    // コウモリ変換タイマー：1T後にヴァンパイア化して味方に
+    if ((e.batConvertTimer || 0) > 0) {
+        e.batConvertTimer--;
+        if (e.batConvertTimer <= 0 && e.batConvertToTeam) {
+            e.team = e.batConvertToTeam;
+            e.type = 'vampire'; e.name = 'ヴァンパイア';
+            e.abilities = {drain: 999};
+            e.hp = 3; e.maxHp = 3; e.ap = 2; e.maxAp = 2;
+            delete e.batConvertToTeam;
+            msg(`🦇 コウモリがヴァンパイアに進化し、味方になった！`, true);
         }
     }
     // Shoes item: expire the temporary AP boost
@@ -3697,6 +3768,14 @@ function startTurn(team, skipEffects = false) {
             }
             return true;
         });
+        // 暗黒フィールドタイルクリーンアップ
+        darknessFields = darknessFields.filter(zone => {
+            if (turn > zone.turnExpires) {
+                zone.cells.forEach(({r,c}) => { if (board[r]?.[c] === 'darkness_tile') board[r][c] = (zone.origTile?.[`${r},${c}`]) || defaultGround(); });
+                return false;
+            }
+            return true;
+        });
         // Night town: vampire/wolf/werewolf every 3 turns
         if (activeStage === 'nighttown' && turn >= 3 && turn % 3 === 0) {
             const pool = ['vampire','wolf','werewolf'];
@@ -3970,6 +4049,33 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
+    if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault') {
+        let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
+        if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
+        if (dist === 0 || dist > 2) return false;
+        if (!isWalkable(r, c)) return false;
+        let srcTile2 = board[se.r]?.[se.c];
+        if (srcTile2 === 'sky_void' || srcTile2 === 'fallen_floor') return false;
+        let rawDr2 = r - se.r, rawDc2 = c - se.c;
+        if (rawDr2 !== 0 && rawDc2 === 0 && Math.abs(rawDr2) === 2) {
+            let midR2 = se.r + Math.sign(rawDr2), midC2 = se.c;
+            if (!isWalkable(midR2, midC2) || entities.some(e => e.hp > 0 && e.r === midR2 && e.c === midC2)) return false;
+        }
+        if (rawDr2 === 0 && rawDc2 !== 0 && Math.abs(rawDc2) === 2) {
+            let midR2 = se.r, midC2 = se.c + Math.sign(rawDc2);
+            if (!isWalkable(midR2, midC2) || entities.some(e => e.hp > 0 && e.r === midR2 && e.c === midC2)) return false;
+        }
+        return true;
+    }
+    if (mode === 'combo_slash') return dist === 1 && target && target.team !== se.team;
+    if (mode === 'claw_slash') return dist === 1 && target && target.team !== se.team;
+    if (mode === 'sweet_honey') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'activation_curse') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
+    if (mode === 'reward_trap') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'bat_infiltration') return maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
+    if (mode === 'fate_choice') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
+    if (mode === 'gold_addiction') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'fun_present') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
     if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
@@ -4687,7 +4793,7 @@ function handleTileClick(vr, c) {
                 if (isInvinKing) {
                     let t = board[r]?.[c];
                     if (['rock', 'mine', 'volcano'].includes(t)) {
-                        if (t === 'mine') breakMine();
+                        if (t === 'mine') breakMine(r, c);
                         board[r][c] = 'plains';
                         msg("👑 無敵の王が岩を砕いて突き進んだ！");
                     } else {
@@ -4743,7 +4849,7 @@ function handleTileClick(vr, c) {
                             msg("険しい斜面に足を取られ、行動力が追加で1減少した！（ケーブルカーが有利）");
                         }
                     }
-                    if (board[r] && board[r][c] === 'mine') { board[r][c] = defaultGround(); breakMine(); }
+                    if (board[r] && board[r][c] === 'mine') { board[r][c] = defaultGround(); breakMine(r, c); }
                     else if (board[r] && board[r][c] === 'trap') {
                         let tKey = `${r},${c}`;
                         if (!selectedEntity.flying && trapOwnerMap[tKey] !== selectedEntity.team) {
@@ -4886,7 +4992,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         } else {
             let wasGoldenCoral = board[r][c] === 'golden_coral';
             let wasCoralReef = board[r][c] === 'coral_reef';
-            if (board[r][c] === 'mine') breakMine();
+            if (board[r][c] === 'mine') breakMine(r, c);
             if (board[r][c] === 'volcano') breakVolcano();
             if (wasGoldenCoral) breakMine();
             let wasCar = board[r][c] === 'car_tile';
@@ -4939,8 +5045,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "毒弓矢！しかし無敵で防がれた！" : `毒弓矢命中！ダメージ(2)と毒(3T)を与えた！`); used = true;
     } else if (actionMode === 'magic_bullet') {
         se.abilities['magic_bullet']--; 
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-        msg(targetEntity.invin ? "魔法弾！しかし無敵で弾かれた！" : "魔法弾命中！ダメージ(1)と吹き飛ばし！"); used = true;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
+        msg(targetEntity.invin ? "魔法弾！しかし無敵で弾かれた！" : "魔法弾命中！ダメージ(2)と吹き飛ばし！"); used = true;
     } else if (actionMode === 'great_fireball') {
         se.abilities['great_fireball']--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap--; knockback(targetEntity, 1, se); }
@@ -5069,12 +5175,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'wind_magic') {
         se.abilities['wind_magic']--; 
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; knockback(targetEntity, 2, se); }
-        msg(targetEntity.invin ? "風魔法！しかし無敵で耐えられた！" : "風魔法！敵を後方2マスへ吹き飛ばした！"); used = true;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.ap--; knockback(targetEntity, 2, se); }
+        msg(targetEntity.invin ? "風魔法！しかし無敵で耐えられた！" : "風魔法！敵に2ダメ＋後方2マスへ吹き飛ばした！"); used = true;
     } else if (actionMode === 'ice_magic') {
         se.abilities['ice_magic']--; 
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 1 + (targetEntity.defDebuff||0); }
-        msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(1)を与え行動力を奪った！"); used = true;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); }
+        msg(targetEntity.invin ? "氷魔法！しかし無敵で防がれた！" : "氷魔法！ダメージ(2)を与え行動力を奪った！"); used = true;
     } else if (actionMode === 'peck') {
         // つつき (鬼カラス・ハヤブサ等) — 半径1/威1/AP-1
         if (se.abilities['peck'] !== 999) se.abilities['peck']--;
@@ -5301,8 +5407,8 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'meditation') {
         se.abilities['meditation']--;
         se.ap = Math.max(0, se.ap - 2);
-        for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k]++; }
-        msg('🧘 瞑想！AP-2して全アビリティの使用回数を+1！'); used = true;
+        for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k] += 2; }
+        msg('🧘 瞑想！AP-2して全アビリティの使用回数を+2！'); used = true;
     } else if (actionMode === 'duel') {
         se.abilities['duel']--;
         // Move to adjacent cell to target (straight line, stop 1 cell away)
@@ -6631,7 +6737,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             targetEntity.ap = Math.max(0, targetEntity.ap - 1);
             let srKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
             if (srKs.length>0) sealAbilities(targetEntity, [srKs[Math.floor(Math.random()*srKs.length)]], 1);
-            // 大悪霊召喚
+            // 悪霊召喚
             let gsC = [];
             for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
                 let nr=targetEntity.r+dr, nc=targetEntity.c+dc;
@@ -6639,13 +6745,168 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
             if (gsC.length>0) {
                 let gsSp=gsC[Math.floor(Math.random()*gsC.length)];
-                let gsM=monsterTemplate('great_spirit',gsSp.r,gsSp.c);
+                let gsM=monsterTemplate('spirit',gsSp.r,gsSp.c);
                 gsM.id='gs_'+Date.now(); gsM.team=se.team; entities.push(gsM);
             }
         }
         se.ap = 0;
-        msg(targetEntity.invin ? `👻 放魂術！しかし無敵で防がれた！` : `👻 放魂術！${targetEntity.name}に${srDmg}ダメ＋吹飛5＋AP-1＋1T封印＋大悪霊召喚！`);
+        msg(targetEntity.invin ? `👻 放魂術！しかし無敵で防がれた！` : `👻 放魂術！${targetEntity.name}に${srDmg}ダメ＋吹飛5＋AP-1＋1T封印＋悪霊召喚！`);
         used = true;
+    // ====== デビル ======
+    } else if (actionMode === 'combo_slash') {
+        if (se.abilities['combo_slash'] !== 999) se.abilities['combo_slash']--;
+        let cslDmg = 1 + (se.atkBonus||0) + (se.comboSlashBonus||0);
+        if (meleeDodged(targetEntity)) { msg(`⚔️ 連続斬り！しかし飛行コマに回避された！`); used = true; }
+        else {
+            if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= cslDmg + (targetEntity.defDebuff||0); }
+            se.comboSlashBonus = (se.comboSlashBonus||0) + 1;
+            if (Math.random() < 0.5) { if (se.abilities['combo_slash'] !== 999) se.abilities['combo_slash']++; }
+            msg(targetEntity.invin ? `⚔️ 連続斬り！しかし無敵で防がれた！` : `⚔️ 連続斬り！${targetEntity.name}に${cslDmg}ダメ！次T連続斬り+1！50%回数+1！`);
+            used = true;
+        }
+    } else if (actionMode === 'escape_dash') {
+        if (se.abilities['escape_dash'] !== 999) se.abilities['escape_dash']--;
+        let edOldR = se.r, edOldC = se.c;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c;
+        if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
+        if (['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground'].includes(board[edOldR][edOldC])) {
+            board[edOldR][edOldC] = 'trap'; trapOwnerMap[`${edOldR},${edOldC}`] = se.team;
+        }
+        let edEvent = checkTileEffects(se);
+        msg("🏃 逃げ足！ダッシュして元の場所に罠を設置！" + (edEvent ? " "+edEvent : ""));
+        checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'rock_dash') {
+        if (se.abilities['rock_dash'] !== 999) se.abilities['rock_dash']--;
+        let rdOldR = se.r, rdOldC = se.c;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c;
+        if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
+        if (!['rock','mine','volcano','gravestone'].includes(board[rdOldR]?.[rdOldC])) board[rdOldR][rdOldC] = 'rock';
+        let rdEvent = checkTileEffects(se);
+        msg("🪨 退路を断ち走る！ダッシュして元の場所に岩を設置！" + (rdEvent ? " "+rdEvent : ""));
+        checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'slow_assault') {
+        if (se.abilities['slow_assault'] !== 999) se.abilities['slow_assault']--;
+        let saOldR = se.r, saOldC = se.c;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c;
+        if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
+        if (!['rock','mine','volcano','gravestone'].includes(board[saOldR]?.[saOldC])) board[saOldR][saOldC] = 'rock';
+        let saEvent = checkTileEffects(se);
+        msg("😈 じわじわ攻める！ダッシュして元の場所に岩を設置！" + (saEvent ? " "+saEvent : ""));
+        checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'claw_slash') {
+        if (se.abilities['claw_slash'] !== 999) se.abilities['claw_slash']--;
+        let csDmg = 1 + (se.atkBonus||0);
+        let csBonus = ((targetEntity._prevTurnHp||0) < targetEntity.hp) || (targetEntity.atkBonus||0) > 0;
+        if (csBonus) csDmg += 2;
+        if (meleeDodged(targetEntity)) { msg(`🔥 爪で切り裂く！しかし飛行コマに回避された！`); used = true; }
+        else {
+            if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+                targetEntity.hp -= csDmg + (targetEntity.defDebuff||0);
+                if (csBonus) { knockback(targetEntity,1,se); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
+            }
+            msg(targetEntity.invin ? `🔥 爪で切り裂く！しかし無敵で防がれた！` : `🔥 爪で切り裂く！${targetEntity.name}に${csDmg}ダメ${csBonus?'（バフ罰+吹飛+AP-1）':''}！`);
+            used = true;
+        }
+    } else if (actionMode === 'sweet_honey') {
+        if (se.abilities['sweet_honey'] !== 999) se.abilities['sweet_honey']--;
+        targetEntity.hp = Math.min(targetEntity.maxHp + 5, targetEntity.hp + 2);
+        targetEntity.invin = true; targetEntity.invinTimer = 1;
+        targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+        if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
+        Object.keys(targetEntity.abilities||{}).filter(k => k !== 'drop_rock').forEach(k => {
+            cursedAbilities[targetEntity.id][k] = Math.max(cursedAbilities[targetEntity.id][k]||0, 1);
+        });
+        targetEntity.skillUsed = true;
+        msg(`🍯 甘い蜜！${targetEntity.name}にHP+2・バリア付与！しかし全アビリティ封印・AP-1の代償を払う！`); used = true;
+    } else if (actionMode === 'activation_curse') {
+        if (se.abilities['activation_curse'] !== 999) se.abilities['activation_curse']--;
+        targetEntity.activationCurse = {timer: 2, prevR: targetEntity.r, prevC: targetEntity.c};
+        msg(`😈 活性化の呪い！${targetEntity.name}に2T呪いをかけた！AP+1・移動ごとに1ダメ！`); used = true;
+    } else if (actionMode === 'reward_trap') {
+        if (se.abilities['reward_trap'] !== 999) se.abilities['reward_trap']--;
+        let rtFDr = targetEntity.team === 'player' ? -1 : +1;
+        let rtBDr = -rtFDr;
+        for (let dc2 = -1; dc2 <= 1; dc2++) {
+            let nr=targetEntity.r+rtFDr, nc=targetEntity.c+dc2;
+            if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) board[nr][nc]='rock';
+        }
+        let rtBehindR=targetEntity.r+rtBDr*2, rtBehindC=targetEntity.c;
+        if (rtBehindR>=0&&rtBehindR<SIZE&&isWalkable(rtBehindR,rtBehindC)&&!entities.some(ev=>ev.hp>0&&ev.r===rtBehindR&&ev.c===rtBehindC)) {
+            if (Math.random()<0.4) { board[rtBehindR][rtBehindC]='trap'; trapOwnerMap[`${rtBehindR},${rtBehindC}`]=se.team; }
+            else entities.push({id:'rtpresent_'+Date.now(),type:'present_box',name:'プレゼント🎁',team:se.team,r:rtBehindR,c:rtBehindC,hp:1,maxHp:1,ap:0,maxAp:0,abilities:{},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,isPresentBox:true});
+        }
+        if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
+        Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock').forEach(k=>{ cursedAbilities[targetEntity.id][k]=Math.max(cursedAbilities[targetEntity.id][k]||0,1); });
+        targetEntity.skillUsed = true;
+        msg(`🎁 ご褒美の罠！前方3岩・後方アイテム設置！全アビリティ封印！`); used = true;
+    } else if (actionMode === 'bat_infiltration') {
+        if (se.abilities['bat_infiltration'] !== 999) se.abilities['bat_infiltration']--;
+        let biDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) targetEntity.hp -= biDmg;
+        let biCells=[];
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
+            if(dr===0&&dc===0) continue;
+            let nr=targetEntity.r+dr, nc=targetEntity.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) biCells.push({r:nr,c:nc});
+        }
+        if (biCells.length>0) {
+            let biPos=biCells[Math.floor(Math.random()*biCells.length)];
+            let bat=monsterTemplate('bat',biPos.r,biPos.c);
+            bat.id='dv_bat_'+Date.now(); bat.team=targetEntity.team;
+            bat.batConvertTimer=1; bat.batConvertToTeam=se.team; entities.push(bat);
+        }
+        msg(targetEntity.invin ? `🦇 コウモリ潜入！しかし無敵で防がれた！` : `🦇 コウモリ潜入！${targetEntity.name}に${biDmg}ダメ！周囲コウモリ召喚→1T後ヴァンパイア味方化！`);
+        se.ap = 0; used = true;
+    } else if (actionMode === 'fate_choice') {
+        if (se.abilities['fate_choice'] !== 999) se.abilities['fate_choice']--;
+        let fcDr = se.team === 'player' ? +1 : -1;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let fcPlaced=false;
+            for (let step=3; step>=1&&!fcPlaced; step--) {
+                let nr=targetEntity.r+fcDr*step, nc=targetEntity.c;
+                if(nr>=0&&nr<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc&&ev!==targetEntity)) { targetEntity.r=nr; targetEntity.c=nc; fcPlaced=true; }
+            }
+            targetEntity.hp -= 5+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+            targetEntity.ap = Math.max(0, targetEntity.ap-2);
+        }
+        msg(targetEntity.invin ? `🎲 運命の選択！しかし無敵で防がれた！` : `🎲 運命の選択！${targetEntity.name}を自陣方向3マス移動＋5ダメ＋AP-2！`); used = true;
+    } else if (actionMode === 'gold_addiction') {
+        if (se.abilities['gold_addiction'] !== 999) se.abilities['gold_addiction']--;
+        let gaDmg = 2+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= gaDmg; knockback(targetEntity,1,se); }
+        let gaFDr = targetEntity.team==='player' ? -1 : +1;
+        let gaBDr = -gaFDr;
+        for (let dc2=-1;dc2<=1;dc2++) { let nr=targetEntity.r+gaFDr,nc=targetEntity.c+dc2; if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) board[nr][nc]='rock'; }
+        let gaMines=0, gaMinePos=[];
+        for (let dr=1;dr<=3&&gaMines<4;dr++) for(let dc2=-1;dc2<=1&&gaMines<4;dc2++) {
+            let nr=targetEntity.r+gaBDr*dr, nc=targetEntity.c+dc2;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)) { board[nr][nc]='mine'; gaMinePos.push(`${nr},${nc}`); gaMines++; }
+        }
+        gaMinePos.slice(0,3).forEach(k=>copperForcedMines.add(k));
+        if (!targetEntity.invin) {
+            targetEntity.poisonTimer=1; targetEntity.poisonStacks=(targetEntity.poisonStacks||0)+1;
+            if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id]={};
+            Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&k!=='shatter').forEach(k=>{ cursedAbilities[targetEntity.id][k]=Math.max(cursedAbilities[targetEntity.id][k]||0,1); });
+        }
+        msg(targetEntity.invin ? `💰 金依存症！しかし無敵で防がれた！` : `💰 金依存症！${gaDmg}ダメ+吹飛！前方3岩・後方4鉱山！毒+全封印(岩砕き除く)！`); used = true;
+    } else if (actionMode === 'fun_present') {
+        if (se.abilities['fun_present'] !== 999) se.abilities['fun_present']--;
+        let fpDmg = 2+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) targetEntity.hp -= fpDmg;
+        let fpCells=[];
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
+            if(dr===0&&dc===0) continue;
+            let nr=targetEntity.r+dr, nc=targetEntity.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) fpCells.push({r:nr,c:nc});
+        }
+        if (fpCells.length>0) {
+            let fpPos=fpCells[Math.floor(Math.random()*fpCells.length)];
+            entities.push({id:'fp_'+Date.now(),type:'present_box',name:'プレゼント🎁',team:se.team,r:fpPos.r,c:fpPos.c,hp:1,maxHp:1,ap:0,maxAp:0,abilities:{},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,isPresentBox:true});
+        }
+        msg(targetEntity.invin ? `🎁 お楽しみのプレゼント！しかし無敵で防がれた！` : `🎁 お楽しみのプレゼント！${targetEntity.name}に${fpDmg}ダメ＋周辺プレゼント設置！`); used = true;
     } else if (actionMode === 'soul_pull') {
         // 引魂術 (陰陽師) — 半径5、目の前引き寄せ、3ダメ+AP-1+1T封印
         if (se.abilities['soul_pull'] !== 999) se.abilities['soul_pull']--;
@@ -6675,14 +6936,14 @@ function handleAbilityTarget(r, c, targetEntity) {
             let nr=se.r+dr, nc=se.c+dc;
             if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) skC.push({r:nr,c:nc});
         }
-        ['fox_fire','oni_crow','oni_snake'].forEach((st,i) => {
+        ['fox_fire','great_oni'].forEach((st,i) => {
             if (skC[i]) {
                 let m=monsterTemplate(st,skC[i].r,skC[i].c);
                 m.id='sk_'+st+Date.now()+i; m.team=se.team; entities.push(m);
             }
         });
         se.ap = 0;
-        msg(`🐦 式神召喚！狐火・鬼カラス・鬼蛇を召喚！残りアビリティ使用不可！`);
+        msg(`🐦 式神召喚！狐火・大鬼を召喚！残りアビリティ使用不可！`);
         used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
@@ -6910,19 +7171,6 @@ function executeSkill(se) {
             msg(`☯️ 陰陽冥鬼：封印済み/回数0アビリティが5以上必要！(現在${sealedCount}/5)`);
             return false;
         }
-        // 青鬼・赤鬼・大鬼を周囲に召喚
-        let oniC = [];
-        for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
-            if(dr===0&&dc===0) continue;
-            let nr=se.r+dr, nc=se.c+dc;
-            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) oniC.push({r:nr,c:nc});
-        }
-        ['blue_oni','red_oni','great_oni'].forEach((ot,i) => {
-            if (oniC[i]) {
-                let m=monsterTemplate(ot,oniC[i].r,oniC[i].c);
-                m.id='onmyo_'+ot+Date.now()+i; m.team=se.team; entities.push(m);
-            }
-        });
         // 半径5の敵にランダムで引き寄せor吹飛ばし
         let skillMsgs = [];
         entities.forEach(t => {
@@ -6949,7 +7197,33 @@ function executeSkill(se) {
         if (cursedAbilities[se.id]) {
             delete cursedAbilities[se.id];
         }
-        msg(`☯️ 陰陽冥鬼発動！青鬼・赤鬼・大鬼召喚！全封印解除！${skillMsgs.join('・')||'周囲に敵なし'}！`);
+        msg(`☯️ 陰陽冥鬼発動！全封印解除！${skillMsgs.join('・')||'周囲に敵なし'}！`);
+        return true;
+    }
+    // ====== デビル スキル: 寿命の前借り ======
+    if (se.type === 'devil') {
+        let dfCells = [], dfOrig = {};
+        for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+            let nr=se.r+dr, nc=se.c+dc;
+            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            let ct = board[nr][nc];
+            if (!['rock','mine','volcano','gravestone','sky_void','fallen_floor','darkness_tile','pentagram_tile','light_barrier_tile'].includes(ct)) {
+                dfOrig[`${nr},${nc}`] = ct;
+                board[nr][nc] = 'darkness_tile';
+                dfCells.push({r:nr,c:nc});
+            }
+        }
+        darknessFields.push({ownerTeam:se.team, ownerId:se.id, cells:dfCells, origTile:dfOrig, turnExpires:turn+1});
+        let dfHealMsgs = [];
+        entities.forEach(t => {
+            if (t.hp<=0||t.team===se.team) return;
+            if (dfCells.some(cl=>cl.r===t.r&&cl.c===t.c)) {
+                t.hp = Math.min(t.maxHp+5, t.hp+5);
+                t.ap = Math.max(0, t.ap-2);
+                dfHealMsgs.push(`${t.name}HP+5・AP-2`);
+            }
+        });
+        msg(`💀 寿命の前借り！半径2暗黒フィールド展開！${dfHealMsgs.length>0?'敵:'+dfHealMsgs.join('・')+'！':''}次Tフィールド内の敵に10ダメ+AP-1+全封印！`);
         return true;
     }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
@@ -7066,9 +7340,9 @@ function executeRushSkill(se, targetR, targetC, mode) {
         return;
     }
     if (mode === 'skill_dragon') {
-        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999, hell_breath: 1 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 7, maxHp: 7, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999, hell_breath: 1 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
         se.skillUsed = true;
-        msg("ドラゴン召喚！(HP5/AP2・火炎ブレス∞/噛みつき∞・飛行)");
+        msg("ドラゴン召喚！(HP7/AP2・火炎ブレス∞/噛みつき∞・飛行)");
         return;
     }
     // ====== 新スキルモード ======
@@ -7167,9 +7441,18 @@ function executeRushSkill(se, targetR, targetC, mode) {
     });
 }
 
-function breakMine() {
+function breakMine(mineR, mineC) {
     if (treasures.length === 0) { msg("鉱山破壊！しかし何も見つからなかった…"); return; }
-    let t = treasures.splice(Math.floor(Math.random()*treasures.length), 1)[0];
+    let posKey = (mineR !== undefined && mineC !== undefined) ? `${mineR},${mineC}` : null;
+    let t;
+    if (posKey && copperForcedMines.has(posKey)) {
+        copperForcedMines.delete(posKey);
+        t = 'copper';
+        let ci = treasures.indexOf('copper');
+        if (ci !== -1) treasures.splice(ci, 1);
+    } else {
+        t = treasures.splice(Math.floor(Math.random()*treasures.length), 1)[0];
+    }
     
     let msgText = "鉱山破壊！";
     if (t === 'platinum') msgText += "プラチナ獲得！(全アビリティ回復、このターンAP+1、HP回復)";
@@ -8510,6 +8793,7 @@ function updateUI() {
             angel:        '堕天',
             world_manager: '世界の作り直し',
             onmyoji: '陰陽冥鬼',
+            devil:   '寿命の前借り',
         };
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
