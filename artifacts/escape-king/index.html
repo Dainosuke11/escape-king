@@ -331,6 +331,8 @@
         .ability-btn.condition-met { border: 2px solid #2ecc71; box-shadow: 0 0 7px rgba(46,204,113,0.55); }
         .ability-btn.condition-met::after { content: ' ✅条件達成'; font-size: 11px; color: #2ecc71; font-weight: normal; }
         .ability-btn:disabled { background: #333; color: #666; cursor: not-allowed; border-color: #222; }
+        .ability-btn.sealed { background: repeating-linear-gradient(45deg,#1a1818,#1a1818 8px,#2a2020 8px,#2a2020 16px) !important; border: 2px solid #555 !important; color: #888 !important; cursor: not-allowed; }
+        .ability-btn.sealed::before { content: "⛓️ "; }
         
         .select-group { margin: 20px 0; text-align: left; }
         .select-group label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
@@ -636,7 +638,7 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ戦士 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / ダッシュ5 / モリで刺す10 / ウォーターカッター3<br>水流噴火1 / 潜水1 / 変身(水中)∞ / 波乗り2 / 渦潮1 / タコ召喚1<br>ウォーターゲージ制：ゲージ15~で変身・20~でバフ獲得</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🎪 ピエロ (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ナイフジャグリング3 / 恐怖の笑顔3 / 玉乗り5<br>アクロバット2 / 空中ブランコ2 / 爆弾クラッカー1 / サル召喚1<br>スキル:棺桶ナイフ(対象を3T行動不能＋毎T2ダメ)<br>隣接敵が封じられると他コマに棺桶壊し(解放)が出現</div></div>
         <div class="guide-job-card"><div class="guide-job-name">💀 死霊術師 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / テレポート3 / 闇魔法5(範囲2/威1/毒) / 沼魔法1(範囲2/威2/毒沼1T)<br>魂吸収1(半径1味方全破壊→HP+アビリティ+魂+5) / ボーンアーマー1(魂消費+味方破壊→1T無敵+ATK+1)<br>スカルヘッド1(魂消費→ドクロ召喚) / ネクロバインド1(魂消費/範囲3/AP-1+封印+ゾンビ)<br>ネクロサモン3(5T後/魂消費で上位) / アンデットパーティ1(魂3消費/7種召喚)<br>死体融合1(魂3消費/味方全破壊→キメラ)　スキル:霊魂放出(範囲3/威3+魂)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">👼 天使 (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 光のムチ5(直線2/威1/AP-1) / フェザーダッシュ5(ダッシュ+隣接AP-1/堕天+1)<br>バインドアロー3(直線5/威1/AP-2/5封印/堕天+1) / 光の呪縛3(半径2全体/AP-2/5封印/堕天+1)<br>光の結界3(半径1/1T結界+無敵/敵AP-2+封印/堕天+1)<br>スキル:堕天(ゲージ≥15/AP+2/罪の刻印・デスサイズ・均衡崩し・怨みの打撃追加/毎T自1ダメ)<br>堕天使追加技：罪の刻印1(呪い付与) / デスサイズ∞(半径AoE) / 均衡崩し1(強力貫通) / 怨みの打撃∞(半径1/被弾強化/ゲージ30強化)</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">👼 天使 (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 光のムチ5(直線2/威1/AP-1) / フェザーダッシュ5(ダッシュ+隣接AP-1/堕天+1)<br>バインドアロー3(直線5/威1/AP0+5封印/堕天+1) / 光の呪縛3(半径2/AP0+5封印/堕天+1)<br>光の結界3(半径1/1T結界+無敵/敵AP-2+封印/堕天+1)<br>スキル:堕天(ゲージ≥15/発動TのみAP+2/罪の刻印・デスサイズ・均衡崩し・怨みの打撃追加/毎T自1ダメ+ゲージ+1)<br>堕天使追加技：罪の刻印3(AP-2/5封印/呪い) / デスサイズ∞(半径AoE) / 均衡崩し3(直線5か半径8+転送) / 怨みの打撃∞(半径1/被弾・バフで+2ダメ)<br>※飛行コマ：岩マス通過時AP-1追加。天使/堕天使はダメージを受けるたびに堕天ゲージ+1</div></div>
         <div class="guide-job-card"><div class="guide-job-name">⚖️ 世界の管理者 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ダッシュ3 / 天秤5(HP≤15で半径3/威1+被弾で強化/全アビ+1)<br>均衡の調整5(魔法弾/半径2/敵ゴール有利で+3ダメ+AP-2+封印/全アビ+1) / 調停の裁き5(落雷/半径3/敵コマ多数で全体攻撃/全アビ+1)<br>秩序の修正5(半径4/後吹飛/敵3マス移動で結界+AP-2+封印+バリア/全アビ+1) / 不平等への怒り5(炎/半径5/残りアビ1以下があれば+3ダメ+AP-2+半径3全体2ダメ/全アビ+1)<br>均等の一撃5(超能力/半径3/後吹飛+前岩/前T敵スキル使用で+3ダメ+AP-2+封印/全アビ+1)<br>調和の祈り5(自分/HP+1・AP+1・全アビ+1/封印された瞬間→自封印解除+全敵1T全封印+AP-2+全アビ+1+次T自AP+1)<br>スキル:世界の作り直し(5T以降/半径5全敵5マス後吹飛+近傍岩5個/次相手ターン後地震/8マス以上遠距離敵で全敵AP-2+1T全封印+全アビ+1)</div></div>
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
@@ -1212,13 +1214,13 @@ const ABILITY_TIPS = {
     corpse_throw: '半径3マスの敵に3ダメ＋吹き飛ばし。ネクロキメラ自身も1ダメを受け、敵の足元にゾンビが出現する。回数∞。',
     light_whip: '直線2マス内の敵に1ダメ・AP-1を与え、堕天ゲージ+1。回数5。',
     feather_dash: 'ダッシュ移動した後、移動先の隣接敵全員のAPを-1する。さらに堕天ゲージ+1。回数5。',
-    bind_arrow: '直線5マス内の敵に1ダメ・AP-2・ランダム5アビリティを1T封印する光の矢。堕天ゲージ+1。回数3。',
-    light_bind: '半径2マス内の敵1体を対象にAP-2・ランダム5アビリティを1T封印する光の拘束。堕天ゲージ+1。回数3。',
+    bind_arrow: '直線5マス内の敵に1ダメ・AP0(完全拘束)・ランダム5アビリティを1T封印する光の矢。堕天ゲージ+1。回数3。',
+    light_bind: '半径2マス内の敵1体を対象にAP0(完全拘束)・ランダム5アビリティを1T封印する光の拘束。堕天ゲージ+1。回数3。',
     scales: '半径1マスの敵に2ダメ・自HP+2回復。堕天ゲージ≥30なら4ダメ・自HP+4回復。条件なし。堕天ゲージ+1。回数3。',
     light_barrier: '足元半径1マスに1ターン光の結界を展開：自分に無敵バリア付与、内部の敵にAP-2+全アビリティ封印。堕天ゲージ+1。回数3。',
-    sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数1。',
+    sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数3。',
     death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
-    balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数1。',
+    balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数3。',
     combo_slash: '半径1マスの敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
     retreat: '自分に1Tバリアを付与。バリアが解けた次のターン開始時に後方1マスへ自動後退し、元の場所に罠を設置する。回数3。',
     escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
@@ -2858,7 +2860,7 @@ function processTurnStartEffects(e) {
         e.fallenGauge = (e.fallenGauge||0) + 1;
         if (!e.fallen && e.fallenGauge === 15) msg(`⚠️ ${e.name}の堕天ゲージが15に達した！スキル「堕天」が発動可能！`, true);
         if (e.fallen && e.fallenGauge === 30) msg(`😈 ${e.name}の堕天ゲージ30！デスサイズ・罪の刻印・均衡崩しが強化された！`, true);
-        if (e.fallen && !e.invin) { e.hp = Math.max(0, e.hp - 1); msg(`😈 ${e.name}の堕落の業苦：HP-1！`, true); }
+        if (e.fallen && !e.invin) { e.hp = Math.max(0, e.hp - 1); e.fallenGauge = (e.fallenGauge||0) + 1; msg(`😈 ${e.name}の堕落の業苦：HP-1！堕天ゲージ+1(${e.fallenGauge})`, true); }
         e._prevHp = e.hp;
     }
     // 罪の刻印チェック：印のある敵が堕天使から遠ざかったら1ダメ
@@ -4859,11 +4861,16 @@ function handleTileClick(vr, c) {
                 }
             }
             // Flying units pass through rocks, water, voids, and other obstacles (not occupied tiles)
+            // Crossing a rock-like tile costs 1 extra AP
             if (!canMove && selectedEntity.flying && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
                 let t = board[r]?.[c];
-                if (['rock', 'mine', 'volcano', 'gravestone', 'river', 'whirlpool', 'sea', 'deep_water',
-                     'sky_void', 'fallen_floor', 'lava', 'sea_trench', 'coral_reef', 'golden_coral'].includes(t) &&
-                    !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) canMove = true;
+                const flyRockTiles = ['rock', 'mine', 'volcano', 'gravestone'];
+                const flyOtherTiles = ['river', 'whirlpool', 'sea', 'deep_water', 'sky_void', 'fallen_floor', 'lava', 'sea_trench', 'coral_reef', 'golden_coral'];
+                if ([...flyRockTiles, ...flyOtherTiles].includes(t) &&
+                    !entities.find(e => e.hp > 0 && e.r === r && e.c === c)) {
+                    canMove = true;
+                    if (flyRockTiles.includes(t)) cost++; // 岩越えはAP追加コスト
+                }
             }
             // Ocean units can swim in water tiles
             if (!canMove && isOceanUnit(selectedEntity) && r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
@@ -6488,23 +6495,21 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['bind_arrow']--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
-            targetEntity.ap = Math.max(0, targetEntity.ap - 2);
+            targetEntity.ap = 0;
             let baKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
             sealAbilities(targetEntity, baKs.sort(()=>Math.random()-0.5).slice(0,5), 1);
-            targetEntity.skillUsed = true;
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`🏹 バインドアロー！${targetEntity.name}に1ダメ・AP-2・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`🏹 バインドアロー！${targetEntity.name}に1ダメ・AP0・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'light_bind') {
         se.abilities['light_bind']--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.ap = Math.max(0, targetEntity.ap - 2);
+            targetEntity.ap = 0;
             let lbKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
             sealAbilities(targetEntity, lbKs.sort(()=>Math.random()-0.5).slice(0,5), 1);
-            targetEntity.skillUsed = true;
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`✨ 光の呪縛！${targetEntity?.name}にAP-2・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`✨ 光の呪縛！${targetEntity?.name}にAP0・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'scales') {
         se.abilities['scales']--;
         let scHasDmg = (se.hp < se.maxHp);
@@ -7308,12 +7313,12 @@ function executeSkill(se) {
         if (gauge < 15) { msg(`👼 堕天：堕天ゲージが足りません！(${gauge}/15) ゲージはターン開始時・ダメージ時に+1`); return false; }
         se.fallen = true;
         se.name = '堕天使';
-        se.maxAp += 2; se.ap = Math.min(se.ap + 2, se.maxAp);
-        se.abilities['sin_mark'] = 1;
+        se.ap = Math.min(se.ap + 2, 6);  // 発動ターンのみAP+2（maxApは変えない）
+        se.abilities['sin_mark'] = 3;
         se.abilities['death_scythe'] = 999;
-        se.abilities['balance_break'] = 1;
+        se.abilities['balance_break'] = 3;
         se.abilities['grudge_strike'] = 999;
-        msg(`😈 堕天発動！天使が堕天使に変身！AP+2・最大AP+2！「罪の刻印・デスサイズ・均衡崩し・怨みの打撃」追加！毎ターン自HP-1！`);
+        msg(`😈 堕天発動！天使が堕天使に変身！発動ターンAP+2！「罪の刻印3・デスサイズ・均衡崩し3・怨みの打撃」追加！毎ターン自HP-1！`);
         return true;
     }
     // ====== 陰陽師 スキル: 陰陽冥鬼 ======
@@ -8954,7 +8959,8 @@ function updateUI() {
         if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id]?.has(key) || isCursed) btn.disabled = true;
         if (isCursed) {
             let turns = cursedAbilities[selectedEntity.id][key];
-            btn.innerText = `💀 【呪い${turns}T】${dispName}`;
+            btn.classList.add('sealed');
+            btn.innerText = `【封印${turns}T】${dispName}`;
         }
         // 戦闘形態中: form_shift/shatter/tentacle_whip/tractor_beam/drop_rock のみ使用可
         if (selectedEntity.formShifted && !['form_shift','shatter','tentacle_whip','tractor_beam','drop_rock'].includes(key)) {
