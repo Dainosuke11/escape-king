@@ -1136,7 +1136,7 @@ const ABILITY_TIPS = {
     peck: '隣接した敵をつつく。攻撃力1。回数無限。',
     hell_breath: '半径3マス内の全敵に3ダメージ＋AP-1＋吹き飛ばし。ドラゴンNPCに1回付与。',
     thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
-    meditation: 'AP-2して全アビリティ使用回数を+2する。使用回数1。',
+    meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
     jet_boost: 'AP-1・HP-1して半径2マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
     laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
@@ -5428,8 +5428,8 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'meditation') {
         se.abilities['meditation']--;
         se.ap = Math.max(0, se.ap - 2);
-        for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k] += 2; }
-        msg('🧘 瞑想！AP-2して全アビリティの使用回数を+2！'); used = true;
+        for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999 && k !== 'meditation') se.abilities[k] += 1; }
+        msg('🧘 瞑想！AP-2して全アビリティの使用回数を+1！'); used = true;
     } else if (actionMode === 'duel') {
         se.abilities['duel']--;
         // Move to adjacent cell to target (straight line, stop 1 cell away)
