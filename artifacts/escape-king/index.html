@@ -8294,6 +8294,60 @@ function cpuLogic() {
             }
 
             // ====================================================
+            // 優先度7.5: ステージギミック — 岩転がし・大砲接近
+            // ====================================================
+            // 岩転がし: 隣接岩が敵の進行路に向いている場合に発動
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.roll_rock||0)>0) {
+                for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    let rr=cpu.r+dr, rc=cpu.c+dc;
+                    if (rr>=0&&rr<SIZE&&rc>=0&&rc<SIZE&&board[rr]?.[rc]==='rock') {
+                        let rrDir=rr>10?1:-1;
+                        let rrCols=[rc-1,rc,rc+1].filter(x=>x>=0&&x<SIZE);
+                        let wouldHit=targets.some(t=>
+                            rrCols.includes(t.c)&&
+                            ((rrDir===1&&t.r>rr)||(rrDir===-1&&t.r<rr))
+                        );
+                        if (wouldHit) {
+                            if (cpu.abilities.roll_rock!==999) cpu.abilities.roll_rock--;
+                            rollRockPending={r:rr,c:rc,dir:rrDir,cols:rrCols};
+                            rollRockWarnTiles=[];
+                            let rrw=rr+rrDir;
+                            while (rrw>=0&&rrw<SIZE) {
+                                rrCols.forEach(cc=>rollRockWarnTiles.push({r:rrw,c:cc}));
+                                if (!isWalkable(rrw,rc,true,true)) break;
+                                rrw+=rrDir;
+                            }
+                            cpu.ap--;
+                            msg("⛰️ 敵が岩転がしを使用！幅3マスで岩が転がる！");
+                            attacked=true; break;
+                        }
+                    }
+                }
+            }
+            // 大砲接近: 大砲タイルに乗っていない場合、射程内に敵を捉えられる大砲へ向かう
+            if (!attacked && cpu.ap>=1 && board[cpu.r]?.[cpu.c]!=='cannon') {
+                let bestCannon=null, bestDist=99;
+                for (let r2=0;r2<SIZE;r2++) {
+                    for (let c2=0;c2<SIZE;c2++) {
+                        if (board[r2]?.[c2]==='cannon') {
+                            let cd=Math.max(Math.abs(cpu.r-r2),Math.abs(cpu.c-c2));
+                            let canFire=targets.some(t=>Math.max(Math.abs(t.r-r2),Math.abs(t.c-c2))<=8);
+                            if (cd<=4&&canFire&&cd<bestDist) { bestCannon={r:r2,c:c2}; bestDist=cd; }
+                        }
+                    }
+                }
+                if (bestCannon&&bestDist>0) {
+                    let path=findPath(cpu.r,cpu.c,bestCannon.r,bestCannon.c);
+                    if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)) {
+                        cpuMoveTo(path[0].r,path[0].c);
+                        if (board[cpu.r]?.[cpu.c]==='cannon') msg("🎯 敵が大砲に乗り込んだ！");
+                        else msg("🎯 敵が大砲へ向かって移動！");
+                        attacked=true;
+                    }
+                }
+            }
+
+            // ====================================================
             // 優先度8: 遠距離・近接攻撃アビリティ
             // ====================================================
             if (!attacked) {
@@ -8722,6 +8776,57 @@ function npcLogic() {
                     board[t.r][t.c] = 'rock';
                     msg(`大鬼が岩落とし！進路を阻んだ！`);
                     attacked = true; n.ap--;
+                }
+            }
+
+            // ステージギミック: 岩転がし
+            if (!attacked && n.ap>=1 && (n.abilities.roll_rock||0)>0) {
+                for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    let rr=n.r+dr, rc=n.c+dc;
+                    if (rr>=0&&rr<SIZE&&rc>=0&&rc<SIZE&&board[rr]?.[rc]==='rock') {
+                        let rrDir=rr>10?1:-1;
+                        let rrCols=[rc-1,rc,rc+1].filter(x=>x>=0&&x<SIZE);
+                        let wouldHit=targets.some(t=>
+                            rrCols.includes(t.c)&&
+                            ((rrDir===1&&t.r>rr)||(rrDir===-1&&t.r<rr))
+                        );
+                        if (wouldHit) {
+                            if (n.abilities.roll_rock!==999) n.abilities.roll_rock--;
+                            rollRockPending={r:rr,c:rc,dir:rrDir,cols:rrCols};
+                            rollRockWarnTiles=[];
+                            let rrw=rr+rrDir;
+                            while (rrw>=0&&rrw<SIZE) {
+                                rrCols.forEach(cc=>rollRockWarnTiles.push({r:rrw,c:cc}));
+                                if (!isWalkable(rrw,rc,true,true)) break;
+                                rrw+=rrDir;
+                            }
+                            n.ap--;
+                            msg(`⛰️ ${n.name}が岩転がし！幅3マスで岩が転がる！`,true);
+                            attacked=true; break;
+                        }
+                    }
+                }
+            }
+            // ステージギミック: 大砲接近（大砲に乗っていない場合、近くの大砲へ向かう）
+            if (!attacked && n.ap>=1 && board[n.r]?.[n.c]!=='cannon') {
+                let bestCannon=null, bestDist=99;
+                for (let r2=0;r2<SIZE;r2++) {
+                    for (let c2=0;c2<SIZE;c2++) {
+                        if (board[r2]?.[c2]==='cannon') {
+                            let cd=Math.max(Math.abs(n.r-r2),Math.abs(n.c-c2));
+                            let canFire=targets.some(t=>Math.max(Math.abs(t.r-r2),Math.abs(t.c-c2))<=8);
+                            if (cd<=4&&canFire&&cd<bestDist) { bestCannon={r:r2,c:c2}; bestDist=cd; }
+                        }
+                    }
+                }
+                if (bestCannon&&bestDist>0) {
+                    let path=findPath(n.r,n.c,bestCannon.r,bestCannon.c);
+                    if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)) {
+                        n.r=path[0].r; n.c=path[0].c; n.ap--;
+                        if (board[n.r]?.[n.c]==='cannon') msg(`🎯 ${n.name}が大砲に乗り込んだ！`,true);
+                        else msg(`🎯 ${n.name}が大砲へ向かって移動！`,true);
+                        attacked=true;
+                    }
                 }
             }
 
