@@ -334,6 +334,8 @@
         .ability-btn { display: block; width: 100%; margin: 8px 0; background: #2c3e50; color: #ecf0f1; border: 1px solid #1a252f; padding: 10px; cursor: pointer; text-align: left; border-radius: 4px; font-weight: bold; transition: 0.2s; font-size: 13px; box-sizing: border-box; }
         .ability-btn:hover:not(:disabled) { background: #34495e; }
         .ability-btn.active { background: var(--accent); color: #fff; border-color: #d35400; box-shadow: 0 0 8px rgba(230, 126, 34, 0.6); }
+        .ability-btn.condition-met { border: 2px solid #2ecc71; box-shadow: 0 0 7px rgba(46,204,113,0.55); }
+        .ability-btn.condition-met::after { content: ' ✅条件達成'; font-size: 11px; color: #2ecc71; font-weight: normal; }
         .ability-btn:disabled { background: #333; color: #666; cursor: not-allowed; border-color: #222; }
         
         .select-group { margin: 20px 0; text-align: left; }
@@ -1246,7 +1248,7 @@ const JOB_DATA = {
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1, snake_summon: 1 }, hp: 30, ap: 2 },
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 3, sweep: 3, laser_snipe: 2, laser_bazooka: 2, incinerate: 2, recon_drone: 2, emp_field: 2 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
@@ -3182,45 +3184,19 @@ function processTurnStartEffects(e) {
             }
         }
         let wg = e.waterGauge || 0;
-        // ゲージ>29: AP+2・ATK+2・全射程+2 (fullWaterBuff)
-        if (wg > 29) {
+        // ゲージ≥29: AP+2・ATK+2 (fullWaterBuff) — ターン開始時に毎回評価
+        if (wg >= 29) {
             if (!e.fullWaterBuff) {
-                // Remove highWaterBuff (+1) first if active, then apply full (+2)
-                if (e.highWaterBuff) {
-                    e.maxAp=Math.max(1,e.maxAp-1); e.atkBonus=Math.max(0,(e.atkBonus||0)-1);
-                    e.highWaterBuff=false;
-                }
                 e.maxAp = Math.min(e.maxAp+2,6); e.ap=Math.min(e.ap,e.maxAp);
                 e.atkBonus=(e.atkBonus||0)+2;
-                e.rangeBonus=(e.rangeBonus||0)+2;
                 e.fullWaterBuff=true;
-                msg(`🌊 ${e.name}のゲージ29超え！AP+2・ATK+2・全射程+2！`, true);
-            }
-        } else if (wg >= 20) {
-            // ゲージ≥20: AP+1・ATK+1 (highWaterBuff)
-            if (e.fullWaterBuff) {
-                e.maxAp=Math.max(1,e.maxAp-2); e.ap=Math.min(e.ap,e.maxAp);
-                e.atkBonus=Math.max(0,(e.atkBonus||0)-2);
-                e.rangeBonus=Math.max(0,(e.rangeBonus||0)-2);
-                e.fullWaterBuff=false;
-            }
-            if (!e.highWaterBuff) {
-                e.maxAp = Math.min(e.maxAp+1,5); e.ap=Math.min(e.ap,e.maxAp);
-                e.atkBonus=(e.atkBonus||0)+1;
-                e.highWaterBuff=true;
-                msg(`🌊 ${e.name}のゲージ20以上！AP+1・ATK+1！`, true);
+                msg(`🌊 ${e.name}のゲージ29以上！AP+2・ATK+2！`, true);
             }
         } else {
             if (e.fullWaterBuff) {
                 e.maxAp=Math.max(1,e.maxAp-2); e.ap=Math.min(e.ap,e.maxAp);
                 e.atkBonus=Math.max(0,(e.atkBonus||0)-2);
-                e.rangeBonus=Math.max(0,(e.rangeBonus||0)-2);
                 e.fullWaterBuff=false;
-            }
-            if (e.highWaterBuff) {
-                e.maxAp=Math.max(1,e.maxAp-1); e.ap=Math.min(e.ap,e.maxAp);
-                e.atkBonus=Math.max(0,(e.atkBonus||0)-1);
-                e.highWaterBuff=false;
             }
         }
         // ゲージ≥15: ランダム3アビリティ回数+1（閾値超えたとき一度だけ）
@@ -4096,6 +4072,8 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
+    // 潜伏中の敵は単体遠距離攻撃では補足できない（AoEは別処理で当たる）
+    if (target && target.team !== se.team && (target.stealth || board[target.r]?.[target.c] === 'forest')) return false;
     if (mode === 'combo_slash') return dist === 1 && target && target.team !== se.team;
     if (mode === 'claw_slash') return dist === 1 && target && target.team !== se.team;
     if (mode === 'sweet_honey') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
@@ -4138,7 +4116,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'miner_call' || mode === 'wolf_summon' || mode === 'falcon_summon' || mode === 'snake_summon') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'dig') return maxDist === 1 && (board[r]?.[c] === 'plains' || board[r]?.[c] === 'desert') && !target;
     if (mode === 'hole_move') return board[r]?.[c] === 'hole' && !target && !(se.r === r && se.c === c);
-    if (mode === 'tame') return maxDist <= 2 && target && target.team !== se.team && !isJobPiece(target);
+    if (mode === 'tame') return maxDist <= 3 && target && target.team !== se.team && !isJobPiece(target);
     if (mode === 'skill_copy') return maxDist <= 2 && target && target.team !== se.team && isJobPiece(target);
     if (mode === 'skill_dragon') return maxDist <= 2 && isWalkable(r, c);
     if (mode === 'fire_breath') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
@@ -4709,13 +4687,11 @@ function checkTileEffects(entity) {
         entity.poisonTimer = Math.max(entity.poisonTimer||0, 2);
         eventMsg = (eventMsg ? eventMsg + " " : "") + "🌊 毒沼に足がとられた！AP-1＋毒！";
     }
-    // Nighttown: auto-board train when stepping onto station in wait phase
-    if (activeStage === 'nighttown' && board[r]?.[c] === 'train_station' && !entity.onTrain && (entity.team==='player'||entity.team==='cpu') && (ntTrainPhase||0)%2===0) {
+    // Nighttown: manual boarding only — show hint when train is at station
+    if (activeStage === 'nighttown' && board[r]?.[c] === 'train_station' && !entity.onTrain && entity.team === 'player' && (ntTrainPhase||0)%2===0) {
         let ntTrain = entities.find(e=>e.id==='nttrain'&&e.hp>0&&e.r===r&&e.c===c);
         if (ntTrain) {
-            entity.onTrain = 'nttrain';
-            entity.invin = true; entity.invinTimer = 999;
-            eventMsg = (eventMsg ? eventMsg + " " : "") + "🚂 列車に自動乗車！次の発車で次駅へ！";
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "🚂 列車が停車中！「列車に乗る」ボタンで手動乗車できます。";
         }
     }
     // Board onto a flying drone (auto-board; once mounted cannot dismount)
@@ -4754,14 +4730,24 @@ function triggerAvalanche(triggerR, triggerC, entity) {
     let width = Math.floor(Math.random() * 3) + 3;
     let startC = Math.max(0, triggerC - Math.floor(width / 2));
     let endC = Math.min(SIZE - 1, startC + width - 1);
+    // 山頂(row≤10)側は上方向(row-6)、麓(row>10)側は下方向(row+6)へ流す
+    let goingDown = triggerR > Math.floor(SIZE / 2);
     let affected = [];
     entities.forEach(e => {
-        if (e.hp > 0 && e.c >= startC && e.c <= endC && e.r >= triggerR) {
-            if (!e.invin) {
+        if (e.hp > 0 && e.c >= startC && e.c <= endC) {
+            // 斜面の向きで影響範囲を限定：山頂側なら trigger より上側、麓側なら trigger より下側
+            let inAffectedZone = goingDown ? (e.r >= triggerR) : (e.r <= triggerR);
+            if (inAffectedZone && !e.invin) {
                 e.hp -= 2;
-                let newR = Math.min(SIZE - 1, e.r + 6);
-                while (newR > e.r && !isWalkable(newR, e.c, true, true)) newR--;
-                e.r = newR;
+                if (goingDown) {
+                    let newR = Math.min(SIZE - 1, e.r + 6);
+                    while (newR > e.r && !isWalkable(newR, e.c, true, true)) newR--;
+                    e.r = newR;
+                } else {
+                    let newR = Math.max(0, e.r - 6);
+                    while (newR < e.r && !isWalkable(newR, e.c, true, true)) newR++;
+                    e.r = newR;
+                }
                 affected.push(e.name);
             }
         }
@@ -4847,8 +4833,14 @@ function handleTileClick(vr, c) {
                     }
                 }
 
+                let _prevMoveTile = board[selectedEntity.r]?.[selectedEntity.c];
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.ap -= cost;
+                // ケーブルカーを降りた瞬間にAP補正を除去する
+                if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(_prevMoveTile) && !['cable_tile','cable_board'].includes(board[r]?.[c])) {
+                    selectedEntity.ap = Math.min(selectedEntity.ap, selectedEntity.maxAp);
+                    selectedEntity.onCableCar = false;
+                }
 
                 // ワイバーン騎乗中: 移動に追従させる
                 if (selectedEntity.onWyvern) {
@@ -5270,9 +5262,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("テレポート完了！" + (eventMsg ? eventMsg : ""));
         checkEnemyTerritory(se);
     } else if (actionMode === 'cannon') {
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
         used = true;
-        msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : "大砲発射！敵に1ダメージと吹き飛ばし！(休2T)");
+        msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : `大砲発射！敵に${1+(se.atkBonus||0)}ダメージと吹き飛ばし！(休2T)`);
         board[se.r][se.c] = 'cannon_cd_2';
     } else if (actionMode === 'spear') {
         if (se.abilities['spear'] !== 999) se.abilities['spear']--;
@@ -5363,10 +5355,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         let healed = 0;
         entities.forEach(e => {
             if (e.team === se.team && e.hp > 0 && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 8) {
-                e.hp = Math.min(e.hp + 1, e.maxHp); healed++;
+                e.hp = Math.min(e.hp + 1, e.maxHp);
+                e.invin = true; e.invinTimer = Math.max(e.invinTimer||0, 1);
+                healed++;
             }
         });
-        msg(`🎵 癒しの笛！半径8マス内の味方${healed}体のHPを1回復！`); used = true;
+        msg(`🎵 癒しの笛！半径8マス内の味方${healed}体のHPを1回復＆1Tバリア付与！`); used = true;
     } else if (actionMode === 'charge_order') {
         se.abilities['charge_order']--;
         let buffed = 0;
@@ -5543,9 +5537,10 @@ function handleAbilityTarget(r, c, targetEntity) {
         for (let hit = 1; hit <= 2; hit++) {
             if (targetEntity.hp > 0 && !targetEntity.invin) {
                 targetEntity.hp -= 1 + (se.atkBonus||0); knockback(targetEntity, 1, se);
+                if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
             }
         }
-        msg(targetEntity.invin ? "速射！無敵で防がれた！" : "🏹 速射！2連射！合計2ダメ・2回吹飛！"); used = true;
+        msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計2ダメ・2回吹飛！${se.poisonWeapon?'・毒':''}！`); used = true;
     } else if (actionMode === 'long_snipe') {
         se.abilities['long_snipe']--;
         se.ap = Math.max(0, se.ap - 1);
@@ -5566,7 +5561,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             for (let {dr,dc} of dirs) {
                 let nr=se.r+dr, nc=se.c+dc;
                 if (isWalkable(nr,nc) && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
-                    entities.push({id:st+Date.now(), type:st, name:sn, team:se.team, r:nr, c:nc, hp:5, maxHp:5, ap:1, maxAp:1, abilities:{...sa}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+2});
+                    entities.push({id:st+Date.now(), type:st, name:sn, team:se.team, r:nr, c:nc, hp:5, maxHp:5, ap:2, maxAp:2, abilities:{...sa}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+2});
                     spawned++; break;
                 }
             }
@@ -7201,9 +7196,10 @@ function executeSkill(se) {
         if (gauge <= 0) { msg("💧 ウォーターゲージがない！水マスに入ってゲージを溜めよう！"); return false; }
         se.hydroPumpGauge = gauge;
         se.waterGauge = 0;
-        if (se.highWaterBuff && gauge < 20) {
-            se.maxAp = Math.max(1, se.maxAp - 1); se.ap = Math.min(se.ap, se.maxAp);
-            se.atkBonus = Math.max(0, (se.atkBonus||0) - 1); se.highWaterBuff = false;
+        // ハイドロポンプでゲージを全消費 → fullWaterBuff解除
+        if (se.fullWaterBuff) {
+            se.maxAp = Math.max(1, se.maxAp - 2); se.ap = Math.min(se.ap, se.maxAp);
+            se.atkBonus = Math.max(0, (se.atkBonus||0) - 2); se.fullWaterBuff = false;
         }
         let rd = gauge <= 5 ? "直線3・威力3" : gauge <= 15 ? "直線5・威力4" : gauge <= 25 ? "直線8・幅3・威力5" : "端まで・幅3・威力6";
         msg(`💦 ハイドロポンプ！ゲージ${gauge}消費(${rd})！方向を選んでください！`);
@@ -7927,7 +7923,11 @@ function cpuLogic() {
             } else if (t === 'magic_circle') { board[nr][nc]='plains'; msg("敵が魔法陣を踏み消した！");
             } else if (t === 'item_tile') {
                 let itm=itemTileMap[`${nr},${nc}`]; board[nr][nc]=defaultGround(); delete itemTileMap[`${nr},${nc}`]; applyItem(cpu,itm); msg("敵がアイテムを取得！");
-            } else if (t === 'forest') { msg("敵が森の中に潜伏し、姿を消した…！"); }
+            } else if (t === 'forest') { msg("敵が森の中に潜伏し、姿を消した…！");
+            } else if (t === 'skyfort_bridge' && activeStage === 'skyfort') {
+                fallenSkyfortBridges.push({r:nr, c:nc}); board[nr][nc]='fallen_floor';
+                msg("💥 崩れる橋！敵が橋を踏み壊した！次ターン開始時に復元する。");
+            }
         }
 
         // Helper: drop rock at best candidate around target entity
@@ -8041,12 +8041,12 @@ function cpuLogic() {
             // ====================================================
             // 優先度3: 岩落とし封鎖 — 常にプレイヤー周囲を積極的に岩で囲む
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerMain) {
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock') && playerMain) {
                 // 上下左右→斜め順で囲む（岩砕き残数に関係なく常に実行）
                 let trapped = dropRockAround(playerMain,
                     [[-1,0],[0,1],[0,-1],[1,0],[-1,1],[-1,-1],[1,1],[1,-1]],
                     `🪨 敵が岩を落としてプレイヤーを封鎖！`);
-                if (trapped) attacked=true;
+                if (trapped) { if (!usedAbilities[cpu.id]) usedAbilities[cpu.id]=new Set(); usedAbilities[cpu.id].add('drop_rock'); attacked=true; }
             }
 
             // ====================================================
@@ -8074,13 +8074,13 @@ function cpuLogic() {
             // ====================================================
             // 優先度5: 中央越えプレイヤーを岩で阻止（既存ロジック維持）
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0) {
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock')) {
                 let crossedPlayers = entities.filter(e=>e.team==='player'&&e.hp>0&&e.r<=9);
                 outerBlock: for (let cp of crossedPlayers) {
                     let blocked = dropRockAround(cp,
                         [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
                         "🪨 敵が岩落としで中央越えを阻止！");
-                    if (blocked){attacked=true; break outerBlock;}
+                    if (blocked){ if (!usedAbilities[cpu.id]) usedAbilities[cpu.id]=new Set(); usedAbilities[cpu.id].add('drop_rock'); attacked=true; break outerBlock;}
                 }
             }
 
@@ -8129,7 +8129,7 @@ function cpuLogic() {
             // ====================================================
             // 優先度7: 岩ハラスメント — 毎ターン必ず実行（r≤10制限撤廃・対象はプレイヤー本体）
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && playerMain) {
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock') && playerMain) {
                 // 優先順位：プレイヤー進行方向前方→左右→斜め→後方（必ずplayerMain基準）
                 let hpm = playerMain;
                 let forwardR = hpm.r - 1; // 相手の前進方向（CPUベースへ向かう = 上方向）
@@ -8773,6 +8773,23 @@ function checkWin() {
     }
 }
 
+function isAbilityConditionMet(key, se) {
+    if (!se) return false;
+    // 連続斬り: 1回以上使用済みで攻撃力スタックがある
+    if (key === 'combo_slash') return (se.comboSlashBonus||0) > 0;
+    // 爪で切り裂く: 隣接敵がバフ中（atkBonus>0 or 回復済み）
+    if (key === 'claw_slash') {
+        return entities.some(e => e.team !== se.team && e.hp > 0 &&
+            Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) === 1 &&
+            ((e.atkBonus||0) > 0 || (e._prevTurnHp||0) < e.hp || (e.whistleBuff||0) > 0));
+    }
+    // 堕天ゲージ≥30で強化されるアビリティ
+    if (['death_scythe','sin_mark','balance_break','scales'].includes(key)) return (se.fallenGauge||0) >= 30;
+    // 潜伏中: 弓や短剣が潜伏ボーナス発動
+    if (['bow','dagger','poison_dagger'].includes(key)) return se.stealth === true;
+    return false;
+}
+
 function updateUI() {
     const list = document.getElementById('ability-list');
     list.innerHTML = '';
@@ -8807,6 +8824,7 @@ function updateUI() {
         let btn = document.createElement('button');
         btn.className = 'ability-btn';
         if (actionMode === key) btn.classList.add('active');
+        if (isAbilityConditionMet(key, selectedEntity)) btn.classList.add('condition-met');
         
         let count = selectedEntity.abilities[key];
         let dispName = ABILITY_NAMES[key] || key;
@@ -9085,8 +9103,8 @@ function updateUI() {
 
 <div id="kofi-section" style="
     width: 100%;
-    margin-top: 60px;
-    padding: 40px 20px;
+    margin-top: 16px;
+    padding: 14px 20px;
     background: #1a1a2e;
     border-top: 1px solid #2a2a44;
     text-align: center;
