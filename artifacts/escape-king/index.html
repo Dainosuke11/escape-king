@@ -654,28 +654,12 @@
 <div id="guide-screen">
     <h2>📖 キャラクター図鑑</h2>
     <div class="guide-tabs">
-        <button class="guide-tab active" onclick="switchGuideTab('jobs')">ジョブ一覧</button>
-        <button class="guide-tab" onclick="switchGuideTab('npcs')">NPCモンスター</button>
+        <button class="guide-tab active" data-tab="jobs" onclick="switchGuideTab('jobs')">ジョブ一覧</button>
+        <button class="guide-tab" data-tab="npcs" onclick="switchGuideTab('npcs')">NPCモンスター</button>
     </div>
     <div class="guide-content" id="guide-jobs-content">
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
-        <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/ナイフ)</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🪨 ゴーレム (HP3)</div><div class="guide-job-desc">ぶん殴り∞ / 岩投げ∞。強力な近接＆遠距離攻撃を持つ岩の巨人。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🟩 スライム (HP1)</div><div class="guide-job-desc">特殊能力なし。最弱だが呪いマスなどで強化される。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐺 オオカミ (HP2/AP3)</div><div class="guide-job-desc">噛み付き∞。素早く移動・吸血攻撃。獣使いに召喚・テイム可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">👻 幽霊 (HP2/AP3)</div><div class="guide-job-desc">とりつき(AP-1)∞ / 浄化(教会で魂消化)。墓場ステージに出現。岩を無視して移動。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🧟 ゾンビ (HP2/AP2)</div><div class="guide-job-desc">ぶん殴り∞ / 毒攻撃∞。噛まれると毒状態。墓場ステージに出現。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">⛏️ 炭鉱夫 (HP2/AP2)</div><div class="guide-job-desc">剣撃∞ / 地面掘り∞ / 穴移動∞。地下トンネルで奇襲。歩兵が召喚可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🏹 弓兵・槍兵 (HP2/AP2)</div><div class="guide-job-desc">弓兵：弓攻撃∞(遠距離)。槍兵：槍攻撃∞(射程2)。王・騎士・歩兵が召喚可能。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐉 ワイバーン (HP3/AP3/飛行)</div><div class="guide-job-desc">ぶん殴り∞ / 火炎ブレス∞ / ヘルブレス∞。天空要塞に出現。騎乗可能(乗ると飛行)。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🤿 タコ (HP3/AP2/海洋)</div><div class="guide-job-desc">触手のムチ∞。サメ戦士が召喚可能。水上専用コマで海洋ボーナスあり。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐒 おもちゃのサル (HP1/AP2)</div><div class="guide-job-desc">シンバル騒音∞(半径1/威1) / プレゼント設置∞。ピエロが召喚可能。撃破時プレゼントを落とす。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🎁 プレゼント箱</div><div class="guide-job-desc">敵が半径1マスに来ると爆発(威1/吹き飛ばし)。味方が踏むとランダムアイテム(靴/スター/剣)獲得。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🛸 偵察ドローン (HP1/AP2/飛行)</div><div class="guide-job-desc">体当たり∞(威1) / 電力補給∞(HP+5/機械兵+5)。5T後に機械兵が召喚可能。撃墜時爆発＋罠設置。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
@@ -1869,6 +1853,181 @@ function backToHome() {
     if (s) s.textContent = '';
 }
 
+const NPC_DATA = [
+    {
+        key: 'goblin_group',
+        emoji: '👺',
+        name: 'ゴブリン各種',
+        hp: null, ap: null,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: null,
+        customStats: 'big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/ナイフ)',
+        stage: '',
+        note: '最も一般的な敵。ステージ各地に出現。種類によりHP・AP・能力が異なる。'
+    },
+    {
+        key: 'golem',
+        emoji: '🪨',
+        name: 'ゴーレム',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999, rock_throw: 999, shatter: 5 },
+        stage: '',
+        note: '強力な近接＆遠距離攻撃を持つ岩の巨人。マッチョのゴーレム制作で召喚可能。'
+    },
+    {
+        key: 'slime',
+        emoji: '🟩',
+        name: 'スライム',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: {},
+        stage: '',
+        note: '特殊能力なし。最弱だが呪いマスなどで強化される。'
+    },
+    {
+        key: 'wolf',
+        emoji: '🐺',
+        name: 'オオカミ',
+        hp: 2, ap: 3,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '',
+        note: '素早く移動・吸血攻撃。獣使いに召喚・テイム可能。'
+    },
+    {
+        key: 'spirit',
+        emoji: '👻',
+        name: '幽霊(悪霊)',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999, possess: 999 },
+        stage: '墓場',
+        note: '岩を無視して移動。とりつきでAP-1。教会マスで浄化可能。'
+    },
+    {
+        key: 'zombie',
+        emoji: '🧟',
+        name: 'ゾンビ',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '墓場/混沌',
+        note: '墓場・混沌ステージに3ターンごとに大量出現。噛まれると毒状態。'
+    },
+    {
+        key: 'miner',
+        emoji: '⛏️',
+        name: '炭鉱夫',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { shatter: 999, dig: 999, punch: 999 },
+        stage: '',
+        note: '地下トンネルで奇襲。岩を砕くたびに攻撃力上昇。歩兵が召喚可能。'
+    },
+    {
+        key: 'archer',
+        emoji: '🏹',
+        name: '弓兵',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bow: 999 },
+        stage: '',
+        note: '遠距離から弓攻撃。王・騎士・歩兵が召喚可能。'
+    },
+    {
+        key: 'lancer',
+        emoji: '🗡️',
+        name: '槍兵',
+        hp: 5, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { spear: 999 },
+        stage: '',
+        note: '射程2の槍攻撃。王・騎士・歩兵が召喚可能。'
+    },
+    {
+        key: 'flying_drone',
+        emoji: '🐉',
+        name: 'ワイバーン',
+        hp: null, ap: null,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999, fire_breath: 999, hell_breath: 999 },
+        stage: '天空要塞',
+        note: '騎乗可能(乗ると飛行)。vehicleチームのためHPバーなし・倒せない。'
+    },
+    {
+        key: 'octopus',
+        emoji: '🐙',
+        name: 'タコ',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: true, lavaWalker: false,
+        abilities: { tentacle_whip: 999, water_spit: 999 },
+        stage: '',
+        note: 'サメ戦士が召喚可能。水上専用コマで海洋ボーナスあり。'
+    },
+    {
+        key: 'monkey_toy',
+        emoji: '🐒',
+        name: 'おもちゃのサル',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { cymbal_noise: 999, monkey_present_set: 1 },
+        stage: '',
+        note: 'ピエロが召喚可能。撃破時プレゼントを落とす。'
+    },
+    {
+        key: 'present_box',
+        emoji: '🎁',
+        name: 'プレゼント箱',
+        hp: 1, ap: 0,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: null,
+        customStats: '敵が半径1マスに来ると爆発(威1/吹き飛ばし)。味方が踏むとアイテム(靴/スター/剣)獲得。',
+        stage: '',
+        note: 'おもちゃのサル/ピエロが設置。戦略的トラップとして活用できる。'
+    },
+    {
+        key: 'recon_drone_unit',
+        emoji: '🛸',
+        name: '偵察ドローン',
+        hp: 1, ap: 2,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { drone_ram: 999, power_supply_drone: 999 },
+        stage: '',
+        note: '機械兵が召喚可能(回数2)。撃墜時爆発＋罠設置。'
+    },
+    {
+        key: 'shark',
+        emoji: '🦈',
+        name: 'サメ',
+        hp: 2, ap: 3,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '海底神殿',
+        note: '海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。'
+    },
+    {
+        key: 'eel',
+        emoji: '🐍',
+        name: 'ウツボ',
+        hp: 2, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '海底神殿',
+        note: '海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。'
+    },
+    {
+        key: 'salamander',
+        emoji: '🦎',
+        name: 'サラマンダー',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: true,
+        abilities: { bite: 999 },
+        stage: '溶岩地帯',
+        note: '溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！'
+    },
+];
+
 function buildGuideJobsContent() {
     const container = document.getElementById('guide-jobs-content');
     container.innerHTML = '';
@@ -1900,8 +2059,54 @@ function buildGuideJobsContent() {
     }
 }
 
+function buildGuideNpcsContent() {
+    const container = document.getElementById('guide-npcs-content');
+    container.innerHTML = '';
+    NPC_DATA.forEach(npc => {
+        const flags = [];
+        if (npc.flying) flags.push('飛行');
+        if (npc.oceanUnit) flags.push('海洋');
+        if (npc.lavaWalker) flags.push('溶岩歩行');
+
+        let statsStr = '';
+        if (npc.hp !== null && npc.ap !== null) {
+            statsStr = `HP${npc.hp}/AP${npc.ap}`;
+            if (flags.length) statsStr += '/' + flags.join('・');
+        } else if (flags.length) {
+            statsStr = flags.join('・');
+        }
+
+        const stagePrefix = npc.stage ? `【${npc.stage}】` : '';
+        const headerText = statsStr ? `${npc.emoji} ${npc.name} (${statsStr}) ${stagePrefix}` : `${npc.emoji} ${npc.name} ${stagePrefix}`;
+
+        let descText = '';
+        if (npc.customStats) {
+            descText = npc.customStats;
+        } else if (npc.abilities && Object.keys(npc.abilities).length > 0) {
+            descText = Object.entries(npc.abilities).map(([key, count]) => {
+                const rawName = ABILITY_NAMES[key] || key;
+                const parenIdx = rawName.indexOf('(');
+                const baseName = parenIdx >= 0 ? rawName.substring(0, parenIdx) : rawName;
+                const countStr = count >= 999 ? '∞' : String(count);
+                return baseName + countStr;
+            }).join(' / ');
+        } else {
+            descText = '特殊能力なし';
+        }
+        if (npc.note) descText += `。${npc.note}`;
+
+        const card = document.createElement('div');
+        card.className = 'guide-job-card';
+        card.innerHTML =
+            `<div class="guide-job-name">${headerText.trim()}</div>` +
+            `<div class="guide-job-desc">${descText}</div>`;
+        container.appendChild(card);
+    });
+}
+
 function openGuide() {
     buildGuideJobsContent();
+    buildGuideNpcsContent();
     document.getElementById('guide-screen').style.display = 'flex';
     switchGuideTab('jobs');
 }
@@ -1909,9 +2114,9 @@ function closeGuide() {
     document.getElementById('guide-screen').style.display = 'none';
 }
 function switchGuideTab(tab) {
-    document.getElementById('guide-tab-jobs').style.display = (tab==='jobs') ? 'block' : 'none';
-    document.getElementById('guide-tab-npcs').style.display = (tab==='npcs') ? 'block' : 'none';
-    document.querySelectorAll('.guide-tab-btn').forEach(b => {
+    document.getElementById('guide-jobs-content').style.display = (tab==='jobs') ? 'block' : 'none';
+    document.getElementById('guide-npcs-content').style.display = (tab==='npcs') ? 'block' : 'none';
+    document.querySelectorAll('.guide-tab').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
     });
 }
