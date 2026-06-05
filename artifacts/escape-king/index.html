@@ -4914,7 +4914,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'swamp_magic') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'soul_absorb') return r===se.r && c===se.c;
     if (mode === 'bone_armor') return r===se.r && c===se.c;
-    if (mode === 'skull_head') return r===se.r && c===se.c;
+    if (mode === 'skull_head') return maxDist<=1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
     if (mode === 'necro_bind') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'necro_summon') { if(turn<5) return false; return maxDist<=1+(se.rangeBonus||0) && isWalkable(r,c) && !target; }
     if (mode === 'undead_party') return r===se.r && c===se.c;
@@ -4958,7 +4958,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'pentagram_formation') return maxDist===0;
     if (mode === 'soul_release') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'soul_pull') return maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'shikigami_summon') return maxDist===0 && turn >= 5;
+    if (mode === 'shikigami_summon') return maxDist<=1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c) && turn>=5;
     // 式神用アビリティ
     if (mode === 'charge') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'poison_bite') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
@@ -4982,6 +4982,8 @@ function isValidTarget(se, r, c, mode) {
         return true;
     }
     if (mode === 'skill_dwarf_combine') return maxDist<=1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (['summon_magic','summon_archer','summon_lancer','monkey_toy'].includes(mode)) return maxDist<=1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (mode === 'skill_infantry_squad') return maxDist<=1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
     return false;
 }
 
@@ -6068,13 +6070,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "槍攻撃！しかし無敵で防がれた！" : "槍攻撃命中！ダメージ(2)！"); used = true;
     } else if (actionMode === 'summon_archer') {
         se.abilities['summon_archer']--;
-        let dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-        let placed = false;
-        for (let d of dirs) { if (isWalkable(r, c)) { placed = true; break; } }
-        if (placed) {
-            entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
-            msg("弓兵を召喚！(HP3/AP2/直線弓∞)"); used = true;
-        }
+        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        msg("弓兵を召喚！(HP3/AP2/直線弓∞)"); used = true;
     } else if (actionMode === 'summon_lancer') {
         se.abilities['summon_lancer']--;
         entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
@@ -7113,14 +7110,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'skull_head') {
         if((se.soulCount||0)<1){msg("💀 スカルヘッド：魂が必要です！");return;}
         se.abilities['skull_head']--; se.soulCount--;
-        let shCell=null;
-        for(let dr=-1;dr<=1&&!shCell;dr++) for(let dc=-1;dc<=1&&!shCell;dc++){
-            if(dr===0&&dc===0) continue;
-            let nr=se.r+dr,nc=se.c+dc;
-            if(isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) shCell={r:nr,c:nc};
-        }
-        if(!shCell){msg("💀 スカルヘッド：召喚場所がありません！");return;}
-        let sk2=spawnAt('skull',shCell.r,shCell.c); sk2.team=se.team; sk2.necroOwnerId=se.id;
+        let sk2=spawnAt('skull',r,c); sk2.team=se.team; sk2.necroOwnerId=se.id;
         msg(`💀 スカルヘッド！魂1消費→ドクロ召喚！攻撃を肩代わりして爆発！`); used = true;
     } else if (actionMode === 'necro_bind') {
         if((se.soulCount||0)<1){msg("💀 ネクロバインド：魂が必要です！");return;}
@@ -7795,21 +7785,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         used = true;
     } else if (actionMode === 'shikigami_summon') {
-        // 式神召喚 (陰陽師) — 5T~、狐火+鬼カラス+鬼蛇召喚
+        // 式神召喚 (陰陽師) — 5T~、狐火+大鬼召喚
         if (turn < 5) { msg("🐦 式神召喚：5ターン目以降でないと使用できない！"); return; }
         if (se.abilities['shikigami_summon'] !== 999) se.abilities['shikigami_summon']--;
-        let skC = [];
-        for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+        // 狐火を選択セルに設置、大鬼を近隣の空きに自動配置
+        let m0=monsterTemplate('fox_fire',r,c); m0.id='sk_fox'+Date.now(); m0.team=se.team; entities.push(m0);
+        let oniCell=null;
+        for(let dr=-2;dr<=2&&!oniCell;dr++) for(let dc=-2;dc<=2&&!oniCell;dc++){
             if(dr===0&&dc===0) continue;
-            let nr=se.r+dr, nc=se.c+dc;
-            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) skC.push({r:nr,c:nc});
+            let nr=se.r+dr,nc=se.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) oniCell={r:nr,c:nc};
         }
-        ['fox_fire','great_oni'].forEach((st,i) => {
-            if (skC[i]) {
-                let m=monsterTemplate(st,skC[i].r,skC[i].c);
-                m.id='sk_'+st+Date.now()+i; m.team=se.team; entities.push(m);
-            }
-        });
+        if(oniCell){ let m1=monsterTemplate('great_oni',oniCell.r,oniCell.c); m1.id='sk_oni'+Date.now(); m1.team=se.team; entities.push(m1); }
         se.ap = 0;
         { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`🐦 式神召喚！狐火・大鬼を召喚！残りアビリティ使用不可！`);
