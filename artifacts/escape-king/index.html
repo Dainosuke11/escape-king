@@ -1971,6 +1971,97 @@ const NPC_DATA = [
         note: '墓場・混沌ステージに3ターンごとに大量出現。噛まれると毒状態。'
     },
     {
+        key: 'bat',
+        emoji: '🦇',
+        name: 'コウモリ',
+        hp: 1, ap: 3,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '墓場',
+        note: '墓場に5ターンごとに出現する飛行ユニット。デビルの「コウモリ潜入」で召喚されたコウモリは1T後ヴァンパイアに進化する。'
+    },
+    {
+        key: 'vampire',
+        emoji: '🧛',
+        name: 'ヴァンパイア',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: null,
+        customStats: '吸血∞',
+        stage: '墓場/地下迷宮',
+        note: '墓場・地下迷宮に出現。隣接した敵を吸血しHP回復。死霊術師のアンデットパーティでも召喚される。'
+    },
+    {
+        key: 'werewolf',
+        emoji: '🐺',
+        name: 'オオカミ男',
+        hp: 5, ap: 3,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999 },
+        stage: '墓場/地下迷宮',
+        note: '墓場・地下迷宮に出現する高HP・高AP型。噛み付き攻撃でAP-1の追加効果。通常のオオカミより一回り強い。'
+    },
+    {
+        key: 'frankenstein',
+        emoji: '🧟',
+        name: 'フランケン',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '墓場/混沌/地下迷宮',
+        note: '墓場ゾンビ群に10%の確率で混じる強化版ゾンビ。地下迷宮にも出現。死霊術師の魂消費サモンでも召喚される。'
+    },
+    {
+        key: 'great_spirit',
+        emoji: '👻',
+        name: '大悪霊',
+        hp: 5, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { bite: 999, possess: 999 },
+        stage: '墓場',
+        note: '通常の悪霊の強化版。HP5の高耐久。とりつきでAP-1。死霊術師が魂1消費で召喚できる上位アンデット。'
+    },
+    {
+        key: 'skeleton',
+        emoji: '🦴',
+        name: 'スケルトン',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '墓場',
+        note: '死霊術師のネクロサモンで召喚される骸骨兵。HP1だが隣接する骸骨系(スケルトン・スケルトンソルジャー)がバリアを形成する。'
+    },
+    {
+        key: 'skeleton_soldier',
+        emoji: '💀',
+        name: 'スケルトンソルジャー',
+        hp: 3, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { sword: 999 },
+        stage: '墓場/地下迷宮',
+        note: '死霊術師が魂1消費で召喚できる上位スケルトン。剣撃でHP3の耐久を持つ。地下迷宮コロシアムのNPCとしても登場。'
+    },
+    {
+        key: 'skull',
+        emoji: '💀',
+        name: 'ドクロ',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { dark_magic: 999 },
+        stage: '墓場',
+        note: '死霊術師のスカルヘッドで召喚。代わりにダメージを受け、HP0で半径1マスに爆発(1ダメ+吹き飛ばし)するトラップ型ユニット。'
+    },
+    {
+        key: 'necro_chimera',
+        emoji: '☠️',
+        name: 'ネクロキメラ',
+        hp: 6, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { corpse_throw: 999 },
+        stage: '墓場',
+        note: '死霊術師の「死体融合」で魂3消費+周囲全味方を破壊して召喚するボス級ユニット。死体投げで半径3/威3を放つ。'
+    },
+    {
         key: 'miner',
         emoji: '⛏️',
         name: '炭鉱夫',
