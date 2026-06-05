@@ -305,6 +305,10 @@
         .guide-detail-row { font-size: 11px; color: #aaa; line-height: 1.6; padding: 2px 0; }
         .guide-detail-row .tip-name { color: #d4c06a; font-weight: bold; margin-right: 4px; }
         .guide-content { height: 440px; overflow-y: auto; padding-right: 4px; }
+        #guide-npc-filters { display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .npc-filter-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #555; background: #2c3e50; color: #ccc; font-size: 12px; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .npc-filter-btn:hover { background: #34495e; }
+        .npc-filter-btn.active { background: #1a252f; border-color: var(--accent); color: var(--accent); font-weight: bold; }
         /* Matching notification */
         #match-toast {
             display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -673,6 +677,7 @@
     </div>
     <div class="guide-content" id="guide-jobs-content">
     </div>
+    <div id="guide-npc-filters"></div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
@@ -2343,10 +2348,35 @@ function buildGuideJobsContent() {
     }
 }
 
+let currentNpcFilter = '全て';
+
+function buildNpcFilterButtons() {
+    const container = document.getElementById('guide-npc-filters');
+    const stageSet = new Set();
+    NPC_DATA.forEach(npc => {
+        if (npc.stage) {
+            npc.stage.split('/').forEach(s => { const t = s.trim(); if (t) stageSet.add(t); });
+        }
+    });
+    const stages = ['全て', ...stageSet];
+    container.innerHTML = stages.map(s =>
+        `<button class="npc-filter-btn${s === currentNpcFilter ? ' active' : ''}" onclick="switchNpcFilter('${s}')">${s}</button>`
+    ).join('');
+}
+
+function switchNpcFilter(filter) {
+    currentNpcFilter = filter;
+    buildNpcFilterButtons();
+    buildGuideNpcsContent();
+}
+
 function buildGuideNpcsContent() {
     const container = document.getElementById('guide-npcs-content');
     container.innerHTML = '';
-    NPC_DATA.forEach(npc => {
+    const visibleNpcs = currentNpcFilter === '全て'
+        ? NPC_DATA
+        : NPC_DATA.filter(npc => npc.stage && npc.stage.split('/').map(s => s.trim()).includes(currentNpcFilter));
+    visibleNpcs.forEach(npc => {
         const flags = [];
         if (npc.flying) flags.push('飛行');
         if (npc.oceanUnit) flags.push('海洋');
@@ -2390,6 +2420,8 @@ function buildGuideNpcsContent() {
 
 function openGuide() {
     buildGuideJobsContent();
+    currentNpcFilter = '全て';
+    buildNpcFilterButtons();
     buildGuideNpcsContent();
     document.getElementById('guide-screen').style.display = 'flex';
     switchGuideTab('jobs');
@@ -2400,6 +2432,7 @@ function closeGuide() {
 function switchGuideTab(tab) {
     document.getElementById('guide-jobs-content').style.display = (tab==='jobs') ? 'block' : 'none';
     document.getElementById('guide-npcs-content').style.display = (tab==='npcs') ? 'block' : 'none';
+    document.getElementById('guide-npc-filters').style.display = (tab==='npcs') ? 'flex' : 'none';
     document.querySelectorAll('.guide-tab').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
     });
