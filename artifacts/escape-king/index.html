@@ -5519,7 +5519,8 @@ function showEntityInfo(e) {
     }
     let mafiaGaugeStr = (e.mafiaGauge !== undefined) ? ` &nbsp; 🏴G${e.mafiaGauge}` : '';
     let junkPointStr = (e.junkPoint !== undefined || e.dwarfUnit || e.isDwarfRobot) ? ` &nbsp; ⚙️JP${e.junkPoint||0}` : '';
-    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    const entityIcon = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] + ' ' : '';
+    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
