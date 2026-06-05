@@ -2233,6 +2233,66 @@ const NPC_DATA = [
         stage: '',
         note: '魔術師スキルで半径2マス以内に召喚できる飛行ユニット。火炎ブレス∞・噛みつき∞・ヘルブレス1回。天空要塞・溶岩地帯にはNPCとしても出現(HP5/AP3)。'
     },
+    {
+        key: 'fox_fire',
+        emoji: '🦊',
+        name: '狐火',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { charge: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキル「狐火召喚」で呼び出される式神。突進攻撃∞。HP1と脆いが数で圧迫する。'
+    },
+    {
+        key: 'oni_crow',
+        emoji: '🐦',
+        name: '鬼カラス',
+        hp: 3, ap: 2,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { peck: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキル「鬼カラス召喚」で呼び出される飛行式神。つつき攻撃でAP-1の追加効果あり。'
+    },
+    {
+        key: 'oni_snake',
+        emoji: '🐍',
+        name: '鬼蛇',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { poison_bite: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキル「鬼蛇召喚」で呼び出される式神。毒噛みで毒状態を付与する。'
+    },
+    {
+        key: 'blue_oni',
+        emoji: '👹',
+        name: '青鬼',
+        hp: 5, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキルで召喚される鬼ユニット。HP5の高耐久。パンチ攻撃∞。'
+    },
+    {
+        key: 'red_oni',
+        emoji: '👹',
+        name: '赤鬼',
+        hp: 5, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキルで召喚される鬼ユニット。HP5の高耐久。パンチ攻撃∞。'
+    },
+    {
+        key: 'great_oni',
+        emoji: '👹',
+        name: '大鬼(式)',
+        hp: 8, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '陰陽師召喚',
+        note: '陰陽師スキル「大鬼召喚」で呼び出される最強の式神。HP8の超高耐久。パンチ攻撃∞。'
+    },
 ];
 
 function buildGuideJobsContent() {
