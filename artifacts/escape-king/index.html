@@ -10437,6 +10437,14 @@ function updateUI() {
     btnM.disabled = selectedEntity.ap <= 0;
     if (actionMode === 'move') btnM.classList.add('active'); else btnM.classList.remove('active');
 
+    // 召喚ユニット種別ラベル（ENTITY_ICONS に登録されているユニット全種）
+    if (ENTITY_ICONS[selectedEntity.type]) {
+        let typeDiv = document.createElement('div');
+        typeDiv.style.cssText = 'padding:5px 8px; background:#1e2d3d; border-radius:4px; color:#a8d8ea; font-weight:bold; font-size:13px; margin-bottom:4px; border-left:3px solid #3498db;';
+        typeDiv.textContent = `${ENTITY_ICONS[selectedEntity.type]} ${selectedEntity.name}`;
+        list.appendChild(typeDiv);
+    }
+
     // JPカウンター（ドワーフ系ユニット）
     if (selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) {
         let jpDiv = document.createElement('div');
