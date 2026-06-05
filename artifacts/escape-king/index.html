@@ -7970,12 +7970,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("⛏️ ダッシュ！"+(mgEvt?" "+mgEvt:""));
         checkEnemyTerritory(se); used=true;
     } else if (actionMode === 'robot_arm') {
-        let raDmg=((se.isDwarfRobot)?5:3)+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        let raDmg=3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
         if(se.abilities['robot_arm']!==999) se.abilities['robot_arm']--;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,raDmg)){targetEntity.hp-=raDmg;knockback(targetEntity,1,se);}
         msg(targetEntity.invin?`🦾 ロボットアーム！しかし無敵で防がれた！`:`🦾 ロボットアーム！${targetEntity.name}に${raDmg}ダメ+吹飛！`); used=true;
     } else if (actionMode === 'robot_leg') {
-        let rlDmg=((se.isDwarfRobot)?4:2)+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        let rlDmg=2+(se.atkBonus||0)+(targetEntity.defDebuff||0);
         if(se.abilities['robot_leg']!==999) se.abilities['robot_leg']--;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,rlDmg)){targetEntity.hp-=rlDmg;knockback(targetEntity,1,se);}
         let rlDr=Math.sign(targetEntity.r-se.r), rlDc=Math.sign(targetEntity.c-se.c);
@@ -7983,7 +7983,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if(rlNr>=0&&rlNr<SIZE&&rlNc>=0&&rlNc<SIZE&&isWalkable(rlNr,rlNc)&&!entities.some(e=>e.hp>0&&e.r===rlNr&&e.c===rlNc)){se.r=rlNr;se.c=rlNc;}
         msg(targetEntity.invin?`🦿 ロボットレッグ！しかし無敵で防がれた！`:`🦿 ロボットレッグ！${targetEntity.name}に${rlDmg}ダメ+吹飛+前進！`); used=true;
     } else if (actionMode === 'robot_body') {
-        let rbDmg=((se.isDwarfRobot)?3:1)+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        let rbDmg=1+(se.atkBonus||0)+(targetEntity.defDebuff||0);
         if(se.abilities['robot_body']!==999) se.abilities['robot_body']--;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,rbDmg)){
             targetEntity.hp-=rbDmg;
@@ -8002,15 +8002,15 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin?`🪖 ロボットヘッド！しかし無敵で防がれた！`:`🪖 ロボットヘッド！${targetEntity.name}のAP-1+全アビ1T封印！`); used=true;
     } else if (actionMode === 'robot_cannon') {
         if(!se.isDwarfRobot&&(se.junkPoint||0)<2){msg("💣 ロボットキャノン：JP2が必要！");return;}
-        let rcDmg=((se.isDwarfRobot)?7:5)+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        let rcDmg=5+(se.atkBonus||0)+(targetEntity.defDebuff||0);
         if(se.abilities['robot_cannon']!==999) se.abilities['robot_cannon']--;
         if(!se.isDwarfRobot) se.junkPoint-=2;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,rcDmg)){
             targetEntity.hp-=rcDmg; knockback(targetEntity,1,se);
-            let rcSplash=(se.isDwarfRobot)?4:2;
+            let rcSplash=2;
             entities.forEach(t=>{if(t!==targetEntity&&t.hp>0&&t.team!==se.team&&!t.invin&&Math.max(Math.abs(t.r-targetEntity.r),Math.abs(t.c-targetEntity.c))<=1) t.hp-=rcSplash+(t.defDebuff||0);});
         }
-        msg(targetEntity.invin?`💣 ロボットキャノン！しかし無敵で防がれた！`:`💣 ロボットキャノン！${targetEntity.name}に${rcDmg}ダメ+吹飛+隣接追加ダメ！${!se.isDwarfRobot?`JP-2(残${se.junkPoint})`:'ロボット強化版！'}`); used=true;
+        msg(targetEntity.invin?`💣 ロボットキャノン！しかし無敵で防がれた！`:`💣 ロボットキャノン！${targetEntity.name}に${rcDmg}ダメ+吹飛+隣接追加ダメ！${!se.isDwarfRobot?`JP-2(残${se.junkPoint})`:''}`); used=true;
     } else if (actionMode === 'nail_gun') {
         let ngDmg=3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
         if(se.abilities['nail_gun']!==999) se.abilities['nail_gun']--;
@@ -8530,7 +8530,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         entities.push({
             id: robotId, type: 'dwarf_robot', name: 'ドワーフロボ',
             team: se.team, r: targetR, c: targetC,
-            hp: 25, maxHp: 25, ap: 2, maxAp: 2,
+            hp: 15, maxHp: 15, ap: 2, maxAp: 2,
             abilities: { drop_rock: 999, shatter: 999, robot_arm: 999, robot_leg: 999, robot_body: 999, robot_head: 999, robot_cannon: 999 },
             skillUsed: true, stealth: false, stealthTimer: 0,
             invin: false, invinTimer: 0, poisonTimer: 0,
@@ -8539,7 +8539,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         });
         se.abilities = {...se.initialAbilities};
         se.skillUsed = true;
-        msg(`🤖 合体！ドワーフロボ(HP25/AP2/射程+2/威力+2)を召喚！ドワーフはパーツ収集を最初からやり直し！`);
+        msg(`🤖 合体！ドワーフロボ(HP15/AP2/射程+2)を召喚！ドワーフはパーツ収集を最初からやり直し！`);
         return;
     }
     // ====== 既存スキルモード ======
