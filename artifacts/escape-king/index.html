@@ -1401,6 +1401,11 @@ const JOB_GUIDE_META = {
     dwarf:         { emoji: '⚙️', fullName: 'ドワーフエンジニア', note: '【JP：ジャンクポイント】岩砕き/素材集めで増加。パーツ製造・タレット建設・キャノンで消費\n★スキル「合体」：全5パーツ∞が揃うと使用可能。半径1にドワーフロボ(HP25/AP2)召喚。撃破時JP+10・アビリティ初期化' },
 };
 
+const ENTITY_ICONS = {
+    dwarf_robot: '🤖',
+    turret:      '🔩',
+};
+
 // ============================================================
 //  WEBSOCKET FUNCTIONS
 // ============================================================
@@ -5175,7 +5180,8 @@ function render() {
         const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
         // Wyvern has no HP (maxHp===0 is the flag); skip HP bar for it
         const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
-        ed.innerHTML = `${isEnemy ? '敵:' : ''}${e.name.substring(0,2)}${poisonIcon}${hpBar}`;
+        let entityLabel = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] : e.name.substring(0,2);
+        ed.innerHTML = `${isEnemy ? '敵:' : ''}${entityLabel}${poisonIcon}${hpBar}`;
         
         let vr = displayR(e.r);
         let targetTile = document.getElementById(`tile-${vr}-${e.c}`);
