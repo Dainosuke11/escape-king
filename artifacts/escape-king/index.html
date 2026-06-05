@@ -8156,13 +8156,8 @@ function executeSkill(se) {
     }
     
     if (se.type === 'infantry') {
-        let cl = {...se, id: 'cl'+Date.now(), name: '分隊', hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: {...se.abilities}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
-        cl.c += 1;
-        if (!isWalkable(cl.r, cl.c)) cl.c -= 2;
-        if (!isWalkable(cl.r, cl.c)) { cl.c += 1; cl.r += 1; }
-        entities.push(cl);
-        msg("歩兵の分隊！別動隊が出現！(HP5/AP2・5ターン生存でスキル解放)");
-        return true;
+        msg("歩兵の分隊！設置場所(半径1マス以内の空きマス)を選んでください");
+        actionMode = 'skill_infantry_squad'; render(); return false;
     }
     // ====== 機械兵 スキル: リミッター解除 ======
     if (se.type === 'cyborg') {
@@ -8385,6 +8380,14 @@ function executeSkill(se) {
 }
 
 function executeRushSkill(se, targetR, targetC, mode) {
+    if (mode === 'skill_infantry_squad') {
+        let cl = {...se, id: 'cl'+Date.now(), name: '分隊', r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: {...(se.initialAbilities||se.abilities)}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
+        delete cl.skillRecoverTurn;
+        entities.push(cl);
+        se.skillUsed = true;
+        msg("歩兵の分隊！別動隊が出現！(HP5/AP2・5ターン生存でスキル解放)");
+        return;
+    }
     if (mode === 'skill_hydro') {
         let gauge = se.hydroPumpGauge || 0;
         let range, width, dmg;
