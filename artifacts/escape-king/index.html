@@ -256,6 +256,7 @@
         .volcano_summit_ground { background: #2a1005; }
         .ash-mist { box-shadow: inset 0 0 10px rgba(180,140,60,0.95) !important; background: rgba(70,50,20,0.55) !important; }
         .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); }
+        .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
         .eruption-warn { box-shadow: inset 0 0 0 3px #ff4500 !important; background: rgba(255,80,0,0.3) !important; }
         /* Curse tile (demon stage) */
         .curse_tile { background: #3b0060; }
@@ -433,6 +434,7 @@
             <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
             <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
             <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
+            <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
         </select>
     </div>
     <div class="select-group">
@@ -527,6 +529,7 @@
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
                 <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
+                <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -562,6 +565,7 @@
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
                 <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
+                <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
             </select>
         </div>
         <div class="select-group">
@@ -628,6 +632,7 @@
                 <option value="world_manager">⚖️ 世界の管理者 (天秤・調停・世界の作り直し)</option>
                 <option value="onmyoji">☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)</option>
                 <option value="devil">😈 デビル (爪・甘い蜜・寿命の前借り)</option>
+                <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -667,6 +672,8 @@
         <div class="guide-job-card"><div class="guide-job-name">👼 天使 (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 光のムチ5(直線2/威1/AP-1) / フェザーダッシュ5(ダッシュ+隣接AP-1/堕天+1)<br>バインドアロー3(直線5/威1/AP0+5封印/堕天+1) / 光の呪縛3(半径2/AP0+5封印/堕天+1)<br>光の結界3(半径1/1T結界+無敵/敵AP-2+封印/堕天+1)<br>スキル:堕天(ゲージ≥15/発動TのみAP+2/罪の刻印・デスサイズ・均衡崩し・怨みの打撃追加/毎T自1ダメ+ゲージ+1)<br>堕天使追加技：罪の刻印3(AP-2/5封印/呪い) / デスサイズ∞(半径AoE) / 均衡崩し3(直線5か半径8+転送) / 怨みの打撃∞(半径1/被弾・バフで+2ダメ)<br>※飛行コマ：岩マス通過時AP-1追加。天使/堕天使はダメージを受けるたびに堕天ゲージ+1</div></div>
         <div class="guide-job-card"><div class="guide-job-name">⚖️ 世界の管理者 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / ダッシュ3 / 天秤5(HP≤15で半径3/威1+被弾で強化/全アビ+1)<br>均衡の調整5(魔法弾/半径2/敵ゴール有利で+3ダメ+AP-2+封印/全アビ+1) / 調停の裁き5(落雷/半径3/敵コマ多数で全体攻撃/全アビ+1)<br>秩序の修正5(半径4/後吹飛/敵3マス移動で結界+AP-2+封印+バリア/全アビ+1) / 不平等への怒り5(炎/半径5/残りアビ1以下があれば+3ダメ+AP-2+半径3全体2ダメ/全アビ+1)<br>均等の一撃5(超能力/半径3/後吹飛+前岩/前T敵スキル使用で+3ダメ+AP-2+封印/全アビ+1)<br>調和の祈り1(自分/HP+1・AP+1・全アビ+1/封印された瞬間→自封印解除+全敵1T全封印+AP-2+全アビ+1+次T自AP+1)<br>スキル:世界の作り直し(5T以降/半径5全敵5マス後吹飛+近傍岩5個/次相手ターン後地震/8マス以上遠距離敵で全敵AP-2+1T全封印+全アビ+1)</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🔯 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / 鬼腕解放10 / 神速5 / 護符の結界3<br>五芒星の陣3 / 放魂術3 / 引魂術3 / 式神召喚3(5T~)<br>※各アビリティ使用後そのターン他アビリティ使用不可<br>スキル:陰陽冥鬼</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">😈 デビル (HP30/AP2/飛行)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き5 / 爪で切り裂く×10(半径1/威1/敵バフ時+2+吹飛+AP-1) / じわじわ攻める×5(ダッシュ+岩)<br>甘い蜜×3(半径2/敵HP+2+バリア→全封印+AP-1) / 活性化の呪い×3(半径3/2T:AP+1+移動ごと1ダメ)<br>ご褒美の罠×3(半径2/前3岩+後アイテム+全封印) / コウモリ潜入×2(半径5/3ダメ+コウモリ→1T後味方化)<br>運命の選択×3(半径3/5ダメ+AP-2+敵3マス後退) / 金依存症×3(半径2/2ダメ+吹飛+前3岩+後4鉱山+毒+全封印)<br>お楽しみのプレゼント×1(半径3/2ダメ+プレゼント設置)<br>★スキル「寿命の前借り」：半径2暗黒フィールド→次T内の敵に10ダメ+AP-1+全封印</div></div>
+        <div class="guide-job-card"><div class="guide-job-name">🤵 マフィア (HP30/AP2)</div><div class="guide-job-desc">岩落とし∞ / 岩砕き3 / 尻尾切り×5(ダッシュ+元の場所に子分) / 拳銃×6(直線3/威2・至近威3/G+2)<br>けじめ×1(半径1/威3+AP-1/G1消費) / 狙撃×1(直線5/威5/自AP-1/G1消費)<br>裏取引×3(半径1/互HP+3+対象封印5+AP-1/G+3) / 借用書×3(半径1/1Tコントロール/G3消費)<br>拷問×3(半径1/威4+AP-2+全封印1T/返済持ちで+2ダメ/G2消費) / 恐喝×3(半径2/返済付与+双方アビ+1+AP-2+自バリア/G+5)<br>【マフィアゲージ】悪事で増加・消費系アビリティに必要<br>【子分】HP1/AP2/拳銃∞。マフィアが攻撃を受けると代わりにランダムな子分が食らう。子分消滅でG+1<br>【返済】敵に付与。ターン開始時(回数1以上):封印3+AP-1+自2ダメ→マフィアHP+2・全アビ+1・G+2<br>★スキル「縄張り宣言」：Gを全消費→半径1+G分の縄張り1T展開。縄張り内の敵全員に返済付与。縄張り内で敵が移動するたびG+1+1ダメ</div></div>
     </div>
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
         <div class="guide-job-card"><div class="guide-job-name">👺 ゴブリン各種</div><div class="guide-job-desc">big(HP3/剣) / red(HP2/炎/剣) / blue(HP2/AP3/ナイフ/剣) / small(HP1/ナイフ)</div></div>
@@ -685,8 +692,6 @@
         <div class="guide-job-card"><div class="guide-job-name">🦈 サメ (HP2/AP3) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。潮流にのって1マス流される。素早く危険。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🐍 ウツボ (HP2/AP2) 海底神殿</div><div class="guide-job-desc">噛み付き∞。海底神殿に4ターンごとに出現。狭い通路を守る待ち伏せ型。</div></div>
         <div class="guide-job-card"><div class="guide-job-name">🦎 サラマンダー (HP3/AP2) 溶岩地帯</div><div class="guide-job-desc">噛み付き∞。溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">☯️ 陰陽師 (HP30/AP2)</div><div class="guide-job-desc">【鬼腕解放×10】半径1/威2+吹飛+封印。封印不可。5封印以上でAoE+50%回数+1。【神速×5】半径3陸移動/通過1ダメ+狐火召喚/その後アビ不可。【護符の結界×3】半径2味方バリア+HP1/正面5岩。【五芒星の陣×3】半径3結界1T/敵AP-1+全封印。【放魂術×3】半径3/威3+吹飛5+AP-1+封印+悪霊召喚。【引魂術×3】半径5引寄せ/威3+AP-1+封印。【式神召喚×3(5T~)】狐火+大鬼召喚。★スキル「陰陽冥鬼」：封印/回数0アビ5以上で半径5全敵を引き寄せor吹飛ばし＋ランダム3種封印解除。</div></div>
-        <div class="guide-job-card"><div class="guide-job-name">😈 デビル (HP30/AP2/飛行)</div><div class="guide-job-desc">【爪で切り裂く×10】半径1/威1。敵がバフ取得済みなら+2ダメ+吹飛+AP-1。【じわじわ攻める×5】2マスダッシュ＋元の場所に岩。【甘い蜜×3】半径2/敵HP+2+バリア付与。バリア中全アビ封印+AP-1。【活性化の呪い×3】半径3/2T呪い:AP+1・移動ごと1ダメ。【ご褒美の罠×3】半径2/前方3岩・後方アイテム・全封印1T。【コウモリ潜入×2】半径5/3ダメ＋周囲にコウモリ召喚→1T後ヴァンパイア味方化。【運命の選択×3】半径3/敵を自陣方向3マス移動＋5ダメ+AP-2。【金依存症×3】半径2/2ダメ+吹飛/前3岩/後4鉱山/毒+全封印。【お楽しみのプレゼント×1】半径3/2ダメ+周辺プレゼント。★スキル「寿命の前借り」：半径2に暗黒フィールド/フィールド内の敵HP+5・AP-2→次T10ダメ+AP-1+全封印。</div></div>
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
@@ -830,6 +835,7 @@ let factoryPressWarning = false; // true = warning shown this turn, will hit nex
 // Volcano Summit stage
 let volcanoCraterRadius = 0;    // 0=just center tile, expands every 4 turns
 let volcanoSplatterTiles = [];  // [{r,c,placedTurn}] temp magma-splatter lava tiles
+let mafiaTerritory = null; // {ownerTeam, cells:[{r,c}], ownerTurn, origTiles:{}} — 1T縄張りエリア
 let volcanoAshMistSet = new Set(); // "r,c" keys of cells under ash mist this player-turn
 
 // ============================================================
@@ -1114,7 +1120,17 @@ const ABILITY_NAMES = {
     gold_addiction: '金依存症(半径2/威2+吹飛/前方3岩/後方4鉱山/毒+全封印1T)',
     fun_present: 'お楽しみのプレゼント(半径3/威2/周辺プレゼント設置)',
     lifespan_advance: '寿命の前借り(半径2暗黒フィールド/敵HP+5AP-1/次T10ダメ+AP-1+全封印)',
-    beast_fuse: '獣融合'
+    beast_fuse: '獣融合',
+    tail_cut: '尻尾切り(ダッシュ+元の場所に子分)',
+    pistol: '拳銃(直線3/威2-3/ゲージ+2)',
+    penance: 'けじめ(半径1/威3/AP-1/ゲージ1消費)',
+    snipe: '狙撃(直線5/威5/自AP-1/ゲージ1消費)',
+    backroom_deal: '裏取引(半径1/HP+3+封印5+AP-1/ゲージ+3)',
+    debt_note: '借用書(半径1/1Tコントロール/ゲージ3消費)',
+    torture_mafia: '拷問(半径1/威4+AP-2+全封印/ゲージ2消費)',
+    extortion: '恐喝(半径2/返済付与+AP-2+バリア/ゲージ+5)',
+    repayment: '返済(ターン開始時:封印3+AP-1→マフィア回復)',
+    territory_declaration: '縄張り宣言(ゲージ全消費/半径1+ゲージ分の縄張り1T)'
 };
 
 const ABILITY_TIPS = {
@@ -1283,7 +1299,16 @@ const ABILITY_TIPS = {
     soul_pull: '半径5マスの敵を目の前に引き寄せ＋3ダメ＋AP-1＋ランダム1アビリティ1T封印。使用後、全アビリティを1T封印(oni_arm・岩落とし除く)。回数3。',
     shikigami_summon: '5ターン経過後から使用可能。隣接マスに狐火と大鬼を召喚する。使用後、全アビリティを1T封印(oni_arm・岩落とし除く)。回数3。',
     charge: '半径1マスの敵に攻撃。残りAP全てをダメージに上乗せし、AP-1を付与。全AP消費。回数∞。(式神・狐火等が使用)',
-    poison_bite: '半径1マスの敵に1ダメ＋毒3T付与。回数∞。(鬼蛇等が使用)'
+    poison_bite: '半径1マスの敵に1ダメ＋毒3T付与。回数∞。(鬼蛇等が使用)',
+    tail_cut: '2マス以内のマスへダッシュ。元いた場所に行動力0の子分を残す(5T後に自由行動可)。マフィアゲージ+1。回数5。',
+    pistol: '同じ行か列の直線3マス内の敵に2ダメ。半径1マス以内なら3ダメ。マフィアゲージ+2。回数6。',
+    penance: '半径1マスの敵に3ダメ+AP-1。マフィアゲージを1消費しないと使えない。回数1。',
+    snipe: '同じ行か列の直線5マス内の敵に5ダメ。自分のAP-1。マフィアゲージを1消費しないと使えない。回数1。',
+    backroom_deal: '半径1マスの敵と自分のHPをそれぞれ+3。敵のランダムアビリティ5種を1T封印+AP-1。マフィアゲージ+3。回数3。',
+    debt_note: '半径1マスの敵を1ターン支配。敵が返済アビリティ持ちなら返済-1してさらに1T延長。マフィアゲージを3消費。回数3。',
+    torture_mafia: '半径1マスの敵に4ダメ+AP-2+全アビリティ1T封印。敵の返済が1以上なら+2ダメ。マフィアゲージを2消費。回数3。',
+    extortion: '半径2マスの敵に返済を1回付与。お互いの全アビリティ+1。敵AP-2。自分に1Tバリア。マフィアゲージ+5。回数3。',
+    repayment: 'ターン開始時に自動発動(使用回数1以上時)：ランダム3アビリティ1T封印+AP-1+自身2ダメ。マフィア側：HP+2・全アビ+1・ゲージ+2。'
 };
 
 const JOB_DATA = {
@@ -1305,7 +1330,8 @@ const JOB_DATA = {
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
     world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 1 }, hp: 30, ap: 2 },
     onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 3, oni_arm: 10, divine_speed: 5, talisman_barrier: 3, pentagram_formation: 3, soul_release: 3, soul_pull: 3, shikigami_summon: 3 }, hp: 30, ap: 2 },
-    devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true }
+    devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true },
+    mafia:   { name: 'マフィア', abilities: { drop_rock: 999, shatter: 3, tail_cut: 5, pistol: 6, penance: 1, snipe: 1, backroom_deal: 3, debt_note: 3, torture_mafia: 3, extortion: 3 }, hp: 30, ap: 2, mafiaUnit: true }
 };
 
 // ============================================================
@@ -1487,7 +1513,8 @@ function getGameState() {
         factoryPressWarning,
         volcanoCraterRadius,
         volcanoSplatterTiles: JSON.parse(JSON.stringify(volcanoSplatterTiles)),
-        volcanoAshMistSet: [...volcanoAshMistSet]
+        volcanoAshMistSet: [...volcanoAshMistSet],
+        mafiaTerritory: mafiaTerritory ? JSON.parse(JSON.stringify(mafiaTerritory)) : null
     };
 }
 
@@ -1514,6 +1541,7 @@ function applyGameState(state) {
     if (state.volcanoCraterRadius !== undefined) volcanoCraterRadius = state.volcanoCraterRadius;
     if (state.volcanoSplatterTiles) volcanoSplatterTiles = state.volcanoSplatterTiles;
     if (state.volcanoAshMistSet) volcanoAshMistSet = new Set(state.volcanoAshMistSet);
+    if (state.mafiaTerritory !== undefined) mafiaTerritory = state.mafiaTerritory;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -2114,7 +2142,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -2767,8 +2795,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}) });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}) });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
@@ -2795,6 +2823,7 @@ function initEntities(pJob, difficulty = "1") {
     colosseumShrinkLayer = 0;
     laneSpeedMap = []; factoryPressTarget = null; factoryPressWarning = false;
     volcanoCraterRadius = 0; volcanoSplatterTiles = []; volcanoAshMistSet = new Set();
+    mafiaTerritory = null;
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -2874,13 +2903,14 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}) });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}) });
     addExtraEnemies(difficulty);
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
+    mafiaTerritory = null;
 }
 
 function addExtraEnemies(difficulty) {
@@ -2915,6 +2945,7 @@ function addExtraEnemies(difficulty) {
             ...(jd.oceanUnit ? {oceanUnit:true, waterGauge:jd.waterGauge||10, maxWaterGauge:jd.maxWaterGauge||30} : {}),
             ...(jd.flying ? {flying:true} : {}),
             ...(t === 'angel' ? {fallenGauge:0, fallen:false} : {}),
+            ...(jd.mafiaUnit ? {mafiaGauge:0} : {}),
         });
     }
 }
@@ -3076,6 +3107,28 @@ function processTurnStartEffects(e) {
         e.activationCurse.timer--;
         e.activationCurse.prevR = e.r; e.activationCurse.prevC = e.c;
         if (e.activationCurse.timer <= 0) { delete e.activationCurse; msg(`😈 ${e.name}の活性化の呪いが解けた！`, true); }
+    }
+    // 返済アビリティ：ターン開始時に自動発動
+    if ((e.abilities?.repayment||0) >= 1 && !e.invin) {
+        let rpKeys = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&k!=='repayment'&&e.abilities[k]>0);
+        let sealKeys = rpKeys.sort(()=>Math.random()-0.5).slice(0,3);
+        if (!cursedAbilities[e.id]) cursedAbilities[e.id] = {};
+        sealKeys.forEach(k=>{ cursedAbilities[e.id][k] = Math.max(cursedAbilities[e.id][k]||0, 1); });
+        e.ap = Math.max(0, e.ap - 1);
+        if (!e.invin) e.hp -= 2;
+        msg(`💳 ${e.name}は返済の義務を果たした！封印3+AP-1+2ダメ！`, true);
+        let mafiaEnt = entities.find(me => me.hp>0 && me.type==='mafia' && me.team!==e.team);
+        if (mafiaEnt) {
+            mafiaEnt.hp = Math.min(mafiaEnt.maxHp+5, mafiaEnt.hp+2);
+            Object.keys(mafiaEnt.abilities||{}).forEach(k=>{ if(mafiaEnt.abilities[k]!==999) mafiaEnt.abilities[k]++; });
+            mafiaEnt.mafiaGauge = Math.min(20, (mafiaEnt.mafiaGauge||0)+2);
+            msg(`🤵 マフィアが返済を受け取った！HP+2・全アビ+1・ゲージ+2！`, true);
+        }
+    }
+    // 子分の凍結管理
+    if (e.type === 'kobun') {
+        if ((e.kobunFreezeUntil||0) > turn) { e.ap = 0; }
+        else if ((e.kobunFreezeUntil||0) > 0 && (e.kobunFreezeUntil||0) <= turn && e.ap === 0) { e.ap = e.maxAp||2; e.kobunFreezeUntil = 0; }
     }
     // コウモリ変換タイマー：1T後にヴァンパイア化して味方に
     if ((e.batConvertTimer || 0) > 0) {
@@ -3405,6 +3458,20 @@ function processTurnStartEffects(e) {
             // Already handled above (hp-=1 when gauge becomes 0)
         }
     }
+}
+
+function tryKobunShield(target, dmg) {
+    if (!target || target.type !== 'mafia' || target.hp <= 0) return false;
+    let kobuns = entities.filter(e => e.hp > 0 && e.type === 'kobun' && e.team === target.team);
+    if (kobuns.length === 0) return false;
+    let k = kobuns[Math.floor(Math.random() * kobuns.length)];
+    k.hp -= dmg;
+    msg(`🛡️ 子分が${target.name}への攻撃を肩代わり！子分に${dmg}ダメ！`, true);
+    if (k.hp <= 0) {
+        target.mafiaGauge = Math.min(20, (target.mafiaGauge||0) + 1);
+        msg(`😤 子分が倒れた！マフィアゲージ+1！`, true);
+    }
+    return true;
 }
 
 function necroShieldBlock(entity) {
@@ -4061,6 +4128,10 @@ function startTurn(team, skipEffects = false) {
             }
             return true;
         });
+        // マフィア縄張り期限チェック
+        if (mafiaTerritory && turn > mafiaTerritory.expireTurn) {
+            mafiaTerritory = null;
+        }
         // 暗黒フィールドタイルクリーンアップ
         darknessFields = darknessFields.filter(zone => {
             if (turn > zone.turnExpires) {
@@ -4630,7 +4701,7 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
-    if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault') {
+    if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault' || mode === 'tail_cut') {
         let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
         if (dist === 0 || dist > 2) return false;
@@ -4659,6 +4730,13 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'fate_choice') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
     if (mode === 'gold_addiction') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'fun_present') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
+    if (mode === 'pistol') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'penance') return dist===1 && target && target.team!==se.team;
+    if (mode === 'snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5 && target && target.team!==se.team;
+    if (mode === 'backroom_deal') return dist===1 && target && target.team!==se.team;
+    if (mode === 'debt_note') return dist===1 && target && target.team!==se.team;
+    if (mode === 'torture_mafia') return dist===1 && target && target.team!==se.team;
+    if (mode === 'extortion') return maxDist>0 && maxDist<=2 && target && target.team!==se.team;
     if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
@@ -4918,6 +4996,10 @@ function render() {
             if (activeStage === 'volcano_summit' && volcanoAshMistSet.has(`${ar},${c}`)) {
                 d.classList.add('ash-mist');
             }
+            // マフィア縄張りオーバーレイ
+            if (mafiaTerritory && mafiaTerritory.cells.some(cl => cl.r===ar && cl.c===c)) {
+                d.classList.add('mafia-territory');
+            }
             if (fogSet.has(`${ar},${c}`)) d.classList.add('fog-tile');
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
@@ -5061,7 +5143,8 @@ function showEntityInfo(e) {
         let hasSkull = entities.some(s => s.hp > 0 && s.team === e.team && ['skeleton','skeleton_soldier'].includes(s.type) && Math.max(Math.abs(s.r - e.r), Math.abs(s.c - e.c)) <= 1);
         if (hasSkull) skullShieldStr = '&nbsp;💀🛡骸骨バリア';
     }
-    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    let mafiaGaugeStr = (e.mafiaGauge !== undefined) ? ` &nbsp; 🏴G${e.mafiaGauge}` : '';
+    panel.innerHTML = `<div class="eip-name">${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -5520,6 +5603,15 @@ function handleTileClick(vr, c) {
 }
 
 function checkEnemyTerritory(entity) {
+    // マフィア縄張りチェック：敵が縄張り内に移動したらダメージ+ゲージ
+    if (mafiaTerritory && entity.team !== mafiaTerritory.ownerTeam && entity.hp > 0) {
+        if (mafiaTerritory.cells.some(cl => cl.r===entity.r && cl.c===entity.c)) {
+            if (!entity.invin) entity.hp -= 1;
+            let mafiaEnt = entities.find(me => me.hp>0 && me.type==='mafia' && me.team===mafiaTerritory.ownerTeam);
+            if (mafiaEnt) mafiaEnt.mafiaGauge = Math.min(20, (mafiaEnt.mafiaGauge||0)+1);
+            msg(`🏴 縄張り侵入！${entity.name}に1ダメ・マフィアゲージ+1！`, true);
+        }
+    }
     let pInEnemy, cInEnemy;
     if (activeStage === 'nighttown') {
         pInEnemy = entity.team === 'player' && entity.r <= 9 && entity.c >= 11;
@@ -7627,6 +7719,90 @@ function handleAbilityTarget(r, c, targetEntity) {
         { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
         msg(`🐦 式神召喚！狐火・大鬼を召喚！残りアビリティ使用不可！`);
         used = true;
+    } else if (actionMode === 'tail_cut') {
+        if (se.abilities['tail_cut'] !== 999) se.abilities['tail_cut']--;
+        // Dash to target cell (2 steps max, already validated)
+        let tcOldR=se.r, tcOldC=se.c;
+        se.r=r; se.c=c;
+        checkTileEffects(se); checkEnemyTerritory(se);
+        // Spawn kobun near target
+        let tcCells=[];
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+            if(dr===0&&dc===0) continue;
+            let nr=r+dr,nc=c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) tcCells.push({r:nr,c:nc});
+        }
+        if(tcCells.length>0){
+            let kp=tcCells[Math.floor(Math.random()*tcCells.length)];
+            entities.push({id:'kobun_'+Date.now(),type:'kobun',name:'子分',team:se.team,r:kp.r,c:kp.c,hp:1,maxHp:1,ap:0,maxAp:2,abilities:{pistol:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,kobunFreezeUntil:turn+5});
+        }
+        se.mafiaGauge = Math.min(20,(se.mafiaGauge||0)+1);
+        msg(`🏃 尻尾切り！子分を置いてダッシュ！マフィアゲージ+1(${se.mafiaGauge})！`); used=true;
+    } else if (actionMode === 'pistol') {
+        if (se.abilities['pistol'] !== 999) se.abilities['pistol']--;
+        let ptDmg = 2+(se.atkBonus||0)+(Math.random()<0.5?1:0)+(targetEntity.defDebuff||0);
+        if(!targetEntity.invin && !tryKobunShield(targetEntity,ptDmg)) targetEntity.hp-=ptDmg;
+        se.mafiaGauge = Math.min(20,(se.mafiaGauge||0)+2);
+        msg(targetEntity.invin?`🔫 拳銃射撃！しかし無敵で防がれた！`:`🔫 拳銃射撃！${targetEntity.name}に${ptDmg}ダメ！ゲージ+2(${se.mafiaGauge})`); used=true;
+    } else if (actionMode === 'penance') {
+        if((se.mafiaGauge||0)<1){msg("マフィアゲージが足りない！(1必要)");return;}
+        if(se.abilities['penance']!==999) se.abilities['penance']--;
+        se.mafiaGauge=Math.max(0,(se.mafiaGauge||0)-1);
+        let pnDmg=3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        if(!targetEntity.invin&&!tryKobunShield(targetEntity,pnDmg)){targetEntity.hp-=pnDmg;targetEntity.ap=Math.max(0,targetEntity.ap-1);}
+        msg(targetEntity.invin?`🙏 贖罪！しかし無敵で防がれた！`:`🙏 贖罪！${targetEntity.name}に${pnDmg}ダメ+AP-1！ゲージ消費1`); used=true;
+    } else if (actionMode === 'snipe') {
+        if((se.mafiaGauge||0)<1){msg("マフィアゲージが足りない！(1必要)");return;}
+        if(se.abilities['snipe']!==999) se.abilities['snipe']--;
+        se.mafiaGauge=Math.max(0,(se.mafiaGauge||0)-1);
+        se.ap=Math.max(0,se.ap-1);
+        let snDmg=5+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+        if(!targetEntity.invin&&!tryKobunShield(targetEntity,snDmg)) targetEntity.hp-=snDmg;
+        msg(targetEntity.invin?`🎯 狙撃！しかし無敵で防がれた！`:`🎯 狙撃！${targetEntity.name}に${snDmg}ダメ！自身AP-1・ゲージ消費1`); used=true;
+    } else if (actionMode === 'backroom_deal') {
+        if(se.abilities['backroom_deal']!==999) se.abilities['backroom_deal']--;
+        targetEntity.hp=Math.min(targetEntity.maxHp+5,targetEntity.hp+3);
+        se.hp=Math.min(se.maxHp+5,se.hp+3);
+        // Seal 5 random target abilities for 1T
+        let bdKs=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+        if(bdKs.length>0) sealAbilities(targetEntity,bdKs.sort(()=>Math.random()-0.5).slice(0,5),1);
+        targetEntity.ap=Math.max(0,targetEntity.ap-1);
+        se.mafiaGauge=Math.min(20,(se.mafiaGauge||0)+3);
+        msg(`🤝 裏取引！${targetEntity.name}に甘い条件(HP+3)を提示！ランダム5アビ1T封印・AP-1！自身HP+3・ゲージ+3！`); used=true;
+    } else if (actionMode === 'debt_note') {
+        if((se.mafiaGauge||0)<3){msg("マフィアゲージが足りない！(3必要)");return;}
+        if(se.abilities['debt_note']!==999) se.abilities['debt_note']--;
+        se.mafiaGauge=Math.max(0,(se.mafiaGauge||0)-3);
+        // 1T 支配: temporarily switch target to mafia's team
+        targetEntity.originalTeam = targetEntity.originalTeam || targetEntity.team;
+        targetEntity.team = se.team;
+        let dnExtra = (targetEntity.abilities?.repayment||0) >= 1;
+        if(dnExtra){ targetEntity.abilities['repayment']=Math.max(0,(targetEntity.abilities['repayment']||0)-1); targetEntity.mindControlTimer=2; } else { targetEntity.mindControlTimer=1; }
+        msg(`📋 借用書！${targetEntity.name}を${dnExtra?'2':'1'}T支配！${dnExtra?'返済-1で延長！':''}ゲージ3消費！`); used=true;
+    } else if (actionMode === 'torture_mafia') {
+        if((se.mafiaGauge||0)<2){msg("マフィアゲージが足りない！(2必要)");return;}
+        if(se.abilities['torture_mafia']!==999) se.abilities['torture_mafia']--;
+        se.mafiaGauge=Math.max(0,(se.mafiaGauge||0)-2);
+        let toHasRepay = (targetEntity.abilities?.repayment||0) >= 1;
+        let toDmg=4+(se.atkBonus||0)+(targetEntity.defDebuff||0)+(toHasRepay?2:0);
+        if(!targetEntity.invin&&!tryKobunShield(targetEntity,toDmg)){
+            targetEntity.hp-=toDmg;
+            targetEntity.ap=Math.max(0,targetEntity.ap-2);
+            let toKs=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if(toKs.length>0) sealAbilities(targetEntity,toKs,1);
+        }
+        msg(targetEntity.invin?`😤 拷問！しかし無敵で防がれた！`:`😤 拷問！${targetEntity.name}に${toDmg}ダメ${toHasRepay?'(返済ボーナス+2)':''}+AP-2+全アビ封印！ゲージ2消費！`); used=true;
+    } else if (actionMode === 'extortion') {
+        if(se.abilities['extortion']!==999) se.abilities['extortion']--;
+        if(!targetEntity.abilities) targetEntity.abilities={};
+        targetEntity.abilities['repayment']=(targetEntity.abilities['repayment']||0)+1;
+        // Both get +1 to all abilities
+        Object.keys(se.abilities||{}).forEach(k=>{if(k!=='drop_rock'&&se.abilities[k]!==999) se.abilities[k]++;});
+        Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&k!=='repayment').forEach(k=>{if(targetEntity.abilities[k]!==999) targetEntity.abilities[k]++;});
+        targetEntity.ap=Math.max(0,targetEntity.ap-2);
+        se.invin=true; se.invinTimer=1;
+        se.mafiaGauge=Math.min(20,(se.mafiaGauge||0)+5);
+        msg(`💰 恐喝！${targetEntity.name}に返済+1・AP-2！双方アビ+1・自身バリア・ゲージ+5！`); used=true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -7917,6 +8093,31 @@ function executeSkill(se) {
             }
         });
         msg(`💀 寿命の前借り！半径2暗黒フィールド展開！${dfHealMsgs.length>0?'敵:'+dfHealMsgs.join('・')+'！':''}次Tフィールド内の敵に10ダメ+AP-1+全封印！`);
+        return true;
+    }
+    // ====== マフィア スキル: 縄張り宣言 ======
+    if (se.type === 'mafia') {
+        let g = se.mafiaGauge || 0;
+        if (g < 1) { msg("縄張り宣言：マフィアゲージが0です！ゲージを溜めてから使いましょう！"); return false; }
+        let radius = 1 + g;
+        let cells = [];
+        for (let dr=-radius;dr<=radius;dr++) for (let dc=-radius;dc<=radius;dc++) {
+            let nr=se.r+dr, nc=se.c+dc;
+            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE) cells.push({r:nr,c:nc});
+        }
+        // All enemies in territory get +1 repayment
+        let affectedNames = [];
+        entities.forEach(t => {
+            if(t.hp<=0||t.team===se.team) return;
+            if(cells.some(cl=>cl.r===t.r&&cl.c===t.c)) {
+                if(!t.abilities) t.abilities={};
+                t.abilities['repayment']=(t.abilities['repayment']||0)+1;
+                affectedNames.push(t.name);
+            }
+        });
+        mafiaTerritory = { ownerTeam: se.team, cells, expireTurn: turn + 1 };
+        se.mafiaGauge = 0;
+        msg(`🏴 縄張り宣言！ゲージ${g}消費→半径${radius}マス縄張り展開1T！${affectedNames.length>0?affectedNames.join('・')+'に返済付与！':''}`);
         return true;
     }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
@@ -9654,6 +9855,7 @@ function updateUI() {
             world_manager: '世界の作り直し',
             onmyoji: '陰陽冥鬼',
             devil:   '寿命の前借り',
+            mafia:   '縄張り宣言',
         };
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
