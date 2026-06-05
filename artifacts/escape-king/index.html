@@ -10384,6 +10384,37 @@ function updateUI() {
             continue;
         }
 
+        // パーツ製造ボタン（JP残量で色変え）
+        const _CRAFT_KEYS = ['arm_craft','leg_craft','body_craft','head_craft','cannon_craft'];
+        if ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) && _CRAFT_KEYS.includes(key)) {
+            if (count <= 0) continue; // 製造済み（robot側で表示）
+            let btn = document.createElement('button');
+            btn.className = 'ability-btn';
+            btn.title = ABILITY_TIPS[key] || dispName;
+            const jp = selectedEntity.junkPoint || 0;
+            const craftNames = {
+                arm_craft: '腕パーツ製造',
+                leg_craft: '足パーツ製造',
+                body_craft: '腹パーツ製造',
+                head_craft: '頭パーツ製造',
+                cannon_craft: 'キャノンパーツ製造',
+            };
+            const label = craftNames[key] || dispName;
+            if (jp >= 2) {
+                btn.style.cssText = 'background:#7d4e00; color:#ffe082; border:2px solid #f39c12; font-weight:bold;';
+                btn.innerText = `✅ ${label}（JP2消費）`;
+                if (actionMode === key) btn.classList.add('active');
+                if (usedAbilities[selectedEntity.id]?.has(key)) btn.disabled = true;
+                btn.onclick = () => setMode(key);
+            } else {
+                btn.style.cssText = 'background:#2c3e50; color:#7f8c8d; border:1px solid #4a5568; font-style:italic; cursor:default;';
+                btn.innerText = `🔧 ${label}（JP不足・現在${jp} JP）`;
+                btn.disabled = true;
+            }
+            list.appendChild(btn);
+            continue;
+        }
+
         let btn = document.createElement('button');
         btn.className = 'ability-btn';
         if (actionMode === key) btn.classList.add('active');
