@@ -10335,7 +10335,8 @@ function updateUI() {
         return;
     }
 
-    document.getElementById('ui-name').innerText = selectedEntity.name + (selectedEntity.waterMode ? ' 🌊[水中]' : '');
+    const _uiEntityIcon = ENTITY_ICONS[selectedEntity.type] ? ENTITY_ICONS[selectedEntity.type] + ' ' : '';
+    document.getElementById('ui-name').innerText = _uiEntityIcon + selectedEntity.name + (selectedEntity.waterMode ? ' 🌊[水中]' : '');
     document.getElementById('ui-ap').innerText = selectedEntity.ap;
     document.getElementById('ui-hp').innerText = selectedEntity.hp + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '') + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '');
     
