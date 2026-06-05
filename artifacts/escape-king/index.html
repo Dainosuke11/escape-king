@@ -10312,18 +10312,50 @@ function updateUI() {
     btnM.disabled = selectedEntity.ap <= 0;
     if (actionMode === 'move') btnM.classList.add('active'); else btnM.classList.remove('active');
 
+    // JPカウンター（ドワーフ系ユニット）
+    if (selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) {
+        let jpDiv = document.createElement('div');
+        jpDiv.style.cssText = 'padding:6px 8px; background:#2c3e50; border-radius:4px; color:#f39c12; font-weight:bold; font-size:13px; margin-bottom:4px;';
+        jpDiv.textContent = `⚙️ ジャンクポイント: ${selectedEntity.junkPoint || 0} JP`;
+        list.appendChild(jpDiv);
+    }
+
+    const _ROBOT_KEYS = ['robot_arm','robot_leg','robot_body','robot_head','robot_cannon'];
+
     for (let key in selectedEntity.abilities) {
+        let count = selectedEntity.abilities[key];
+        let dispName = ABILITY_NAMES[key] || key;
+        let isCursed = cursedAbilities[selectedEntity.id]?.[key] > 0;
+
+        // ロボットアビリティの特別表示（ドワーフエンジニア・ドワーフロボ）
+        if ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) && _ROBOT_KEYS.includes(key)) {
+            let btn = document.createElement('button');
+            btn.className = 'ability-btn';
+            btn.title = ABILITY_TIPS[key] || dispName;
+            if (count === 999) {
+                btn.style.cssText = 'background:#1a6b2e; color:#7dde8f; border:1px solid #2ecc71; font-weight:bold;';
+                btn.innerText = `🟢 ${dispName}∞`;
+                if (actionMode === key) btn.classList.add('active');
+                if (usedAbilities[selectedEntity.id]?.has(key) || isCursed) btn.disabled = true;
+                if (isCursed) { btn.classList.add('sealed'); btn.innerText = `【封印${cursedAbilities[selectedEntity.id][key]}T】${dispName}`; }
+                btn.onclick = () => setMode(key);
+            } else {
+                btn.style.cssText = 'background:#2c3e50; color:#7f8c8d; border:1px solid #4a5568; font-style:italic; cursor:default;';
+                btn.innerText = `🔧 ${dispName}（JP2消費で製造可能）`;
+                btn.disabled = true;
+            }
+            list.appendChild(btn);
+            continue;
+        }
+
         let btn = document.createElement('button');
         btn.className = 'ability-btn';
         if (actionMode === key) btn.classList.add('active');
         if (isAbilityConditionMet(key, selectedEntity)) btn.classList.add('condition-met');
         
-        let count = selectedEntity.abilities[key];
-        let dispName = ABILITY_NAMES[key] || key;
         btn.innerText = count === 999 ? `${dispName}（無制限）` : `${dispName}（残り${count}回使用可能）`;
         btn.title = ABILITY_TIPS[key] || dispName;
         
-        let isCursed = cursedAbilities[selectedEntity.id]?.[key] > 0;
         if ((count !== 999 && count <= 0) || usedAbilities[selectedEntity.id]?.has(key) || isCursed) btn.disabled = true;
         if (isCursed) {
             let turns = cursedAbilities[selectedEntity.id][key];
