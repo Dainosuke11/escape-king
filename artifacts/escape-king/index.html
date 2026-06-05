@@ -298,6 +298,12 @@
         .guide-job-card { background: #1a1a20; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .guide-job-name { font-size: 15px; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
         .guide-job-desc { font-size: 12px; color: #ccc; line-height: 1.55; }
+        .guide-detail-btn { margin-top: 7px; display: inline-block; font-size: 11px; color: #7ec8e3; background: none; border: 1px solid #7ec8e366; border-radius: 4px; padding: 2px 8px; cursor: pointer; user-select: none; transition: background 0.15s; }
+        .guide-detail-btn:hover { background: #7ec8e322; }
+        .guide-detail-panel { display: none; margin-top: 8px; border-top: 1px solid #333; padding-top: 7px; }
+        .guide-detail-panel.open { display: block; }
+        .guide-detail-row { font-size: 11px; color: #aaa; line-height: 1.6; padding: 2px 0; }
+        .guide-detail-row .tip-name { color: #d4c06a; font-weight: bold; margin-right: 4px; }
         .guide-content { height: 440px; overflow-y: auto; padding-right: 4px; }
         /* Matching notification */
         #match-toast {
@@ -2038,7 +2044,8 @@ function buildGuideJobsContent() {
         if (jobData.flying) flags.push('飛行');
         const headerExtra = flags.length ? '/' + flags.join('・') : '';
 
-        const abilityList = Object.entries(jobData.abilities).map(([key, count]) => {
+        const abilityEntries = Object.entries(jobData.abilities);
+        const abilityList = abilityEntries.map(([key, count]) => {
             const rawName = ABILITY_NAMES[key] || key;
             const parenIdx = rawName.indexOf('(');
             const baseName = parenIdx >= 0 ? rawName.substring(0, parenIdx) : rawName;
@@ -2050,11 +2057,27 @@ function buildGuideJobsContent() {
 
         const noteLines = meta.note ? meta.note.split('\n').map(l => `<br>${l}`).join('') : '';
 
+        const tipRows = abilityEntries.map(([key]) => {
+            const tip = ABILITY_TIPS[key];
+            if (!tip) return '';
+            const rawName = ABILITY_NAMES[key] || key;
+            const parenIdx = rawName.indexOf('(');
+            const baseName = parenIdx >= 0 ? rawName.substring(0, parenIdx) : rawName;
+            return `<div class="guide-detail-row"><span class="tip-name">${baseName}</span>${tip}</div>`;
+        }).filter(Boolean).join('');
+
+        const panelId = 'tip-panel-' + jobKey;
+        const hasTips = tipRows.length > 0;
+
         const card = document.createElement('div');
         card.className = 'guide-job-card';
         card.innerHTML =
             `<div class="guide-job-name">${meta.emoji} ${meta.fullName} (HP${jobData.hp}/AP${jobData.ap}${headerExtra})</div>` +
-            `<div class="guide-job-desc">${abilityList}<br>スキル:${skillName}${noteLines}</div>`;
+            `<div class="guide-job-desc">${abilityList}<br>スキル:${skillName}${noteLines}</div>` +
+            (hasTips
+                ? `<button class="guide-detail-btn" onclick="(function(btn){var p=document.getElementById('${panelId}');var open=p.classList.toggle('open');btn.textContent=open?'▼ 詳細を閉じる':'▶ 詳細を見る';})(this)">▶ 詳細を見る</button>` +
+                  `<div class="guide-detail-panel" id="${panelId}">${tipRows}</div>`
+                : '');
         container.appendChild(card);
     }
 }
