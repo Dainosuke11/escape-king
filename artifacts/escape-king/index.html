@@ -362,6 +362,14 @@
         .ability-btn:disabled { background: #333; color: #666; cursor: not-allowed; border-color: #222; }
         .ability-btn.sealed { background: repeating-linear-gradient(45deg,#1a1818,#1a1818 8px,#2a2020 8px,#2a2020 16px) !important; border: 2px solid #555 !important; color: #888 !important; cursor: not-allowed; }
         .ability-btn.sealed::before { content: "⛓️ "; }
+        @keyframes craft-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(243,156,18,0.8), 0 0 0 0 rgba(243,156,18,0.4); transform: scale(1); }
+            50%  { box-shadow: 0 0 10px 4px rgba(243,156,18,0.5), 0 0 18px 8px rgba(243,156,18,0.2); transform: scale(1.03); }
+            100% { box-shadow: 0 0 0 0 rgba(243,156,18,0); transform: scale(1); }
+        }
+        .ability-btn.craft-ready {
+            animation: craft-pulse 0.9s ease-in-out infinite;
+        }
         
         .select-group { margin: 20px 0; text-align: left; }
         .select-group label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
@@ -750,6 +758,9 @@ let currentTurnMsgs = []; // 現ターンのメッセージ蓄積
 let skyfortLiftPos = 9; // top row of 2x2 floating lift (cols 13-14)
 let magicCircleTimer = 5; 
 let usedAbilities = {};
+// craft-pulse animation state: edge-trigger when JP crosses 2
+let craftJpWasReady = {};     // entityId → boolean (was JP >= 2 at last pre-loop check)
+let craftReadyActive = {};    // 'entityId|key' → boolean (should animate; cleared each turn)
 // Phase B: souls / items / falling floors
 let souls = { player: 0, cpu: 0 };
 let digHoles = [];          // [{r,c,team}] dug holes from miner
@@ -4062,6 +4073,7 @@ function startTurn(team, skipEffects = false) {
     isPlayerTurn = (team === 'player');
     currentActingTeam = team;
     stopTurnTimer();
+    craftReadyActive = {}; // stop all craft pulse animations at turn start
     // 世界の作り直し: 遅延地震の発動チェック
     if (pendingEarthquake && pendingEarthquake.castTurn < turn && team === pendingEarthquake.ownerTeam) {
         let eqEnemyTeam = pendingEarthquake.ownerTeam === 'player' ? 'cpu' : 'player';
@@ -10546,6 +10558,22 @@ function updateUI() {
 
     const _ROBOT_KEYS = ['robot_arm','robot_leg','robot_body','robot_head','robot_cannon'];
 
+    // Pre-compute craft pulse edge-trigger once per updateUI call (before the abilities loop).
+    // This ensures all craft buttons for the entity see the same transition state atomically.
+    if (selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) {
+        const _preJP = selectedEntity.junkPoint || 0;
+        const _preEid = selectedEntity.id;
+        if (_preJP >= 2 && !craftJpWasReady[_preEid]) {
+            // JP just crossed from <2 to >=2 — activate pulse for all available craft buttons
+            ['arm_craft','leg_craft','body_craft','head_craft','cannon_craft'].forEach(k => {
+                if ((selectedEntity.abilities[k] || 0) > 0) {
+                    craftReadyActive[_preEid + '|' + k] = true;
+                }
+            });
+        }
+        craftJpWasReady[_preEid] = (_preJP >= 2);
+    }
+
     for (let key in selectedEntity.abilities) {
         let count = selectedEntity.abilities[key];
         let dispName = ABILITY_NAMES[key] || key;
@@ -10588,12 +10616,24 @@ function updateUI() {
                 cannon_craft: 'キャノンパーツ製造',
             };
             const label = craftNames[key] || dispName;
+            const entityId = selectedEntity.id;
+            const compoundKey = entityId + '|' + key;
             if (jp >= 2) {
                 btn.style.cssText = 'background:#7d4e00; color:#ffe082; border:2px solid #f39c12; font-weight:bold;';
                 btn.innerText = `✅ ${label}（JP2消費）`;
-                if (actionMode === key) btn.classList.add('active');
+                if (actionMode === key) {
+                    btn.classList.add('active');
+                } else if (craftReadyActive[compoundKey]) {
+                    // craftReadyActive is set by the pre-loop block when JP crosses from <2 to >=2,
+                    // and persists until turn start (craftReadyActive={}) or button click.
+                    btn.classList.add('craft-ready');
+                }
                 if (usedAbilities[selectedEntity.id]?.has(key)) btn.disabled = true;
-                btn.onclick = () => setMode(key);
+                btn.onclick = () => {
+                    craftReadyActive[compoundKey] = false; // dismiss animation for this button
+                    btn.classList.remove('craft-ready');
+                    setMode(key);
+                };
             } else {
                 btn.style.cssText = 'background:#2c3e50; color:#7f8c8d; border:1px solid #4a5568; font-style:italic; cursor:default;';
                 btn.innerText = `🔧 ${label}（JP不足・現在${jp} JP）`;
