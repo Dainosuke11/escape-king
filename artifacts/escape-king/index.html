@@ -2044,6 +2044,56 @@ const NPC_DATA = [
         stage: '溶岩地帯',
         note: '溶岩を自在に歩ける耐熱生物。溶岩地帯に5ターンごとに出現。吹き飛ばし技で溶岩に叩き込め！'
     },
+    {
+        key: 'kobun',
+        emoji: '🕵️',
+        name: '子分',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { pistol: 999 },
+        stage: '',
+        note: 'マフィアの「尻尾切り」で出現。召喚後5ターンは行動不能。銃で直線3マス先まで攻撃。'
+    },
+    {
+        key: 'decoy',
+        emoji: '🪆',
+        name: 'デコイ人形',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { punch: 999 },
+        stage: '',
+        note: '暗殺者が召喚。人形が生存中は暗殺者が潜伏状態になる。毎ターン1ダメージを受けて消滅する。'
+    },
+    {
+        key: 'falcon',
+        emoji: '🦅',
+        name: 'ハヤブサ',
+        hp: 3, ap: 2,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { peck: 999 },
+        stage: '',
+        note: '獣使いが「ハヤブサ召喚」で呼び出す飛行ユニット。つつき攻撃でAP-1の追加効果あり。開始5T後に召喚可能。'
+    },
+    {
+        key: 'snake',
+        emoji: '🐍',
+        name: '毒蛇',
+        hp: 1, ap: 2,
+        flying: false, oceanUnit: false, lavaWalker: false,
+        abilities: { poison_bite: 999, constrict: 999 },
+        stage: '',
+        note: '獣使いが「毒蛇召喚」で隣接マスに呼び出す。毒噛みで毒付与＋締め上げでAP-1。召喚回数は1回のみ。'
+    },
+    {
+        key: 'dragon',
+        emoji: '🐉',
+        name: '竜',
+        hp: 7, ap: 2,
+        flying: true, oceanUnit: false, lavaWalker: false,
+        abilities: { fire_breath: 999, bite: 999, hell_breath: 1 },
+        stage: '',
+        note: '魔術師スキルで半径2マス以内に召喚できる飛行ユニット。火炎ブレス∞・噛みつき∞・ヘルブレス1回。天空要塞・溶岩地帯にはNPCとしても出現(HP5/AP3)。'
+    },
 ];
 
 function buildGuideJobsContent() {
