@@ -1150,7 +1150,7 @@ const ABILITY_NAMES = {
     robot_arm: 'ロボットアーム(半径2/威3+吹飛)',
     robot_leg: 'ロボットレッグ(半径2/威2+吹飛+前進)',
     robot_body: 'ロボットボディ(半径3/正面岩+1ダメ)',
-    robot_head: 'ロボットヘッド(半径3/AP-1+全封印1T)',
+    robot_head: 'ロボットヘッド(半径3/AP-1+ランダム5封印1T)',
     robot_cannon: 'ロボットキャノン(半径5/威5+隣接2ダメ+吹飛/JP2消費)',
     nail_gun: 'ネイルガン(半径3/威3+AP-1+吹飛)'
 };
@@ -1345,7 +1345,7 @@ const ABILITY_TIPS = {
     robot_arm: '半径2マス以内の敵に3ダメ+後方吹き飛ばし。ロボット版は射程4・威力5。',
     robot_leg: '半径2マス以内の敵に2ダメ+後方吹き飛ばし後、自分が1マス前進。ロボット版は射程4・威力4。',
     robot_body: '半径3マス以内の敵の正面に岩を設置して1ダメ。ロボット版は射程5・威力3。',
-    robot_head: '半径3マス以内の敵のAP-1+全アビリティ1T封印。ロボット版は射程5。',
+    robot_head: '半径3マス以内の敵のAP-1+ランダム5種アビリティ1T封印。ロボット版は射程5。',
     robot_cannon: '半径5マス以内の敵に5ダメ+後方吹き飛ばし。隣接敵にも2ダメ。JP2消費。ロボット版は射程7・威力7・隣接4ダメ・消費なし。',
     nail_gun: '半径3マス以内の敵に3ダメ+AP-1+後方吹き飛ばし。'
 };
@@ -8003,10 +8003,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         if(se.abilities['robot_head']!==999) se.abilities['robot_head']--;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,0)){
             targetEntity.ap=Math.max(0,targetEntity.ap-1);
-            let rhKs=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            let rhAll=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            for(let i=rhAll.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[rhAll[i],rhAll[j]]=[rhAll[j],rhAll[i]];}
+            let rhKs=rhAll.slice(0,5);
             if(rhKs.length>0) sealAbilities(targetEntity,rhKs,1);
         }
-        msg(targetEntity.invin?`🪖 ロボットヘッド！しかし無敵で防がれた！`:`🪖 ロボットヘッド！${targetEntity.name}のAP-1+全アビ1T封印！`); used=true;
+        msg(targetEntity.invin?`🪖 ロボットヘッド！しかし無敵で防がれた！`:`🪖 ロボットヘッド！${targetEntity.name}のAP-1+ランダム${rhKs.length}種アビ1T封印！`); used=true;
     } else if (actionMode === 'robot_cannon') {
         if(!se.isDwarfRobot&&(se.junkPoint||0)<2){msg("💣 ロボットキャノン：JP2が必要！");return;}
         let rcDmg=5+(se.atkBonus||0)+(targetEntity.defDebuff||0);
