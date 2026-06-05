@@ -689,8 +689,8 @@
     <div class="panel">
         <div id="turn-indicator">Player's Turn (Turn: 1)</div>
         <div id="souls-indicator" style="color:#bb8fce; font-size:13px; display:none;"></div>
-        <div id="status-message" style="color: #f1c40f;">準備完了</div>
-        <div id="battle-log" style="display:none; max-height:64px; overflow-y:auto; font-size:11px; color:#aaa; background:#1a1a2a; border:1px solid #333; border-radius:4px; padding:3px 6px; margin-top:4px; line-height:1.4;"></div>
+        <div id="status-message" style="color: #f1c40f; font-size:12px;">準備完了</div>
+        <div id="battle-log" style="max-height:70px; overflow-y:auto; font-size:11px; color:#bbb; background:#1a1a2a; border:1px solid #333; border-radius:4px; padding:3px 6px; margin-top:4px; line-height:1.5;"></div>
     </div>
     <div id="turn-timer-wrap">
         <div id="turn-timer-row">
@@ -1356,7 +1356,7 @@ const JOB_DATA = {
     onmyoji: { name: '陰陽師', abilities: { drop_rock: 999, shatter: 3, oni_arm: 10, divine_speed: 5, talisman_barrier: 3, pentagram_formation: 3, soul_release: 3, soul_pull: 3, shikigami_summon: 3 }, hp: 30, ap: 2 },
     devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true },
     mafia:   { name: 'マフィア', abilities: { drop_rock: 999, shatter: 3, tail_cut: 5, pistol: 6, penance: 1, snipe: 1, backroom_deal: 3, debt_note: 3, torture_mafia: 3, extortion: 3 }, hp: 30, ap: 2, mafiaUnit: true },
-    dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 999, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1, robot_arm: 0, robot_leg: 0, robot_body: 0, robot_head: 0, robot_cannon: 0 }, hp: 30, ap: 2, dwarfUnit: true }
+    dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 10, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1 }, hp: 30, ap: 2, dwarfUnit: true }
 };
 
 const JOB_SKILL_NAMES = {
@@ -2675,21 +2675,28 @@ window.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 function msg(text, append=false) {
     let el = document.getElementById('status-message');
-    if (append) el.innerText += " " + text;
-    else el.innerText = text;
-    // バトルログ蓄積
-    if (!append) currentTurnMsgs = [text];
-    else currentTurnMsgs.push(text);
+    el.innerText = text;
+    let bl = document.getElementById('battle-log');
+    if (bl) {
+        if (!append && currentTurnMsgs.length === 0) currentTurnMsgs = [text];
+        else if (!append) { currentTurnMsgs = [text]; }
+        else currentTurnMsgs.push(text);
+        bl.innerHTML = currentTurnMsgs.map(m => `<span style="display:block;padding:1px 0;">${m}</span>`).join('');
+        bl.scrollTop = bl.scrollHeight;
+    }
 }
 
 function flushBattleLog() {
-    prevTurnLog = currentTurnMsgs.slice(-10);
     currentTurnMsgs = [];
     let el = document.getElementById('battle-log');
-    if (!el) return;
-    if (prevTurnLog.length === 0) { el.style.display='none'; return; }
-    el.style.display = 'block';
-    el.innerHTML = '<b style="color:#888">前ターン:</b> ' + prevTurnLog.map(m => `<span>${m}</span>`).join(' ／ ');
+    if (el) { el.innerHTML = ''; }
+}
+
+function applyPoison(target, stacks=1) {
+    if (!target || target.invin) return;
+    target.poisonStacks = (target.poisonStacks||0) + stacks;
+    target.poisonTimer = Math.max(target.poisonTimer||0, 3) + (stacks > 1 ? stacks - 1 : 0);
+    if (target.poisonStacks >= 3) target._virulentPoison = true;
 }
 
 function isNoRockZone(r, c) {
@@ -3264,14 +3271,10 @@ function initBoard(stageType) {
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) {
             if (board[r2][c2]==='plains'||board[r2][c2]==='desert'||board[r2][c2]==='forest') board[r2][c2]='arena_floor';
         }
-        // Outer arena walls (circular)
-        for (let c2=3; c2<=17; c2++) { if(!isNoRockZone(4,c2)) board[4][c2]='rock'; if(!isNoRockZone(16,c2)) board[16][c2]='rock'; }
-        for (let r2=5; r2<=15; r2++) { if(!isNoRockZone(r2,3)) board[r2][3]='rock'; if(!isNoRockZone(r2,17)) board[r2][17]='rock'; }
-        // Gate openings in outer walls
-        board[4][10]='arena_floor'; board[16][10]='arena_floor';
-        board[10][3]='arena_floor'; board[10][17]='arena_floor';
-        // Inner pillars
+        // Inner pillars (no outer walls at start — outer perimeter shrinks in over time)
         [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
+        // 4 magic circles at arena quadrant centers
+        [[5,5],[5,15],[15,5],[15,15]].forEach(([r2,c2]) => { if(board[r2]?.[c2]==='arena_floor') board[r2][c2]='magic_circle'; });
         colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1}; colosseumShrinkLayer = 0;
     } else if (stageType === 'factory') {
         // === FACTORY STAGE ===
@@ -4014,8 +4017,9 @@ function processTurnStartEffects(e) {
         let tile = board[e.r]?.[e.c];
         let onWater = isWaterTile(tile);
         if (!onWater) {
-            let heatBonus = getStageHeatLevel() >= 3 ? 1 : 0;
-            let drain = ((tile === 'desert' || tile === 'lava' || tile === 'lava_ground' || tile === 'volcano_summit_ground') ? 2 : 1) + heatBonus;
+            let baseDrain = (tile === 'desert' || tile === 'lava' || tile === 'lava_ground' || tile === 'volcano_summit_ground') ? 2 : 1;
+            let heatBonus = (getStageHeatLevel() >= 3 && baseDrain < 2) ? 1 : 0;
+            let drain = baseDrain + heatBonus;
             e.waterGauge = Math.max(0, (e.waterGauge||0) - drain);
             if (e.waterGauge <= 0 && !e.invin) {
                 e.hp -= 1; e.ap = Math.max(0, e.ap - 1);
@@ -4121,7 +4125,7 @@ function necroShieldBlock(entity) {
 
 function incrementManagerAbilities(e) {
     Object.keys(e.abilities || {}).forEach(k => {
-        if (k !== 'drop_rock' && e.abilities[k] !== 999) e.abilities[k]++;
+        if (k !== 'drop_rock' && k !== 'harmonious_prayer' && e.abilities[k] !== 999) e.abilities[k]++;
     });
 }
 
@@ -4837,19 +4841,6 @@ function startTurn(team, skipEffects = false) {
                 colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + pts;
                 msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
             });
-            // 敵陣ゾーン(相手の半面)に入った場合 +10点(1回/ターン)
-            ['player','cpu'].forEach(team => {
-                let lastSc = colosseumLastScoreTurn[team] || -1;
-                if (turn > lastSc) {
-                    let foeHalf = team==='player' ? (r2) => r2<=8 : (r2) => r2>=12;
-                    let main = entities.find(e=>e.hp>0&&e.team===team&&(e.id==='p1'||e.id==='c1'));
-                    if (main && foeHalf(main.r)) {
-                        colosseumPoints[team] = (colosseumPoints[team]||0) + 10;
-                        colosseumLastScoreTurn[team] = turn;
-                        msg(`⚔️ ${team==='player'?'あなた':'相手'}が敵陣突入！+10点！得点→ あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
-                    }
-                }
-            });
             // === 2ターンに1度 外周縮小＋押し込み（前レイヤー修復付き）===
             if (turn % 2 === 0) {
                 colosseumShrinkLayer++;
@@ -4875,20 +4866,20 @@ function startTurn(team, skipEffects = false) {
                 };
                 if (sl > 1) {
                     let ps = sl - 1;
-                    let pTop = 4 + ps, pBot = 16 - ps, pLeft = 3 + ps, pRight = 17 - ps;
+                    let pTop = ps - 1, pBot = SIZE - ps, pLeft = ps - 1, pRight = SIZE - ps;
                     for (let c2 = pLeft; c2 <= pRight; c2++) {
-                        if (board[pTop]?.[c2] !== 'rock') { pushOffRepaired(pTop, c2); board[pTop][c2] = 'rock'; }
-                        if (board[pBot]?.[c2] !== 'rock') { pushOffRepaired(pBot, c2); board[pBot][c2] = 'rock'; }
+                        if (pTop >= 0 && board[pTop]?.[c2] !== 'rock') { pushOffRepaired(pTop, c2); board[pTop][c2] = 'rock'; }
+                        if (pBot < SIZE && board[pBot]?.[c2] !== 'rock') { pushOffRepaired(pBot, c2); board[pBot][c2] = 'rock'; }
                     }
                     for (let r2 = pTop + 1; r2 < pBot; r2++) {
-                        if (board[r2]?.[pLeft]  !== 'rock') { pushOffRepaired(r2, pLeft);  board[r2][pLeft]  = 'rock'; }
-                        if (board[r2]?.[pRight] !== 'rock') { pushOffRepaired(r2, pRight); board[r2][pRight] = 'rock'; }
+                        if (pLeft >= 0 && board[r2]?.[pLeft]  !== 'rock') { pushOffRepaired(r2, pLeft);  board[r2][pLeft]  = 'rock'; }
+                        if (pRight < SIZE && board[r2]?.[pRight] !== 'rock') { pushOffRepaired(r2, pRight); board[r2][pRight] = 'rock'; }
                     }
                 }
 
-                // --- 新レイヤー境界を押し込み＋岩化 ---
-                let newTopRow = 4 + sl, newBotRow = 16 - sl;
-                let newLeftCol = 3 + sl, newRightCol = 17 - sl;
+                // --- 新レイヤー境界を押し込み＋岩化 (外周から内側へ縮小) ---
+                let newTopRow = sl - 1, newBotRow = SIZE - sl;
+                let newLeftCol = sl - 1, newRightCol = SIZE - sl;
                 if (newTopRow < newBotRow && newLeftCol < newRightCol) {
                     let pushMsgs = [];
                     entities.filter(e => e.hp > 0).forEach(e => {
@@ -4925,7 +4916,7 @@ function startTurn(team, skipEffects = false) {
                 }
             }
             // === 3ターンに1度、各ステージのランダムキャラ2体を召喚 ===
-            if (turn % 3 === 0) {
+            {
                 const allColossMobs = [
                     {type:'gladiator',    name:'剣闘士',          hp:3,ap:2,ab:{sword:999,punch:999},     pts:1},
                     {type:'archer',       name:'弓闘士',           hp:2,ap:2,ab:{bow:999},                pts:3},
@@ -4972,11 +4963,9 @@ function startTurn(team, skipEffects = false) {
         }
         // ===== FACTORY STAGE events =====
         if (activeStage === 'factory') {
-            const boosted = turn >= 10;
             const speedVal = (row) => {
                 const s = laneSpeedMap[row] || 'stop';
-                if (!boosted) return s === 'fast' ? 2 : s === 'normal' ? 1 : 0;
-                return s === 'fast' ? 4 : s === 'normal' ? 2 : 1;
+                return s === 'fast' ? 2 : s === 'normal' ? 1 : 0;
             };
 
             // --- Press machine gimmick (every odd turn: warn; every even turn: attack) ---
@@ -4995,7 +4984,7 @@ function startTurn(team, skipEffects = false) {
                 if (factoryPressTarget) {
                     let hitNames = [];
                     entities.forEach(e => {
-                        if (e.hp > 0 && !e.invin && Math.max(Math.abs(e.r - factoryPressTarget.r), Math.abs(e.c - factoryPressTarget.c)) <= 4) {
+                        if (e.hp > 0 && !e.invin && Math.max(Math.abs(e.r - factoryPressTarget.r), Math.abs(e.c - factoryPressTarget.c)) <= 1) {
                             e.hp -= 2;
                             e._pressedThisTurn = true;
                             hitNames.push(e.name);
@@ -5111,8 +5100,6 @@ function startTurn(team, skipEffects = false) {
             if (furnaceHitNames.length > 0) msg(`🔥 溶鉱炉に飲み込まれた！${furnaceHitNames.join('・')} に30ダメ！`, true);
             checkWin();
 
-            // --- Boost notice at turn 10 ---
-            if (turn === 10) msg(`⚠️ コンベアが加速した！速度が2倍になった！`, true);
 
             // --- Right-edge spawns every turn: 1-2 objects at col 20 ---
             let spawnCount = 1 + (Math.random() < 0.5 ? 1 : 0);
@@ -5384,6 +5371,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
     if (mode === 'drain') return dist === 1 && target && target.team !== se.team;
     if (mode === 'dark_magic') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
+    if (mode === 'possess') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'shark_charge') return maxDist === 1 && target && target.team !== se.team && (se.waterMode || false);
     if (mode === 'teleport') return maxDist > 0 && maxDist <= 2 && isWalkable(r, c, true);
@@ -5640,10 +5628,9 @@ function render() {
             if (activeStage === 'factory' && tileType === 'factory_conveyor') {
                 const ls = laneSpeedMap[ar] || 'stop';
                 d.classList.add(`lane-${ls}`);
-                if (turn >= 10) d.classList.add('lane-boosted');
             }
             if (activeStage === 'factory' && factoryPressTarget) {
-                if (Math.max(Math.abs(ar - factoryPressTarget.r), Math.abs(c - factoryPressTarget.c)) <= 4) {
+                if (Math.max(Math.abs(ar - factoryPressTarget.r), Math.abs(c - factoryPressTarget.c)) <= 1) {
                     if (factoryPressWarning) d.classList.add('press-warn');
                     else d.classList.add('press-attack');
                 }
@@ -5703,8 +5690,8 @@ function render() {
         const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
         // Wyvern has no HP (maxHp===0 is the flag); skip HP bar for it
         const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
-        let entityLabel = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] : e.name.substring(0,2);
-        ed.innerHTML = `${isEnemy ? '敵:' : ''}${entityLabel}${poisonIcon}${hpBar}`;
+        let entityLabel = e.name.substring(0,2);
+        ed.innerHTML = `${entityLabel}${poisonIcon}${hpBar}`;
         
         let vr = displayR(e.r);
         let targetTile = document.getElementById(`tile-${vr}-${e.c}`);
@@ -5838,7 +5825,6 @@ function setMode(mode) {
         let se = selectedEntity;
         if (!se) { updateUI(); render(); return; }
         if (usedAbilities[se.id]?.has('material_gather')) { msg("このアビリティは既に今ターン使用済です"); return; }
-        if (se.ap <= 0) { msg("行動力が足りません"); return; }
         let rockCount = 0;
         for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
             if(dr===0&&dc===0) continue;
@@ -6040,24 +6026,27 @@ function checkTileEffects(entity) {
         if (entity._lastLotusKey !== lKey) {
             entity._lastLotusKey = lKey;
             lotusPadSteps[lKey] = (lotusPadSteps[lKey] || 0) + 1;
-            if (lotusPadSteps[lKey] >= 2) {
+            if (lotusPadSteps[lKey] >= 1) {
                 board[r][c] = 'lotus_sunken';
                 lotusSunkenTimers = lotusSunkenTimers || {};
                 lotusSunkenTimers[lKey] = turn + 2; // 2ターン後に復活
                 delete entity._lastLotusKey;
                 eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉が沈んだ！(2T後復活)";
             } else {
-                eventMsg = (eventMsg ? eventMsg + " " : "") + `🌸 蓮の葉がゆらゆら…(${lotusPadSteps[lKey]}/2)`;
+                eventMsg = (eventMsg ? eventMsg + " " : "") + `🌸 蓮の葉がゆらゆら…(${lotusPadSteps[lKey]}/1)`;
             }
         } else {
             eventMsg = (eventMsg ? eventMsg + " " : "") + "🌸 蓮の葉の上で静止中…";
         }
     }
-    // Swamp tile: slow + poison non-flying entities
+    // Swamp tile: slow + poison non-flying entities (friendly swamps don't affect own team)
     if (board[r]?.[c] === 'swamp_tile' && !entity.flying && !isOceanUnit(entity)) {
-        entity.ap = Math.max(0, entity.ap - 1);
-        entity.poisonTimer = Math.max(entity.poisonTimer||0, 2);
-        eventMsg = (eventMsg ? eventMsg + " " : "") + "🌊 毒沼に足がとられた！AP-1＋毒！";
+        let swampOwnerInfo = tempSwamps.find(sw => sw.r===r && sw.c===c);
+        if (!swampOwnerInfo || swampOwnerInfo.ownerTeam !== entity.team) {
+            entity.ap = Math.max(0, entity.ap - 1);
+            entity.poisonTimer = Math.max(entity.poisonTimer||0, 2);
+            eventMsg = (eventMsg ? eventMsg + " " : "") + "🌊 毒沼に足がとられた！AP-1＋毒！";
+        }
     }
     // Nighttown: manual boarding only — show hint when train is at station
     if (activeStage === 'nighttown' && board[r]?.[c] === 'train_station' && !entity.onTrain && entity.team === 'player' && (ntTrainPhase||0)%2===0) {
@@ -6447,12 +6436,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         let _bowSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.ap--; targetEntity.hp -= 1 + _bowSB + (targetEntity.defDebuff||0) + (se.atkBonus||0); knockback(targetEntity, 1, se);
-            if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+            if (se.poisonWeapon) applyPoison(targetEntity);
         }
         msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${1+_bowSB})${se.poisonWeapon?'・毒':''}！`); used = true;
     } else if (actionMode === 'poison_bow') {
         se.abilities['poison_bow']--; 
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; knockback(targetEntity, 1, se); }
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); applyPoison(targetEntity); knockback(targetEntity, 1, se); }
         msg(targetEntity.invin ? "毒弓矢！しかし無敵で防がれた！" : `毒弓矢命中！ダメージ(2)と毒(3T)を与えた！`); used = true;
     } else if (actionMode === 'magic_bullet') {
         se.abilities['magic_bullet']--; 
@@ -6609,7 +6598,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let stealthBonus = (se.type === 'assassin' && se.stealth) ? 1 : 0;
             let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0) + stealthBonus;
             if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= dmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-            if (se.poisonWeapon && !targetEntity.invin) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+            if (se.poisonWeapon && !targetEntity.invin) applyPoison(targetEntity);
             if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
             let bonus = stealthBonus > 0 ? '【潜伏ボーナス+1】' : '';
             msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${bonus}${atkName}命中！ダメージ(${dmg})${se.poisonWeapon?'・毒付与':''}を与えAPを奪い吹き飛ばした！`); used = true;
@@ -6620,13 +6609,13 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (meleeDodged(targetEntity)) { msg("短剣刺し！しかし飛行コマに回避された！"); }
         else if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.ap--; targetEntity.hp -= 1 + _dagSB + (se.atkBonus||0) + (targetEntity.defDebuff||0);
-            if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+            if (se.poisonWeapon) applyPoison(targetEntity);
         }
         msg(targetEntity.invin ? "短剣刺し！しかし無敵で防がれた！" : `${_dagSB?'【潜伏ボーナス+1】':''}短剣刺し！近接ダメージ(${1+_dagSB})${se.poisonWeapon?'・毒':''}を与え行動力減少！`); used = true;
     } else if (actionMode === 'poison_dagger') {
         se.abilities['poison_dagger']--; 
         let _pdSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + _pdSB + (se.atkBonus||0) + (targetEntity.defDebuff||0); targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + _pdSB + (se.atkBonus||0) + (targetEntity.defDebuff||0); applyPoison(targetEntity); }
         msg(targetEntity.invin ? "毒剣刺し！しかし無敵で防がれた！" : `${_pdSB?'【潜伏ボーナス+1】':''}毒剣刺し！近接ダメージ(${2+_pdSB})と毒(3T)を与え行動力減少！`); used = true;
     } else if (actionMode === 'smash_slash') {
         se.abilities['smash_slash']--; 
@@ -6919,7 +6908,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         for (let hit = 1; hit <= 2; hit++) {
             if (targetEntity.hp > 0 && !targetEntity.invin) {
                 targetEntity.hp -= 1 + (se.atkBonus||0); knockback(targetEntity, 1, se);
-                if (se.poisonWeapon) { targetEntity.poisonTimer = 3; targetEntity.poisonStacks = (targetEntity.poisonStacks||0)+1; }
+                if (se.poisonWeapon) applyPoison(targetEntity);
             }
         }
         msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計2ダメ・2回吹飛！${se.poisonWeapon?'・毒':''}！`); used = true;
@@ -7667,7 +7656,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 let swT=board[nr]?.[nc];
                 if (swT && (isGroundTile(swT)||swT==='lake_ground')) {
                     board[nr][nc]='swamp_tile';
-                    tempSwamps.push({r:nr,c:nc,origTile:swT,expiresAt:turn+1});
+                    tempSwamps.push({r:nr,c:nc,origTile:swT,expiresAt:turn+1,ownerTeam:se.team});
                     swampCount++;
                     entities.filter(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team&&!e.flying&&!e.invin).forEach(e=>{e.poisonTimer=Math.max(e.poisonTimer||0,2);e.ap=Math.max(0,e.ap-1);});
                 }
@@ -8067,8 +8056,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let pbDmg = 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= pbDmg;
-            targetEntity.poisonTimer = Math.max(targetEntity.poisonTimer||0, 3);
-            targetEntity.poisonStacks = (targetEntity.poisonStacks||0) + 1;
+            applyPoison(targetEntity);
         }
         msg(targetEntity.invin ? `🐍 毒噛み！しかし無敵で防がれた！` : `🐍 毒噛み！${targetEntity.name}に${pbDmg}ダメ＋毒付与！`);
         used = true;
@@ -8396,16 +8384,21 @@ function handleAbilityTarget(r, c, targetEntity) {
         let tcOldR=se.r, tcOldC=se.c;
         se.r=r; se.c=c;
         checkTileEffects(se); checkEnemyTerritory(se);
-        // Spawn kobun near target
-        let tcCells=[];
-        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-            if(dr===0&&dc===0) continue;
-            let nr=r+dr,nc=c+dc;
-            if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) tcCells.push({r:nr,c:nc});
-        }
-        if(tcCells.length>0){
-            let kp=tcCells[Math.floor(Math.random()*tcCells.length)];
-            entities.push({id:'kobun_'+Date.now(),type:'kobun',name:'子分',team:se.team,r:kp.r,c:kp.c,hp:1,maxHp:1,ap:0,maxAp:2,abilities:{pistol:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,kobunFreezeUntil:turn+5});
+        // Spawn kobun at old position (where se was before dashing)
+        const _kobunFreezeUntil = turn < 5 ? turn + 5 : 0;
+        if(isWalkable(tcOldR,tcOldC)&&!entities.some(ev=>ev.hp>0&&ev.r===tcOldR&&ev.c===tcOldC)){
+            entities.push({id:'kobun_'+Date.now(),type:'kobun',name:'子分',team:se.team,r:tcOldR,c:tcOldC,hp:1,maxHp:1,ap:_kobunFreezeUntil>0?0:2,maxAp:2,abilities:{pistol:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,kobunFreezeUntil:_kobunFreezeUntil});
+        } else {
+            let tcCells=[];
+            for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+                if(dr===0&&dc===0) continue;
+                let nr=tcOldR+dr,nc=tcOldC+dc;
+                if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) tcCells.push({r:nr,c:nc});
+            }
+            if(tcCells.length>0){
+                let kp=tcCells[Math.floor(Math.random()*tcCells.length)];
+                entities.push({id:'kobun_'+Date.now(),type:'kobun',name:'子分',team:se.team,r:kp.r,c:kp.c,hp:1,maxHp:1,ap:_kobunFreezeUntil>0?0:2,maxAp:2,abilities:{pistol:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,kobunFreezeUntil:_kobunFreezeUntil});
+            }
         }
         se.mafiaGauge = Math.min(20,(se.mafiaGauge||0)+1);
         msg(`🏃 尻尾切り！子分を置いてダッシュ！マフィアゲージ+1(${se.mafiaGauge})！`); used=true;
@@ -8545,7 +8538,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.push({id:tId, type:'turret', name:'タレット', team:se.team, r, c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{nail_gun:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, dwarfOwner:se.id});
         msg(`🔩 タレット建設！JP-2(残${se.junkPoint})→タレット(HP5/ネイルガン∞)設置！`); used=true;
     } else if (actionMode === 'material_gather_dash') {
-        se.ap=Math.max(0,se.ap-1);
         if(se.onBoat&&!['river','whirlpool'].includes(board[r]?.[c])) se.onBoat=null;
         se.r=r; se.c=c;
         if(se.onWyvern){let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0);if(wy){wy.r=r;wy.c=c;}}
@@ -9668,12 +9660,12 @@ function cpuLogic() {
             }
             if (canKill && !attacked && cpu.abilities.poison_bow>0 && pkDist<=5 && getLoS(cpu,pkTarget)<99) {
                 cpu.abilities.poison_bow--;
-                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;knockback(pkTarget,1,cpu);pkTarget.poisonTimer=3;msg(`🏹 敵がトドメの毒弓矢！${pkTarget.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;knockback(pkTarget,1,cpu);applyPoison(pkTarget);msg(`🏹 敵がトドメの毒弓矢！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
             if (canKill && !attacked && cpu.abilities.poison_dagger>0 && pkDist<=1) {
                 cpu.abilities.poison_dagger--;
-                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;pkTarget.poisonTimer=3;msg(`🗡️ 敵がトドメの毒剣刺し！${pkTarget.name}に2ダメージ！`);}
+                if (!pkTarget.invin&&!necroShieldBlock(pkTarget)){pkTarget.ap--;pkTarget.hp-=2;applyPoison(pkTarget);msg(`🗡️ 敵がトドメの毒剣刺し！${pkTarget.name}に2ダメージ！`);}
                 attacked=true; cpu.ap--;
             }
             if (canKill && !attacked && cpu.abilities.rock_throw>0 && pkDist<=2) {
@@ -9878,7 +9870,7 @@ function cpuLogic() {
                     board[cpu.r][cpu.c]='cannon_cd_2';attacked=true;cpu.ap--;
                 } else if (cpu.abilities.poison_bow>0 && dist<=5 && getLoS(cpu,p)<99) {
                     cpu.abilities.poison_bow--;
-                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);p.poisonTimer=3;msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`);}
+                    if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;knockback(p,1,cpu);applyPoison(p);msg(`敵の毒弓矢！${p.name}に2ダメージと毒！`);}
                     else{msg(`敵の毒弓矢！しかし${p.name}は無敵で防いだ！`);}
                     attacked=true;cpu.ap--;
                 } else if (cpu.abilities.spear>0 && dist<=2 && (cpu.r===p.r||cpu.c===p.c)) {
@@ -9899,7 +9891,7 @@ function cpuLogic() {
                 } else if (dist<=1) {
                     if (cpu.abilities.poison_dagger>0){
                         cpu.abilities.poison_dagger--;
-                        if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;p.poisonTimer=3;msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`);}
+                        if (!p.invin&&!necroShieldBlock(p)){p.ap--;p.hp-=2;applyPoison(p);msg(`敵の毒剣刺し！${p.name}に2ダメージと毒！`);}
                         else{msg(`敵の毒剣刺し！しかし${p.name}は無敵で防いだ！`);}
                         attacked=true;cpu.ap--;
                     } else if (cpu.abilities.sword>0||cpu.abilities.punch>0||cpu.abilities.bite>0) {
@@ -10370,7 +10362,7 @@ function npcLogic() {
                     if (!p.invin && !necroShieldBlock(p)) { p.hp -= 2; msg(`${n.name}の岩投げ！2ダメージ！`); }
                     else { msg(`${n.name}の岩投げ！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
-                } else if (n.abilities.possess && dist <= 1) {
+                } else if (n.abilities.possess && dist <= 2) {
                     if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; p.ap = Math.max(0, p.ap - 1); msg(`👻 ${n.name}がとりついた！1ダメージ＆AP-1！`, true); }
                     else { msg(`👻 ${n.name}のとりつき！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
@@ -10485,6 +10477,10 @@ function checkWin() {
         // Factory: player wins row 0 cols 19-20; cpu wins row 20 cols 19-20
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && e.c >= 19) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && e.c >= 19) || pTrapped;
+    } else if (activeStage === 'colosseum') {
+        // Colosseum: only arena_goal tiles count as victory
+        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal') || cTrapped;
+        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal') || pTrapped;
     } else {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
@@ -10622,7 +10618,11 @@ function updateUI() {
     const _uiEntityIcon = ENTITY_ICONS[selectedEntity.type] ? ENTITY_ICONS[selectedEntity.type] + ' ' : '';
     document.getElementById('ui-name').innerText = _uiEntityIcon + selectedEntity.name + (selectedEntity.waterMode ? ' 🌊[水中]' : '');
     document.getElementById('ui-ap').innerText = selectedEntity.ap;
-    document.getElementById('ui-hp').innerText = selectedEntity.hp + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '') + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '');
+    document.getElementById('ui-hp').innerText = selectedEntity.hp
+        + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '')
+        + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '')
+        + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
+        + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '');
     
     if (selectedEntity.team !== myTeam()) {
         btnM.disabled = true;
