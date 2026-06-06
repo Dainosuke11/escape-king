@@ -1106,6 +1106,7 @@ const ABILITY_NAMES = {
     retreat: '撤退',
     escape_dash: '逃げ足(移動+元の場所に罠)',
     rock_dash: '退路を断ち走る(移動+元の場所に岩)',
+    mountain_dash: '山越えダッシュ(岩越え/2マス移動)',
     claw_slash: '爪で切り裂く(半径1/威1/敵バフ時+2+吹飛+AP-1)',
     slow_assault: 'じわじわ攻める(移動+元の場所に岩)',
     sweet_honey: '甘い蜜(半径2/敵HP+2+バリア/バリア中全封印+AP-1)',
@@ -1291,6 +1292,7 @@ const ABILITY_TIPS = {
     escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
     ninja_walk: '2マス以内のマスへ忍び足で移動。元いた場所に罠を設置する。弓・曲射・速射・遠距離狙撃の基礎ダメージ+1(暗殺者専用)。回数5。',
     rock_dash: '2マス以内のマスへ高速移動。元いた場所に岩を設置する。回数5。',
+    mountain_dash: '岩マスを乗り越えて2マス以内に移動できる特殊ダッシュ。中間に岩があっても飛び越えて目的地まで移動可能。回数5。',
     claw_slash: '半径1マスの敵に1ダメ。対象が体力・攻撃力・アビリティを今ターンか前ターンに回復・増加させていた場合、追加2ダメ＋吹き飛ばし＋AP-1。回数10。',
     slow_assault: '2マス以内のマスへ移動。元いた場所に岩を設置する。回数5。',
     sweet_honey: '半径2マスの敵の体力を2回復させ1ターンバリアを付与。バリア中、全アビリティ封印＋AP-1。回数3。',
@@ -1351,7 +1353,7 @@ const JOB_DATA = {
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
-    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1 }, hp: 30, ap: 2 },
+    beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, mountain_dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_spit: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
@@ -5348,6 +5350,23 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
+    if (mode === 'mountain_dash') {
+        if (dist === 0 || dist > 2) return false;
+        if (!isWalkable(r, c)) return false;
+        let srcTile2 = board[se.r]?.[se.c];
+        if (srcTile2 === 'sky_void' || srcTile2 === 'fallen_floor') return false;
+        // 中間マスに岩があっても乗り越えられる（エンティティは通過不可）
+        let rawDr2 = r - se.r, rawDc2 = c - se.c;
+        if (rawDr2 !== 0 && rawDc2 === 0 && Math.abs(rawDr2) === 2) {
+            let midR2 = se.r + Math.sign(rawDr2);
+            if (entities.some(e => e.hp > 0 && e.r === midR2 && e.c === se.c)) return false;
+        }
+        if (rawDr2 === 0 && rawDc2 !== 0 && Math.abs(rawDc2) === 2) {
+            let midC2 = se.c + Math.sign(rawDc2);
+            if (entities.some(e => e.hp > 0 && e.r === se.r && e.c === midC2)) return false;
+        }
+        return true;
+    }
     if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault' || mode === 'tail_cut' || mode === 'ninja_walk') {
         let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
@@ -8381,6 +8400,13 @@ function handleAbilityTarget(r, c, targetEntity) {
         let nwEvent = checkTileEffects(se);
         msg("🥷 忍び足！元の場所に罠を設置！" + (nwEvent ? " "+nwEvent : ""));
         checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'mountain_dash') {
+        if (se.abilities['mountain_dash'] !== 999) se.abilities['mountain_dash']--;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c; used = true;
+        let mdEvent = checkTileEffects(se);
+        msg(`🏔️ 山越えダッシュ！岩を飛び越えて移動！${mdEvent ? ' ' + mdEvent : ''}`);
+        checkEnemyTerritory(se);
     } else if (actionMode === 'rock_dash') {
         if (se.abilities['rock_dash'] !== 999) se.abilities['rock_dash']--;
         let rdOldR = se.r, rdOldC = se.c;
