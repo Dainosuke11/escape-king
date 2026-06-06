@@ -1230,7 +1230,7 @@ const ABILITY_TIPS = {
     barrier_magic: 'AP-1消費。半径5マス以内の味方コマ全員に無敵バリアを1ターン付与する。回数1。',
     flying_kick: '直線2マス移動。目的地に敵がいれば2ダメ・AP-1。AP消費なし。回数5。',
     wave_shot: '直線3マス以内の敵1体に3ダメ。回数3。',
-    aqua_dash: '2マス移動(ダッシュと同じ移動)。水マスに着地するとそのターンAP+2。回数5。',
+    aqua_dash: '2マス移動(ダッシュと同じ移動)。水マスに着地するとさらに前方2マス追加移動＋AP+2。回数5。',
     rapid_strikes: '周囲半径1マスの全敵に2ダメ・吹き飛ばし。回数3。',
     throw_enemy: '半径1マスの敵1体に3ダメ＋後方3マス吹き飛ばし。着地先に別の敵がいれば連鎖3ダメ。回数2。',
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
@@ -4873,7 +4873,14 @@ function startTurn(team, skipEffects = false) {
                     entities.forEach(e => {
                         if (e.hp>0 && e.r===r2 && e.c===c2 && !e.flying && !isOceanUnit(e) && !e.invin) {
                             e.hp -= 2; msg(`💧 ${e.name}が沼に落ちた！2ダメージ！`, true);
-                            const dirs=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+                            // 中央方向を優先して押し出す（中央座標 < 10 / > 10 比較バグを回避）
+                            const center = Math.floor(SIZE / 2);
+                            const lsDr = e.r < center ? 1 : e.r > center ? -1 : 0;
+                            const lsDc = e.c < center ? 1 : e.c > center ? -1 : 0;
+                            const dirs = [];
+                            if (lsDr !== 0) dirs.push({dr:lsDr,dc:0});
+                            if (lsDc !== 0) dirs.push({dr:0,dc:lsDc});
+                            dirs.push({dr:lsDr||1,dc:0},{dr:0,dc:lsDc||1},{dr:-lsDr||1,dc:0},{dr:0,dc:-lsDc||1});
                             for (let {dr,dc} of dirs) { let nr=e.r+dr,nc=e.c+dc; if(isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)){e.r=nr;e.c=nc;break;} }
                         }
                     });
@@ -4902,12 +4909,10 @@ function startTurn(team, skipEffects = false) {
                 let sl = colosseumShrinkLayer;
 
                 // --- 前レイヤーの壁を修復（岩砕きで壊された穴を塞ぐ）---
-                const pushOffRepaired = (r2, c2) => {
+                // dr/dc: 壁の位置から内側へ押す方向（呼び出し元から渡す）
+                const pushOffRepaired = (r2, c2, dr, dc) => {
                     let onIt = entities.filter(e => e.hp > 0 && e.r === r2 && e.c === c2);
                     onIt.forEach(e => {
-                        let dr = e.r < 10 ? 1 : e.r > 10 ? -1 : 0;
-                        let dc = e.c < 10 ? 1 : e.c > 10 ? -1 : 0;
-                        if (dr === 0 && dc === 0) dc = 1;
                         for (let step = 1; step <= 6; step++) {
                             let nr = e.r + dr * step, nc = e.c + dc * step;
                             if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) break;
@@ -4923,12 +4928,12 @@ function startTurn(team, skipEffects = false) {
                     let ps = sl - 1;
                     let pTop = ps - 1, pBot = SIZE - ps, pLeft = ps - 1, pRight = SIZE - ps;
                     for (let c2 = pLeft; c2 <= pRight; c2++) {
-                        if (pTop >= 0 && board[pTop]?.[c2] !== 'rock') { pushOffRepaired(pTop, c2); board[pTop][c2] = 'rock'; }
-                        if (pBot < SIZE && board[pBot]?.[c2] !== 'rock') { pushOffRepaired(pBot, c2); board[pBot][c2] = 'rock'; }
+                        if (pTop >= 0 && board[pTop]?.[c2] !== 'rock') { pushOffRepaired(pTop, c2, 1, 0); board[pTop][c2] = 'rock'; }
+                        if (pBot < SIZE && board[pBot]?.[c2] !== 'rock') { pushOffRepaired(pBot, c2, -1, 0); board[pBot][c2] = 'rock'; }
                     }
                     for (let r2 = pTop + 1; r2 < pBot; r2++) {
-                        if (pLeft >= 0 && board[r2]?.[pLeft]  !== 'rock') { pushOffRepaired(r2, pLeft);  board[r2][pLeft]  = 'rock'; }
-                        if (pRight < SIZE && board[r2]?.[pRight] !== 'rock') { pushOffRepaired(r2, pRight); board[r2][pRight] = 'rock'; }
+                        if (pLeft >= 0 && board[r2]?.[pLeft]  !== 'rock') { pushOffRepaired(r2, pLeft, 0, 1);  board[r2][pLeft]  = 'rock'; }
+                        if (pRight < SIZE && board[r2]?.[pRight] !== 'rock') { pushOffRepaired(r2, pRight, 0, -1); board[r2][pRight] = 'rock'; }
                     }
                 }
 
@@ -4938,13 +4943,15 @@ function startTurn(team, skipEffects = false) {
                 if (newTopRow < newBotRow && newLeftCol < newRightCol) {
                     let pushMsgs = [];
                     entities.filter(e => e.hp > 0).forEach(e => {
-                        let onWall =
-                            ((e.r === newTopRow || e.r === newBotRow) && e.c >= newLeftCol && e.c <= newRightCol) ||
-                            ((e.c === newLeftCol || e.c === newRightCol) && e.r > newTopRow && e.r < newBotRow);
-                        if (!onWall) return;
-                        let dr = e.r < 10 ? 1 : e.r > 10 ? -1 : 0;
-                        let dc = e.c < 10 ? 1 : e.c > 10 ? -1 : 0;
-                        if (dr === 0 && dc === 0) dc = 1;
+                        let onTopWall = e.r === newTopRow && e.c >= newLeftCol && e.c <= newRightCol;
+                        let onBotWall = e.r === newBotRow && e.c >= newLeftCol && e.c <= newRightCol;
+                        let onLeftWall = e.c === newLeftCol && e.r > newTopRow && e.r < newBotRow;
+                        let onRightWall = e.c === newRightCol && e.r > newTopRow && e.r < newBotRow;
+                        if (!onTopWall && !onBotWall && !onLeftWall && !onRightWall) return;
+                        // 壁の位置から内側方向を決定（中央座標比較バグを回避）
+                        let dr = onTopWall ? 1 : onBotWall ? -1 : 0;
+                        let dc = onLeftWall ? 1 : onRightWall ? -1 : 0;
+                        if (dr === 0 && dc === 0) dc = 1; // コーナー兼任時のフォールバック
                         let pushed = false;
                         for (let step = 1; step <= 6 && !pushed; step++) {
                             let nr = e.r + dr * step, nc = e.c + dc * step;
@@ -6532,11 +6539,25 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'aqua_dash') {
         if (se.abilities['aqua_dash'] !== 999) se.abilities['aqua_dash']--;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        let adOldR = se.r, adOldC = se.c;
         se.r = r; se.c = c; used = true;
         let adWaterBonus = isWaterTile(board[r]?.[c]) || activeStage === 'bigriver' || activeStage === 'underwater';
-        if (adWaterBonus) { se.ap = Math.min(se.ap + 2, se.maxAp); }
+        let adExtraMoved = 0;
+        if (adWaterBonus) {
+            // 水マス着地でさらに前方2マス追加移動
+            let adDr = Math.sign(r - adOldR), adDc = Math.sign(c - adOldC);
+            for (let step = 1; step <= 2; step++) {
+                let nr = se.r + adDr, nc = se.c + adDc;
+                if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) break;
+                if (!isWalkable(nr, nc, true)) break;
+                if (entities.some(o => o.hp > 0 && o.r === nr && o.c === nc && o !== se)) break;
+                se.r = nr; se.c = nc; adExtraMoved++;
+            }
+            se.ap = Math.min(se.ap + 2, se.maxAp);
+        }
         let adEventMsg = checkTileEffects(se);
-        msg(`🌊 アクアダッシュ！${adWaterBonus ? 'AP+2！' : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
+        let adExtraMsg = adExtraMoved > 0 ? `さらに${adExtraMoved}マス前進！` : '';
+        msg(`🌊 アクアダッシュ！${adWaterBonus ? `水マス着地！${adExtraMsg}AP+2！` : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
         checkEnemyTerritory(se);
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
