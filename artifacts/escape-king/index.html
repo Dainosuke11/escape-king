@@ -267,6 +267,10 @@
         .factory_goal { background: #1b5e20; border: 2px solid #76ff03 !important; }
         .factory_goal::after { content: "🚩"; font-size: calc(var(--tile-size)*0.4); }
         .factory_conveyor { background: #37474f; }
+        .factory_skip_1 { background: #1565c0; border: 1px solid #42a5f5 !important; }
+        .factory_skip_1::after { content: "▶"; font-size: calc(var(--tile-size)*0.55); color: #fff; }
+        .factory_skip_2 { background: #0d47a1; border: 1px solid #80deea !important; }
+        .factory_skip_2::after { content: "▶▶"; font-size: calc(var(--tile-size)*0.38); color: #80deea; }
         .factory_conveyor.lane-fast::after { content: "◀◀"; font-size: calc(var(--tile-size)*0.28); color: #ff5252; animation: conv-fast 0.4s linear infinite; }
         .factory_conveyor.lane-normal::after { content: "◀"; font-size: calc(var(--tile-size)*0.32); color: #ffeb3b; animation: conv-norm 0.8s linear infinite; }
         .factory_conveyor.lane-stop::after { content: "■"; font-size: calc(var(--tile-size)*0.25); color: #78909c; }
@@ -3306,10 +3310,10 @@ function initBoard(stageType) {
             else if (r2 <= 13) laneSpeedMap.push('normal');
             else laneSpeedMap.push('stop');
         }
-        // Initial scatter: some mines, volcanoes, item tiles on conveyor belt (cols 4-18)
-        let factoryItems = ['mine','mine','volcano','volcano','item_tile','item_tile'];
+        // Initial scatter: mines, volcanoes, skip tiles on conveyor belt (cols 4-18)
+        let factoryItems = ['mine','mine','mine','volcano','volcano','volcano','cannon','cannon','item_tile','item_tile','factory_skip_1','factory_skip_1','factory_skip_1','factory_skip_1','factory_skip_1','factory_skip_2','factory_skip_2','factory_skip_2','factory_skip_2','factory_skip_2'];
         factoryItems.forEach(ti => {
-            for (let att=0; att<50; att++) {
+            for (let att=0; att<80; att++) {
                 let fr=1+Math.floor(Math.random()*(SIZE-2)), fc=4+Math.floor(Math.random()*15);
                 if (board[fr][fc]==='factory_conveyor' && !entities.some(e=>e.hp>0&&e.r===fr&&e.c===fc)) {
                     board[fr][fc]=ti;
@@ -3367,7 +3371,7 @@ function initBoard(stageType) {
 }
 
 function isGroundTile(t) {
-    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','swamp_tile','factory_conveyor','factory_goal','volcano_summit_ground'].includes(t);
+    return ['plains','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','snow','mountain_tile','desert','forest','castle_tile','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','rail_tile','train_station','train_switch','skyfort_bridge','lake_ground','lake_island','lotus_pad','lotus_sunken','arena_floor','arena_goal','swamp_tile','factory_conveyor','factory_skip_1','factory_skip_2','factory_goal','volcano_summit_ground'].includes(t);
 }
 
 function placeChurchesAndItems(stageType) {
@@ -3611,7 +3615,14 @@ function processTurnStartEffects(e) {
     // Car/Train NPCs are controlled by nighttownCarTimer; no autonomous AP
     if (e.type === 'car' || e.type === 'train') { e.ap = 0; return; }
     // Decoy doll takes 1 self-damage at its own turn start
-    if (e.type === 'decoy') e.hp -= 1;
+    if (e.type === 'decoy') {
+        e.hp -= 1;
+        if (e.hp <= 0) {
+            entities.filter(a => a.type === 'assassin' && a.team === e.team && a.decoyStealth).forEach(a => {
+                a.decoyStealth = false; a.stealth = false; a.stealthTimer = 0;
+            });
+        }
+    }
     // Assassin stays stealthed while an ally decoy survives; lose decoy-stealth otherwise
     if (e.type === 'assassin' && e.decoyStealth) {
         let decoyAlive = entities.some(d => d.type === 'decoy' && d.team === e.team && d.hp > 0);
@@ -4852,10 +4863,12 @@ function startTurn(team, skipEffects = false) {
                 if (e.type === 'frankenstein' || e.type === 'vampire' || e.type === 'salamander' || e.type === 'shark' || e.type === 'skeleton_soldier') return 2;
                 return 1;
             };
-            entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc' && e.lastAttackTeam).forEach(e => {
+            entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc').forEach(e => {
                 e.colossCounted = true;
+                let attacker = e.lastAttackTeam || currentActingTeam;
+                if (!attacker || !['player','cpu'].includes(attacker)) return;
                 let pts = colossStrengthPts(e);
-                colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + pts;
+                colosseumPoints[attacker] = (colosseumPoints[attacker]||0) + pts;
                 msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
             });
             // === 2ターン目から毎ターン外周縮小＋押し込み（前レイヤー修復付き）===
@@ -4973,8 +4986,12 @@ function startTurn(team, skipEffects = false) {
                 if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
                     colosseumGoalSpawned[team] = true;
                     let goalRow = team==='player' ? 0 : SIZE-1;
-                    for (let c2=8; c2<=12; c2++) { if(['arena_floor','rock'].includes(board[goalRow][c2])) board[goalRow][c2]='arena_goal'; }
-                    msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！敵陣に旗が出現！`, true);
+                    let placed = false;
+                    for (let c2=0; c2<SIZE && !placed; c2++) {
+                        if (board[goalRow][c2] === 'arena_floor') { board[goalRow][c2] = 'arena_goal'; placed = true; }
+                    }
+                    if (!placed) board[goalRow][10] = 'arena_goal';
+                    msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！自軍の旗が出現！踏めば勝利！`, true);
                 }
             });
         }
@@ -5062,8 +5079,8 @@ function startTurn(team, skipEffects = false) {
                     e.c = destC;
                 }
             });
-            // --- Conveyor belt: shift board tiles (item_tile, mine, volcano) left ---
-            const movableTiles = ['item_tile', 'mine', 'volcano'];
+            // --- Conveyor belt: shift board tiles (item_tile, mine, volcano, cannon, skip tiles) left ---
+            const movableTiles = ['item_tile', 'mine', 'volcano', 'cannon', 'factory_skip_1', 'factory_skip_2'];
             for (let r2 = 0; r2 < SIZE; r2++) {
                 let steps = speedVal(r2);
                 if (steps === 0) continue;
@@ -5118,21 +5135,27 @@ function startTurn(team, skipEffects = false) {
             checkWin();
 
 
-            // --- Right-edge spawns every turn: 1-2 objects at col 20 ---
-            let spawnCount = 1 + (Math.random() < 0.5 ? 1 : 0);
+            // --- Right-edge spawns every turn: 2-3 objects at col 20 (more mines/cannons/skips) ---
+            let spawnCount = 2 + (Math.random() < 0.5 ? 1 : 0);
             for (let i = 0; i < spawnCount; i++) {
                 let sr = 1 + Math.floor(Math.random() * (SIZE - 2));
                 if (board[sr]?.[20] === 'factory_conveyor' && !entities.some(e => e.hp > 0 && e.r === sr && e.c === 20)) {
                     let rv = Math.random();
-                    if (rv < 0.20) {
+                    if (rv < 0.12) {
                         board[sr][20] = 'item_tile';
                         const its = ['star','shoes','sword'];
                         itemTileMap[`${sr},20`] = its[Math.floor(Math.random()*3)];
-                    } else if (rv < 0.35) {
+                    } else if (rv < 0.27) {
                         board[sr][20] = 'mine';
-                    } else if (rv < 0.45) {
+                    } else if (rv < 0.38) {
+                        board[sr][20] = 'cannon';
+                    } else if (rv < 0.48) {
                         board[sr][20] = 'volcano';
-                    } else if (rv < 0.55) {
+                    } else if (rv < 0.63) {
+                        board[sr][20] = 'factory_skip_1';
+                    } else if (rv < 0.76) {
+                        board[sr][20] = 'factory_skip_2';
+                    } else if (rv < 0.86) {
                         // Purple NPC goblin
                         entities.push({id:'factgob'+Date.now(), type:'goblin_small', name:'🟣工場ゴブリン', team:'npc',
                             r:sr, c:20, hp:2, maxHp:2, ap:2, maxAp:2,
@@ -5306,7 +5329,7 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station','train_switch','skyfort_bridge','volcano_summit_ground','arena_floor','arena_goal','lake_ground','lake_island','lotus_pad','lotus_sunken','forest','swamp_tile','factory_conveyor','factory_goal'];
+        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station','train_switch','skyfort_bridge','volcano_summit_ground','arena_floor','arena_goal','lake_ground','lake_island','lotus_pad','lotus_sunken','forest','swamp_tile','factory_conveyor','factory_goal','factory_skip_1','factory_skip_2'];
         return rockableGrounds.includes(board[r][c]) && !isNoRockZone(r, c) && !target;
     }
     // Stolen lock: prevents use for 1 turn after being stolen from
@@ -5368,7 +5391,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'debt_note') return maxDist<=1 && target && target.team!==se.team;
     if (mode === 'torture_mafia') return maxDist<=1 && target && target.team!==se.team;
     if (mode === 'extortion') return maxDist>0 && maxDist<=2 && target && target.team!==se.team;
-    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground' || board[r][c] === 'arena_floor' || board[r][c] === 'lake_ground' || board[r][c] === 'forest' || board[r][c] === 'graveyard_ground' || board[r][c] === 'nighttown_ground' || board[r][c] === 'fortress_floor' || board[r][c] === 'snow' || board[r][c] === 'mountain_tile' || board[r][c] === 'castle_tile' || board[r][c] === 'swamp_tile' || board[r][c] === 'factory_conveyor' || board[r][c] === 'volcano_summit_ground' || board[r][c] === 'skyfort_bridge') && !target;
+    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground' || board[r][c] === 'arena_floor' || board[r][c] === 'lake_ground' || board[r][c] === 'forest' || board[r][c] === 'graveyard_ground' || board[r][c] === 'nighttown_ground' || board[r][c] === 'fortress_floor' || board[r][c] === 'snow' || board[r][c] === 'mountain_tile' || board[r][c] === 'castle_tile' || board[r][c] === 'swamp_tile' || board[r][c] === 'factory_conveyor' || board[r][c] === 'factory_skip_1' || board[r][c] === 'factory_skip_2' || board[r][c] === 'volcano_summit_ground' || board[r][c] === 'skyfort_bridge') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
     if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
@@ -5922,6 +5945,18 @@ function checkTileEffects(entity) {
         }
     } else if (board[r] && board[r][c] === 'avalanche_tile') {
         triggerAvalanche(r, c, entity);
+    } else if (board[r] && (board[r][c] === 'factory_skip_1' || board[r][c] === 'factory_skip_2')) {
+        let skipDist = board[r][c] === 'factory_skip_2' ? 2 : 1;
+        let newC = c;
+        for (let s = 0; s < skipDist; s++) {
+            let nc = newC + 1;
+            if (nc >= SIZE) break;
+            if (!isGroundTile(board[r]?.[nc]) && board[r]?.[nc] !== 'factory_skip_1' && board[r]?.[nc] !== 'factory_skip_2') break;
+            if (entities.some(e2 => e2.hp > 0 && e2.r === r && e2.c === nc && e2 !== entity)) break;
+            newC = nc;
+        }
+        if (newC > c) { entity.c = newC; }
+        eventMsg = `▶ スキップマス！右に${newC - c}マス移動！`;
     } else if (board[r] && board[r][c] === 'item_tile') {
         let item = itemTileMap[`${r},${c}`];
         board[r][c] = defaultGround();
@@ -8234,7 +8269,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         se.r = r; se.c = c;
         if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
-        const nwTrapTiles = ['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground','arena_floor','forest','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','castle_tile','skyfort_bridge','volcano_summit_ground','factory_conveyor','swamp_tile'];
+        const nwTrapTiles = ['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground','arena_floor','forest','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','castle_tile','skyfort_bridge','volcano_summit_ground','factory_conveyor','factory_skip_1','factory_skip_2','swamp_tile'];
         if (nwTrapTiles.includes(board[nwOldR]?.[nwOldC])) {
             board[nwOldR][nwOldC] = 'trap'; trapOwnerMap[`${nwOldR},${nwOldC}`] = se.team;
         }
@@ -10437,7 +10472,7 @@ function npcLogic() {
                     else { msg(`👻 ${n.name}のとりつき！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
                 } else if (n.abilities.drain && dist <= 1) {
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; n.hp = Math.min(n.maxHp, n.hp + 1); msg(`🧛 ${n.name}の吸血！1ダメージを吸収しHP回復！`, true); }
+                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 2; n.hp = Math.min(n.maxHp, n.hp + 2); msg(`🧛 ${n.name}の吸血！2ダメージを吸収しHP+2回復！`, true); }
                     else { msg(`🧛 ${n.name}の吸血！しかし無敵で防いだ！`); }
                     attacked = true; n.ap--;
                 } else if (n.abilities.bite && dist <= 1) {
@@ -10548,9 +10583,12 @@ function checkWin() {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && e.c >= 19) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && e.c >= 19) || pTrapped;
     } else if (activeStage === 'colosseum') {
-        // Colosseum: only arena_goal tiles count as victory
-        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal') || cTrapped;
-        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal') || pTrapped;
+        // Colosseum: step on your own flag (player row 0, cpu row 20) — enemy touching it does nothing
+        pWin = (colosseumGoalSpawned['player'] && entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && board[e.r]?.[e.c] === 'arena_goal')) || cTrapped;
+        cWin = (colosseumGoalSpawned['cpu'] && entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && board[e.r]?.[e.c] === 'arena_goal')) || pTrapped;
+    } else if (activeStage === 'forest') {
+        pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
+        cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
     } else {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
@@ -10641,7 +10679,10 @@ function isAbilityConditionMet(key, se) {
     // 堕天ゲージ≥30で強化されるアビリティ
     if (['death_scythe','sin_mark','balance_break','scales'].includes(key)) return (se.fallenGauge||0) >= 30;
     // 潜伏中: 弓や短剣が潜伏ボーナス発動
-    if (['bow','dagger','poison_dagger'].includes(key)) return se.stealth === true;
+    if (['dagger','poison_dagger'].includes(key)) return se.stealth === true;
+    if (key === 'bow') return se.stealth === true || se.poisonWeapon === true;
+    // 毒武器化中（隠伏天誅後）: 速射・曲射・遠距離狙撃も毒を塗れる
+    if (['rapid_shot','curved_shot','long_snipe'].includes(key)) return se.poisonWeapon === true;
     // 怨みの打撃: 自分がこのターン被弾した
     if (key === 'grudge_strike') return se._tookDamageThisTurn === true;
     // 世界の管理者: 各アビリティの発動条件
