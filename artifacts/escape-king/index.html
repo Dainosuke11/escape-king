@@ -257,6 +257,8 @@
         .ash-mist { box-shadow: inset 0 0 10px rgba(180,140,60,0.95) !important; background: rgba(70,50,20,0.55) !important; }
         .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
+        .thorn-field { background-image: repeating-linear-gradient(45deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%), repeating-linear-gradient(135deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%) !important; background-size: 8px 8px !important; box-shadow: inset 0 0 8px rgba(34,139,34,0.7) !important; border: 1px solid #2d8a27 !important; }
+        .thorn-field::after { content: "🌿"; font-size: calc(var(--tile-size)*0.28); opacity: 0.65; pointer-events: none; }
         .eruption-warn { box-shadow: inset 0 0 0 3px #ff4500 !important; background: rgba(255,80,0,0.3) !important; }
         /* Curse tile (demon stage) */
         .curse_tile { background: #3b0060; }
@@ -832,6 +834,7 @@ let volcanoCraterRadius = 0;    // 0=just center tile, expands every 4 turns
 let volcanoSplatterTiles = [];  // [{r,c,placedTurn}] temp magma-splatter lava tiles
 let mafiaTerritory = null; // {ownerTeam, cells:[{r,c}], ownerTurn, origTiles:{}} — 1T縄張りエリア
 let volcanoAshMistSet = new Set(); // "r,c" keys of cells under ash mist this player-turn
+let thornTileMap = {}; // "r,c" → {timer, ownerTeam} — 根っこバインドのトゲエリア
 
 // ============================================================
 //  ONLINE MODE STATE
@@ -3470,6 +3473,7 @@ function initEntities(pJob, difficulty = "1") {
     laneSpeedMap = []; factoryPressTarget = null; factoryPressWarning = false;
     volcanoCraterRadius = 0; volcanoSplatterTiles = []; volcanoAshMistSet = new Set();
     mafiaTerritory = null;
+    thornTileMap = {};
     // Stage-specific entities
     if (activeStage === 'bigriver') {
         // Two warships: one adjacent to player land (row 14), one adjacent to CPU land (row 6)
@@ -3557,6 +3561,7 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
     mafiaTerritory = null;
+    thornTileMap = {};
 }
 
 function addExtraEnemies(difficulty) {
@@ -4012,6 +4017,14 @@ function processTurnStartEffects(e) {
         let newPRB = (e.plantLevel||0) >= 30 ? 3 : (e.plantLevel||0) >= 20 ? 2 : (e.plantLevel||0) >= 10 ? 1 : 0;
         e.rangeBonus = Math.max(0, (e.rangeBonus||0) - (e.plantRangeBonus||0)) + newPRB;
         e.plantRangeBonus = newPRB;
+        // トゲフィールド持続タイマー → 期限切れでatkBonus解除
+        if ((e.thornFieldTimer||0) > 0) {
+            e.thornFieldTimer--;
+            if (e.thornFieldTimer <= 0) {
+                e.atkBonus = Math.max(0, (e.atkBonus||0) - (e.thornAtkBonus||0));
+                e.thornAtkBonus = 0;
+            }
+        }
     }
     // 待機ボーナス: 前ターンに何も行動しなかったユニットへ
     if (!e.actedThisTurn && !e._usedAbilityThisTurn && e.hp > 0) {
@@ -4819,6 +4832,11 @@ function startTurn(team, skipEffects = false) {
         // マフィア縄張り期限チェック
         if (mafiaTerritory && turn > mafiaTerritory.expireTurn) {
             mafiaTerritory = null;
+        }
+        // トゲタイルタイマー（毎ターン1ずつ減算、0になったら消去）
+        for (let key in thornTileMap) {
+            thornTileMap[key].timer--;
+            if (thornTileMap[key].timer <= 0) delete thornTileMap[key];
         }
         // 暗黒フィールドタイルクリーンアップ
         darknessFields = darknessFields.filter(zone => {
@@ -5694,6 +5712,10 @@ function render() {
             if (mafiaTerritory && mafiaTerritory.cells.some(cl => cl.r===ar && cl.c===c)) {
                 d.classList.add('mafia-territory');
             }
+            // トゲエリアオーバーレイ（根っこバインド）
+            if (thornTileMap[`${ar},${c}`]) {
+                d.classList.add('thorn-field');
+            }
             if (fogSet.has(`${ar},${c}`)) d.classList.add('fog-tile');
 
             if (canIAct() && selectedEntity && actionMode !== 'move' && actionMode !== 'skill') {
@@ -5911,6 +5933,12 @@ function checkTileEffects(entity) {
     let r = entity.r;
     let c = entity.c;
     let eventMsg = "";
+    // トゲタイル効果：敵かつ非飛行ならAP-1・毒3T
+    let thornKey = `${r},${c}`;
+    if (thornTileMap[thornKey] && entity.team !== thornTileMap[thornKey].ownerTeam && !entity.flying) {
+        if (!entity.invin) { entity.ap = Math.max(0, entity.ap - 1); entity.poisonTimer = (entity.poisonTimer||0) + 3; }
+        if (!eventMsg) eventMsg = `🌿 トゲを踏んだ！AP-1・毒3T！`;
+    }
     if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
@@ -9297,6 +9325,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
             for (let w=-1; w<=1; w++) {
                 let wr=br+(rbStepC!==0?w:0), wc=bc+(rbStepR!==0?w:0);
                 if (wr<0||wr>=SIZE||wc<0||wc>=SIZE) continue;
+                thornTileMap[`${wr},${wc}`] = { timer: 2, ownerTeam: se.team };
                 entities.forEach(t => {
                     if (t.hp>0 && t.team!==se.team && t.r===wr && t.c===wc && !t.flying) {
                         if (!t.invin) { t.hp-=3; t.ap=Math.max(0,t.ap-2); t.poisonTimer=(t.poisonTimer||0)+3; rbHit++; }
@@ -9304,7 +9333,16 @@ function executeRushSkill(se, targetR, targetC, mode) {
                 });
             }
         }
-        msg(`🌿 根っこバインド！直線5マス幅3の敵${rbHit}体に3ダメ・AP-2・3T毒！`);
+        // 植物レベルに応じたATKボーナス（トゲ持続中）
+        let rbAtkBonus = (se.plantLevel||0) >= 20 ? 2 : (se.plantLevel||0) >= 10 ? 1 : 0;
+        if (rbAtkBonus > 0) {
+            se.atkBonus = Math.max(0, (se.atkBonus||0) - (se.thornAtkBonus||0)); // 旧ボーナス除去
+            se.thornAtkBonus = rbAtkBonus;
+            se.atkBonus = (se.atkBonus||0) + rbAtkBonus;
+            se.thornFieldTimer = 2;
+        }
+        let bonusStr = rbAtkBonus > 0 ? `・植物LV${se.plantLevel||0}→ATK+${rbAtkBonus}(2T)！` : '';
+        msg(`🌿 根っこバインド！直線5マス幅3の敵${rbHit}体に3ダメ・AP-2・3T毒！2Tトゲ設置${bonusStr}`);
         se.skillUsed = true; return;
     }
     if (mode === 'skill_coffin') {
