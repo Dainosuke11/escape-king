@@ -7761,7 +7761,10 @@ function handleAbilityTarget(r, c, targetEntity) {
         let soulAvail=(se.soulCount||0)>0;
         let nsT; if(soulAvail){se.soulCount--;nsT=['frankenstein','great_spirit','skeleton_soldier'][Math.floor(Math.random()*3)];}
         else nsT=['zombie','spirit','skeleton'][Math.floor(Math.random()*3)];
-        let ns2=spawnAt(nsT,r,c); ns2.team=se.team;
+        let ns2=spawnAt(nsT,r,c);
+        ns2.team = se.team;
+        ns2.id = (se.team === 'player' ? 'p' : 'cpu') + '_nsummon_' + nsT + '_' + Date.now() + Math.floor(Math.random()*1000);
+        ns2.necroSummoned = true;
         msg(`💀 ネクロサモン！${soulAvail?'魂1消費→':''}${ns2.name}(HP${ns2.hp})を召喚！`); used = true;
     } else if (actionMode === 'undead_party') {
         if(turn<5){msg('💀 アンデットパーティ：5ターン後から使用可能！');return;}
@@ -7776,7 +7779,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         upCells.sort(()=>Math.random()-0.5);
         let upSpawned=0;
-        upTypes.forEach((t,i)=>{if(upCells[i]){let m=spawnAt(t,upCells[i].r,upCells[i].c);m.team=se.team;m.undeadPartyDestroyTurn=turn;upSpawned++;}});
+        upTypes.forEach((t,i)=>{if(upCells[i]){let m=spawnAt(t,upCells[i].r,upCells[i].c);m.team=se.team;m.id=(se.team==='player'?'p':'cpu')+'_up_'+t+'_'+Date.now()+'_'+i;m.necroSummoned=true;m.undeadPartyDestroyTurn=turn;upSpawned++;}});
         msg(`💀 アンデットパーティ！魂3消費→${upSpawned}体のアンデッドを召喚！次のターン開始時に自動消滅！`); used = true;
     } else if (actionMode === 'corpse_fusion') {
         if((se.soulCount||0)<3){msg("💀 死体融合：魂が3必要！(現在"+(se.soulCount||0)+")");return;}
@@ -7792,7 +7795,10 @@ function handleAbilityTarget(r, c, targetEntity) {
             if(isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) cfCell={r:nr,c:nc};
         }
         if(!cfCell) cfCell={r:se.r,c:se.c};
-        let cf=spawnAt('necro_chimera',cfCell.r,cfCell.c); cf.team=se.team;
+        let cf=spawnAt('necro_chimera',cfCell.r,cfCell.c);
+        cf.team=se.team;
+        cf.id=(se.team==='player'?'p':'cpu')+'_cfusion_'+Date.now()+Math.floor(Math.random()*1000);
+        cf.necroSummoned=true;
         cf.hp=Math.max(1,cfTotalHp); cf.maxHp=Math.max(1,cfTotalHp);
         msg(`💀 死体融合！魂3消費・${cfAllies.length}体破壊→ネクロキメラ(HP${cf.hp})召喚！`); used = true;
     } else if (actionMode === 'corpse_throw') {
@@ -7801,7 +7807,10 @@ function handleAbilityTarget(r, c, targetEntity) {
             knockback(targetEntity,1,se);
             let ctPos={r:targetEntity.r,c:targetEntity.c};
             if(!entities.some(ev=>ev.hp>0&&ev.r===ctPos.r&&ev.c===ctPos.c&&ev!==targetEntity)){
-                let z=spawnAt('zombie',ctPos.r,ctPos.c); z.team=se.team;
+                let z=spawnAt('zombie',ctPos.r,ctPos.c);
+            z.team=se.team;
+            z.id=(se.team==='player'?'p':'cpu')+'_cthrow_zombie_'+Date.now()+Math.floor(Math.random()*1000);
+            z.necroSummoned=true;
             }
             if(!se.invin) se.hp=Math.max(0,se.hp-1);
         }
@@ -9485,9 +9494,14 @@ function mergeSpirits() {
         for (let j = i + 1; j < spirits.length; j++) {
             let a = spirits[i], b = spirits[j];
             if (a.hp <= 0 || b.hp <= 0) continue;
+            // Only merge same-team spirits
+            if (a.team !== b.team) continue;
             if (Math.max(Math.abs(a.r-b.r), Math.abs(a.c-b.c)) <= 3) {
+                let savedTeam = a.team;
+                let savedId = a.id;
                 let gs = monsterTemplate('great_spirit', a.r, a.c);
-                gs.id = 'gspirit' + Date.now() + Math.floor(Math.random()*1000);
+                gs.id = savedId; // preserve original id so usedAbilities/selections remain valid
+                gs.team = savedTeam; // preserve team (monsterTemplate defaults to 'npc')
                 b.hp = 0; b.soulCounted = true;
                 Object.assign(a, gs);
                 msg("👹 二体の悪霊が合体し『大悪霊』が誕生した！", true);
