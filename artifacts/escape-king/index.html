@@ -704,6 +704,7 @@
     <div class="panel">
         <div id="turn-indicator">Player's Turn (Turn: 1)</div>
         <div id="souls-indicator" style="color:#bb8fce; font-size:13px; display:none;"></div>
+        <div id="stage-element-info" style="display:none; font-size:12px; font-weight:bold;"></div>
         <div id="status-message" style="color: #f1c40f; font-size:12px;">準備完了</div>
         <div id="battle-log" style="max-height:70px; overflow-y:auto; font-size:11px; color:#bbb; background:#1a1a2a; border:1px solid #333; border-radius:4px; padding:3px 6px; margin-top:4px; line-height:1.5;"></div>
     </div>
@@ -721,6 +722,7 @@
             <div class="status-row">
                 <span>AP: <span id="ui-ap" style="color:#3498db;">-</span></span>
                 <span>HP: <span id="ui-hp" style="color:#e74c3c;">-</span></span>
+                <span>属性: <span id="ui-element" style="color:#888;">-</span></span>
             </div>
             <button class="btn" style="margin-bottom:15px; background: #2980b9;" id="btn-move">移動 / 決定 (AP 1)</button>
             <hr style="border: 1px solid #444; margin-bottom: 15px;">
@@ -9010,6 +9012,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         const _tgtElem = getEntityElement(targetEntity);
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
+            msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
         }
     }
     if (used && se.fallen && !actionMode.startsWith('skill_') &&
@@ -11152,10 +11155,25 @@ function updateUI() {
     // Disable end-turn button if not my turn
     btnE.disabled = !canIAct();
 
+    // ステージ属性表示
+    const _stageElemKey = STAGE_ELEMENT[activeStage] ?? 'none';
+    const _stageElemInfoEl = document.getElementById('stage-element-info');
+    if (_stageElemInfoEl) {
+        if (_stageElemKey !== 'none' && ELEMENT_DATA[_stageElemKey]) {
+            _stageElemInfoEl.style.display = 'block';
+            _stageElemInfoEl.style.color = ELEMENT_DATA[_stageElemKey].color;
+            _stageElemInfoEl.textContent = `ステージ属性: ${ELEMENT_DATA[_stageElemKey].label}`;
+        } else {
+            _stageElemInfoEl.style.display = 'none';
+        }
+    }
+
     if (!selectedEntity) {
         document.getElementById('ui-name').innerText = "未選択";
         document.getElementById('ui-ap').innerText = "-";
         document.getElementById('ui-hp').innerText = "-";
+        document.getElementById('ui-element').textContent = "-";
+        document.getElementById('ui-element').style.color = '#888';
         btnM.disabled = true;
         return;
     }
@@ -11170,7 +11188,16 @@ function updateUI() {
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
         + (selectedEntity.type === 'necromancer' ? ` 💀${selectedEntity.soulCount||0}` : '')
         + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '');
-    
+    const _uiElemKey = getEntityElement(selectedEntity);
+    const _uiElemSpan = document.getElementById('ui-element');
+    if (_uiElemKey !== 'none' && ELEMENT_DATA[_uiElemKey]) {
+        _uiElemSpan.textContent = ELEMENT_DATA[_uiElemKey].label;
+        _uiElemSpan.style.color = ELEMENT_DATA[_uiElemKey].color;
+    } else {
+        _uiElemSpan.textContent = '無';
+        _uiElemSpan.style.color = '#888';
+    }
+
     if (selectedEntity.team !== myTeam()) {
         btnM.disabled = true;
         list.innerHTML = '<div style="color:#aaa; text-align:center; padding:10px;">敵またはNPCのコマです<br>（行動不可）</div>';
