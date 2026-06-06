@@ -4273,6 +4273,13 @@ function processTurnStartEffects(e) {
             // Already handled above (hp-=1 when gauge becomes 0)
         }
     }
+    // 陰陽師: ターン開始ごとに光属性⇔闇属性を交互切り替え
+    if (e.type === 'onmyoji') {
+        e._onmyojiLight = !e._onmyojiLight;
+        const newElem = e._onmyojiLight ? 'light' : 'dark';
+        e.element = newElem;
+        msg(`☯️ ${e.name}の属性が${ELEMENT_DATA[newElem]?.label ?? newElem}に転じた！`);
+    }
     reapNecroSouls();
 }
 
@@ -9032,6 +9039,18 @@ function handleAbilityTarget(r, c, targetEntity) {
     if (used) {
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
+        // 魔法使い: 使ったアビリティ/スキルの属性に変化
+        if (se.type === 'mage') {
+            const usedElem = actionMode === 'skill'
+                ? (se.fallen ? 'dark' : (JOB_SKILL_ELEMENT[se.type] ?? 'none'))
+                : (actionMode.startsWith('skill_')
+                    ? (SKILL_MODE_ELEMENT[actionMode] ?? 'none')
+                    : (ABILITY_ELEMENT[actionMode] ?? 'none'));
+            if (usedElem && usedElem !== 'none') {
+                se.element = usedElem;
+                msg(`🔮 ${se.name}の属性が${ELEMENT_DATA[usedElem]?.label ?? usedElem}に変化！`);
+            }
+        }
         // 世界の管理者: 被弾カウント追跡（inequality_anger条件用）
         if (targetEntity && targetEntity.type === 'world_manager' && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
             targetEntity._managerDmgCount = (targetEntity._managerDmgCount||0) + 1;
