@@ -1028,9 +1028,9 @@ const ABILITY_NAMES = {
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
     barrier_magic: '障壁魔法(半径5/味方バリア1T)',
-    flying_kick: '跳び蹴り(直線3/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威1/吹飛)',
-    flame_breath: '火炎ブレス(半径2/威2/燃焼2T)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
-    counter: 'カウンター(被弾反撃)', ryujin_transform: '変身(竜形態/飛行)',
+    flying_kick: '跳び蹴り(直線3/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威2/吹飛)',
+    throw_enemy: '投げ飛ばし(半径1/威3/3マス吹飛)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
+    counter: 'カウンター(全ダメ無効+全効果反射)', ryujin_transform: '変身(竜形態/飛行)',
     afterimage: '残像(デコイ/潜伏/5T~)',
     fortify: '築城(正面3岩+南大砲/1T限定)',
     unwavering_stance: '不退転の構え(被ダメ+1/味方AP+1・攻撃+1)',
@@ -1224,10 +1224,10 @@ const ABILITY_TIPS = {
     roar: '自身周囲半径1マス(植物LV分拡大)の全敵に1ダメ・敵AP-1・ランダム1アビリティ1T封印。回数1。',
     barrier_magic: 'AP-1消費。半径5マス以内の味方コマ全員に無敵バリアを1ターン付与する。回数1。',
     flying_kick: '直線3マス内の敵に接近して2ダメ・AP-1・吹き飛ばし。AP消費1。回数1。',
-    rapid_strikes: '周囲半径1マスの全敵に1ダメ・吹き飛ばし。回数3。',
-    flame_breath: '半径2マスの敵1体に2ダメ＋2ターン燃焼(毎ターン1ダメ)。回数2。',
+    rapid_strikes: '周囲半径1マスの全敵に2ダメ・吹き飛ばし。回数3。',
+    throw_enemy: '半径1マスの敵1体に3ダメ＋後方3マス吹き飛ばし。着地先に別の敵がいれば連鎖3ダメ。回数2。',
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
-    counter: '構え状態を1回追加。次に近接攻撃を受けた時に自動で2ダメ反撃。回数3。',
+    counter: '1ターン全ダメ・弱体化を無効化(バリア)＋被弾した攻撃のダメージ・AP減少・燃焼など全効果を攻撃者に反射する。回数3。',
     ryujin_transform: '竜の姿に変身(飛行・ヘルブレス使用可)。再使用で元に戻る。3Tクールダウン。',
     afterimage: '隣接マスに残像(HP1/AP3/打撃のみ/1T消滅)を召喚し、自身は3ターン潜伏。5T経過後使用可。回数1。',
     fortify: '正面(北)3マスに一時的な岩を設置し、南に大砲マスを配置。岩と大砲は次の自分ターン開始時に消滅。回数2。',
@@ -1353,7 +1353,7 @@ const JOB_DATA = {
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
     alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_spit: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, plant_wall: 3, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
-    ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
+    ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, throw_enemy: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, bite: 5, throw_net: 1, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 1, soul_absorb: 1, bone_armor: 1, skull_head: 1, necro_bind: 1, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
@@ -3985,7 +3985,7 @@ function processTurnStartEffects(e) {
     // カウンターバリア - invinTimer経由で自動消滅。バリアが切れたら解除
     if (e.counterBarrierActive && !e.invin) {
         e.counterBarrierActive = false;
-        msg(`⚡ ${e.name}のカウンターバリアが解除された！`, true);
+        msg(`⚡ ${e.name}のカウンターが解除された！`, true);
     }
     // アクロバット タイマー
     if ((e.acrobatTimer||0) > 0) {
@@ -5479,7 +5479,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'charge_formation') return r===se.r && c===se.c;
     if (mode === 'coordinated_atk') return r===se.r && c===se.c;
     if (mode === 'scouting') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
-    if (mode === 'flame_breath') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'throw_enemy') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'tail_swing') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'counter') return true;
     if (mode === 'ryujin_transform') return true;
@@ -6376,6 +6376,20 @@ function triggerRockHideBreak(target, attacker) {
     return true;
 }
 
+function applyCounterReflect(attacker, defender, dmg, apLost, burnStacks) {
+    if (!defender || !defender.counterBarrierActive || attacker.invin) return;
+    if (dmg > 0) attacker.hp = Math.max(0, attacker.hp - dmg);
+    if (apLost > 0) attacker.ap = Math.max(0, attacker.ap - apLost);
+    if (burnStacks > 0) attacker.burnTimer = (attacker.burnTimer||0) + burnStacks;
+    defender.counterBarrierActive = false;
+    defender.invin = false;
+    defender.invinTimer = 0;
+    let fx = dmg > 0 ? `${dmg}ダメ` : '';
+    if (apLost > 0) fx += (fx?'・':'') + `AP-${apLost}`;
+    if (burnStacks > 0) fx += (fx?'・':'') + `${burnStacks}T燃焼`;
+    msg(`⚡ カウンター！${defender.name}が全効果反射！攻撃者に${fx}！`, true);
+}
+
 function handleAbilityTarget(r, c, targetEntity) {
     let se = selectedEntity;
     let used = false;
@@ -6644,7 +6658,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let dmg = ((se.type === 'golem' || se.type === 'big' || se.type === 'ryujin' || se.type === 'afterimage') ? 2 : 1) + (se.atkBonus || 0) + stealthBonus;
             if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= dmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
             if (se.poisonWeapon && !targetEntity.invin) applyPoison(targetEntity);
-            if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+            applyCounterReflect(se, targetEntity, dmg + (targetEntity.defDebuff||0), 1);
             let bonus = stealthBonus > 0 ? '【潜伏ボーナス+1】' : '';
             msg(targetEntity.invin ? `${atkName}！しかし無敵で防がれた！` : `${bonus}${atkName}命中！ダメージ(${dmg})${se.poisonWeapon?'・毒付与':''}を与えAPを奪い吹き飛ばした！`); used = true;
         }
@@ -7064,7 +7078,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['laser_blade']--;
         if (!se.invin) se.hp -= 2;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 3 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 3 + (targetEntity?.defDebuff||0), 1);
         msg(targetEntity?.invin ? 'レーザーブレード！しかし無敵で防がれた！' : 'レーザーブレード！反動2ダメ・敵に3ダメ・AP-1！'); used = true;
     } else if (actionMode === 'sweep') {
         se.abilities['sweep']--;
@@ -7080,7 +7094,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['laser_snipe']--;
         if (!se.invin) se.hp -= 2;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 4 + (targetEntity?.defDebuff||0), 1);
         msg(targetEntity?.invin ? 'レーザースナイプ！しかし無敵で防がれた！' : 'レーザースナイプ！反動2ダメ・直線5マス4ダメ・AP-1！'); used = true;
     } else if (actionMode === 'laser_bazooka') {
         se.abilities['laser_bazooka']--;
@@ -7141,7 +7155,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['incinerate']--;
         if (!se.invin) se.hp -= 2;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 5 + (targetEntity?.defDebuff||0), 2, 2);
         msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！反動2ダメ・5ダメ・敵AP-2・2ターン燃焼ダメージ！'); used = true;
     } else if (actionMode === 'recon_drone') {
         if (!isWalkable(r, c, true)) { msg("🛸 その場所には召喚できません！"); return false; }
@@ -7158,7 +7172,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'drone_ram') {
         if (!targetEntity || targetEntity.team === se.team) { msg("体当たり：有効な敵ターゲットが必要です"); return false; }
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-        if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 1 + (targetEntity.defDebuff||0), 0);
         msg(targetEntity.invin ? '💥 体当たり！しかし無敵で弾かれた！' : `💥 体当たり！${targetEntity.name}に1ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'power_supply_drone') {
         se.ap = Math.max(0, se.ap - 1);
@@ -7183,7 +7197,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (t) {
                 let dmg = (se.jugglingPower||1) + (se.atkBonus||0);
                 if (!t.invin) { t.hp -= dmg + (t.defDebuff||0); t.ap = Math.max(0,t.ap-1); }
-                if (t.counterBarrierActive&&!se.invin) { se.hp-=2; t.counterBarrierActive=false; t.invin=false; t.invinTimer=0; msg(`⚡ カウンターバリア！全ダメ無効＋2ダメ反射！`,true); }
+                applyCounterReflect(se, t, dmg + (t.defDebuff||0), 1);
                 se.jugglingPower = (se.jugglingPower||1)+1;
                 if (se.abilities['knife_juggling']!==999) se.abilities['knife_juggling']++;
                 msg(`🎪 ナイフジャグリング！${t.name}に${dmg}ダメ！次回パワー${se.jugglingPower}・回数+1！`); hit=true; break;
@@ -7220,7 +7234,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let t=entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
             if (t) {
                 if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r:nr-dr,c:nc-dc}); }
-                if (t.counterBarrierActive&&!se.invin) { se.hp-=2; t.counterBarrierActive=false; t.invin=false; t.invinTimer=0; msg(`⚡カウンターバリア！全ダメ無効＋2ダメ反射！`,true); }
+                applyCounterReflect(se, t, 2 + (t.defDebuff||0) + (se.atkBonus||0), 0);
                 msg(`🎡 玉乗り！${t.name}を蹴散らし！2ダメ・吹き飛ばし！`); hitEnemy=true;
                 if (isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==t)) { se.r=nr; se.c=nc; moved=step; }
                 break;
@@ -7268,7 +7282,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t=>{
             if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
                 if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r,c}); hitCount++; }
-                if (t.counterBarrierActive&&!se.invin) { se.hp-=2; t.counterBarrierActive=false; t.invin=false; t.invinTimer=0; msg(`⚡カウンターバリア！全ダメ無効＋2ダメ反射！`,true); }
+                applyCounterReflect(se, t, 2 + (t.defDebuff||0) + (se.atkBonus||0), 0);
             }
         });
         se.stealth=true; se.stealthTimer=1;
@@ -7304,7 +7318,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['tentacle_whip']--;
         let twDmg = se.formShifted ? 5 : 1;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= twDmg + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, twDmg + (targetEntity?.defDebuff||0), 0);
         msg(targetEntity?.invin ? '🐙 触手のムチ！しかし無敵で防がれた！' : `🐙 触手のムチ！${twDmg}ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'water_spit') {
         se.abilities['water_spit']--;
@@ -7346,7 +7360,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'egg_spit') {
         se.abilities['egg_spit']--;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 2 + (targetEntity.defDebuff||0); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 2 + (targetEntity?.defDebuff||0), 0);
         if (targetEntity) {
             let eggCandidates = [];
             for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
@@ -7384,7 +7398,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['branch_whip']--;
         let bwDmg = (se.plantLevel||0) >= 20 ? 5 : (se.plantLevel||0) >= 10 ? 3 : 1;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= bwDmg + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, bwDmg + (targetEntity?.defDebuff||0), 0);
         if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
             se.plantLevel = (se.plantLevel||0) + 1;
             let ms = plantLvUpOnce(se);
@@ -7435,7 +7449,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['seed_bazooka']--;
         let sbDmg = (se.plantLevel||0) >= 20 ? 5 : (se.plantLevel||0) >= 10 ? 3 : 1;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= sbDmg + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, sbDmg + (targetEntity?.defDebuff||0), 1);
         if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
             se.plantLevel = (se.plantLevel||0) + 1;
             let ms = plantLvUpOnce(se);
@@ -7512,7 +7526,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (isWalkable(nr,nc,false,true) && !entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) { se.r=nr; se.c=nc; }
         }
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, 2 + (targetEntity?.defDebuff||0), 1);
         msg(targetEntity?.invin ? '🦵 跳び蹴り！しかし無敵で防がれた！' : '🦵 跳び蹴り！接近して2ダメ・AP-1・吹き飛ばし！');
         checkEnemyTerritory(se); used = true;
     } else if (actionMode === 'rapid_strikes') {
@@ -7520,15 +7534,37 @@ function handleAbilityTarget(r, c, targetEntity) {
         let rsHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                if (!t.invin) { t.hp -= 1; knockback(t,1,se); rsHit++; }
+                if (!t.invin) { t.hp -= 2; knockback(t,1,se); rsHit++; }
+                applyCounterReflect(se, t, 2 + (t.defDebuff||0), 0);
             }
         });
-        msg(`👊 乱打！半径1マスの敵${rsHit}体に1ダメ・吹き飛ばし！`); used = true;
-    } else if (actionMode === 'flame_breath') {
-        se.abilities['flame_breath']--;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 2 + (targetEntity.defDebuff||0); targetEntity.burnTimer = (targetEntity.burnTimer||0) + 2; }
-        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
-        msg(targetEntity?.invin ? '🔥 火炎ブレス！しかし無敵で防がれた！' : '🔥 火炎ブレス！2ダメ・2ターン燃焼ダメージ！'); used = true;
+        msg(`👊 乱打！半径1マスの敵${rsHit}体に2ダメ・吹き飛ばし！`); used = true;
+    } else if (actionMode === 'throw_enemy') {
+        se.abilities['throw_enemy']--;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let teDmg = 3 + (targetEntity.defDebuff||0);
+            targetEntity.hp -= teDmg;
+            let teDr = Math.sign(targetEntity.r - se.r) || 1, teDc = Math.sign(targetEntity.c - se.c);
+            let teR = targetEntity.r, teC = targetEntity.c;
+            let chainTarget = null;
+            for (let step = 1; step <= 3; step++) {
+                let nr = teR + teDr, nc = teC + teDc;
+                if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) break;
+                if (!isWalkable(nr, nc, true)) break;
+                let blocker = entities.find(e => e.hp > 0 && e.r === nr && e.c === nc && e !== targetEntity);
+                if (blocker) {
+                    if (blocker.team !== se.team && !blocker.invin) { chainTarget = blocker; blocker.hp -= 3 + (blocker.defDebuff||0); }
+                    break;
+                }
+                teR = nr; teC = nc;
+            }
+            targetEntity.r = teR; targetEntity.c = teC;
+            applyCounterReflect(se, targetEntity, teDmg, 0);
+            msg(`🐲 投げ飛ばし！${targetEntity.name}に3ダメ・3マス吹き飛ばし！${chainTarget ? chainTarget.name + 'に連鎖3ダメ！' : ''}`);
+        } else {
+            msg('🐲 投げ飛ばし！しかし無敵で防がれた！');
+        }
+        used = true;
     } else if (actionMode === 'tail_swing') {
         se.abilities['tail_swing']--;
         let tsHit = 0, tsDr = Math.sign(r-se.r), tsDc = Math.sign(c-se.c);
@@ -7545,7 +7581,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['counter']--;
         se.invin = true; se.invinTimer = 1;
         se.counterBarrierActive = true;
-        msg(`⚡ カウンターバリア！1ターン全ダメ・弱体化を無効化！被弾時に2ダメ反射！`); used = true;
+        msg(`⚡ カウンター！1ターン全ダメ・弱体化を無効化！被弾した攻撃の全効果を反射！`); used = true;
     } else if (actionMode === 'ryujin_transform') {
         se.abilities['ryujin_transform']--;
         if ((se.transformCooldownLeft||0) > 0) { msg(`変身はあと${se.transformCooldownLeft}ターン後に使用可能！`); se.abilities['ryujin_transform']++; return; }
@@ -7593,7 +7629,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (meleeDodged(targetEntity)) { msg("💪 石で殴る！しかし飛行コマに回避された！"); used = true; }
         else {
             if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= spDmg + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
-            if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！全ダメ無効＋2ダメ反射！`, true); }
+            applyCounterReflect(se, targetEntity, spDmg + (targetEntity.defDebuff||0), 1);
             let rockPlaced = false;
             if (!targetEntity.invin && (targetEntity.r !== origR || targetEntity.c !== origC)) {
                 const rockable = ['plains','desert','graveyard_ground','nighttown_ground','fortress_floor','mountain_tile','snow','summit','castle_tile','dungeon_ground','forest','volcano_summit_ground'];
@@ -7670,7 +7706,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let biteDmg = 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
         if (meleeDodged(targetEntity)) { msg("🦈 噛みつき！しかし飛行コマに回避された！"); }
         else if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= biteDmg; targetEntity.ap = Math.max(0, targetEntity.ap - 1); }
-        if (targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        applyCounterReflect(se, targetEntity, biteDmg, 1);
         msg(targetEntity.invin ? '🦈 噛みつき！しかし無敵で防がれた！' : `🦈 噛みつき！${targetEntity.name}に${biteDmg}ダメ＋AP-1！`); used = true;
     } else if (actionMode === 'throw_net') {
         se.abilities['throw_net']--;
@@ -11176,7 +11212,7 @@ function updateUI() {
         if ((selectedEntity.limiterReleased||0) > 0)
             addStatus(`⚙️ リミッター解除中！残り${selectedEntity.limiterReleased}ターン・毎ターン3自傷`, '#8e44ad');
         if (selectedEntity.counterBarrierActive)
-            addStatus(`⚡ カウンターバリア発動中！全ダメ無効＋反射`, '#d35400');
+            addStatus(`⚡ カウンター発動中！全ダメ無効＋全効果反射`, '#d35400');
         if ((selectedEntity.transformCooldownLeft||0) > 0)
             addStatus(`🐲 変身クールダウン残り${selectedEntity.transformCooldownLeft}ターン`, '#2c3e50');
         if (selectedEntity.ryujinDragonForm)
