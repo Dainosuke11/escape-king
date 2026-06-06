@@ -1022,9 +1022,9 @@ const ABILITY_NAMES = {
     analysis: '分析(半径2/AP-1/敵:ランダムアビ1T封印/味方:APコスト-1)',
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/目の前引き寄せ/威1/AP-1)',
-    abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_place: '卵設置(孵化→宇宙人)',
-    optical_camo: '光学迷彩(1T潜伏)', form_shift: '形態変化(戦闘形態)',
-    branch_whip: '枝のムチ(半径2/威1)', seed_plant: '種まき(成長→ベビーM)',
+    abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_spit: '卵吐き(半径2/隣接卵/威2)',
+    optical_camo: '光学迷彩(1T潜伏)', form_shift: '形態変化(戦闘形態→触手強化)',
+    branch_whip: '枝のムチ(半径2/植物LV威力変化)', plant_wall: '植物の壁(前方3マス種+1Tバリア)',
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
     barrier_magic: '障壁魔法(半径5/味方バリア1T)',
@@ -1213,11 +1213,11 @@ const ABILITY_TIPS = {
     water_spit: '射程2マスの敵に1ダメ。味方の海洋コマに当てるとウォーターゲージ+5・HP+1回復。回数無限。',
     tractor_beam: '半径3マスの敵に1ダメ・使用者の目の前に引き寄せ・AP-1。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
-    egg_place: '隣接マスに宇宙卵を設置。2ターン後に宇宙人Jr(HP4/AP2)が孵化。回数3。',
+    egg_spit: '半径2マスの敵に2ダメ・着弾した敵の隣接1マスに宇宙卵を設置。2ターン後に孵化。回数3。',
     optical_camo: '光学迷彩で1ターン潜伏状態になる。移動中でも隠れる。回数2。',
-    form_shift: '戦闘形態に変化。全アビリティ+2・攻撃力+2。再度使用で元に戻る。回数1。',
-    branch_whip: '半径2マス(植物LV分拡大)の敵に1ダメ・吹き飛ばし。回数5。',
-    seed_plant: '隣接マスに種を植える。1T後→若芽、2T後→ベビーマンドレイク(HP6/AP2)。回数5。',
+    form_shift: '戦闘形態に変化。HP+5・変身ターンのみAP+2・射程+1。触手のムチが威力5に。再使用で戻る(全アビリティ+1)。回数1。',
+    branch_whip: '半径2マスの敵に植物LVで威力変化(LV1-9:1/LV10-19:3/LV20+:5)。吹き飛ばし。回数5。',
+    plant_wall: 'マンドレイクの目の前幅3マスに種を植え・1ターンバリア。回数3。',
     fusion: 'AP-1消費。半径1マス内の植物コマを全吸収(種+1/若芽+2/ベビーM+3)。植物LVアップ＋HP・全アビリティ(fusion除く)増加。回数1。',
     seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。命中後に敵周辺ランダム1マスに種を設置。回数1。',
     root_spread: 'AP-2して半径8マスの味方全員HP+1・各自ランダム1アビリティ+1(岩落とし除く)＋植物LV+1＋種を即時1段階成長。回数1。',
@@ -1351,8 +1351,8 @@ const JOB_DATA = {
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, dash: 5, wolf_summon: 1, tame: 1, falcon_summon: 1, punch: 5, healing_flute: 3, charge_order: 1, beast_fuse: 1, howl: 1 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 1, tsusembo: 1, golem_create: 1 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
-    alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_place: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
-    mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, seed_plant: 5, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
+    alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 1, egg_spit: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
+    mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, plant_wall: 3, fusion: 1, seed_bazooka: 1, root_spread: 1, roar: 1 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, dash: 5, punch: 10, flying_kick: 1, rapid_strikes: 3, flame_breath: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 1 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 1, bite: 5, throw_net: 1, whirlpool_atk: 1, octopus_summon: 1 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 1, monkey_toy: 1 }, hp: 30, ap: 2 },
@@ -4002,6 +4002,26 @@ function processTurnStartEffects(e) {
         e.burnTimer--;
         if (!e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は燃焼中！1ダメージ！(残${e.burnTimer}T)`, true); }
     }
+    // マンドレイク: 植物レベルに応じた射程ボーナス（毎ターン再計算）
+    if (e.type === 'mandrake' || e.type === 'baby_mandrake') {
+        let newPRB = (e.plantLevel||0) >= 30 ? 3 : (e.plantLevel||0) >= 20 ? 2 : (e.plantLevel||0) >= 10 ? 1 : 0;
+        e.rangeBonus = Math.max(0, (e.rangeBonus||0) - (e.plantRangeBonus||0)) + newPRB;
+        e.plantRangeBonus = newPRB;
+    }
+    // 待機ボーナス: 前ターンに何も行動しなかったユニットへ
+    if (!e.actedThisTurn && !e._usedAbilityThisTurn && e.hp > 0) {
+        e.hp = Math.min(e.maxHp, e.hp + 1);
+        let idlePool = Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock' && e.abilities[k] !== 999 && (e.abilities[k]||0) > 0);
+        if (idlePool.length > 0) {
+            let ik = idlePool[Math.floor(Math.random() * idlePool.length)];
+            e.abilities[ik]++;
+            msg(`💤 ${e.name}は待機ボーナス！HP+1・[${ABILITY_NAMES[ik]||ik}]回数+1！`, true);
+        } else {
+            msg(`💤 ${e.name}は待機ボーナス！HP+1！`, true);
+        }
+    }
+    e.actedThisTurn = false;
+    e._usedAbilityThisTurn = false;
     // リミッター解除 毎ターン自傷（2ターン）
     if ((e.limiterReleased||0) > 0) {
         if (!e.invin) { e.hp -= 3; msg(`⚙️ ${e.name}はリミッター解除の反動で3ダメージ！(残${e.limiterReleased}T)`, true); }
@@ -5430,13 +5450,13 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'water_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && (target.team!==se.team || isOceanUnit(target));
     if (mode === 'tractor_beam') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'abduction') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'egg_place') return maxDist<=1 && isWalkable(r,c);
+    if (mode === 'egg_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'optical_camo') return true;
     if (mode === 'form_shift') return true;
     if (mode === 'skill_mind_control') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     // Mandrake
     if (mode === 'branch_whip') return maxDist>0 && maxDist<=2+(se.plantLevel||0)+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'seed_plant') { let g=board[r]?.[c]; return maxDist<=1+(se.plantLevel||0) && !target && (g==='plains'||g==='dungeon_ground'||g==='desert'||g==='graveyard_ground'||g==='nighttown_ground'||g==='fortress_floor'||g==='mountain_tile'||g==='snow'||g==='summit'||g==='volcano_summit_ground'); }
+    if (mode === 'plant_wall') return r===se.r && c===se.c;
     if (mode === 'fusion') return true;
     if (mode === 'seed_bazooka') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.plantLevel||0)+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'root_spread') return true;
@@ -6215,6 +6235,7 @@ function handleTileClick(vr, c) {
 
                 let _prevMoveTile = board[selectedEntity.r]?.[selectedEntity.c];
                 selectedEntity.r = r; selectedEntity.c = c;
+                selectedEntity.actedThisTurn = true;
                 selectedEntity.ap -= cost;
                 // ケーブルカーを降りた瞬間にAP補正を除去する
                 if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(_prevMoveTile) && !['cable_tile','cable_board'].includes(board[r]?.[c])) {
@@ -6432,9 +6453,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
+        let dashOldR = se.r, dashOldC = se.c;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         if (isOceanUnit(se) && se.waterMode && !isWaterTile(board[r]?.[c])) se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
         se.r = r; se.c = c; used = true;
+        // 産み付けダッシュ: エイリアンは元の場所に卵を産む
+        if (se.type === 'alien' && isWalkable(dashOldR, dashOldC) && !entities.some(x=>x.hp>0&&x.r===dashOldR&&x.c===dashOldC)) {
+            entities.push({ id:'egg'+Date.now(), type:'alien_egg', name:'宇宙卵', team:se.team, r:dashOldR, c:dashOldC, hp:2, maxHp:2, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+        }
+        // 植樹走り: マンドレイクは元の場所に種を植える
+        if (se.type === 'mandrake' && isWalkable(dashOldR, dashOldC) && !entities.some(x=>x.hp>0&&x.r===dashOldR&&x.c===dashOldC)) {
+            entities.push({ id:'seed'+Date.now(), type:'seed', name:'種', team:se.team, r:dashOldR, c:dashOldC, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+        }
         if (se.onWyvern) {
             let wy = entities.find(e => e.id === se.onWyvern && e.hp > 0);
             if (wy) { wy.r = r; wy.c = c; }
@@ -7272,9 +7302,10 @@ function handleAbilityTarget(r, c, targetEntity) {
     // ====== エイリアン ======
     } else if (actionMode === 'tentacle_whip') {
         se.abilities['tentacle_whip']--;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
+        let twDmg = se.formShifted ? 5 : 1;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= twDmg + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
-        msg(targetEntity?.invin ? '🐙 触手のムチ！しかし無敵で防がれた！' : '🐙 触手のムチ！1ダメ・吹き飛ばし！'); used = true;
+        msg(targetEntity?.invin ? '🐙 触手のムチ！しかし無敵で防がれた！' : `🐙 触手のムチ！${twDmg}ダメ・吹き飛ばし！`); used = true;
     } else if (actionMode === 'water_spit') {
         se.abilities['water_spit']--;
         if (targetEntity && targetEntity.team === se.team && isOceanUnit(targetEntity)) {
@@ -7312,10 +7343,23 @@ function handleAbilityTarget(r, c, targetEntity) {
             msg(`👽 アブダクション！${targetEntity.name}を2ダメ＋1ターン異空間に誘拐！ランダム3アビリティ封印！`);
         } else { msg('👽 アブダクション！しかし無敵で防がれた！'); }
         used = true;
-    } else if (actionMode === 'egg_place') {
-        se.abilities['egg_place']--;
-        entities.push({ id:'egg'+Date.now(), type:'alien_egg', name:'宇宙卵', team:se.team, r, c, hp:2, maxHp:2, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg('🥚 卵設置！2ターン後に宇宙人Jrが孵化！'); used = true;
+    } else if (actionMode === 'egg_spit') {
+        se.abilities['egg_spit']--;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 2 + (targetEntity.defDebuff||0); }
+        if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
+        if (targetEntity) {
+            let eggCandidates = [];
+            for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+                if (dr===0&&dc===0) continue;
+                let nr=targetEntity.r+dr, nc=targetEntity.c+dc;
+                if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&isWalkable(nr,nc)&&!entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)) eggCandidates.push({r:nr,c:nc});
+            }
+            if (eggCandidates.length>0) {
+                let pos=eggCandidates[Math.floor(Math.random()*eggCandidates.length)];
+                entities.push({ id:'egg'+Date.now(), type:'alien_egg', name:'宇宙卵', team:se.team, r:pos.r, c:pos.c, hp:2, maxHp:2, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+            }
+        }
+        msg(targetEntity?.invin ? '🥚 卵吐き！しかし無敵で防がれた！' : '🥚 卵吐き！2ダメ・敵隣接に宇宙卵設置！2ターン後に孵化！'); used = true;
     } else if (actionMode === 'optical_camo') {
         se.abilities['optical_camo']--;
         se.stealth = true; se.stealthTimer = 1;
@@ -7323,33 +7367,43 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'form_shift') {
         se.abilities['form_shift']--;
         if (!se.formShifted) {
-            se.savedAbils = {...se.abilities};
-            se.atkBonus = (se.atkBonus||0) + 1;
             se.formShifted = true;
-            se.hp = Math.min(se.maxHp, se.hp + 3);
-            msg('👽 形態変化！戦闘形態！攻撃力+1・HP+3回復！触手/岩砕き/変身以外使用不可！');
+            se.hp = Math.min(se.maxHp, se.hp + 5);
+            se.ap = Math.min(se.ap + 2, (se.maxAp||2) + 2);
+            se.rangeBonus = (se.rangeBonus||0) + 1;
+            msg('👽 形態変化！戦闘形態！HP+5・AP+2・射程+1！触手のムチが5ダメに！触手/変身/岩落とし/岩砕き以外封印！');
         } else {
-            if (se.savedAbils) { se.abilities = se.savedAbils; }
-            se.atkBonus = Math.max(0,(se.atkBonus||0)-1);
             se.formShifted = false;
-            msg('👽 元の形態に戻った！');
+            se.rangeBonus = Math.max(0, (se.rangeBonus||0) - 1);
+            for (let k of Object.keys(se.abilities)) { if (se.abilities[k] !== 999) se.abilities[k]++; }
+            msg('👽 元の形態に戻った！全アビリティ+1！');
         }
         used = true;
     // ====== マンドレイク ======
     } else if (actionMode === 'branch_whip') {
         se.abilities['branch_whip']--;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
+        let bwDmg = (se.plantLevel||0) >= 20 ? 5 : (se.plantLevel||0) >= 10 ? 3 : 1;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= bwDmg + (targetEntity.defDebuff||0); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
         if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
             se.plantLevel = (se.plantLevel||0) + 1;
             let ms = plantLvUpOnce(se);
             msg(`🌿 撃破！植物LV${se.plantLevel}に上昇！HP+1！${ms?'🎉節目ボーナス：ATK/射程/AP+1！':''}`, true);
         }
-        msg(targetEntity?.invin ? '🌿 枝のムチ！しかし無敵で防がれた！' : '🌿 枝のムチ！1ダメ・吹き飛ばし！'); used = true;
-    } else if (actionMode === 'seed_plant') {
-        se.abilities['seed_plant']--;
-        entities.push({ id:'seed'+Date.now(), type:'seed', name:'種', team:se.team, r, c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg('🌱 種まき！1ターンで若芽→2ターンでベビーマンドレイクに成長！'); used = true;
+        msg(targetEntity?.invin ? '🌿 枝のムチ！しかし無敵で防がれた！' : `🌿 枝のムチ！${bwDmg}ダメ(植物LV${se.plantLevel||0})・吹き飛ばし！`); used = true;
+    } else if (actionMode === 'plant_wall') {
+        se.abilities['plant_wall']--;
+        let wallDir = se.team === 'player' ? -1 : 1;
+        let wallPlanted = 0;
+        for (let dc = -1; dc <= 1; dc++) {
+            let nr = se.r + wallDir, nc = se.c + dc;
+            if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && isWalkable(nr, nc) && !entities.some(x=>x.hp>0&&x.r===nr&&x.c===nc)) {
+                entities.push({ id:'seed'+(Date.now()+dc), type:'seed', name:'種', team:se.team, r:nr, c:nc, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+                wallPlanted++;
+            }
+        }
+        se.invin = true; se.invinTimer = 1;
+        msg(`🌿 植物の壁！前方${wallPlanted}マスに種を植え・1Tバリア！`); used = true;
     } else if (actionMode === 'fusion') {
         se.abilities['fusion']--;
         se.ap = Math.max(0, se.ap - 1);
@@ -7379,7 +7433,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'seed_bazooka') {
         se.abilities['seed_bazooka']--;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
+        let sbDmg = (se.plantLevel||0) >= 20 ? 5 : (se.plantLevel||0) >= 10 ? 3 : 1;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= sbDmg + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); knockback(targetEntity,1,se); }
         if (targetEntity && targetEntity.counterBarrierActive && !se.invin) { se.hp -= 2; targetEntity.counterBarrierActive = false; targetEntity.invin = false; targetEntity.invinTimer = 0; msg(`⚡ カウンターバリア！${targetEntity.name}が全ダメ無効＋2ダメ反射！`, true); }
         if (targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) {
             se.plantLevel = (se.plantLevel||0) + 1;
@@ -7428,15 +7483,17 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🌳 根を張る！AP-2して半径8の味方${healed}体を回復(ランダムアビリティ+1)・植物LV${se.plantLevel}・種を即成長！`); used = true;
     } else if (actionMode === 'roar') {
         se.abilities['roar']--;
+        let roarDmg = (se.plantLevel||0) >= 20 ? 3 : (se.plantLevel||0) >= 10 ? 2 : 1;
         let rHit = 0, rRange = 1 + (se.plantLevel||0);
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=rRange) {
                 if (!t.invin) {
-                    t.hp -= 1; t.ap = Math.max(0,t.ap-1); rHit++;
-                    // ランダム1アビリティを1T封印
-                    let pool = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]||0)>0&&t.abilities[k]!==999&&!((t.sealedAbilities?.[k]||0)>0));
-                    if (pool.length>0) {
-                        let k=pool[Math.floor(Math.random()*pool.length)];
+                    t.hp -= roarDmg; t.ap = Math.max(0,t.ap-1); rHit++;
+                    // ランダム3アビリティを1T封印
+                    let pool = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]||0)>0&&t.abilities[k]!==999);
+                    let shuffled = pool.sort(()=>Math.random()-0.5);
+                    for (let i=0; i<Math.min(3,shuffled.length); i++) {
+                        let k=shuffled[i];
                         if(!t.sealedAbilities) t.sealedAbilities={};
                         t.sealedAbilities[k]=(t.sealedAbilities[k]||0)+1;
                         if(!(t.empSealTimer>0)) t.empSealTimer=1;
@@ -7444,7 +7501,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 }
             }
         });
-        msg(`🌿 咆哮！半径${rRange}マスの敵${rHit}体に1ダメ・AP-1・ランダム1アビ封印！`); used = true;
+        msg(`🌿 咆哮！半径${rRange}マスの敵${rHit}体に${roarDmg}ダメ・AP-1・ランダム3アビ封印！`); used = true;
     // ====== 竜人族 ======
     } else if (actionMode === 'flying_kick') {
         se.abilities['flying_kick']--;
@@ -8668,6 +8725,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
     }
     if (used) {
+        se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 世界の管理者: 被弾カウント追跡（inequality_anger条件用）
         if (targetEntity && targetEntity.type === 'world_manager' && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
@@ -10896,10 +10954,10 @@ function updateUI() {
             btn.classList.add('sealed');
             btn.innerText = `【封印${turns}T】${dispName}`;
         }
-        // 戦闘形態中: form_shift/shatter/tentacle_whip/tractor_beam/drop_rock のみ使用可
-        if (selectedEntity.formShifted && !['form_shift','shatter','tentacle_whip','tractor_beam','drop_rock'].includes(key)) {
+        // 戦闘形態中: form_shift/tentacle_whip/drop_rock/shatter のみ使用可
+        if (selectedEntity.formShifted && !['form_shift','tentacle_whip','drop_rock','shatter'].includes(key)) {
             btn.disabled = true;
-            btn.title = '⚔️ 戦闘形態中 — 変身/岩砕き/触手系のみ使用可';
+            btn.title = '⚔️ 戦闘形態中 — 触手のムチ/変身/岩落とし/岩砕きのみ使用可';
         }
         btn.onclick = () => setMode(key);
         list.appendChild(btn);
