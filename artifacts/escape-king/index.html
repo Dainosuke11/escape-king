@@ -10942,6 +10942,16 @@ function isAbilityConditionMet(key, se) {
     return false;
 }
 
+// スキルボタンの条件達成チェック（枠を光らせる用）
+function isSkillConditionMet(se) {
+    if (!se) return false;
+    // マンドレイク「根っこバインド」: 植物LV10以上でATKボーナス発動条件
+    if (se.type === 'mandrake' || se.type === 'baby_mandrake') {
+        return (se.plantLevel||0) >= 10;
+    }
+    return false;
+}
+
 function updateUI() {
     const list = document.getElementById('ability-list');
     list.innerHTML = '';
@@ -11131,6 +11141,8 @@ function updateUI() {
         sb.style.background = '#d35400'; sb.style.color = '#fff';
         sb.innerText = skillName ? `固有スキル発動【${skillName}】` : '固有スキル発動';
         if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
+        // スキル条件達成時に枠を光らせる
+        if (isSkillConditionMet(selectedEntity)) sb.classList.add('condition-met');
         sb.onclick = () => setMode('skill');
         list.appendChild(sb);
     }
