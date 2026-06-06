@@ -9349,7 +9349,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
             initialAbilities: { drop_rock: 999, shatter: 999, robot_arm: 999, robot_leg: 999, robot_body: 999, robot_head: 999, robot_cannon: 999 }
         });
         se.abilities = {...se.initialAbilities};
-        se.skillUsed = true;
+        se.skillUsed = false; // 再度パーツを集めれば再び合体可能
         msg(`🤖 合体！ドワーフロボ(HP15/AP2/射程+2)を召喚！ドワーフはパーツ収集を最初からやり直し！`);
         return;
     }
@@ -10981,30 +10981,27 @@ function updateUI() {
         let isCursed = cursedAbilities[selectedEntity.id]?.[key] > 0;
 
         // ロボットアビリティの特別表示（ドワーフエンジニア・ドワーフロボ）
+        // count!==999（未製造）の場合は対応craftボタン側で表示するので非表示
         if ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) && _ROBOT_KEYS.includes(key)) {
+            if (count !== 999) continue; // craftボタンがある間は非表示
             let btn = document.createElement('button');
             btn.className = 'ability-btn';
             btn.title = ABILITY_TIPS[key] || dispName;
-            if (count === 999) {
-                btn.style.cssText = 'background:#1a6b2e; color:#7dde8f; border:1px solid #2ecc71; font-weight:bold;';
-                btn.innerText = `🟢 ${dispName}∞`;
-                if (actionMode === key) btn.classList.add('active');
-                if (usedAbilities[selectedEntity.id]?.has(key) || isCursed) btn.disabled = true;
-                if (isCursed) { btn.classList.add('sealed'); btn.innerText = `【封印${cursedAbilities[selectedEntity.id][key]}T】${dispName}`; }
-                btn.onclick = () => setMode(key);
-            } else {
-                btn.style.cssText = 'background:#2c3e50; color:#7f8c8d; border:1px solid #4a5568; font-style:italic; cursor:default;';
-                btn.innerText = `🔧 ${dispName}（JP2消費で製造可能）`;
-                btn.disabled = true;
-            }
+            btn.style.cssText = 'background:#1a6b2e; color:#7dde8f; border:1px solid #2ecc71; font-weight:bold;';
+            btn.innerText = `🟢 ${dispName}∞`;
+            if (actionMode === key) btn.classList.add('active');
+            if (usedAbilities[selectedEntity.id]?.has(key) || isCursed) btn.disabled = true;
+            if (isCursed) { btn.classList.add('sealed'); btn.innerText = `【封印${cursedAbilities[selectedEntity.id][key]}T】${dispName}`; }
+            btn.onclick = () => setMode(key);
             list.appendChild(btn);
             continue;
         }
 
         // パーツ製造ボタン（JP残量で色変え）
         const _CRAFT_KEYS = ['arm_craft','leg_craft','body_craft','head_craft','cannon_craft'];
+        const _CRAFT_TO_ROBOT = { arm_craft:'robot_arm', leg_craft:'robot_leg', body_craft:'robot_body', head_craft:'robot_head', cannon_craft:'robot_cannon' };
         if ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) && _CRAFT_KEYS.includes(key)) {
-            if (count <= 0) continue; // 製造済み（robot側で表示）
+            if (count <= 0 || selectedEntity.abilities[_CRAFT_TO_ROBOT[key]] === 999) continue; // 製造済みまたはロボアビ有効中は非表示
             let btn = document.createElement('button');
             btn.className = 'ability-btn';
             btn.title = ABILITY_TIPS[key] || dispName;
