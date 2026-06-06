@@ -2695,6 +2695,11 @@ function flushBattleLog() {
 
 function applyPoison(target, stacks=1) {
     if (!target || target.invin) return;
+    if ((target.poisonTimer||0) > 0) {
+        // 毒状態に再び毒を浴びると猛毒に昇格
+        target._virulentPoison = true;
+        msg(`☠️ ${target.name}は毒が重なり猛毒になった！`, true);
+    }
     target.poisonStacks = (target.poisonStacks||0) + stacks;
     target.poisonTimer = Math.max(target.poisonTimer||0, 3) + (stacks > 1 ? stacks - 1 : 0);
     if (target.poisonStacks >= 3) target._virulentPoison = true;
@@ -3819,11 +3824,11 @@ function processTurnStartEffects(e) {
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
-        let isSever = (e.poisonStacks || 0) >= 2;
+        let isSever = (e.poisonStacks || 0) >= 2 || !!e._virulentPoison;
         let dmg = isSever ? 2 : 1;
         if (!e.invin) e.hp -= dmg;
-        // No random AP loss — pure HP damage only
-        if (e.poisonTimer <= 0) { e.poisonStacks = 0; }
+        if (!e.invin) msg(`${isSever ? '☠️ 猛毒' : '🟢 毒'}！${e.name}が${dmg}ダメージ！(残${e.poisonTimer}T)`, true);
+        if (e.poisonTimer <= 0) { e.poisonStacks = 0; e._virulentPoison = false; }
     }
     if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
     // 撤退：バリアが解けたターン開始時に後退＋罠設置
