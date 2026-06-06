@@ -5325,6 +5325,25 @@ function startTurn(team, skipEffects = false) {
                     }
                 }
             }
+
+            // --- スキップタイル常時10枚確保: 不足分を右端(col18-20)から補充 ---
+            const SKIP_TARGET = 10;
+            let currentSkips = 0;
+            for (let r2 = 0; r2 < SIZE; r2++)
+                for (let c2 = 1; c2 < SIZE; c2++)
+                    if (board[r2][c2] === 'factory_skip_1' || board[r2][c2] === 'factory_skip_2') currentSkips++;
+            let needed = SKIP_TARGET - currentSkips;
+            // 補充は右寄り(cols 16-20)のランダム行に配置（コンベアマスのみ）
+            let skipAttempts = 0;
+            while (needed > 0 && skipAttempts < 60) {
+                skipAttempts++;
+                let sr2 = 1 + Math.floor(Math.random() * (SIZE - 2));
+                let sc2 = 16 + Math.floor(Math.random() * 5); // col 16-20
+                if (board[sr2]?.[sc2] === 'factory_conveyor' && !entities.some(e => e.hp > 0 && e.r === sr2 && e.c === sc2)) {
+                    board[sr2][sc2] = Math.random() < 0.55 ? 'factory_skip_1' : 'factory_skip_2';
+                    needed--;
+                }
+            }
         }
         // Temp swamp cleanup
         tempSwamps = tempSwamps.filter(sw => {
