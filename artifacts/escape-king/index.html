@@ -5740,7 +5740,8 @@ function render() {
         let poisonIcon = e.poisonTimer > 0 ? '<span style="color:#2ecc71;">☠</span>' : '';
         const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
         // Wyvern has no HP (maxHp===0 is the flag); skip HP bar for it
-        const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}</div>`;
+        let jpSuffix = (e.dwarfUnit || e.isDwarfRobot) && e.junkPoint !== undefined ? ` <span style="color:#e67e22;">⚙${e.junkPoint}</span>` : '';
+        const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}${jpSuffix}</div>`;
         let entityLabel = e.name.substring(0,2);
         ed.innerHTML = `${entityLabel}${poisonIcon}${hpBar}`;
         
@@ -5881,7 +5882,13 @@ function setMode(mode) {
             if(dr===0&&dc===0) continue;
             let nr=se.r+dr, nc=se.c+dc;
             if(nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
-            if(['rock','mine','volcano','gravestone'].includes(board[nr]?.[nc])) { board[nr][nc]=defaultGround(); rockCount++; }
+            let mgTile = board[nr]?.[nc];
+            if(['rock','mine','volcano','gravestone'].includes(mgTile)) {
+                if(mgTile==='mine') breakMine(nr,nc);
+                if(mgTile==='volcano') breakVolcano();
+                if(mgTile==='gravestone') spawnAt('spirit',nr,nc);
+                board[nr][nc]=defaultGround(); rockCount++;
+            }
         }
         se.junkPoint = (se.junkPoint||0) + rockCount;
         if(se.abilities['material_gather']!==999) se.abilities['material_gather']--;
