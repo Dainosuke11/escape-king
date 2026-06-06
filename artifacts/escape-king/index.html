@@ -4176,7 +4176,7 @@ function startTurn(team, skipEffects = false) {
     {
         let upExpired = entities.filter(e => e.hp > 0 && e.undeadPartyDestroyTurn !== undefined && e.undeadPartyDestroyTurn < turn);
         if (upExpired.length > 0) {
-            upExpired.forEach(e => { e.hp = -1; e.necroSoulCounted = true; });
+            upExpired.forEach(e => { e.hp = -1; });
             msg(`💀 アンデッドパーティのコマ${upExpired.length}体が消滅した！`, true);
             checkWin();
         }
