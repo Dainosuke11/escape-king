@@ -5400,6 +5400,8 @@ function startTurn(team, skipEffects = false) {
             }
             return true;
         });
+        // CPU/NPCターン終了→playerターン開始：cpuチームの残AP温存回復
+        if (turn > 1) applyApRestRecovery('cpu');
         entities.forEach(e => {
             if (e.team === 'player') {
                 processTurnStartEffects(e);
@@ -5423,6 +5425,8 @@ function startTurn(team, skipEffects = false) {
         }
 
     } else if (team === 'cpu') {
+        // playerターン終了→cpuターン開始：playerチームの残AP温存回復
+        applyApRestRecovery('player');
         if (!skipEffects) {
             entities.forEach(e => {
                 if (e.team === 'cpu') processTurnStartEffects(e);
@@ -9919,6 +9923,31 @@ function reapSouls() {
             }
         }
     });
+}
+
+// 行動力温存回復：ターン終了時に残APがあればHP・アビリティ回復
+function applyApRestRecovery(team) {
+    let msgs = [];
+    entities.forEach(e => {
+        if (e.hp <= 0 || e.team !== team) return;
+        let remainAp = e.ap || 0;
+        if (remainAp <= 0) return;
+        // HP回復（maxHpを超えない）
+        let hpGain = Math.min(remainAp, e.maxHp - e.hp);
+        if (hpGain > 0) e.hp += hpGain;
+        // ランダムアビリティ回復（残AP数分、毎回1種ランダム選択して+1）
+        let abilityKeys = Object.keys(e.abilities || {}).filter(k => e.abilities[k] !== 999 && k !== 'drop_rock');
+        let abilityRecoveries = {};
+        for (let i = 0; i < remainAp; i++) {
+            if (abilityKeys.length === 0) break;
+            let k = abilityKeys[Math.floor(Math.random() * abilityKeys.length)];
+            e.abilities[k]++;
+            abilityRecoveries[k] = (abilityRecoveries[k] || 0) + 1;
+        }
+        let abMsg = Object.keys(abilityRecoveries).map(k => `${ABILITY_NAMES[k]||k}+${abilityRecoveries[k]}`).join('・');
+        msgs.push(`${e.name}(AP${remainAp}温存)→HP+${hpGain}${abMsg ? '・' + abMsg : ''}`);
+    });
+    if (msgs.length > 0) msg(`💤 行動力温存回復！${msgs.join(' / ')}`, true);
 }
 
 function endTurn() {
