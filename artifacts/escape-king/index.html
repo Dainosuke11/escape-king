@@ -10944,10 +10944,39 @@ function isAbilityConditionMet(key, se) {
 // スキルボタンの条件達成チェック（枠を光らせる用）
 function isSkillConditionMet(se) {
     if (!se) return false;
-    // マンドレイク「根っこバインド」: 植物LV10以上でATKボーナス発動条件
-    if (se.type === 'mandrake' || se.type === 'baby_mandrake') {
-        return (se.plantLevel||0) >= 10;
+    const t = se.copiedSkill && se.type === 'thief' ? se.copiedSkill : se.type;
+    // マンドレイク: 植物LV10以上でATKボーナス
+    if (t === 'mandrake' || t === 'baby_mandrake') return (se.plantLevel||0) >= 10;
+    // 世界の管理者: 5T以上 かつ 遠距離敵あり（ボーナス条件）
+    if (t === 'world_manager') {
+        return turn >= 5 && entities.some(e => e.hp>0 && e.team!==se.team && Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c)) >= 8);
     }
+    // サメ戦士: ウォーターゲージ蓄積済み
+    if (t === 'shark_warrior') return (se.waterGauge||0) > 0;
+    // 天使: 堕天ゲージ15以上
+    if (t === 'angel') return (se.fallenGauge||0) >= 15;
+    // 陰陽師: 封印/回数0アビリティ5以上
+    if (t === 'onmyoji') {
+        let ownAbs = Object.keys(se.abilities||{}).filter(k => k !== 'drop_rock');
+        let sealedCount = ownAbs.filter(k => (se.abilities[k]===0) || (cursedAbilities[se.id]?.[k]>0)).length;
+        return sealedCount >= 5;
+    }
+    // マフィア: マフィアゲージ1以上
+    if (t === 'mafia') return (se.mafiaGauge||0) >= 1;
+    // ドワーフ: 全5パーツ製造済み
+    if (t === 'dwarf') {
+        return ['robot_arm','robot_leg','robot_body','robot_head','robot_cannon'].every(k => (se.abilities[k]||0) >= 999);
+    }
+    // ビーストマスター / 歩兵: 5ターン以上経過
+    if (t === 'beastmaster') return turn >= 5;
+    if (t === 'infantry') {
+        if (se.name === '分隊') return turn - (se.turnBorn||0) >= 5;
+        return turn >= 5;
+    }
+    // 機械兵: リミッター未発動 かつ 2T以上経過
+    if (t === 'cyborg') return (se.limiterReleased||0) <= 0 && turn >= 2;
+    // マッチョ: ドーピング未発動（再使用可能）
+    if (t === 'macho') return (se.dopingTimer||0) <= 0;
     return false;
 }
 
