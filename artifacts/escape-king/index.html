@@ -1223,7 +1223,7 @@ const ABILITY_TIPS = {
     form_shift: '戦闘形態に変化。HP+5・変身ターンのみAP+2・射程+1。触手のムチが威力5に。再使用で戻る(全アビリティ+1)。回数1。',
     branch_whip: '半径2マスの敵に植物LVで威力変化(LV1-9:1/LV10-19:3/LV20+:5)。吹き飛ばし。回数5。',
     plant_wall: 'マンドレイクの目の前幅3マスに種を植え・1ターンバリア。回数3。',
-    fusion: 'AP-1消費。半径1マス内の植物コマを全吸収(種+1/若芽+2/ベビーM+3)。植物LVアップ＋HP・全アビリティ(fusion除く)増加。回数1。',
+    fusion: '半径1マス内の植物コマを全吸収(種+1/若芽+2/ベビーM+3)。植物LVアップ＋HP・全アビリティ(fusion除く)増加。回数1。',
     seed_bazooka: '直線3マス(植物LV分拡大)の敵に1ダメ・AP-1・吹き飛ばし。命中後に敵周辺ランダム1マスに種を設置。回数1。',
     root_spread: 'AP-2して半径8マスの味方全員HP+1・各自ランダム1アビリティ+1(岩落とし除く)＋植物LV+1＋種を即時1段階成長。回数1。',
     roar: '自身周囲半径1マス(植物LV分拡大)の全敵に1ダメ・敵AP-1・ランダム1アビリティ1T封印。回数1。',
@@ -7496,7 +7496,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🌿 植物の壁！前方${wallPlanted}マスに種を植え・1Tバリア！`); used = true;
     } else if (actionMode === 'fusion') {
         se.abilities['fusion']--;
-        se.ap = Math.max(0, se.ap - 1);
         let seedCount = 0, sproutCount = 0, babyCount = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team===se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
