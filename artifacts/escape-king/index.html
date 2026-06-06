@@ -7686,7 +7686,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let absorbed = entities.filter(e=>e.hp>0&&e.id!==se.id&&e.team===se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1+(se.rangeBonus||0));
         if (absorbed.length===0){msg("💀 魂吸収：半径1マス内に味方がいません！");return;}
         absorbed.forEach(e=>{
-            e.hp=-1; e.necroSoulCounted=true;
+            e.hp=-1;
             se.hp+=1;
             se.soulCount=(se.soulCount||0)+5;
         });
@@ -7702,7 +7702,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let nearAlly=entities.find(e=>e.hp>0&&e.id!==se.id&&e.team===se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
         if(!nearAlly){msg("💀 ボーンアーマー：半径1マス内に味方が必要です！");return;}
         se.abilities['bone_armor']--;
-        nearAlly.hp=-1; nearAlly.necroSoulCounted=true;
+        nearAlly.hp=-1;
         se.invin=true; se.invinTimer=1;
         se.atkBonus=(se.atkBonus||0)+1; se.rangeBonus=(se.rangeBonus||0)+1;
         if(!se.abilities.punch){se.abilities.punch=999;se.boneArmorAddedPunch=true;}
