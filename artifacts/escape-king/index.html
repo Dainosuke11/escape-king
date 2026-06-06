@@ -1746,6 +1746,12 @@ function getGameState() {
 function applyGameState(state) {
     board = state.board;
     entities = state.entities;
+    // Re-derive element for any entity that lost it during serialisation/reconnect.
+    for (const e of entities) {
+        if (e.element == null) {
+            e.element = NPC_ELEMENT[e.type] ?? JOB_ELEMENT[e.type] ?? 'none';
+        }
+    }
     turn = state.turn;
     isPlayerTurn = state.isPlayerTurn;
     activeStage = state.activeStage;
