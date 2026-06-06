@@ -4090,6 +4090,7 @@ function processTurnStartEffects(e) {
             // Already handled above (hp-=1 when gauge becomes 0)
         }
     }
+    reapNecroSouls();
 }
 
 function tryKobunShield(target, dmg) {
@@ -4177,6 +4178,7 @@ function startTurn(team, skipEffects = false) {
         let upExpired = entities.filter(e => e.hp > 0 && e.undeadPartyDestroyTurn !== undefined && e.undeadPartyDestroyTurn < turn);
         if (upExpired.length > 0) {
             upExpired.forEach(e => { e.hp = -1; });
+            reapNecroSouls();
             msg(`💀 アンデッドパーティのコマ${upExpired.length}体が消滅した！`, true);
             checkWin();
         }
@@ -5140,19 +5142,8 @@ function startTurn(team, skipEffects = false) {
             if (turn > sw.expiresAt) { if (board[sw.r]?.[sw.c]==='swamp_tile') board[sw.r][sw.c]=sw.origTile; return false; }
             return true;
         });
-        // Necromancer: accumulate souls from all dead entities (ally or enemy)
-        {
-            let allNecros = entities.filter(e => e.type==='necromancer' && e.hp>0);
-            if (allNecros.length > 0) {
-                entities.filter(e => e.hp<=0 && !e.necroSoulCounted && e.type!=='necromancer').forEach(e => {
-                    e.necroSoulCounted = true;
-                    allNecros.forEach(n => {
-                        n.soulCount = (n.soulCount||0) + 1;
-                        if (n.team === myTeam()) msg(`💀 魂ゲージ+1！(${e.name}の魂を吸収)`, true);
-                    });
-                });
-            }
-        }
+        // Necromancer: catch any deaths not yet counted (fallback for tile/NPC damage)
+        reapNecroSouls();
 
         // Skyfort: flying drones (vehicle) randomly walk 1 step — only when no one mounted
         if (activeStage === 'skyfort') {
@@ -7690,6 +7681,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             se.hp+=1;
             se.soulCount=(se.soulCount||0)+5;
         });
+        reapNecroSouls();
         // 犠牲コマ数だけ繰り返し：ランダム4アビリティ（岩落とし・岩砕き除く）を+1
         let saEligible = Object.keys(se.abilities).filter(k => k!=='drop_rock' && k!=='shatter' && k!=='soul_absorb' && se.abilities[k]!==999);
         let saTotalRecovered = 0;
@@ -7702,7 +7694,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         let nearAlly=entities.find(e=>e.hp>0&&e.id!==se.id&&e.team===se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
         if(!nearAlly){msg("💀 ボーンアーマー：半径1マス内に味方が必要です！");return;}
         se.abilities['bone_armor']--;
-        nearAlly.hp=-1;
+        nearAlly.hp=-1; reapNecroSouls();
         se.invin=true; se.invinTimer=1;
         se.atkBonus=(se.atkBonus||0)+1; se.rangeBonus=(se.rangeBonus||0)+1;
         if(!se.abilities.punch){se.abilities.punch=999;se.boneArmorAddedPunch=true;}
@@ -7752,7 +7744,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if(cfAllies.length===0){msg("💀 死体融合：半径2マス内に味方がいません！");return;}
         se.abilities['corpse_fusion']--; se.soulCount-=3;
         let cfTotalHp=cfAllies.reduce((s,e)=>s+e.hp,0);
-        cfAllies.forEach(e=>{e.hp=-1;e.necroSoulCounted=true;});
+        cfAllies.forEach(e=>{e.hp=-1;}); reapNecroSouls();
         let cfCell=null;
         for(let dr=-1;dr<=1&&!cfCell;dr++) for(let dc=-1;dc<=1&&!cfCell;dc++){
             if(dr===0&&dc===0) continue;
@@ -8667,6 +8659,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && targetEntity.team === 'npc' && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
             targetEntity.lastAttackTeam = se.team;
         }
+        reapNecroSouls();
         if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
             if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
             usedAbilities[se.id].add(actionMode);
@@ -9462,6 +9455,19 @@ function mergeSpirits() {
             }
         }
     }
+}
+
+// Award +1 soul to every living necromancer for each newly-dead entity.
+function reapNecroSouls() {
+    let allNecros = entities.filter(e => e.type==='necromancer' && e.hp>0);
+    if (allNecros.length === 0) return;
+    entities.filter(e => e.hp<=0 && !e.necroSoulCounted && e.type!=='necromancer').forEach(e => {
+        e.necroSoulCounted = true;
+        allNecros.forEach(n => {
+            n.soulCount = (n.soulCount||0) + 1;
+            if (n.team === myTeam()) msg(`💀 魂ゲージ+1！(${e.name}の魂を吸収)`, true);
+        });
+    });
 }
 
 // Award souls for npc monsters that just died, to the team currently acting.
