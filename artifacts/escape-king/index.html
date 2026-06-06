@@ -380,6 +380,14 @@
         .ability-btn.craft-ready {
             animation: craft-pulse 0.9s ease-in-out infinite;
         }
+        @keyframes element-pulse {
+            0%   { box-shadow: 0 0 4px 2px var(--elem-color, #fff); }
+            50%  { box-shadow: 0 0 12px 5px var(--elem-color, #fff); }
+            100% { box-shadow: 0 0 4px 2px var(--elem-color, #fff); }
+        }
+        .ability-btn.element-pulse {
+            animation: element-pulse 0.9s ease-in-out infinite;
+        }
         
         .select-group { margin: 20px 0; text-align: left; }
         .select-group label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
@@ -1373,6 +1381,79 @@ const JOB_DATA = {
     dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 10, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1 }, hp: 30, ap: 2, dwarfUnit: true }
 };
 
+const ELEMENT_DATA = {
+    fire:  { label: '🔥火',  color: '#e74c3c', weakTo: 'water' },
+    water: { label: '💧水',  color: '#3498db', weakTo: 'grass' },
+    grass: { label: '🌿草',  color: '#27ae60', weakTo: 'fire'  },
+    light: { label: '✨光',  color: '#f1c40f', weakTo: 'dark'  },
+    dark:  { label: '🌑闇',  color: '#9b59b6', weakTo: 'light' },
+    none:  { label: '無',    color: '#888888', weakTo: null    },
+};
+
+const JOB_ELEMENT = {
+    king: 'light', knight: 'none', assassin: 'dark', infantry: 'none',
+    mage: 'none', thief: 'none', beastmaster: 'grass', macho: 'none',
+    cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
+    shark_warrior: 'water', clown: 'none', necromancer: 'dark',
+    angel: 'light', world_manager: 'light', onmyoji: 'dark',
+    devil: 'dark', mafia: 'none', dwarf: 'none',
+};
+
+const NPC_ELEMENT = {
+    big: 'fire', red: 'fire', blue: 'none', small: 'none',
+    wolf: 'grass', zombie: 'dark', frankenstein: 'dark',
+    spirit: 'dark', great_spirit: 'dark', bat: 'dark',
+    werewolf: 'dark', vampire: 'dark', dragon: 'fire', wyvern: 'fire',
+    salamander: 'fire', shark: 'water', eel: 'water',
+    skeleton: 'dark', skeleton_soldier: 'dark', necro_chimera: 'dark',
+    skull: 'dark', fox_fire: 'dark', oni_crow: 'dark',
+    oni_snake: 'dark', blue_oni: 'dark', red_oni: 'dark', great_oni: 'dark',
+};
+
+const ABILITY_ELEMENT = {
+    fire_breath: 'fire', volcano_shot: 'fire', incinerate: 'fire',
+    great_fireball: 'fire', wave_shot: 'fire',
+    aqua_dash: 'water', water_cutter: 'water', water_eruption: 'water',
+    whirlpool_atk: 'water', ice_magic: 'water',
+    branch_whip: 'grass', plant_wall: 'grass', seed_bazooka: 'grass',
+    root_spread: 'grass', healing_flute: 'grass', charge_order: 'grass',
+    wolf_summon: 'grass', falcon_summon: 'grass', tame: 'grass', beast_fuse: 'grass',
+    light_whip: 'light', bind_arrow: 'light', light_bind: 'light',
+    light_barrier: 'light', royal_dignity: 'light', scales: 'light',
+    balance_adjust: 'light', mediation_judgment: 'light', harmonious_prayer: 'light',
+    dark_magic: 'dark', swamp_magic: 'dark', soul_absorb: 'dark',
+    bone_armor: 'dark', skull_head: 'dark', necro_bind: 'dark',
+    necro_summon: 'dark', undead_party: 'dark', corpse_fusion: 'dark',
+    ninja_walk: 'dark', soul_release: 'dark', soul_pull: 'dark',
+    shikigami_summon: 'dark', sweet_honey: 'dark', bat_infiltration: 'dark',
+    fate_choice: 'dark', sin_mark: 'dark', death_scythe: 'dark',
+    balance_break: 'dark', grudge_strike: 'dark',
+};
+
+const STAGE_ELEMENT = {
+    plains: 'none', forest: 'grass', desert: 'fire', demon: 'dark',
+    castle: 'none', bigriver: 'water', mountain: 'none',
+    graveyard: 'dark', nighttown: 'dark', skyfort: 'light',
+    chaos: 'none', dungeon: 'dark', factory: 'none',
+    lake: 'water', underwater: 'water',
+};
+
+const JOB_SKILL_ELEMENT = {
+    king: 'light', knight: 'none', assassin: 'dark', infantry: 'none',
+    mage: 'fire', thief: 'none', beastmaster: 'none', macho: 'none',
+    cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
+    shark_warrior: 'water', clown: 'none', necromancer: 'dark',
+    angel: 'light', world_manager: 'light', onmyoji: 'dark',
+    devil: 'dark', mafia: 'none', dwarf: 'none',
+};
+
+const SKILL_MODE_ELEMENT = {
+    skill_mage: 'fire', skill_ryujin: 'fire',
+    skill_hydro: 'water',
+    skill_root_bind: 'grass',
+    skill_coffin: 'dark', skill_necro_release: 'dark',
+};
+
 const JOB_SKILL_NAMES = {
     king:          '王の威光',
     knight:        '騎士の突進',
@@ -1733,6 +1814,7 @@ function handleWsMessage(event) {
         const job = myPlayerIndex === 0 ? settings.p1job : settings.p2job;
         const cpuJob = myPlayerIndex === 0 ? settings.p2job : settings.p1job;
 
+        activeStage = settings.stage;
         withSeededRandom(seed, () => {
             initBoard(settings.stage);
             initEntitiesOnline(job, cpuJob, settings.difficulty);
@@ -1740,7 +1822,6 @@ function handleWsMessage(event) {
 
         turn = 1; tempRocks = [];
         isPlayerTurn = settings.p1First;
-        activeStage = settings.stage;
 
         document.getElementById('game-screen').style.display = 'flex';
         updateOnlineInfo();
@@ -3443,9 +3524,27 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     addExtraEnemies(difficulty);
+    // ステージ属性ボーナス/ペナルティ
+    const _stageElem = STAGE_ELEMENT[activeStage] ?? 'none';
+    if (_stageElem !== 'none') {
+        ['p1','c1'].forEach(eid => {
+            const e = entities.find(x => x.id === eid);
+            if (!e) return;
+            const eElem = e.element ?? 'none';
+            if (eElem === _stageElem) {
+                e.hp += 5; e.maxHp += 5;
+                for (let k in e.abilities) {
+                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) e.abilities[k]++;
+                }
+            }
+            if (eElem !== 'none' && ELEMENT_DATA[_stageElem]?.weakTo === eElem) {
+                e._stageWeakPenalty = true;
+            }
+        });
+    }
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
@@ -3553,9 +3652,27 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}) });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}) });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     addExtraEnemies(difficulty);
+    // ステージ属性ボーナス/ペナルティ
+    const _stageElemOL = STAGE_ELEMENT[activeStage] ?? 'none';
+    if (_stageElemOL !== 'none') {
+        ['p1','c1'].forEach(eid => {
+            const e = entities.find(x => x.id === eid);
+            if (!e) return;
+            const eElem = e.element ?? 'none';
+            if (eElem === _stageElemOL) {
+                e.hp += 5; e.maxHp += 5;
+                for (let k in e.abilities) {
+                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) e.abilities[k]++;
+                }
+            }
+            if (eElem !== 'none' && ELEMENT_DATA[_stageElemOL]?.weakTo === eElem) {
+                e._stageWeakPenalty = true;
+            }
+        });
+    }
     scatterRocks(4, 10, 5);
     scatterRocks(16, 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
@@ -3598,6 +3715,7 @@ function addExtraEnemies(difficulty) {
             ...(t === 'angel' ? {fallenGauge:0, fallen:false} : {}),
             ...(jd.mafiaUnit ? {mafiaGauge:0} : {}),
             ...(jd.dwarfUnit ? {junkPoint:0} : {}),
+            element: JOB_ELEMENT[t] ?? 'none',
         });
     }
 }
@@ -3618,6 +3736,10 @@ function getStageHeatLevel() {
     if (activeStage === 'lavaland' || activeStage === 'desert' || activeStage === 'volcano_summit') return 3;
     if (activeStage === 'underwater' || activeStage === 'mountain') return 1;
     return 2;
+}
+
+function getEntityElement(e) {
+    return e.element ?? NPC_ELEMENT[e.type] ?? JOB_ELEMENT[e.type] ?? 'none';
 }
 
 function processTurnStartEffects(e) {
@@ -3726,6 +3848,8 @@ function processTurnStartEffects(e) {
     e.ap = e.maxAp;
     // Factory press AP-1 penalty: consumed here so it survives the AP reset above
     if (e._pressedThisTurn) { e.ap = Math.max(0, e.ap - 1); e._pressedThisTurn = false; }
+    // ステージ属性弱点ペナルティ: 初ターンのみAP-1
+    if (e._stageWeakPenalty) { e.ap = Math.max(0, e.ap - 1); e._stageWeakPenalty = false; }
     // 調和の祈り：保留中のAPボーナスを適用
     if ((e.pendingApBonus || 0) > 0) { e.ap += e.pendingApBonus; e.pendingApBonus = 0; }
     // Ocean unit on water tile: AP+1 bonus
@@ -4553,7 +4677,7 @@ function startTurn(team, skipEffects = false) {
         if (activeStage === 'skyfort' && turn >= 3 && turn % 3 === 0) {
             let dSpot = randomEmptyCells(1)[0];
             if (dSpot) {
-                entities.push({id:'dragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:dSpot.r, c:dSpot.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999, hell_breath:1}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+                entities.push({id:'dragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:dSpot.r, c:dSpot.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999, hell_breath:1}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true, element:'fire'});
                 msg("🐉 ドラゴンが出現！天空要塞が荒れ狂う！", true);
             }
         }
@@ -4765,7 +4889,7 @@ function startTurn(team, skipEffects = false) {
                 }
                 let s2 = randomEmptyCells(1)[0];
                 if (s2) {
-                    entities.push({ id:'vdragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:s2.r, c:s2.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999, hell_breath:1}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true, soulValue:2 });
+                    entities.push({ id:'vdragon'+Date.now(), type:'dragon', name:'竜', team:'npc', r:s2.r, c:s2.c, hp:5, maxHp:5, ap:3, maxAp:3, abilities:{fire_breath:999, bite:999, hell_breath:1}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true, soulValue:2, element:'fire' });
                     msg("🐉 ドラゴンが活火山から舞い降りた！", true);
                 }
             }
@@ -5009,6 +5133,7 @@ function startTurn(team, skipEffects = false) {
                         skillUsed: true, stealth: false, stealthTimer: 0,
                         invin: false, invinTimer: 0, poisonTimer: 0,
                         soulValue: 1, _colossPts: ct.pts,
+                        element: NPC_ELEMENT[ct.type] ?? 'none',
                         ...(ct.flying ? {flying: true} : {})
                     });
                     msg(`⚔️ ${ct.name}が入場！`, true);
@@ -6868,11 +6993,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("穴移動！別の穴へテレポートした！");
     } else if (actionMode === 'wolf_summon') {
         se.abilities['wolf_summon']--;
-        entities.push({ id: 'wolf'+Date.now(), type: 'wolf', name: 'オオカミ', team: se.team, r, c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        entities.push({ id: 'wolf'+Date.now(), type: 'wolf', name: 'オオカミ', team: se.team, r, c, hp: 2, maxHp: 2, ap: 3, maxAp: 3, abilities: { bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn, element: NPC_ELEMENT['wolf'] ?? 'none' });
         msg("オオカミを召喚！(HP2/AP3/噛みつき∞)"); used = true;
     } else if (actionMode === 'falcon_summon') {
         se.abilities['falcon_summon']--;
-        entities.push({ id: 'falcon'+Date.now(), type: 'falcon', name: 'ハヤ', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { peck: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        entities.push({ id: 'falcon'+Date.now(), type: 'falcon', name: 'ハヤ', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { peck: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn, element: NPC_ELEMENT['falcon'] ?? 'none' });
         msg("ハヤブサを召喚！(HP3/AP2/つつき∞・飛行)"); used = true;
     } else if (actionMode === 'healing_flute') {
         se.abilities['healing_flute']--;
@@ -8872,6 +8997,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     }
 
+    // 属性弱点ダメージ+1
+    if (used && targetEntity && !targetEntity.invin && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
+        const _atkElem = actionMode === 'skill'
+            ? (se.fallen ? 'dark' : (JOB_SKILL_ELEMENT[se.type] ?? 'none'))
+            : (actionMode.startsWith('skill_')
+                ? (SKILL_MODE_ELEMENT[actionMode] ?? 'none')
+                : (ABILITY_ELEMENT[actionMode] ?? 'none'));
+        const _tgtElem = getEntityElement(targetEntity);
+        if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
+            targetEntity.hp -= 1;
+        }
+    }
     if (used && se.fallen && !actionMode.startsWith('skill_') &&
         !['feather_dash','bind_arrow','light_bind','scales','light_barrier','sin_mark','death_scythe','balance_break','light_whip','grudge_strike'].includes(actionMode)) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
@@ -9081,6 +9218,7 @@ function executeSkill(se) {
         let gauge = se.fallenGauge || 0;
         if (gauge < 15) { msg(`👼 堕天：堕天ゲージが足りません！(${gauge}/15) ゲージはターン開始時・ダメージ時に+1`); return false; }
         se.fallen = true;
+        se.element = 'dark';
         se.name = '堕天使';
         se.ap = Math.min(se.ap + 2, 6);  // 発動ターンのみAP+2（maxApは変えない）
         se.abilities['sin_mark'] = 3;
@@ -9318,7 +9456,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         return;
     }
     if (mode === 'skill_dragon') {
-        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 7, maxHp: 7, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999, hell_breath: 1 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn });
+        entities.push({ id: 'dragon'+Date.now(), type: 'dragon', name: '竜', team: se.team, r: targetR, c: targetC, hp: 7, maxHp: 7, ap: 2, maxAp: 2, abilities: { fire_breath: 999, bite: 999, hell_breath: 1 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, flying: true, turnBorn: turn, element: 'fire' });
         se.skillUsed = true;
         msg("ドラゴン召喚！(HP7/AP2・火炎ブレス∞/噛みつき∞・飛行)");
         return;
@@ -9522,13 +9660,14 @@ function spawnMonster(r, c) {
     else if (rand < 0.35) { m.type = 'red'; m.name = '赤鬼'; m.hp = 2; m.maxHp = 2; m.abilities.fireball = 99; }
     else if (rand < 0.6) { m.type = 'blue'; m.name = '青鬼'; m.hp = 2; m.maxHp = 2; m.ap=3; m.maxAp=3; m.abilities.throwing_knife = 99; }
     else { m.type = 'small'; m.name = '小鬼'; m.hp = 1; m.maxHp = 1; m.abilities.throwing_knife = 99; }
+    m.element = NPC_ELEMENT[m.type] ?? 'none';
     entities.push({...m, id: 'npc'+Date.now()});
     return m.type;
 }
 
 // ===== Phase B: special monsters with soul values =====
 function monsterTemplate(type, r, c) {
-    let base = { team:'npc', r, c, ap:2, maxAp:2, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:0 };
+    let base = { team:'npc', r, c, ap:2, maxAp:2, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, soulValue:0, element: NPC_ELEMENT[type] ?? 'none' };
     switch(type) {
         case 'zombie':       return {...base, type, name:'ゾンビ', hp:1, maxHp:1, abilities:{bite:999}, soulValue:1};
         case 'frankenstein': return {...base, type, name:'フランケン', hp:3, maxHp:3, abilities:{punch:999}, soulValue:2};
@@ -11142,6 +11281,24 @@ function updateUI() {
         btn.className = 'ability-btn';
         if (actionMode === key) btn.classList.add('active');
         if (isAbilityConditionMet(key, selectedEntity)) btn.classList.add('condition-met');
+
+        // 属性ボーダーカラー
+        const _btnElem = ABILITY_ELEMENT[key];
+        if (_btnElem && ELEMENT_DATA[_btnElem]) {
+            btn.style.borderColor = ELEMENT_DATA[_btnElem].color;
+            btn.style.borderWidth = '2px';
+            btn.style.borderStyle = 'solid';
+            btn.style.setProperty('--elem-color', ELEMENT_DATA[_btnElem].color);
+        }
+        // 弱点属性パルスアニメーション
+        if (_btnElem && _btnElem !== 'none') {
+            const _hasWeakTarget = entities.some(e => {
+                if (e.hp <= 0 || e.team === selectedEntity.team) return false;
+                const tgtElem = getEntityElement(e);
+                return tgtElem !== 'none' && ELEMENT_DATA[tgtElem]?.weakTo === _btnElem;
+            });
+            if (_hasWeakTarget) btn.classList.add('element-pulse');
+        }
         
         btn.innerText = count === 999 ? `${dispName}（無制限）` : `${dispName}（残り${count}回使用可能）`;
         btn.title = ABILITY_TIPS[key] || dispName;
@@ -11192,6 +11349,23 @@ function updateUI() {
         if (actionMode === 'skill' || actionMode.startsWith('skill_')) sb.classList.add('active');
         // スキル条件達成時に枠を光らせる
         if (isSkillConditionMet(selectedEntity)) sb.classList.add('condition-met');
+        // スキルボタン属性ボーダー
+        const _skillElem = selectedEntity.fallen ? 'dark' : (JOB_SKILL_ELEMENT[selectedEntity.type] ?? 'none');
+        if (_skillElem !== 'none' && ELEMENT_DATA[_skillElem]) {
+            sb.style.borderColor = ELEMENT_DATA[_skillElem].color;
+            sb.style.borderWidth = '2px';
+            sb.style.borderStyle = 'solid';
+            sb.style.setProperty('--elem-color', ELEMENT_DATA[_skillElem].color);
+        }
+        // 弱点属性パルスアニメーション
+        if (_skillElem !== 'none') {
+            const _hasWeakTargetSkill = entities.some(e => {
+                if (e.hp <= 0 || e.team === selectedEntity.team) return false;
+                const tgtElem = getEntityElement(e);
+                return tgtElem !== 'none' && ELEMENT_DATA[tgtElem]?.weakTo === _skillElem;
+            });
+            if (_hasWeakTargetSkill) sb.classList.add('element-pulse');
+        }
         sb.onclick = () => setMode('skill');
         list.appendChild(sb);
     }
