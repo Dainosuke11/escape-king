@@ -332,6 +332,7 @@
             white-space: nowrap; overflow: hidden; line-height: 1.1; box-sizing: border-box;
         }
         .hp-bar { font-size: calc(var(--tile-size) * 0.28); font-weight: bold; margin-top: -2px; }
+        .elem-badge { font-size: calc(var(--tile-size) * 0.26); line-height: 1; opacity: 0.9; }
 
         .player-team { background: #ecf0f1; color: #2c3e50; border-color: #2980b9; }
         .cpu-team { background: #c0392b; color: #fff; border-color: #78281f; }
@@ -5897,7 +5898,9 @@ function render() {
         let jpSuffix = (e.dwarfUnit || e.isDwarfRobot) && e.junkPoint !== undefined ? ` <span style="color:#e67e22;">⚙${e.junkPoint}</span>` : '';
         const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}${jpSuffix}</div>`;
         let entityLabel = e.name.substring(0,2);
-        ed.innerHTML = `${entityLabel}${poisonIcon}${hpBar}`;
+        const _eElem = e.element && e.element !== 'none' ? e.element : null;
+        const elemBadge = _eElem ? `<span class="elem-badge">${[...ELEMENT_DATA[_eElem].label][0]}</span>` : '';
+        ed.innerHTML = `${entityLabel}${poisonIcon}${elemBadge}${hpBar}`;
         
         let vr = displayR(e.r);
         let targetTile = document.getElementById(`tile-${vr}-${e.c}`);
