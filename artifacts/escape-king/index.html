@@ -816,6 +816,7 @@ let tempSwamps = [];     // [{r,c,origTile,expiresAt}] temporary swamp tiles
 // Colosseum
 let colosseumPoints = { player: 0, cpu: 0 };
 let colosseumGoalSpawned = { player: false, cpu: false };
+let colosseumGoalPos = { player: null, cpu: null };
 let colosseumLastScoreTurn = { player: -1, cpu: -1 };
 let colosseumShrinkLayer = 0;
 // Necromancer / Skyfort bridges
@@ -3285,7 +3286,7 @@ function initBoard(stageType) {
         [[7,7],[7,13],[13,7],[13,13]].forEach(([r2,c2]) => { if(!isNoRockZone(r2,c2)) board[r2][c2]='rock'; });
         // 4 magic circles at arena quadrant centers
         [[5,5],[5,15],[15,5],[15,15]].forEach(([r2,c2]) => { if(board[r2]?.[c2]==='arena_floor') board[r2][c2]='magic_circle'; });
-        colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumLastScoreTurn = {player:-1,cpu:-1}; colosseumShrinkLayer = 0;
+        colosseumPoints = {player:0,cpu:0}; colosseumGoalSpawned = {player:false,cpu:false}; colosseumGoalPos = {player:null,cpu:null}; colosseumLastScoreTurn = {player:-1,cpu:-1}; colosseumShrinkLayer = 0;
     } else if (stageType === 'factory') {
         // === FACTORY STAGE ===
         // Clear base setup
@@ -3458,6 +3459,7 @@ function initEntities(pJob, difficulty = "1") {
     lotusPadSteps = {}; lotusSunkenTimers = {};
     colosseumPoints = {player:0,cpu:0};
     colosseumGoalSpawned = {player:false,cpu:false};
+    colosseumGoalPos = {player:null,cpu:null};
     colosseumLastScoreTurn = {player:-1,cpu:-1};
     colosseumShrinkLayer = 0;
     laneSpeedMap = []; factoryPressTarget = null; factoryPressWarning = false;
@@ -9509,6 +9511,7 @@ function checkColosseumKillScore() {
         if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
             colosseumGoalSpawned[team] = true;
             let cr = Math.floor(SIZE / 2), cc = Math.floor(SIZE / 2);
+            let placedR = cr, placedC = cc;
             let placed = false;
             // 中央から螺旋状に空きarena_floorを探す
             outer: for (let d = 0; d <= SIZE && !placed; d++) {
@@ -9517,12 +9520,15 @@ function checkColosseumKillScore() {
                         if (Math.abs(dr) !== d && Math.abs(dc) !== d) continue;
                         let r2 = cr + dr, c2 = cc + dc;
                         if (r2 >= 0 && r2 < SIZE && c2 >= 0 && c2 < SIZE && board[r2][c2] === 'arena_floor') {
-                            board[r2][c2] = 'arena_goal'; placed = true; break outer;
+                            board[r2][c2] = 'arena_goal';
+                            placedR = r2; placedC = c2;
+                            placed = true; break outer;
                         }
                     }
                 }
             }
             if (!placed) board[cr][cc] = 'arena_goal';
+            colosseumGoalPos[team] = { r: placedR, c: placedC };
             msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！ステージ中央に旗が出現！踏めば勝利！`, true);
         }
     });
@@ -10613,9 +10619,10 @@ function checkWin() {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && e.c >= 19) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && e.c >= 19) || pTrapped;
     } else if (activeStage === 'colosseum') {
-        // Colosseum: step on the central flag tile to win
-        pWin = (colosseumGoalSpawned['player'] && entities.some(e => e.team === 'player' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal')) || cTrapped;
-        cWin = (colosseumGoalSpawned['cpu'] && entities.some(e => e.team === 'cpu' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal')) || pTrapped;
+        // Colosseum: step on YOUR OWN flag tile to win (enemy passes through opponent's flag)
+        let pGP = colosseumGoalPos['player'], cGP = colosseumGoalPos['cpu'];
+        pWin = (pGP && entities.some(e => e.team === 'player' && e.hp > 0 && e.r === pGP.r && e.c === pGP.c)) || cTrapped;
+        cWin = (cGP && entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === cGP.r && e.c === cGP.c)) || pTrapped;
     } else if (activeStage === 'forest') {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
