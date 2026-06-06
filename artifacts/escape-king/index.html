@@ -234,8 +234,8 @@
         .lake_ground { background: #0a2a3d; }
         .lotus_pad { background: #2d6a4f; border: 2px solid #52b788 !important; }
         .lotus_pad::after { content: "🌸"; font-size: calc(var(--tile-size)*0.38); }
-        .lotus_sunken { background: #1a3d5c; }
-        .lotus_sunken::after { content: "〜"; font-size: calc(var(--tile-size)*0.28); color: #74b9ff; }
+        .lotus_sunken { background: #7ec8e3; }
+        .lotus_sunken::after { content: "〜"; font-size: calc(var(--tile-size)*0.28); color: #1565c0; font-weight:bold; }
         .lake_island { background: #5a4a20; border: 1px solid #8b7355 !important; }
         /* Colosseum */
         .arena_floor { background: #b8860b; }
@@ -990,7 +990,7 @@ function withSeededRandom(seed, fn) {
 //  GAME DATA
 // ============================================================
 const ABILITY_NAMES = {
-    drop_rock: '岩落とし(AP-1)', shatter: '岩砕き', dash: 'ダッシュ',
+    drop_rock: '岩落とし(AP-1)', shatter: '岩砕き', dash: 'ダッシュ', ninja_walk: '忍び足',
     trap: '罠設置', bow: '弓攻撃', sword: '剣撃', punch: 'ぶん殴り', teleport: 'テレポート',
     magic_bullet: '魔法弾', wind_magic: '風魔法', ice_magic: '氷魔法',
     poison_bow: '毒弓矢', dagger: '短剣刺し', poison_dagger: '毒剣刺し',
@@ -1281,6 +1281,7 @@ const ABILITY_TIPS = {
     combo_slash: '半径1マスの敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
     retreat: '自分に1Tバリアを付与。バリアが解けた次のターン開始時に後方1マスへ自動後退し、元の場所に罠を設置する。回数3。',
     escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
+    ninja_walk: '2マス以内のマスへ忍び足で移動。元いた場所に罠を設置する。弓・曲射・速射・遠距離狙撃の基礎ダメージ+1(暗殺者専用)。回数5。',
     rock_dash: '2マス以内のマスへ高速移動。元いた場所に岩を設置する。回数5。',
     claw_slash: '半径1マスの敵に1ダメ。対象が体力・攻撃力・アビリティを今ターンか前ターンに回復・増加させていた場合、追加2ダメ＋吹き飛ばし＋AP-1。回数10。',
     slow_assault: '2マス以内のマスへ移動。元いた場所に岩を設置する。回数5。',
@@ -1338,7 +1339,7 @@ const ABILITY_TIPS = {
 const JOB_DATA = {
     king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_archer: 1, counter: 1, graceful_rest: 1, royal_dignity: 1, bombardment: 1, combo_slash: 2 }, hp: 30, ap: 2 },
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 1, summon_lancer: 1, unwavering_stance: 1, duel: 1, heavy_armor: 1, mount_horse: 1, combo_slash: 2 }, hp: 30, ap: 2 },
-    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 1, long_snipe: 1 }, hp: 30, ap: 2 },
+    assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, ninja_walk: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 1, long_snipe: 1 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 1, coordinated_atk: 1, scouting: 1, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 1, meditation: 1, summon_magic: 1, barrier_magic: 1 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 1, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
@@ -3503,14 +3504,14 @@ function initEntities(pJob, difficulty = "1") {
         });
         factoryPressTarget = null; factoryPressWarning = false;
     }
-    // Volcano summit: diagonal corners
+    // Volcano summit: center start
     if (activeStage === 'volcano_summit') {
         let p1 = entities.find(e => e.id === 'p1');
         let c1 = entities.find(e => e.id === 'c1');
-        if (p1) { p1.r = 19; p1.c = 4; }
-        if (c1) { c1.r = 1; c1.c = 16; }
-        entities.filter(e => e.team === 'player' && e.id !== 'p1').forEach((e, i) => { e.r = 19 - (i % 2); e.c = 4 + i; });
-        entities.filter(e => e.team === 'cpu' && e.id !== 'c1').forEach((e, i) => { e.r = 1 + (i % 2); e.c = 16 - i; });
+        if (p1) { p1.r = 19; p1.c = 10; }
+        if (c1) { c1.r = 1; c1.c = 10; }
+        entities.filter(e => e.team === 'player' && e.id !== 'p1').forEach((e, i) => { e.r = 19 - (i % 2); e.c = 10 + (i % 2 === 0 ? i : -i); });
+        entities.filter(e => e.team === 'cpu' && e.id !== 'c1').forEach((e, i) => { e.r = 1 + (i % 2); e.c = 10 + (i % 2 === 0 ? i : -i); });
         volcanoCraterRadius = 0; volcanoSplatterTiles = []; volcanoAshMistSet = new Set();
     }
     // Night town: diagonal corner starts + boats in river
@@ -3610,7 +3611,7 @@ function processTurnStartEffects(e) {
     if (e.type === 'assassin' && e.decoyStealth) {
         let decoyAlive = entities.some(d => d.type === 'decoy' && d.team === e.team && d.hp > 0);
         if (decoyAlive) { e.stealth = true; }
-        else { e.decoyStealth = false; if (e.stealthTimer <= 0) e.stealth = false; }
+        else { e.decoyStealth = false; e.stealth = false; e.stealthTimer = 0; }
     }
     // tsusembo一時岩の除去
     if (e.tsusemboRocks && e.tsusemboRocks.length > 0) {
@@ -4411,7 +4412,7 @@ function startTurn(team, skipEffects = false) {
             }
         }
         // Nighttown: ロ字列車 8フェーズサイクル
-        if (activeStage === 'nighttown') {
+        if (activeStage === 'nighttown' && currentActingTeam === 'player') {
             let train = entities.find(e => e.id === 'nttrain' && e.hp > 0);
             if (train) {
                 // Phase data: [stationR, stationC, seg_fixed_axis, seg_fixed_val, seg_min, seg_max, destR, destC]
@@ -5297,7 +5298,7 @@ function isValidTarget(se, r, c, mode) {
 
     if (mode === 'drop_rock') {
         if (target && target.team !== se.team && isRockSurrounded(target.r, target.c)) return maxDist <= 8;
-        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station','train_switch','skyfort_bridge','volcano_summit_ground'];
+        const rockableGrounds = ['plains','desert','graveyard_ground','nighttown_ground','nighttown_goal','fortress_floor','mountain_tile','snow','summit','castle_tile','avalanche_tile','cable_tile','cable_board','sea_floor','bubble_vent','oxygen_tile','lava_ground','lava_bridge','cooled_lava','lava','dungeon_ground','dungeon_chest','dungeon_switch','dungeon_torch','rail_tile','train_station','train_switch','skyfort_bridge','volcano_summit_ground','arena_floor','arena_goal','lake_ground','lake_island','lotus_pad','lotus_sunken','forest','swamp_tile','factory_conveyor','factory_goal'];
         return rockableGrounds.includes(board[r][c]) && !isNoRockZone(r, c) && !target;
     }
     // Stolen lock: prevents use for 1 turn after being stolen from
@@ -5323,7 +5324,7 @@ function isValidTarget(se, r, c, mode) {
         }
         return true;
     }
-    if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault' || mode === 'tail_cut') {
+    if (mode === 'escape_dash' || mode === 'rock_dash' || mode === 'slow_assault' || mode === 'tail_cut' || mode === 'ninja_walk') {
         let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
         if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
         if (dist === 0 || dist > 2) return false;
@@ -5355,11 +5356,11 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'pistol') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
     if (mode === 'penance') return dist===1 && target && target.team!==se.team;
     if (mode === 'snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5 && target && target.team!==se.team;
-    if (mode === 'backroom_deal') return dist===1 && target && target.team!==se.team;
-    if (mode === 'debt_note') return dist===1 && target && target.team!==se.team;
-    if (mode === 'torture_mafia') return dist===1 && target && target.team!==se.team;
+    if (mode === 'backroom_deal') return maxDist<=1 && target && target.team!==se.team;
+    if (mode === 'debt_note') return maxDist<=1 && target && target.team!==se.team;
+    if (mode === 'torture_mafia') return maxDist<=1 && target && target.team!==se.team;
     if (mode === 'extortion') return maxDist>0 && maxDist<=2 && target && target.team!==se.team;
-    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground') && !target;
+    if (mode === 'trap') return maxDist <= 1 && (board[r][c] === 'plains' || board[r][c] === 'desert' || board[r][c] === 'dungeon_ground' || board[r][c] === 'lava_ground' || board[r][c] === 'arena_floor' || board[r][c] === 'lake_ground' || board[r][c] === 'forest' || board[r][c] === 'graveyard_ground' || board[r][c] === 'nighttown_ground' || board[r][c] === 'fortress_floor' || board[r][c] === 'snow' || board[r][c] === 'mountain_tile' || board[r][c] === 'castle_tile' || board[r][c] === 'swamp_tile' || board[r][c] === 'factory_conveyor' || board[r][c] === 'volcano_summit_ground' || board[r][c] === 'skyfort_bridge') && !target;
     if (mode === 'bow') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 5 && target && target.team !== se.team;
     if (mode === 'poison_bow') return getLoS(se, {r, c}) <= 99 && target && target.team !== se.team;
     if (['magic_bullet', 'wind_magic', 'ice_magic'].includes(mode)) return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
@@ -5369,7 +5370,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'spear') return (se.r === r || se.c === c) && maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'summon_archer' || mode === 'summon_lancer') return maxDist === 1 && isWalkable(r, c);
     if (mode === 'summon_magic') return maxDist <= 1 && isWalkable(r, c);
-    if (mode === 'drain') return dist === 1 && target && target.team !== se.team;
+    if (mode === 'drain') return maxDist <= 1 && target && target.team !== se.team;
     if (mode === 'dark_magic') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'possess') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'sword' || mode === 'punch' || mode === 'bite' || mode === 'dagger' || mode === 'poison_dagger' || mode === 'smash_slash' || mode === 'stone_punch' || mode === 'chomp') return maxDist === 1 && target && target.team !== se.team;
@@ -6434,11 +6435,12 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'bow') {
         se.abilities['bow']--; 
         let _bowSB = (se.type === 'assassin' && se.stealth) ? 1 : 0;
+        let _bowBase = (se.type === 'assassin') ? 2 : 1;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.ap--; targetEntity.hp -= 1 + _bowSB + (targetEntity.defDebuff||0) + (se.atkBonus||0); knockback(targetEntity, 1, se);
+            targetEntity.ap--; targetEntity.hp -= _bowBase + _bowSB + (targetEntity.defDebuff||0) + (se.atkBonus||0); knockback(targetEntity, 1, se);
             if (se.poisonWeapon) applyPoison(targetEntity);
         }
-        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${1+_bowSB})${se.poisonWeapon?'・毒':''}！`); used = true;
+        msg(targetEntity.invin ? "弓撃！しかし無敵で防がれた！" : `${_bowSB?'【潜伏ボーナス+1】':''}射撃命中！敵にダメージ(${_bowBase+_bowSB})${se.poisonWeapon?'・毒':''}！`); used = true;
     } else if (actionMode === 'poison_bow') {
         se.abilities['poison_bow']--; 
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.ap--; targetEntity.hp -= 2 + (targetEntity.defDebuff||0); applyPoison(targetEntity); knockback(targetEntity, 1, se); }
@@ -6897,28 +6899,32 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`💣 砲撃指令！足元に大砲設置・このターン攻撃力+1！`); used = true;
     } else if (actionMode === 'curved_shot') {
         se.abilities['curved_shot']--;
+        let _csDmg = (se.type === 'assassin') ? 2 : 1;
         // Radius 3, can hit through rocks — no LoS check needed
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
+            targetEntity.hp -= _csDmg + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
+            if (se.poisonWeapon) applyPoison(targetEntity);
         }
-        msg(targetEntity.invin ? "曲射！無敵で防がれた！" : "🏹 曲射！岩の裏からも射抜く！1ダメ・吹飛！"); used = true;
+        msg(targetEntity.invin ? "曲射！無敵で防がれた！" : `🏹 曲射！岩の裏からも射抜く！${_csDmg}ダメ・吹飛！${se.poisonWeapon?'・毒':''}`); used = true;
     } else if (actionMode === 'rapid_shot') {
         se.abilities['rapid_shot']--;
+        let _rsDmg = (se.type === 'assassin') ? 2 : 1;
         // 2 hits on same target
         for (let hit = 1; hit <= 2; hit++) {
             if (targetEntity.hp > 0 && !targetEntity.invin) {
-                targetEntity.hp -= 1 + (se.atkBonus||0); knockback(targetEntity, 1, se);
+                targetEntity.hp -= _rsDmg + (se.atkBonus||0); knockback(targetEntity, 1, se);
                 if (se.poisonWeapon) applyPoison(targetEntity);
             }
         }
-        msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計2ダメ・2回吹飛！${se.poisonWeapon?'・毒':''}！`); used = true;
+        msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計${_rsDmg*2}ダメ・2回吹飛！${se.poisonWeapon?'・毒':''}！`); used = true;
     } else if (actionMode === 'long_snipe') {
         se.abilities['long_snipe']--;
         se.ap = Math.max(0, se.ap - 1);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= 4 + (se.atkBonus||0); knockback(targetEntity, 2, se);
+            if (se.poisonWeapon) applyPoison(targetEntity);
         }
-        msg(targetEntity.invin ? "遠距離狙撃！無敵で防がれた！" : "🎯 遠距離狙撃！AP-1消費！威力4・大吹飛！"); used = true;
+        msg(targetEntity.invin ? "遠距離狙撃！無敵で防がれた！" : `🎯 遠距離狙撃！AP-1消費！威力4・大吹飛！${se.poisonWeapon?'・毒':''}`); used = true;
     } else if (actionMode === 'charge_formation') {
         se.abilities['charge_formation']--;
         // Summon a lancer and an archer adjacent to se
@@ -7675,10 +7681,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         });
         msg(`💀 魂吸収！${absorbed.length}体を破壊→HP+${absorbed.length}・全アビリティ+${absorbed.length}・魂+${absorbed.length*5}！`); used = true;
     } else if (actionMode === 'bone_armor') {
-        if((se.soulCount||0)<1){msg("💀 ボーンアーマー：魂が必要です！");return;}
         let nearAlly=entities.find(e=>e.hp>0&&e.id!==se.id&&e.team===se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
         if(!nearAlly){msg("💀 ボーンアーマー：半径1マス内に味方が必要です！");return;}
-        se.abilities['bone_armor']--; se.soulCount--;
+        se.abilities['bone_armor']--;
         nearAlly.hp=-1; nearAlly.necroSoulCounted=true;
         se.invin=true; se.invinTimer=1;
         se.atkBonus=(se.atkBonus||0)+1; se.rangeBonus=(se.rangeBonus||0)+1;
@@ -7913,7 +7918,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'inequality_anger') {
         se.abilities['inequality_anger']--;
         let iaBaseAtk = 1 + (se.atkBonus||0);
-        let iaAngered = Object.keys(se.abilities||{}).some(k => k !== 'drop_rock' && se.abilities[k] !== 999 && se.abilities[k] <= 1);
+        let iaAngered = Object.keys(se.abilities||{}).some(k => k !== 'drop_rock' && k !== 'inequality_anger' && se.abilities[k] !== 999 && se.abilities[k] <= 1);
         let iaDmg = iaBaseAtk + (iaAngered ? 3 : 0);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= iaDmg + (targetEntity.defDebuff||0);
@@ -8208,6 +8213,19 @@ function handleAbilityTarget(r, c, targetEntity) {
         let edEvent = checkTileEffects(se);
         msg("🏃 逃げ足！ダッシュして元の場所に罠を設置！" + (edEvent ? " "+edEvent : ""));
         checkEnemyTerritory(se); used = true;
+    } else if (actionMode === 'ninja_walk') {
+        if (se.abilities['ninja_walk'] !== 999) se.abilities['ninja_walk']--;
+        let nwOldR = se.r, nwOldC = se.c;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        se.r = r; se.c = c;
+        if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
+        const nwTrapTiles = ['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground','arena_floor','forest','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','castle_tile','skyfort_bridge','volcano_summit_ground','factory_conveyor','swamp_tile'];
+        if (nwTrapTiles.includes(board[nwOldR]?.[nwOldC])) {
+            board[nwOldR][nwOldC] = 'trap'; trapOwnerMap[`${nwOldR},${nwOldC}`] = se.team;
+        }
+        let nwEvent = checkTileEffects(se);
+        msg("🥷 忍び足！元の場所に罠を設置！" + (nwEvent ? " "+nwEvent : ""));
+        checkEnemyTerritory(se); used = true;
     } else if (actionMode === 'rock_dash') {
         if (se.abilities['rock_dash'] !== 999) se.abilities['rock_dash']--;
         let rdOldR = se.r, rdOldC = se.c;
@@ -8404,10 +8422,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🏃 尻尾切り！子分を置いてダッシュ！マフィアゲージ+1(${se.mafiaGauge})！`); used=true;
     } else if (actionMode === 'pistol') {
         if (se.abilities['pistol'] !== 999) se.abilities['pistol']--;
-        let ptDmg = 2+(se.atkBonus||0)+(Math.random()<0.5?1:0)+(targetEntity.defDebuff||0);
+        let ptCloseBonus = (Math.max(Math.abs(r-se.r),Math.abs(c-se.c)) <= 1) ? 4 : 0;
+        let ptDmg = 2+(se.atkBonus||0)+ptCloseBonus+(targetEntity.defDebuff||0);
         if(!targetEntity.invin && !tryKobunShield(targetEntity,ptDmg)) targetEntity.hp-=ptDmg;
         se.mafiaGauge = Math.min(20,(se.mafiaGauge||0)+2);
-        msg(targetEntity.invin?`🔫 拳銃射撃！しかし無敵で防がれた！`:`🔫 拳銃射撃！${targetEntity.name}に${ptDmg}ダメ！ゲージ+2(${se.mafiaGauge})`); used=true;
+        msg(targetEntity.invin?`🔫 拳銃射撃！しかし無敵で防がれた！`:`🔫 拳銃射撃！${targetEntity.name}に${ptDmg}ダメ${ptCloseBonus?'(至近距離+4)':''}！ゲージ+2(${se.mafiaGauge})`); used=true;
     } else if (actionMode === 'penance') {
         if((se.mafiaGauge||0)<1){msg("マフィアゲージが足りない！(1必要)");return;}
         if(se.abilities['penance']!==999) se.abilities['penance']--;
@@ -8593,6 +8612,25 @@ function handleAbilityTarget(r, c, targetEntity) {
         if(se.abilities['nail_gun']!==999) se.abilities['nail_gun']--;
         if(!targetEntity.invin&&!necroShieldBlock(targetEntity)&&!tryKobunShield(targetEntity,ngDmg)){targetEntity.hp-=ngDmg;targetEntity.ap=Math.max(0,targetEntity.ap-1);knockback(targetEntity,1,se);}
         msg(targetEntity.invin?`🔫 ネイルガン！しかし無敵で防がれた！`:`🔫 ネイルガン！${targetEntity.name}に${ngDmg}ダメ+AP-1+吹飛！`); used=true;
+    } else if (actionMode === 'possess') {
+        if (se.abilities['possess'] !== 999) se.abilities['possess']--;
+        let possDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= possDmg;
+            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            sealAbilities(targetEntity, Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock').slice(0,1), 1);
+        }
+        msg(targetEntity.invin ? `👻 とりつき！しかし無敵で防がれた！` : `👻 とりつき！${targetEntity.name}に${possDmg}ダメ＋AP-1＋1T封印！`);
+        used = true;
+    } else if (actionMode === 'drain') {
+        if (se.abilities['drain'] !== 999) se.abilities['drain']--;
+        let drainDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        if (!targetEntity.invin) {
+            targetEntity.hp -= drainDmg;
+            se.hp = Math.min(se.maxHp||30, se.hp + 2);
+        }
+        msg(targetEntity.invin ? `🦇 吸血！しかし無敵で防がれた！` : `🦇 吸血！${targetEntity.name}に${drainDmg}ダメ！自身HP+2！`);
+        used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -8607,6 +8645,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         // 世界の管理者: 被弾カウント追跡（inequality_anger条件用）
         if (targetEntity && targetEntity.type === 'world_manager' && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
             targetEntity._managerDmgCount = (targetEntity._managerDmgCount||0) + 1;
+        }
+        if (targetEntity && targetEntity.team === 'npc' && prevTargetHp !== undefined && targetEntity.hp < prevTargetHp) {
+            targetEntity.lastAttackTeam = se.team;
         }
         if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
             if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
@@ -9194,7 +9235,7 @@ function breakMine(mineR, mineC) {
 }
 
 function meleeDodged(target) {
-    return target && target.flying && !target.invin && Math.random() < 0.5;
+    return target && target.flying && !target.invin && Math.random() < 0.2;
 }
 
 function knockback(target, dist, source) {
@@ -10590,7 +10631,13 @@ function isAbilityConditionMet(key, se) {
         return entities.some(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&(e._movedDistThisTurn||0)>=3);
     }
     if (key === 'inequality_anger') {
-        return se.abilities && Object.values(se.abilities).some(v=>v!==999&&v<=1&&v>0);
+        return se.abilities && Object.values(se.abilities).some(v=>v!==999&&v<=1);
+    }
+    if (key === 'world_recreate') {
+        return entities.some(t => t.hp>0 && t.team!==se.team && t.team!=='npc' && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) >= 8);
+    }
+    if (key === 'stealth_execution') {
+        return se.poisonWeapon === true;
     }
     if (key === 'equal_strike') {
         return entities.some(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&e._usedAbilityLastTurn===true);
@@ -10622,7 +10669,9 @@ function updateUI() {
         + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '')
         + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '')
         + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
-        + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '');
+        + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
+        + (selectedEntity.type === 'necromancer' ? ` 💀${selectedEntity.soulCount||0}` : '')
+        + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '');
     
     if (selectedEntity.team !== myTeam()) {
         btnM.disabled = true;
@@ -10849,7 +10898,8 @@ function updateUI() {
     }
 
     // Nighttown: Train boarding button (adjacent tile or same tile when train at station)
-    if (activeStage === 'nighttown' && selectedEntity && canIAct() && !selectedEntity.onTrain && selectedEntity.team === myTeam() && ntTrainPhase % 2 === 0) {
+    const NT_STATIONS = [{r:2,c:2},{r:2,c:18},{r:18,c:18},{r:18,c:2}];
+    if (activeStage === 'nighttown' && selectedEntity && canIAct() && !selectedEntity.onTrain && selectedEntity.team === myTeam() && NT_STATIONS.some(s=>s.r===entities.find(e=>e.id==='nttrain'&&e.hp>0)?.r&&s.c===entities.find(e=>e.id==='nttrain'&&e.hp>0)?.c)) {
         let train = entities.find(e => e.id === 'nttrain' && e.hp > 0 &&
             Math.abs(e.r - selectedEntity.r) + Math.abs(e.c - selectedEntity.c) <= 1);
         if (train) {
