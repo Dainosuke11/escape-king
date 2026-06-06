@@ -1062,7 +1062,7 @@ const ABILITY_NAMES = {
     royal_dignity: '王の威厳(半径3/敵AP-1/5アビリティ封印1T)',
     bombardment: '砲撃指令(足元に大砲/味方攻撃ダメ+1×1T)',
     curved_shot: '曲射(半径3/貫通岩/威1/吹飛)',
-    rapid_shot: '速射(直線5/威1×2/吹飛×2)',
+    rapid_shot: '速射(直線5/威2×2/吹飛×2)',
     long_snipe: '遠距離狙撃(直線8/威4/吹飛/AP-1)',
     charge_formation: '突撃陣形(半径1に槍兵+弓兵召喚/次T消滅)',
     coordinated_atk: '連携攻撃(半径2味方全員AP+1/ATK+1×1T)',
@@ -1262,7 +1262,7 @@ const ABILITY_TIPS = {
     royal_dignity: '半径3マス内の全敵のAP-1・1ターン間ランダム5アビリティを封印する。',
     bombardment: '王の足元に大砲マスを設置。1ターン中に味方コマが敵に与えるダメージ全てに+1する。',
     curved_shot: '岩の裏にいる敵でも射抜く。射程半径3マス。ダメージ1・後方吹き飛ばし。直線射程不要で岩越し可能。回数2。',
-    rapid_shot: '弓の2連撃。直線5マスの敵に1ダメ・吹き飛ばしを2回繰り返す。回数1。',
+    rapid_shot: '弓の2連撃。直線5マスの敵に2ダメ・吹き飛ばしを2回(合計4ダメ)。毒武器化中は1撃目で毒・2撃目で猛毒になる。回数1。',
     long_snipe: '一撃必殺の狙撃。直線8マス。攻撃力4・後方吹き飛ばし。AP-1消費が必要。回数1。',
     charge_formation: '半径1マスに槍兵と弓兵を召喚する。召喚されたコマは次のターンに自動消滅する。回数1。',
     coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
@@ -6985,6 +6985,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'rapid_shot') {
         se.abilities['rapid_shot']--;
         let _rsDmg = (se.type === 'assassin') ? 2 : 1;
+        let _rsVirulentBefore = !!targetEntity._virulentPoison;
         // 2 hits on same target
         for (let hit = 1; hit <= 2; hit++) {
             if (targetEntity.hp > 0 && !targetEntity.invin) {
@@ -6992,7 +6993,9 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (se.poisonWeapon) applyPoison(targetEntity);
             }
         }
-        msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計${_rsDmg*2}ダメ・2回吹飛！${se.poisonWeapon?'・毒':''}！`); used = true;
+        let _rsGotVirulent = se.poisonWeapon && !!targetEntity._virulentPoison && !_rsVirulentBefore;
+        let _rsPoisonSfx = se.poisonWeapon ? (_rsGotVirulent ? '・猛毒化！' : '・毒') : '';
+        msg(targetEntity.invin ? "速射！無敵で防がれた！" : `🏹 速射！2連射！合計${(_rsDmg+(se.atkBonus||0))*2}ダメ・2回吹飛！${_rsPoisonSfx}`); used = true;
     } else if (actionMode === 'long_snipe') {
         se.abilities['long_snipe']--;
         se.ap = Math.max(0, se.ap - 1);
