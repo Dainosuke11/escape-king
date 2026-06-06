@@ -4841,8 +4841,8 @@ function startTurn(team, skipEffects = false) {
                 colosseumPoints[e.lastAttackTeam] = (colosseumPoints[e.lastAttackTeam]||0) + pts;
                 msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
             });
-            // === 2ターンに1度 外周縮小＋押し込み（前レイヤー修復付き）===
-            if (turn % 2 === 0) {
+            // === 2ターン目から毎ターン外周縮小＋押し込み（前レイヤー修復付き）===
+            if (turn >= 2) {
                 colosseumShrinkLayer++;
                 let sl = colosseumShrinkLayer;
 
