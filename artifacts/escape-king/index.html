@@ -4855,22 +4855,8 @@ function startTurn(team, skipEffects = false) {
         }
         // Colosseum events
         if (activeStage === 'colosseum') {
-            // スコア集計 — _colossPts優先、なければタイプ別
-            const colossStrengthPts = (e) => {
-                if (e._colossPts) return e._colossPts;
-                if (e.type === 'knight' || e.type === 'cyborg' || e.type === 'werewolf') return 4;
-                if (e.type === 'archer' || e.type === 'lancer' || e.type === 'monk' || e.type === 'blue_oni' || e.type === 'red_oni') return 3;
-                if (e.type === 'frankenstein' || e.type === 'vampire' || e.type === 'salamander' || e.type === 'shark' || e.type === 'skeleton_soldier') return 2;
-                return 1;
-            };
-            entities.filter(e => e.hp<=0 && !e.colossCounted && e.team==='npc').forEach(e => {
-                e.colossCounted = true;
-                let attacker = e.lastAttackTeam || currentActingTeam;
-                if (!attacker || !['player','cpu'].includes(attacker)) return;
-                let pts = colossStrengthPts(e);
-                colosseumPoints[attacker] = (colosseumPoints[attacker]||0) + pts;
-                msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
-            });
+            // スコア集計（即時加算のフォールバック）
+            checkColosseumKillScore();
             // === 2ターン目から毎ターン外周縮小＋押し込み（前レイヤー修復付き）===
             if (turn >= 2) {
                 colosseumShrinkLayer++;
@@ -4982,18 +4968,6 @@ function startTurn(team, skipEffects = false) {
                     msg(`⚔️ ${ct.name}が入場！`, true);
                 });
             }
-            ['player','cpu'].forEach(team => {
-                if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
-                    colosseumGoalSpawned[team] = true;
-                    let goalRow = team==='player' ? 0 : SIZE-1;
-                    let placed = false;
-                    for (let c2=0; c2<SIZE && !placed; c2++) {
-                        if (board[goalRow][c2] === 'arena_floor') { board[goalRow][c2] = 'arena_goal'; placed = true; }
-                    }
-                    if (!placed) board[goalRow][10] = 'arena_goal';
-                    msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！自軍の旗が出現！踏めば勝利！`, true);
-                }
-            });
         }
         // ===== FACTORY STAGE events =====
         if (activeStage === 'factory') {
@@ -8709,6 +8683,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             targetEntity.lastAttackTeam = se.team;
         }
         reapNecroSouls();
+        checkColosseumKillScore();
         if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
             if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
             usedAbilities[se.id].add(actionMode);
@@ -9512,6 +9487,47 @@ function mergeSpirits() {
 }
 
 // Award +1 soul to every living necromancer for each newly-dead entity.
+function checkColosseumKillScore() {
+    if (activeStage !== 'colosseum') return;
+    const colossStrengthPts = (e) => {
+        if (e._colossPts) return e._colossPts;
+        if (e.type === 'knight' || e.type === 'cyborg' || e.type === 'werewolf') return 4;
+        if (e.type === 'archer' || e.type === 'lancer' || e.type === 'monk' || e.type === 'blue_oni' || e.type === 'red_oni') return 3;
+        if (e.type === 'frankenstein' || e.type === 'vampire' || e.type === 'salamander' || e.type === 'shark' || e.type === 'skeleton_soldier') return 2;
+        return 1;
+    };
+    entities.filter(e => e.hp <= 0 && !e.colossCounted && e.team === 'npc').forEach(e => {
+        e.colossCounted = true;
+        let attacker = e.lastAttackTeam || currentActingTeam;
+        if (!attacker || !['player','cpu'].includes(attacker)) return;
+        let pts = colossStrengthPts(e);
+        colosseumPoints[attacker] = (colosseumPoints[attacker]||0) + pts;
+        msg(`⚔️ 撃破！+${pts}点 → あなた:${colosseumPoints['player']} / 相手:${colosseumPoints['cpu']}`, true);
+    });
+    // 10点達成チームの旗をステージ中央に出現させる
+    ['player','cpu'].forEach(team => {
+        if ((colosseumPoints[team]||0) >= 10 && !colosseumGoalSpawned[team]) {
+            colosseumGoalSpawned[team] = true;
+            let cr = Math.floor(SIZE / 2), cc = Math.floor(SIZE / 2);
+            let placed = false;
+            // 中央から螺旋状に空きarena_floorを探す
+            outer: for (let d = 0; d <= SIZE && !placed; d++) {
+                for (let dr = -d; dr <= d; dr++) {
+                    for (let dc = -d; dc <= d; dc++) {
+                        if (Math.abs(dr) !== d && Math.abs(dc) !== d) continue;
+                        let r2 = cr + dr, c2 = cc + dc;
+                        if (r2 >= 0 && r2 < SIZE && c2 >= 0 && c2 < SIZE && board[r2][c2] === 'arena_floor') {
+                            board[r2][c2] = 'arena_goal'; placed = true; break outer;
+                        }
+                    }
+                }
+            }
+            if (!placed) board[cr][cc] = 'arena_goal';
+            msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！ステージ中央に旗が出現！踏めば勝利！`, true);
+        }
+    });
+}
+
 function reapNecroSouls() {
     let allNecros = entities.filter(e => e.type==='necromancer' && e.hp>0);
     if (allNecros.length === 0) return;
@@ -10597,9 +10613,9 @@ function checkWin() {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && e.c >= 19) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && e.c >= 19) || pTrapped;
     } else if (activeStage === 'colosseum') {
-        // Colosseum: step on your own flag (player row 0, cpu row 20) — enemy touching it does nothing
-        pWin = (colosseumGoalSpawned['player'] && entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0 && board[e.r]?.[e.c] === 'arena_goal')) || cTrapped;
-        cWin = (colosseumGoalSpawned['cpu'] && entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE-1 && board[e.r]?.[e.c] === 'arena_goal')) || pTrapped;
+        // Colosseum: step on the central flag tile to win
+        pWin = (colosseumGoalSpawned['player'] && entities.some(e => e.team === 'player' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal')) || cTrapped;
+        cWin = (colosseumGoalSpawned['cpu'] && entities.some(e => e.team === 'cpu' && e.hp > 0 && board[e.r]?.[e.c] === 'arena_goal')) || pTrapped;
     } else if (activeStage === 'forest') {
         pWin = entities.some(e => e.team === 'player' && e.hp > 0 && e.r <= 0) || cTrapped;
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
