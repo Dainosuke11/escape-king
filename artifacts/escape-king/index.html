@@ -6678,9 +6678,17 @@ function initSentaiMembers(se) {
     SENTAI_COLOR_ORDER.forEach(col => {
         se.sentaiMembers[col] = {hp:6, maxHp:6, alive:true};
     });
-    se.activeMember = 'red';
-    se.element = 'fire';
-    se.name = '戦隊レッド';
+    // ステージ属性に合ったメンバーを先発に選出
+    const _stageElemS = STAGE_ELEMENT[activeStage] ?? 'none';
+    let startCol = 'red';
+    if (_stageElemS !== 'none') {
+        const matchCol = SENTAI_COLOR_ORDER.find(c => SENTAI_COLOR_INFO[c].element === _stageElemS);
+        if (matchCol) startCol = matchCol;
+    }
+    const startInfo = SENTAI_COLOR_INFO[startCol];
+    se.activeMember = startCol;
+    se.element = startInfo.element;
+    se.name = `戦隊${startInfo.name}`;
 }
 
 function sentaiAliveCount(se) {
