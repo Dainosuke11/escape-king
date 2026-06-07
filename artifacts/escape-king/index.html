@@ -502,6 +502,34 @@
             position: absolute; font-size: 1.1em; line-height: 1;
             animation: burst-particle 0.8s ease-out forwards;
         }
+        /* ===== Light Cast Effect (thunder_magic holy-light flash) ===== */
+        @keyframes light-cast-ring {
+            0%   { opacity: 1; transform: translate(-50%,-50%) scale(0.4); }
+            60%  { opacity: 0.9; transform: translate(-50%,-50%) scale(1.4); }
+            100% { opacity: 0; transform: translate(-50%,-50%) scale(2.0); }
+        }
+        @keyframes light-cast-core {
+            0%   { opacity: 1; transform: translate(-50%,-50%) scale(0.6); }
+            100% { opacity: 0; transform: translate(-50%,-50%) scale(2.8); }
+        }
+        .light-cast-overlay { pointer-events: none; position: fixed; z-index: 9999; }
+        .light-cast-ring {
+            position: absolute; top: 50%; left: 50%;
+            width: 72px; height: 72px; border-radius: 50%;
+            border: 5px solid #ffd700;
+            box-shadow: 0 0 18px 6px #fff8a0, 0 0 36px 10px #ffd700;
+            box-sizing: border-box;
+            animation: light-cast-ring 0.75s ease-out forwards;
+        }
+        .light-cast-core {
+            position: absolute; top: 50%; left: 50%;
+            font-size: 2.4em; line-height: 1;
+            animation: light-cast-core 0.75s ease-out forwards;
+        }
+        .light-cast-particle {
+            position: absolute; font-size: 1.2em; line-height: 1;
+            animation: burst-particle 0.9s ease-out forwards;
+        }
         /* ===== Turn Hint Bar ===== */
         #hint-bar {
             display: none; width: 100%;
@@ -3115,6 +3143,47 @@ function burstEffect(r, c, emoji) {
 
     document.body.appendChild(overlay);
     setTimeout(() => overlay.remove(), 900);
+}
+
+function lightCastEffect(r, c) {
+    const vr = (isOnlineMode && myPlayerIndex === 1) ? (SIZE - 1 - r) : r;
+    const tileEl = document.getElementById(`tile-${vr}-${c}`);
+    if (!tileEl) return;
+    const rect = tileEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'light-cast-overlay';
+    overlay.style.left = cx + 'px';
+    overlay.style.top = cy + 'px';
+
+    const core = document.createElement('div');
+    core.className = 'light-cast-core';
+    core.textContent = '✨';
+    overlay.appendChild(core);
+
+    const ring = document.createElement('div');
+    ring.className = 'light-cast-ring';
+    overlay.appendChild(ring);
+
+    const lightParticles = ['✨', '🌟', '💫', '⭐', '✨', '🌟'];
+    const angles = [0, 60, 120, 180, 240, 300];
+    angles.forEach((deg, i) => {
+        const p = document.createElement('div');
+        p.className = 'light-cast-particle';
+        p.textContent = lightParticles[i % lightParticles.length];
+        const rad = deg * Math.PI / 180;
+        const dist = 50 + Math.random() * 30;
+        p.style.left = (Math.cos(rad) * dist) + 'px';
+        p.style.top = (Math.sin(rad) * dist) + 'px';
+        p.style.animationDuration = (0.7 + Math.random() * 0.4) + 's';
+        p.style.transform = 'translate(-50%,-50%)';
+        overlay.appendChild(p);
+    });
+
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 1050);
 }
 
 function startTurnTimer(from) {
@@ -8059,7 +8128,8 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (!t.invin) { t.hp -= 2; t.ap = Math.max(0,t.ap-2); tmHit++; }
             }
         });
-        msg(`⚡ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2！`); used = true;
+        lightCastEffect(r, c);
+        msg(`✨ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2！`); used = true;
     } else if (actionMode === 'barrier_magic') {
         se.abilities['barrier_magic']--;
         let bHit = 0;
