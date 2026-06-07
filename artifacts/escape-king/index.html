@@ -2792,7 +2792,7 @@ function startCpuRankedMatch() {
 
     const job = resolveJob(document.getElementById('ranked-job-select').value);
     const rank = getRank();
-    const { diff, cpuCount } = getCpuFallbackConfig(rank);
+    const { diff, cpuCount, hpMult, apBonus } = getCpuFallbackConfig(rank);
     isCpuRankedMatch = true;
     cpuRankResultApplied = false;
     isOnlineMode = false;
