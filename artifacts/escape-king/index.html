@@ -741,6 +741,7 @@
                 <span>HP: <span id="ui-hp" style="color:#e74c3c;">-</span></span>
                 <span>属性: <span id="ui-element" style="color:#888;">-</span></span>
             </div>
+            <div id="ui-soul-row" style="display:none; margin-top:4px; font-size:14px; color:#b06cee;">💀 ソウル: <span id="ui-soul">0</span></div>
             <div id="sentai-member-panel"></div>
             <button class="btn" style="margin-bottom:15px; background: #2980b9;" id="btn-move">移動 / 決定 (AP 1)</button>
             <hr style="border: 1px solid #444; margin-bottom: 15px;">
@@ -11703,6 +11704,8 @@ function updateUI() {
         document.getElementById('ui-element').style.color = '#888';
         const _spEl = document.getElementById('sentai-member-panel');
         if (_spEl) { _spEl.innerHTML = ''; _spEl.style.display = 'none'; }
+        const _srEl = document.getElementById('ui-soul-row');
+        if (_srEl) _srEl.style.display = 'none';
         btnM.disabled = true;
         return;
     }
@@ -11715,8 +11718,14 @@ function updateUI() {
         + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '')
         + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
-        + (selectedEntity.type === 'necromancer' ? ` 💀${selectedEntity.soulCount||0}` : '')
         + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '');
+    const _uiSoulRow = document.getElementById('ui-soul-row');
+    if (selectedEntity.type === 'necromancer') {
+        document.getElementById('ui-soul').textContent = selectedEntity.soulCount || 0;
+        _uiSoulRow.style.display = 'block';
+    } else {
+        _uiSoulRow.style.display = 'none';
+    }
     const _uiElemKey = getEntityElement(selectedEntity);
     const _uiElemSpan = document.getElementById('ui-element');
     if (_uiElemKey !== 'none' && ELEMENT_DATA[_uiElemKey]) {
