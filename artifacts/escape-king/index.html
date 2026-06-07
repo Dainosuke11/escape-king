@@ -10576,6 +10576,163 @@ function cpuLogic() {
                     if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
                 } else if (cpu.type==='mage' && dist<=5) {
                     executeRushSkill(cpu,p.r,p.c,'skill_mage'); cpu.ap--;attacked=true;
+                } else if (cpu.type==='sentai_hero') {
+                    // 合体必殺技: 前方3×7レーンに2体以上の敵 + 生存隊員2体以上
+                    let _cbAlive = sentaiAliveCount(cpu);
+                    let _cbFdr = 1; // CPUは下向き(プレイヤー方向)
+                    let _cbEnemies = 0;
+                    for (let _dd=1; _dd<=7; _dd++) {
+                        let _cbR = cpu.r + _cbFdr * _dd;
+                        for (let _dc4=-1; _dc4<=1; _dc4++) {
+                            let _cbC = cpu.c + _dc4;
+                            if (_cbR<0||_cbR>=SIZE||_cbC<0||_cbC>=SIZE) continue;
+                            if (entities.some(e=>e.r===_cbR&&e.c===_cbC&&e.hp>0&&e.team!==cpu.team)) _cbEnemies++;
+                        }
+                    }
+                    if (_cbEnemies >= 2 && _cbAlive >= 2) {
+                        let _cbDmg = _cbAlive * 2;
+                        let _cbHits = 0;
+                        for (let _dd=1; _dd<=7; _dd++) {
+                            let _cbR = cpu.r + _cbFdr * _dd;
+                            for (let _dc4=-1; _dc4<=1; _dc4++) {
+                                let _cbC = cpu.c + _dc4;
+                                if (_cbR<0||_cbR>=SIZE||_cbC<0||_cbC>=SIZE) continue;
+                                let _cbTgt = entities.find(e=>e.r===_cbR&&e.c===_cbC&&e.hp>0&&e.team!==cpu.team);
+                                if (_cbTgt && !_cbTgt.invin && !necroShieldBlock(_cbTgt)) {
+                                    let _cbPrevHp = _cbTgt.hp;
+                                    _cbTgt.hp -= _cbDmg + (_cbTgt.defDebuff||0);
+                                    if (_cbTgt.sentaiMembers) sentaiProcessDamage(_cbTgt, _cbPrevHp);
+                                    _cbHits++;
+                                }
+                            }
+                        }
+                        cpu.skillUsed = true;
+                        cpu._sentaiSkillPenalty = 2;
+                        msg(`🌈 敵が合体必殺技！幅3×深さ7 AoE！${_cbHits}体に${_cbDmg}ダメ！次ターンAP-2！`);
+                        cpu.ap--; attacked = true;
+                    }
+                }
+            }
+
+            // ====================================================
+            // 優先度4.5: 戦隊ヒーロー専用アビリティ
+            // ====================================================
+            if (!attacked && cpu.type === 'sentai_hero') {
+                // --- holy_light: 周囲2マスに敵2体以上 or 自HP <= 15 (AoE回復技) ---
+                let _hlNearEnemies = targets.filter(t=>Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2);
+                if (!attacked && (cpu.abilities.holy_light||0) > 0 && !(cursedAbilities[cpu.id]?.['holy_light']>0) &&
+                    (_hlNearEnemies.length >= 2 || cpu.hp <= 15)) {
+                    sentaiSwitchMember(cpu, 'white');
+                    if (cpu.abilities.holy_light !== 999) cpu.abilities.holy_light--;
+                    let _hlDmg = 2 + (cpu.atkBonus||0);
+                    let _hlHits = 0;
+                    targets.forEach(t => {
+                        if (Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2 && !t.invin && !necroShieldBlock(t)) {
+                            let _hlPrev = t.hp;
+                            t.hp -= _hlDmg + (t.defDebuff||0);
+                            _hlHits++;
+                            if (t.sentaiMembers) sentaiProcessDamage(t, _hlPrev);
+                        }
+                    });
+                    cpu.hp = Math.min(cpu.maxHp||30, cpu.hp + 2);
+                    if (cpu.sentaiMembers) {
+                        let _hlMember = cpu.sentaiMembers[cpu.activeMember||'white'];
+                        if (_hlMember && _hlMember.alive) _hlMember.hp = Math.min(_hlMember.maxHp, _hlMember.hp + 2);
+                    }
+                    msg(`⚪ 敵のホーリーライト！半径2全敵${_hlHits}体に${_hlDmg}ダメ！自身HP+2！`);
+                    attacked = true; cpu.ap--;
+                }
+
+                // --- tacit_agreement: プレイヤーAP >= 2 or 死亡隊員あり + 射程3以内 ---
+                let _taDeadExists = cpu.sentaiMembers && SENTAI_COLOR_ORDER.some(c=>!cpu.sentaiMembers[c].alive);
+                let _taPlayerHighAp = playerMain && playerMain.ap >= 2;
+                if (!attacked && (cpu.abilities.tacit_agreement||0) > 0 && !(cursedAbilities[cpu.id]?.['tacit_agreement']>0) &&
+                    (_taDeadExists || _taPlayerHighAp) && playerMain) {
+                    let _taDist = Math.max(Math.abs(cpu.r-playerMain.r),Math.abs(cpu.c-playerMain.c));
+                    if (_taDist > 0 && _taDist <= 3) {
+                        if (cpu.abilities.tacit_agreement !== 999) cpu.abilities.tacit_agreement--;
+                        if (!playerMain.invin) playerMain.ap = Math.max(0, playerMain.ap - 2);
+                        let _taDirR = 1; // CPU向き(下)
+                        let _taRocks = [];
+                        for (let _dc2=-1; _dc2<=1; _dc2++) {
+                            let _taNr = cpu.r + _taDirR, _taNc = cpu.c + _dc2;
+                            if (_taNr>=0&&_taNr<SIZE&&_taNc>=0&&_taNc<SIZE&&isWalkable(_taNr,_taNc)&&!isNoRockZone(_taNr,_taNc)&&!entities.some(ev=>ev.hp>0&&ev.r===_taNr&&ev.c===_taNc)) {
+                                board[_taNr][_taNc]='rock'; _taRocks.push({r:_taNr,c:_taNc});
+                            }
+                        }
+                        _taRocks.forEach(rc=>tempRocks.push({r:rc.r,c:rc.c,expireOnTurn:turn+2,restoreTile:'plains'}));
+                        let _taRevMsg = '';
+                        if (_taDeadExists) {
+                            let _taDeadCol = SENTAI_COLOR_ORDER.find(c=>!cpu.sentaiMembers[c].alive);
+                            cpu.sentaiMembers[_taDeadCol].alive = true;
+                            cpu.sentaiMembers[_taDeadCol].hp = 1;
+                            let _taDInfo = SENTAI_COLOR_INFO[_taDeadCol];
+                            if (cursedAbilities[cpu.id]?.[_taDInfo.abilityKey] >= 9999) delete cursedAbilities[cpu.id][_taDInfo.abilityKey];
+                            cpu.hp = Math.min(cpu.maxHp, cpu.hp + 1);
+                            _taRevMsg = ` ${_taDInfo.icon}${_taDInfo.name}復活HP1！`;
+                        }
+                        msg(`🤝 敵が暗黙の了解！${playerMain.name}AP-2！前方岩${_taRocks.length}個設置！${_taRevMsg}`);
+                        attacked = true; cpu.ap--;
+                    }
+                }
+
+                // --- dark_revenge: 隣接(dist=1)、威力4+AP-2 ---
+                if (!attacked && dist <= 1 && (cpu.abilities.dark_revenge||0) > 0 && !(cursedAbilities[cpu.id]?.['dark_revenge']>0)) {
+                    sentaiSwitchMember(cpu, 'black');
+                    if (cpu.abilities.dark_revenge !== 999) cpu.abilities.dark_revenge--;
+                    let _drDmg = 4 + (cpu.atkBonus||0) + (p.defDebuff||0);
+                    if (!p.invin && !necroShieldBlock(p)) {
+                        let _drPrev = p.hp;
+                        p.hp -= _drDmg; p.ap = Math.max(0, p.ap - 2);
+                        if (p.sentaiMembers) sentaiProcessDamage(p, _drPrev);
+                        msg(`⚫ 敵のダークリベンジ！${p.name}に${_drDmg}ダメ+AP-2！`);
+                    } else { msg(`⚫ 敵のダークリベンジ！しかし${p.name}は防いだ！`); }
+                    attacked = true; cpu.ap--;
+                }
+
+                // --- gaia_smash: 隣接(dist=1)、威力3+吹飛+岩設置 ---
+                if (!attacked && dist <= 1 && (cpu.abilities.gaia_smash||0) > 0 && !(cursedAbilities[cpu.id]?.['gaia_smash']>0)) {
+                    sentaiSwitchMember(cpu, 'green');
+                    if (cpu.abilities.gaia_smash !== 999) cpu.abilities.gaia_smash--;
+                    let _gsDmg = 3 + (cpu.atkBonus||0) + (p.defDebuff||0);
+                    if (!p.invin && !necroShieldBlock(p)) {
+                        let _gsPrev = p.hp;
+                        p.hp -= _gsDmg; knockback(p, 1, cpu);
+                        let _gsDr = Math.sign(p.r-cpu.r), _gsDc = Math.sign(p.c-cpu.c);
+                        let _gsRr = p.r+_gsDr, _gsRc = p.c+_gsDc;
+                        if (_gsRr>=0&&_gsRr<SIZE&&_gsRc>=0&&_gsRc<SIZE&&isWalkable(_gsRr,_gsRc)&&!isNoRockZone(_gsRr,_gsRc)&&!entities.some(ev=>ev.hp>0&&ev.r===_gsRr&&ev.c===_gsRc)) board[_gsRr][_gsRc]='rock';
+                        if (p.sentaiMembers) sentaiProcessDamage(p, _gsPrev);
+                        msg(`🟢 敵のガイアスマッシュ！${p.name}に${_gsDmg}ダメ+吹飛+岩設置！`);
+                    } else { msg(`🟢 敵のガイアスマッシュ！しかし${p.name}は防いだ！`); }
+                    attacked = true; cpu.ap--;
+                }
+
+                // --- fire_burst: 半径2、威力3+吹飛 ---
+                if (!attacked && dist <= 2 && (cpu.abilities.fire_burst||0) > 0 && !(cursedAbilities[cpu.id]?.['fire_burst']>0)) {
+                    sentaiSwitchMember(cpu, 'red');
+                    if (cpu.abilities.fire_burst !== 999) cpu.abilities.fire_burst--;
+                    let _fbDmg = 3 + (cpu.atkBonus||0) + (p.defDebuff||0);
+                    if (!p.invin && !necroShieldBlock(p)) {
+                        let _fbPrev = p.hp;
+                        p.hp -= _fbDmg; knockback(p, 1, cpu);
+                        if (p.sentaiMembers) sentaiProcessDamage(p, _fbPrev);
+                        msg(`🔴 敵のファイアバースト！${p.name}に${_fbDmg}ダメ+吹飛！`);
+                    } else { msg(`🔴 敵のファイアバースト！しかし${p.name}は防いだ！`); }
+                    attacked = true; cpu.ap--;
+                }
+
+                // --- aqua_beam: 同行 or 同列で距離4以内、威力3+AP-1 ---
+                if (!attacked && (cpu.r===p.r||cpu.c===p.c) && dist > 0 && dist <= 4 && (cpu.abilities.aqua_beam||0) > 0 && !(cursedAbilities[cpu.id]?.['aqua_beam']>0)) {
+                    sentaiSwitchMember(cpu, 'blue');
+                    if (cpu.abilities.aqua_beam !== 999) cpu.abilities.aqua_beam--;
+                    let _abDmg = 3 + (cpu.atkBonus||0) + (p.defDebuff||0);
+                    if (!p.invin && !necroShieldBlock(p)) {
+                        let _abPrev = p.hp;
+                        p.hp -= _abDmg; p.ap = Math.max(0, p.ap - 1);
+                        if (p.sentaiMembers) sentaiProcessDamage(p, _abPrev);
+                        msg(`🔵 敵のアクアビーム！${p.name}に${_abDmg}ダメ+AP-1！`);
+                    } else { msg(`🔵 敵のアクアビーム！しかし${p.name}は防いだ！`); }
+                    attacked = true; cpu.ap--;
                 }
             }
 
