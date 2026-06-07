@@ -838,6 +838,7 @@ let avalanchesTriggered = new Set();
 let cableCarMovesLeft = 4;
 // Underwater Temple
 let oxygenMap = {};
+let _cpuWentFirst = false;
 let tideDirection = 'south';
 let tideTurn = 0;
 // Lava Land
@@ -1182,16 +1183,16 @@ const ABILITY_NAMES = {
     robot_head: 'ロボットヘッド(半径3/AP-1+ランダム5封印1T)',
     robot_cannon: 'ロボットキャノン(半径5/威5+隣接2ダメ+吹飛/JP2消費)',
     nail_gun: 'ネイルガン(半径3/威3+AP-1+吹飛)',
-    fire_burst: '🔴ファイアバースト(半径2/火属性威3+吹飛)',
+    fire_burst: '🔴ファイアバースト(半径2/火属性威2+吹飛)',
     aqua_beam: '🔵アクアビーム(直線4/水属性威3+AP-1)',
     gaia_smash: '🟢ガイアスマッシュ(隣接1/草属性威3+吹飛+岩設置)',
-    holy_light: '⚪ホーリーライト(自中心半径2AoE/光属性威2+HP+2)',
-    dark_revenge: '⚫ダークリベンジ(隣接1/闇属性威4+AP-2)',
+    holy_light: '⚪ホーリーライト(全隊員HP+1+1T無敵)',
+    dark_revenge: '⚫ダークリベンジ(隣接1/闇/1+死亡数×2+AP-2)',
     tacit_agreement: '暗黙の了解(半径3敵AP-2+前方3岩/1死亡隊員復活)',
-    combination_blast: '合体必殺技(幅3/深さ7/威=生存数×2)',
+    combination_blast: '合体必殺技(幅3/深さ7/威=2+生存数)',
     unzan_angya: '雲水行脚(AP+2/G+1~4)',
     fundo_gekkoh: '憤怒激昂(r1全体/威4/炎/吹飛/G1消費)',
-    kako_tosen: '羽化登仙(r2全体/威3/草/G1消費)',
+    kako_tosen: '羽化登仙(r2全体/威3/草/G1消費/命中敵隣に種)',
     kyoshin_tankai: '虚心坦懐(直線5/威4/水/吹飛/G1消費)',
     meikyo_shisui: '明鏡止水(1T無敵/AP+1/G+1/敵r2AP-2+4封印)',
     banzai_jiai: '万物慈愛(r1/5吹飛/威3/連鎖3/水/G+1)',
@@ -1395,13 +1396,13 @@ const ABILITY_TIPS = {
     robot_head: '半径3マス以内の敵のAP-1+ランダム5種アビリティ1T封印。ロボット版は射程5。',
     robot_cannon: '半径5マス以内の敵に5ダメ+後方吹き飛ばし。隣接敵にも2ダメ。JP2消費。ロボット版は射程7・威力7・隣接4ダメ・消費なし。',
     nail_gun: '半径3マス以内の敵に3ダメ+AP-1+後方吹き飛ばし。',
-    fire_burst: '🔴レッドの技。半径2マス内の敵1体に火属性3ダメ+吹き飛ばし。回数5。',
+    fire_burst: '🔴レッドの技。半径2マス内の敵1体に火属性2ダメ+吹き飛ばし。回数5。',
     aqua_beam: '🔵ブルーの技。直線4マスの敵1体に水属性3ダメ+AP-1。回数5。',
     gaia_smash: '🟢グリーンの技。隣接した敵に草属性3ダメ+吹き飛ばし+背後に岩設置。回数5。',
-    holy_light: '⚪ホワイトの技。自分を中心に半径2マスの全敵に光属性2ダメ。自身HP+2。回数5。',
-    dark_revenge: '⚫ブラックの技。隣接した敵に闇属性4ダメ+AP-2。回数5。',
+    holy_light: '⚪ホワイトの技。生存中の全隊員にHP+1と1T無敵バリアを付与。回数5。',
+    dark_revenge: '⚫ブラックの技。隣接した敵に闇属性(1+死亡隊員数×2)ダメ+AP-2。全員生存時1ダメ、全員死亡時11ダメ。回数5。',
     tacit_agreement: '半径3マスの敵1体のAP-2。自分前方幅3マスに岩設置(次T消滅)。死亡済みの隊員1人をHP1で復活させ、封印アビリティを解除する。回数5。',
-    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。生存隊員数×2ダメ。複合属性弱点判定あり。使用後次ターン自AP-2。'
+    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)。複合属性弱点判定あり。使用後次ターン自AP-2。'
 };
 
 const JOB_DATA = {
@@ -2790,6 +2791,7 @@ window.addEventListener('DOMContentLoaded', () => {
         initEntities(pJob, difficulty);
         turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
+        _cpuWentFirst = !isPlayerTurn;
         startTurn(isPlayerTurn ? 'player' : 'cpu');
     });
     document.getElementById('btn-change').addEventListener('click', () => {
@@ -2854,13 +2856,15 @@ function flushBattleLog() {
 function applyPoison(target, stacks=1) {
     if (!target || target.invin) return;
     if ((target.poisonTimer||0) > 0) {
-        // 毒状態に再び毒を浴びると猛毒に昇格
-        target._virulentPoison = true;
-        msg(`☠️ ${target.name}は毒が重なり猛毒になった！`, true);
+        target.poisonStacks = (target.poisonStacks||1) + stacks;
+        target.poisonTimer = 3;
+        if (target.poisonStacks >= 3) target._virulentPoison = true;
+        msg(`☠️ ${target.name}の毒が${target.poisonStacks}スタック！(${target.poisonStacks}ダメ/T)`, true);
+    } else {
+        target.poisonStacks = stacks;
+        target.poisonTimer = 3;
+        if (target.poisonStacks >= 3) target._virulentPoison = true;
     }
-    target.poisonStacks = (target.poisonStacks||0) + stacks;
-    target.poisonTimer = Math.max(target.poisonTimer||0, 3) + (stacks > 1 ? stacks - 1 : 0);
-    if (target.poisonStacks >= 3) target._virulentPoison = true;
 }
 
 function isNoRockZone(r, c) {
@@ -2891,7 +2895,7 @@ function isWalkable(r, c, ignoreRiver=false, ignoreEntities=false, ignoreRock=fa
         let boatHere = entities.find(e => e.hp>0 && e.r===r && e.c===c && (e.type==='boat' || e.type==='warship'));
         if (boatHere) ignoreRiver = true;
     }
-    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'golden_coral', 'lava', 'torpedo_launcher'].includes(t);
+    let blockedByTerrain = ['river', 'rock', 'volcano', 'mine', 'bridge_up', 'whirlpool', 'gravestone', 'sky_void', 'fallen_floor', 'car_tile', 'deep_water', 'sea_trench', 'coral_reef', 'golden_coral', 'lava'].includes(t);
     if (ignoreRiver && (t === 'river' || t === 'whirlpool' || t === 'deep_water')) blockedByTerrain = false;
     if (ignoreRock && ['rock', 'volcano', 'mine'].includes(t)) blockedByTerrain = false;
     if (ignoreVoid && ['sky_void', 'fallen_floor'].includes(t)) blockedByTerrain = false;
@@ -2964,6 +2968,7 @@ function startGame() {
         
         turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
+        _cpuWentFirst = !isPlayerTurn;
         render();
         startTurn(isPlayerTurn ? 'player' : 'cpu');
     } catch (error) {
@@ -3606,7 +3611,13 @@ function initEntities(pJob, difficulty = "1") {
             if (eElem === _stageElem) {
                 e.hp += 5; e.maxHp += 5;
                 for (let k in e.abilities) {
-                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) e.abilities[k]++;
+                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) {
+                        e.abilities[k]++;
+                        if (e.initialAbilities?.[k] !== undefined) e.initialAbilities[k]++;
+                    }
+                }
+                if (e.sentaiMembers) {
+                    SENTAI_COLOR_ORDER.forEach(col => { if (e.sentaiMembers[col]) { e.sentaiMembers[col].hp++; e.sentaiMembers[col].maxHp++; } });
                 }
             }
             if (eElem !== 'none' && ELEMENT_DATA[_stageElem]?.weakTo === eElem) {
@@ -3739,7 +3750,13 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
             if (eElem === _stageElemOL) {
                 e.hp += 5; e.maxHp += 5;
                 for (let k in e.abilities) {
-                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) e.abilities[k]++;
+                    if (e.abilities[k] > 0 && e.abilities[k] !== 999) {
+                        e.abilities[k]++;
+                        if (e.initialAbilities?.[k] !== undefined) e.initialAbilities[k]++;
+                    }
+                }
+                if (e.sentaiMembers) {
+                    SENTAI_COLOR_ORDER.forEach(col => { if (e.sentaiMembers[col]) { e.sentaiMembers[col].hp++; e.sentaiMembers[col].maxHp++; } });
                 }
             }
             if (eElem !== 'none' && ELEMENT_DATA[_stageElemOL]?.weakTo === eElem) {
@@ -3906,14 +3923,7 @@ function processTurnStartEffects(e) {
     // 仙人: 属性交替(奇数ターン=水/偶数ターン=草) + 雲水行脚ゲージボーナス + 生々流転召喚消滅
     if (e.type === 'sennin') {
         e.element = (turn % 2 === 1) ? 'water' : 'grass';
-        if (e._unzanTurn === turn - 1) {
-            let _uGainBonus = (e._senninSkillUsedTurn === turn - 1) ? 0 : 3;
-            if (_uGainBonus > 0) {
-                e.senninGauge = (e.senninGauge||0) + _uGainBonus;
-                msg(`🧘 ${e.name} 雲水行脚ゲージ補填+${_uGainBonus}(計${e.senninGauge})！`, true);
-            }
-            delete e._unzanTurn;
-        }
+        if (e._unzanTurn !== undefined) delete e._unzanTurn;
         if (e._senninSummons && e._senninSummons.length > 0) {
             e._senninSummons = e._senninSummons.filter(s => {
                 if (s.expireAt <= turn) {
@@ -4084,10 +4094,11 @@ function processTurnStartEffects(e) {
     }
     if (e.poisonTimer > 0) {
         e.poisonTimer--;
-        let isSever = (e.poisonStacks || 0) >= 2 || !!e._virulentPoison;
-        let dmg = isSever ? 2 : 1;
+        let _pStacks = e.poisonStacks || 1;
+        let dmg = _pStacks;
+        let isSever = _pStacks >= 2 || !!e._virulentPoison;
         if (!e.invin) e.hp -= dmg;
-        if (!e.invin) msg(`${isSever ? '☠️ 猛毒' : '🟢 毒'}！${e.name}が${dmg}ダメージ！(残${e.poisonTimer}T)`, true);
+        if (!e.invin) msg(`${isSever ? '☠️ 猛毒' : '🟢 毒'}！${e.name}が${dmg}ダメージ！(残${e.poisonTimer}T${_pStacks > 1 ? ', ' + _pStacks + 'スタック' : ''})`, true);
         if (e.poisonTimer <= 0) { e.poisonStacks = 0; e._virulentPoison = false; }
     }
     if (e.invinTimer > 0) { e.invinTimer--; if (e.invinTimer <= 0) e.invin = false; }
@@ -6370,6 +6381,19 @@ function checkTileEffects(entity) {
                 break;
             }
         }
+    }
+    // Torpedo Launcher: 踏んだ瞬間に横方向へ魚雷発射し消滅
+    if (board[r] && board[r][c] === 'torpedo_launcher') {
+        board[r][c] = 'sea_floor';
+        let torpFireDir = c < 10 ? 1 : -1;
+        let torpHit = null;
+        for (let tc = c + torpFireDir; tc >= 0 && tc < SIZE; tc += torpFireDir) {
+            torpHit = entities.find(e2 => e2.hp > 0 && e2.r === r && e2.c === tc && !e2.invin);
+            if (torpHit) break;
+            if (['rock','coral_reef','sea_trench','torpedo_launcher'].includes(board[r]?.[tc])) break;
+        }
+        if (torpHit) { torpHit.hp -= 3; knockback(torpHit, 2, entity); checkWin(); }
+        eventMsg = (eventMsg ? eventMsg + ' ' : '') + (torpHit ? `🚀 魚雷発射！${torpHit.name}に3ダメ+吹き飛ばし！` : `🚀 踏んで魚雷発射！(命中なし)`);
     }
     // Dungeon: 踏んで松明を点灯
     if (board[r] && board[r][c] === 'dungeon_torch' && activeStage === 'dungeon') {
@@ -9242,7 +9266,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'fire_burst') {
         sentaiSwitchMember(se, 'red');
         if (se.abilities['fire_burst'] !== 999) se.abilities['fire_burst']--;
-        let fbDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        let fbDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity) && !tryKobunShield(targetEntity, fbDmg)) {
             targetEntity.hp -= fbDmg; knockback(targetEntity, 1, se);
         }
@@ -9270,27 +9294,25 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'holy_light') {
         sentaiSwitchMember(se, 'white');
         if (se.abilities['holy_light'] !== 999) se.abilities['holy_light']--;
-        let hlHits = 0, hlDmg = 2 + (se.atkBonus||0);
-        entities.forEach(t => {
-            if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
-                if (!t.invin && !necroShieldBlock(t)) { t.hp -= hlDmg + (t.defDebuff||0); hlHits++; }
-            }
-        });
-        se.hp = Math.min(se.maxHp||30, se.hp + 2);
+        let hlHealCount = 0;
         if (se.sentaiMembers) {
-            let activeCol = se.activeMember || 'white';
-            let acMember = se.sentaiMembers[activeCol];
-            if (acMember && acMember.alive) acMember.hp = Math.min(acMember.maxHp, acMember.hp + 2);
+            SENTAI_COLOR_ORDER.forEach(col => {
+                let m = se.sentaiMembers[col];
+                if (m && m.alive) { m.hp = Math.min(m.maxHp, m.hp + 1); hlHealCount++; }
+            });
         }
-        msg(`⚪ ホーリーライト！半径2全敵${hlHits}体に${hlDmg}ダメ！自身HP+2！`); used = true;
+        se.hp = Math.min(se.maxHp||30, se.hp + 1);
+        se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1);
+        msg(`⚪ ホーリーライト！${hlHealCount}人の隊員にHP+1＆1T無敵バリア！`); used = true;
     } else if (actionMode === 'dark_revenge') {
         sentaiSwitchMember(se, 'black');
         if (se.abilities['dark_revenge'] !== 999) se.abilities['dark_revenge']--;
-        let drDmg = 4 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+        let drDeadCount = se.sentaiMembers ? SENTAI_COLOR_ORDER.filter(c=>!se.sentaiMembers[c].alive).length : 0;
+        let drDmg = 1 + (drDeadCount * 2) + (se.atkBonus||0) + (targetEntity.defDebuff||0);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity) && !tryKobunShield(targetEntity, drDmg)) {
             targetEntity.hp -= drDmg; targetEntity.ap = Math.max(0, targetEntity.ap - 2);
         }
-        msg(targetEntity.invin ? `⚫ ダークリベンジ！しかし無敵で防がれた！` : `⚫ ダークリベンジ！${targetEntity.name}に${drDmg}ダメ+AP-2！`); used = true;
+        msg(targetEntity.invin ? `⚫ ダークリベンジ！しかし無敵で防がれた！` : `⚫ ダークリベンジ！${targetEntity.name}に${drDmg}ダメ+AP-2！(死亡隊員${drDeadCount}人)`); used = true;
     } else if (actionMode === 'tacit_agreement') {
         if (se.abilities['tacit_agreement'] !== 999) se.abilities['tacit_agreement']--;
         // 敵AP-2
@@ -9350,9 +9372,20 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (t.hp <= 0 || t.team === se.team) return;
             if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > 2) return;
             let _ktDmg = 3 + (se.atkBonus||0) + (t.defDebuff||0);
-            if (!t.invin) { t.hp -= _ktDmg; _ktHits++; }
+            if (!t.invin) {
+                t.hp -= _ktDmg; _ktHits++;
+                // 被弾した敵の隣に仙人の種(sprout)を植える
+                const _ktDirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+                for (let _ktD of _ktDirs) {
+                    let _ktSr = t.r + _ktD.dr, _ktSc = t.c + _ktD.dc;
+                    if (_ktSr>=0&&_ktSr<SIZE&&_ktSc>=0&&_ktSc<SIZE&&isWalkable(_ktSr,_ktSc)&&!entities.some(ev=>ev.hp>0&&ev.r===_ktSr&&ev.c===_ktSc)) {
+                        entities.push({id:'sprout'+Date.now()+Math.random(), type:'sprout', name:'仙種', team:se.team, r:_ktSr, c:_ktSc, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn});
+                        break;
+                    }
+                }
+            }
         });
-        msg(`🌿 羽化登仙！半径2全体3ダメ(命中${_ktHits}体)！ゲージ-1(残${se.senninGauge})！`); used = true;
+        msg(`🌿 羽化登仙！半径2全体3ダメ(命中${_ktHits}体)！命中敵の隣に種植え！ゲージ-1(残${se.senninGauge})！`); used = true;
     } else if (actionMode === 'kyoshin_tankai') {
         // 虚心坦懐: 直線5/威4/水/吹飛/ゲージ1消費必須
         if ((se.senninGauge||0) < 1) { msg("💧 虚心坦懐：仙人ゲージが足りない！(ゲージ1以上必要)"); actionMode = 'move'; render(); return; }
@@ -9806,7 +9839,7 @@ function executeSkill(se) {
     // ====== 戦隊ヒーロー スキル: 合体必殺技 ======
     if (se.type === 'sentai_hero') {
         let aliveCount = sentaiAliveCount(se);
-        let cbDmg = aliveCount * 2;
+        let cbDmg = 2 + aliveCount;
         let cbFaceDr = se.team === 'player' ? -1 : 1;
         let cbHits = 0, cbPrevHps = new Map();
         for (let dd = 1; dd <= 7; dd++) {
@@ -9839,7 +9872,7 @@ function executeSkill(se) {
         });
         // 使用後次ターンAP-2
         se._sentaiSkillPenalty = 2;
-        msg(`🦸 合体必殺技！幅3×深さ7！生存${aliveCount}体×2=${cbDmg}ダメ×${cbHits}体！複合弱点判定！次T AP-2！`);
+        msg(`🦸 合体必殺技！幅3×深さ7！2+生存${aliveCount}体=${cbDmg}ダメ×${cbHits}体！複合弱点判定！次T AP-2！`);
         se.skillUsed = true;
         return true;
     }
@@ -10862,7 +10895,7 @@ function cpuLogic() {
                         }
                     }
                     if (_cbEnemies >= 2 && _cbAlive >= 2) {
-                        let _cbDmg = _cbAlive * 2;
+                        let _cbDmg = 2 + _cbAlive;
                         let _cbHits = 0;
                         for (let _dd=1; _dd<=7; _dd++) {
                             let _cbR = cpu.r + _cbFdr * _dd;
@@ -10939,32 +10972,23 @@ function cpuLogic() {
                     }
                 }
 
-                // --- holy_light: 周囲2マスに敵2体以上 or 自HP <= 15 or 隊員がHP<=2で封印寸前 (AoE回復技) ---
-                let _hlNearEnemies = targets.filter(t=>Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2);
+                // --- holy_light: 隊員HP低下時 or 自HP <= 15 → 全隊員HP+1+1T無敵 ---
                 let _hlDyingMember = cpu.sentaiMembers && SENTAI_COLOR_ORDER.some(col =>
                     cpu.sentaiMembers[col]?.alive && (cpu.sentaiMembers[col]?.hp || 0) <= 2);
                 if (!attacked && (cpu.abilities.holy_light||0) > 0 && !(cursedAbilities[cpu.id]?.['holy_light']>0) &&
-                    (_hlNearEnemies.length >= 2 || cpu.hp <= 15 || _hlDyingMember)) {
+                    (cpu.hp <= 15 || _hlDyingMember)) {
                     sentaiSwitchMember(cpu, 'white');
                     if (cpu.abilities.holy_light !== 999) cpu.abilities.holy_light--;
-                    let _hlDmg = 2 + (cpu.atkBonus||0);
-                    let _hlHits = 0;
-                    targets.forEach(t => {
-                        if (Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2 && !t.invin && !necroShieldBlock(t)) {
-                            let _hlPrev = t.hp;
-                            t.hp -= _hlDmg + (t.defDebuff||0);
-                            _hlHits++;
-                            if (t.sentaiMembers) sentaiProcessDamage(t, _hlPrev);
-                        }
-                    });
-                    cpu.hp = Math.min(cpu.maxHp||30, cpu.hp + 2);
+                    let _hlHealCount = 0;
                     if (cpu.sentaiMembers) {
-                        let _hlMember = cpu.sentaiMembers[cpu.activeMember||'white'];
-                        if (_hlMember && _hlMember.alive) _hlMember.hp = Math.min(_hlMember.maxHp, _hlMember.hp + 2);
+                        SENTAI_COLOR_ORDER.forEach(col => {
+                            let m = cpu.sentaiMembers[col];
+                            if (m && m.alive) { m.hp = Math.min(m.maxHp, m.hp + 1); _hlHealCount++; }
+                        });
                     }
-                    let _hlWMember = cpu.sentaiMembers?.white;
-                    let _hlWTag = _hlWMember ? `HP${_hlWMember.hp}/${_hlWMember.maxHp} ` : '';
-                    msg(`⚪ホワイト[${_hlWTag}] 敵のホーリーライト！半径2全敵${_hlHits}体に${_hlDmg}ダメ！自身HP+2！`);
+                    cpu.hp = Math.min(cpu.maxHp||30, cpu.hp + 1);
+                    cpu.invin = true; cpu.invinTimer = Math.max(cpu.invinTimer||0, 1);
+                    msg(`⚪ 敵のホーリーライト！${_hlHealCount}人の隊員にHP+1＆1T無敵バリア！`);
                     attacked = true; cpu.ap--;
                 }
 
@@ -11782,7 +11806,11 @@ function npcLogic() {
         render();
         setTimeout(npcLogic, isOnlineMode ? 100 : 100);
     } else {
-        turn++;
+        if (!isOnlineMode && _cpuWentFirst) {
+            _cpuWentFirst = false;
+        } else {
+            turn++;
+        }
         if (isOnlineMode && myPlayerIndex === 0) {
             // P1 increments turn and syncs to P2 with new player turn
             startTurn('player');
@@ -12055,6 +12083,7 @@ function updateUI() {
     document.getElementById('ui-ap').innerText = selectedEntity.ap;
     document.getElementById('ui-hp').innerText = selectedEntity.hp
         + (selectedEntity.waterGauge !== undefined ? ` 💧${selectedEntity.waterGauge}/${selectedEntity.maxWaterGauge||30}` : '')
+        + (activeStage === 'underwater' && (selectedEntity.team === 'player' || selectedEntity.team === 'cpu') && !selectedEntity.oceanUnit ? ` 🫧${oxygenMap[selectedEntity.id]??15}/15` : '')
         + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '')
         + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
