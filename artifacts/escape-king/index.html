@@ -10289,7 +10289,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
     }
     if (used) {
-        if (tutorialMode && tutorialStep === 2) advanceTutorial();
+        if (tutorialMode && tutorialStep === 3) advanceTutorial();
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 魔法使い: 使ったアビリティ/スキルの属性に変化
@@ -13910,12 +13910,22 @@ const TUTORIAL_STEPS = [
         advanceOn: 'move',
     },
     {
-        msg: '🚶 移動できました！<br><br>次はアビリティを使ってみましょう。<br>コマを選択してから<b>アビリティボタン</b>を押して対象を選択してください。',
+        msg: '💨 <b>ダッシュで素早く移動しよう！</b><br><br>移動モード中に<b>2マス以上離れたマス</b>をクリックするとダッシュ移動ができます。<br>AP（行動ポイント）を1消費しますが、一気に距離を詰められます。<br><br>残りAPは画面のコマ情報エリアで確認できます。',
+        highlight: 'btn-move',
+        advanceOn: null,
+    },
+    {
+        msg: '⚔️ <b>アビリティを使ってみよう！</b><br><br>コマを選択してから<b>アビリティボタン</b>を押して対象を選択してください。<br><br>💡 アビリティの種類（斬撃・魔法・召喚など）は<b>ジョブによって全て異なります</b>。ジョブ図鑑で詳細を確認できます！',
         highlight: 'btn-attack',
         advanceOn: 'ability_used',
     },
     {
-        msg: '⚔️ アビリティを使いました！<br><br>次は<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。',
+        msg: '✨ <b>スキルを使ってみよう！</b><br><br>アビリティボタンを押すと複数の技が表示されます。<br>その中に<b>スキル（特殊技）</b>が含まれている場合があります。<br><br>🎯 スキルは1試合に1回しか使えない強力な必殺技です。<br>普通のアビリティと同じく使い方はジョブごとに全く異なります。<br>大事な場面で使いましょう！',
+        highlight: 'btn-attack',
+        advanceOn: null,
+    },
+    {
+        msg: '🔚 <b>ターン終了をしよう！</b><br><br>行動が終わったら<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。',
         highlight: 'btn-end-turn',
         advanceOn: 'end_turn',
     },
