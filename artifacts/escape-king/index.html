@@ -10705,7 +10705,9 @@ function cpuLogic() {
                         let _hlMember = cpu.sentaiMembers[cpu.activeMember||'white'];
                         if (_hlMember && _hlMember.alive) _hlMember.hp = Math.min(_hlMember.maxHp, _hlMember.hp + 2);
                     }
-                    msg(`⚪ 敵のホーリーライト！半径2全敵${_hlHits}体に${_hlDmg}ダメ！自身HP+2！`);
+                    let _hlWMember = cpu.sentaiMembers?.white;
+                    let _hlWTag = _hlWMember ? `HP${_hlWMember.hp}/${_hlWMember.maxHp} ` : '';
+                    msg(`⚪ホワイト[${_hlWTag}] 敵のホーリーライト！半径2全敵${_hlHits}体に${_hlDmg}ダメ！自身HP+2！`);
                     attacked = true; cpu.ap--;
                 }
 
@@ -10737,7 +10739,11 @@ function cpuLogic() {
                             cpu.hp = Math.min(cpu.maxHp, cpu.hp + 1);
                             _taRevMsg = ` ${_taDInfo.icon}${_taDInfo.name}復活HP1！`;
                         }
-                        msg(`🤝 敵が暗黙の了解！${playerMain.name}AP-2！前方岩${_taRocks.length}個設置！${_taRevMsg}`);
+                        let _taCurCol = cpu.activeMember || 'red';
+                        let _taCurInfo = SENTAI_COLOR_INFO[_taCurCol];
+                        let _taCurMember = cpu.sentaiMembers?.[_taCurCol];
+                        let _taTag = _taCurInfo && _taCurMember ? `${_taCurInfo.icon}${_taCurInfo.name}[HP${_taCurMember.hp}/${_taCurMember.maxHp}] ` : '';
+                        msg(`🤝 ${_taTag}敵が暗黙の了解！${playerMain.name}AP-2！前方岩${_taRocks.length}個設置！${_taRevMsg}`);
                         attacked = true; cpu.ap--;
                     }
                 }
@@ -10751,8 +10757,14 @@ function cpuLogic() {
                         let _drPrev = p.hp;
                         p.hp -= _drDmg; p.ap = Math.max(0, p.ap - 2);
                         if (p.sentaiMembers) sentaiProcessDamage(p, _drPrev);
-                        msg(`⚫ 敵のダークリベンジ！${p.name}に${_drDmg}ダメ+AP-2！`);
-                    } else { msg(`⚫ 敵のダークリベンジ！しかし${p.name}は防いだ！`); }
+                        let _drBMember = cpu.sentaiMembers?.black;
+                        let _drBTag = _drBMember ? `[HP${_drBMember.hp}/${_drBMember.maxHp}] ` : '';
+                        msg(`⚫ブラック${_drBTag}敵のダークリベンジ！${p.name}に${_drDmg}ダメ+AP-2！`);
+                    } else {
+                        let _drBMember = cpu.sentaiMembers?.black;
+                        let _drBTag = _drBMember ? `[HP${_drBMember.hp}/${_drBMember.maxHp}] ` : '';
+                        msg(`⚫ブラック${_drBTag}敵のダークリベンジ！しかし${p.name}は防いだ！`);
+                    }
                     attacked = true; cpu.ap--;
                 }
 
@@ -10768,8 +10780,14 @@ function cpuLogic() {
                         let _gsRr = p.r+_gsDr, _gsRc = p.c+_gsDc;
                         if (_gsRr>=0&&_gsRr<SIZE&&_gsRc>=0&&_gsRc<SIZE&&isWalkable(_gsRr,_gsRc)&&!isNoRockZone(_gsRr,_gsRc)&&!entities.some(ev=>ev.hp>0&&ev.r===_gsRr&&ev.c===_gsRc)) board[_gsRr][_gsRc]='rock';
                         if (p.sentaiMembers) sentaiProcessDamage(p, _gsPrev);
-                        msg(`🟢 敵のガイアスマッシュ！${p.name}に${_gsDmg}ダメ+吹飛+岩設置！`);
-                    } else { msg(`🟢 敵のガイアスマッシュ！しかし${p.name}は防いだ！`); }
+                        let _gsGMember = cpu.sentaiMembers?.green;
+                        let _gsGTag = _gsGMember ? `[HP${_gsGMember.hp}/${_gsGMember.maxHp}] ` : '';
+                        msg(`🟢グリーン${_gsGTag}敵のガイアスマッシュ！${p.name}に${_gsDmg}ダメ+吹飛+岩設置！`);
+                    } else {
+                        let _gsGMember = cpu.sentaiMembers?.green;
+                        let _gsGTag = _gsGMember ? `[HP${_gsGMember.hp}/${_gsGMember.maxHp}] ` : '';
+                        msg(`🟢グリーン${_gsGTag}敵のガイアスマッシュ！しかし${p.name}は防いだ！`);
+                    }
                     attacked = true; cpu.ap--;
                 }
 
@@ -10782,8 +10800,14 @@ function cpuLogic() {
                         let _fbPrev = p.hp;
                         p.hp -= _fbDmg; knockback(p, 1, cpu);
                         if (p.sentaiMembers) sentaiProcessDamage(p, _fbPrev);
-                        msg(`🔴 敵のファイアバースト！${p.name}に${_fbDmg}ダメ+吹飛！`);
-                    } else { msg(`🔴 敵のファイアバースト！しかし${p.name}は防いだ！`); }
+                        let _fbRMember = cpu.sentaiMembers?.red;
+                        let _fbRTag = _fbRMember ? `[HP${_fbRMember.hp}/${_fbRMember.maxHp}] ` : '';
+                        msg(`🔴レッド${_fbRTag}敵のファイアバースト！${p.name}に${_fbDmg}ダメ+吹飛！`);
+                    } else {
+                        let _fbRMember = cpu.sentaiMembers?.red;
+                        let _fbRTag = _fbRMember ? `[HP${_fbRMember.hp}/${_fbRMember.maxHp}] ` : '';
+                        msg(`🔴レッド${_fbRTag}敵のファイアバースト！しかし${p.name}は防いだ！`);
+                    }
                     attacked = true; cpu.ap--;
                 }
 
@@ -10796,8 +10820,14 @@ function cpuLogic() {
                         let _abPrev = p.hp;
                         p.hp -= _abDmg; p.ap = Math.max(0, p.ap - 1);
                         if (p.sentaiMembers) sentaiProcessDamage(p, _abPrev);
-                        msg(`🔵 敵のアクアビーム！${p.name}に${_abDmg}ダメ+AP-1！`);
-                    } else { msg(`🔵 敵のアクアビーム！しかし${p.name}は防いだ！`); }
+                        let _abBMember = cpu.sentaiMembers?.blue;
+                        let _abBTag = _abBMember ? `[HP${_abBMember.hp}/${_abBMember.maxHp}] ` : '';
+                        msg(`🔵ブルー${_abBTag}敵のアクアビーム！${p.name}に${_abDmg}ダメ+AP-1！`);
+                    } else {
+                        let _abBMember = cpu.sentaiMembers?.blue;
+                        let _abBTag = _abBMember ? `[HP${_abBMember.hp}/${_abBMember.maxHp}] ` : '';
+                        msg(`🔵ブルー${_abBTag}敵のアクアビーム！しかし${p.name}は防いだ！`);
+                    }
                     attacked = true; cpu.ap--;
                 }
             }
