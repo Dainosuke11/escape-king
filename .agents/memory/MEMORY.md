@@ -1,3 +1,4 @@
 - [Escape the King board geometry](escape-king-board.md) — fixed 21x21 coords; stage layouts & interdependent BRIDGE_TILE_MAP/cable rules.
 - [Escape the King online/ranked](escape-king-online.md) — WebSocket relay (not server-authoritative); client-side rank/RP; room/resume/queue-timer/state-sync contract.
 - [Escape the King sennin job](escape-king-sennin.md) — gauge system, element alternation, ability/skill handlers, sentai item restriction.
+- [Escape the King new character checklist](escape-king-new-char-checklist.md) — all 4 job-select dropdowns + JOB_DATA/ALL_JOBS/etc. must be updated together every time.
