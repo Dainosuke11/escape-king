@@ -1196,7 +1196,15 @@ const ABILITY_NAMES = {
     kyoshin_tankai: '虚心坦懐(直線5/威4/水/吹飛/G1消費)',
     meikyo_shisui: '明鏡止水(1T無敵/AP+1/G+1/敵r2AP-2+4封印)',
     banzai_jiai: '万物慈愛(r1/5吹飛/威3/連鎖3/水/G+1)',
-    seisei_ruten: '生々流転(狼+隼+岩召喚/2T消滅/5T~/G+1)'
+    seisei_ruten: '生々流転(狼+隼+岩召喚/2T消滅/5T~/G+1)',
+    flutter: '🧚羽ばたき(ダッシュ/通過マス→森)',
+    gremlin_trick: '👾グレムリンのイタズラ(召喚/自闇属性/5T~/次T消滅)',
+    gnome_hammer: '🔨ノームの木槌(r1/1ダメ+転送r3+4封印+罠/自草属性)',
+    greenman_arrow: '🌿グリーンマンの毒矢(直線5/2ダメ+毒/自草属性)',
+    redcap_scythe: '🪓レッドキャップの鎌(r1全体/2ダメ+吹飛/自炎属性)',
+    siren_song: '🎵セイレーンの歌声(r5/1ダメ+守護者召喚/自水属性)',
+    pixie_illusion: '✨ピクシーの幻惑(r2全体/ゲージ0+1ダメ+AP-1+4封印/自光属性)',
+    swap_position: '🔄位置替え(r8/敵味方入れ替え/敵1ダメAP-1/味方HP+1)'
 };
 
 const ABILITY_TIPS = {
@@ -1396,6 +1404,14 @@ const ABILITY_TIPS = {
     robot_head: '半径3マス以内の敵のAP-1+ランダム5種アビリティ1T封印。ロボット版は射程5。',
     robot_cannon: '半径5マス以内の敵に5ダメ+後方吹き飛ばし。隣接敵にも2ダメ。JP2消費。ロボット版は射程7・威力7・隣接4ダメ・消費なし。',
     nail_gun: '半径3マス以内の敵に3ダメ+AP-1+後方吹き飛ばし。',
+    flutter: '🧚 羽ばたき移動。ダッシュと同じ距離で移動し、通過した全マスを森マスに変える。回数5。',
+    gremlin_trick: '👾 グレムリンを隣接マスに召喚。召喚中は敵の陣地突破勝利が無効化される。自身が闇属性になる。5ターン目以降に発動可能。グレムリンは次のターン開始時に消滅。消滅時に敵がゴール地点にいると即座に敵勝利。回数5。',
+    gnome_hammer: '🔨 半径1マス内の敵に木属性1ダメ。その敵を後方半径3マスのランダムな空きマスに転送し、4種アビリティを1T封印。元の場所に罠を設置。自身が木属性になる。回数5。',
+    greenman_arrow: '🌿 直線5マスの敵1体に木属性2ダメ＋毒付与。自身が木属性になる。回数5。',
+    redcap_scythe: '🪓 半径1マス内の全敵に炎属性2ダメ＋後方吹き飛ばし。自身が炎属性になる。回数5。',
+    siren_song: '🎵 半径5マス内の敵1体に水属性1ダメ。命中した敵の隣接マスに「森の守護者」(紫コマ)を召喚。自身が水属性になる。回数5。',
+    pixie_illusion: '✨ 忘れ粉を振りまく。自身に1T無敵バリア。半径2マス内の全コマのゲージ・レベル類(ウォーターゲージ・植物レベル・魂等)をリセット。全敵に光属性1ダメ＋AP-1＋4種アビリティ1T封印。自身が光属性になる。回数5。',
+    swap_position: '🔄 半径8マス内の敵または味方と位置を入れ替える。味方なら＋HP+1。敵なら闇属性1ダメ＋AP-1。回数無限。',
     fire_burst: '🔴レッドの技。半径2マス内の敵1体に火属性2ダメ+吹き飛ばし。回数5。',
     aqua_beam: '🔵ブルーの技。直線4マスの敵1体に水属性3ダメ+AP-1。回数5。',
     gaia_smash: '🟢グリーンの技。隣接した敵に草属性3ダメ+吹き飛ばし+背後に岩設置。回数5。',
@@ -1428,7 +1444,8 @@ const JOB_DATA = {
     mafia:   { name: 'マフィア', abilities: { drop_rock: 999, shatter: 3, tail_cut: 5, pistol: 6, penance: 1, snipe: 1, backroom_deal: 3, debt_note: 3, torture_mafia: 3, extortion: 3 }, hp: 30, ap: 2, mafiaUnit: true },
     dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 10, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1 }, hp: 30, ap: 2, dwarfUnit: true },
     sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 },
-    sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true }
+    sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true },
+    pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true }
 };
 
 const ELEMENT_DATA = {
@@ -1446,7 +1463,7 @@ const JOB_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light',
 };
 
 const NPC_ELEMENT = {
@@ -1458,6 +1475,8 @@ const NPC_ELEMENT = {
     skeleton: 'dark', skeleton_soldier: 'dark', necro_chimera: 'dark',
     skull: 'dark', fox_fire: 'dark', oni_crow: 'dark',
     oni_snake: 'dark', blue_oni: 'dark', red_oni: 'dark', great_oni: 'dark',
+    gremlin: 'dark', forest_guardian: 'grass',
+    pixie_fairy: 'light', gnome_npc: 'grass', greenman_npc: 'grass', redcap_npc: 'fire', siren_npc: 'water',
 };
 
 const ABILITY_ELEMENT = {
@@ -1468,6 +1487,9 @@ const ABILITY_ELEMENT = {
     branch_whip: 'grass', plant_wall: 'grass', seed_bazooka: 'grass',
     root_spread: 'grass', healing_flute: 'grass', charge_order: 'grass',
     wolf_summon: 'grass', falcon_summon: 'grass', tame: 'grass', beast_fuse: 'grass',
+    flutter: 'light', greenman_arrow: 'grass', gnome_hammer: 'grass',
+    redcap_scythe: 'fire', siren_song: 'water', pixie_illusion: 'light',
+    swap_position: 'dark',
     light_whip: 'light', bind_arrow: 'light', light_bind: 'light',
     light_barrier: 'light', royal_dignity: 'light', scales: 'light',
     balance_adjust: 'light', mediation_judgment: 'light', harmonious_prayer: 'light',
@@ -1498,7 +1520,7 @@ const JOB_SKILL_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -1523,6 +1545,7 @@ const JOB_SKILL_NAMES = {
     mandrake:      '根っこバインド',
     ryujin:        'ドラゴンインパクト',
     shark_warrior: 'ハイドロポンプ',
+    pixie:         '妖精の里',
     clown:         '棺桶ナイフ',
     necromancer:   '霊魂放出',
     angel:         '堕天',
@@ -1559,6 +1582,7 @@ const JOB_GUIDE_META = {
     dwarf:         { emoji: '⚙️', fullName: 'ドワーフエンジニア', note: '【JP：ジャンクポイント】岩砕き/素材集めで増加。パーツ製造・タレット建設・キャノンで消費\n★スキル「合体」：全5パーツ∞が揃うと使用可能。半径1にドワーフロボ(HP25/AP2)召喚。撃破時JP+10・アビリティ初期化' },
     sentai_hero:   { emoji: '🦸', fullName: '戦隊ヒーロー', note: '【5人チーム】レッド🔴ブルー🔵グリーン🟢ホワイト⚪ブラック⚫\n各隊員HP6、合計HP30を共有。隊員が倒れると担当アビリティが封印される。\n「暗黙の了解」で死亡隊員を復活可。\n★スキル「合体必殺技」：生存隊員×2の威力で幅3×深さ7AoE発射！' },
     sennin:        { emoji: '🧘', fullName: '仙人', note: '【仙人ゲージ】AP温存でゲージ増加。ゲージ消費技に必要。\n属性は草と水を1ターンごとに交替(奇数ターン=水/偶数ターン=草)。\n「雲水行脚」でAP+2。スキル不使用で終えるとゲージ+4、使用でゲージ+1。\n★スキル「自然淘汰」：ゲージ全消費→消費量で半径2~8/威2~8のAoE。AP-2+吹飛+4封印。使用後ゲージ+3。' },
+    pixie:         { emoji: '🧚', fullName: 'ピクシー', note: '【イタズラ好きのトリックスター】光属性・飛行ユニット。\n技ごとに属性が変わる変幻自在の戦士。\n「グレムリンのイタズラ」：5T以降。グレムリン召喚中は敵の陣地突破勝利が無効化。\n「妖精の里」スキル：半径3マスに結界を張り6体の妖精を召喚。敵を封印・味方を守る。' },
 };
 
 const ENTITY_ICONS = {
@@ -1613,6 +1637,13 @@ const ENTITY_ICONS = {
     oni_crow:         '🐦',
     oni_snake:        '🐍',
     great_oni:        '👹',
+    gremlin:          '👾',
+    forest_guardian:  '🦌',
+    pixie_fairy:      '🧚',
+    gnome_npc:        '🔨',
+    greenman_npc:     '🌿',
+    redcap_npc:       '🪓',
+    siren_npc:        '🎵',
 };
 
 // ============================================================
@@ -2943,7 +2974,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -3919,6 +3950,21 @@ function processTurnStartEffects(e) {
         e.ap = Math.max(0, e.ap - e._sentaiSkillPenalty);
         msg(`🦸 合体必殺技後遺症！${e.name} AP-${e._sentaiSkillPenalty}！`, true);
         e._sentaiSkillPenalty = 0;
+    }
+    // グレムリン: turnBorn の次のターン開始時に消滅
+    if (e.type === 'gremlin' && e.turnBorn !== undefined && turn > e.turnBorn) {
+        // 消滅前に敵がゴール地点にいるか確認
+        let gremOwnerTeam = e.team;
+        let enemyTeam = gremOwnerTeam === 'player' ? 'cpu' : 'player';
+        let goalRow = enemyTeam === 'cpu' ? SIZE-1 : 0;
+        let enemyOnGoal = entities.some(x => x.hp>0 && x.team===enemyTeam && x.r===goalRow);
+        e.hp = 0;
+        msg(`👾 グレムリン消滅！${enemyOnGoal?'敵がゴール地点にいる！敵の勝利！':''}`, true);
+        if (enemyOnGoal) {
+            // 即時勝利チェックを呼ぶ（フラグでcheckWinに知らせる）
+            window._gremlinForcedWin = enemyTeam;
+        }
+        return;
     }
     // 仙人: 属性交替(奇数ターン=水/偶数ターン=草) + 雲水行脚ゲージボーナス + 生々流転召喚消滅
     if (e.type === 'sennin') {
@@ -5930,6 +5976,22 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'banzai_jiai') return maxDist===1 && target && target.team!==se.team;
     if (mode === 'seisei_ruten') return maxDist === 0;
     if (mode === 'skill_sennin_tota') return maxDist === 0;
+    // ピクシー
+    if (mode === 'flutter') {
+        let canPhaseF = se.flying || se.invin;
+        if (canPhaseF) return dist>0 && dist<=4 && isWalkable(r,c,true);
+        if (dist===0||dist>4) return false;
+        if (!isWalkable(r,c)) return false;
+        return true;
+    }
+    if (mode === 'gremlin_trick') { if (turn < 5) return false; return maxDist===1 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c); }
+    if (mode === 'gnome_hammer') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'greenman_arrow') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'redcap_scythe') return maxDist===0;
+    if (mode === 'siren_song') return maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'pixie_illusion') return maxDist===0;
+    if (mode === 'swap_position') return maxDist>0 && maxDist<=8+(se.rangeBonus||0) && target;
+    if (mode === 'skill_fairy_village') return maxDist===0;
     return false;
 }
 
@@ -9893,6 +9955,69 @@ function executeSkill(se) {
         se.senninGauge = 0;
         actionMode = 'skill_sennin_tota'; render(); return false;
     }
+    // ====== ピクシー スキル: 妖精の里 ======
+    if (se.type === 'pixie') {
+        const fvR = se.r, fvC = se.c;
+        const fvRange = 3;
+        // 半径3内の味方に1T無敵バリア
+        let fvAllied = 0;
+        entities.forEach(e => {
+            if (e.hp<=0 || e.team !== se.team) return;
+            if (Math.max(Math.abs(e.r-fvR), Math.abs(e.c-fvC)) > fvRange) return;
+            e.invin = true; e.invinTimer = Math.max(e.invinTimer||0, 1);
+            fvAllied++;
+        });
+        // 半径3内の敵にAP-1+4封印
+        let fvEnemyHit = 0;
+        entities.forEach(e => {
+            if (e.hp<=0 || e.team === se.team) return;
+            if (Math.max(Math.abs(e.r-fvR), Math.abs(e.c-fvC)) > fvRange) return;
+            if (e.invin) return;
+            e.ap = Math.max(0, (e.ap||0) - 1);
+            let fvKeys = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]>0||e.abilities[k]===999));
+            if (fvKeys.length > 0) sealAbilities(e, fvKeys.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            fvEnemyHit++;
+        });
+        // 6種の妖精NPCを召喚（グレムリン、レッドキャップ、セイレーン、ノーム、グリーンマン、ピクシー妖精）
+        const fvTypes = [
+            { type:'gremlin', name:'グレムリン', hp:1, abilities:{ swap_position:999 }, element:'dark', turnBorn: turn },
+            { type:'redcap_npc', name:'レッドキャップ', hp:1, abilities:{ redcap_scythe:3 }, element:'fire' },
+            { type:'siren_npc', name:'セイレーン', hp:1, abilities:{ siren_song:3 }, element:'water' },
+            { type:'gnome_npc', name:'ノーム', hp:1, abilities:{ gnome_hammer:3 }, element:'grass' },
+            { type:'greenman_npc', name:'グリーンマン', hp:1, abilities:{ greenman_arrow:3 }, element:'grass' },
+            { type:'pixie_fairy', name:'ピクシー妖精', hp:1, abilities:{ flutter:3 }, element:'light' },
+        ];
+        let fvSpawned = 0;
+        // 隣接マスを探して配置
+        let fvCands = [];
+        for (let dr=-fvRange; dr<=fvRange; dr++) for (let dc=-fvRange; dc<=fvRange; dc++) {
+            let nr=fvR+dr, nc=fvC+dc;
+            if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            if (!isWalkable(nr,nc)) continue;
+            if (entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) continue;
+            fvCands.push({r:nr,c:nc});
+        }
+        fvCands.sort(()=>Math.random()-0.5);
+        fvTypes.forEach((ft, i) => {
+            if (i >= fvCands.length) return;
+            let pos = fvCands[i];
+            entities.push({
+                id: `fv_${ft.type}_${Date.now()}_${i}`, type: ft.type, name: ft.name,
+                team: se.team, r: pos.r, c: pos.c,
+                hp: ft.hp, maxHp: ft.hp, ap: 1, maxAp: 1,
+                abilities: ft.abilities, initialAbilities: {...ft.abilities},
+                skillUsed: true, stealth: false, stealthTimer: 0,
+                invin: false, invinTimer: 0, poisonTimer: 0,
+                element: ft.element,
+                ...(ft.turnBorn !== undefined ? {turnBorn: ft.turnBorn} : {})
+            });
+            fvSpawned++;
+        });
+        msg(`🧚 妖精の里！半径${fvRange}の味方${fvAllied}体に1T無敵バリア！敵${fvEnemyHit}体にAP-1+4封印！妖精${fvSpawned}体召喚！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return true;
+    }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
     if (se.type === 'world_manager') {
         if (turn < 5) { msg(`⚖️ 世界の作り直し：ゲーム開始から5ターン以降でないと使用できない！(現在${turn}ターン)`); return false; }
@@ -10158,6 +10283,185 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.skillUsed = true;
         delete se._senninSkillGauge;
         msg(`🧘 自然淘汰発動！半径${_sr2}・威力${_sd2}・AP-2・吹飛・4封印(命中${_stHits}体)！使用後ゲージ+3(${se.senninGauge})！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    // ====== ピクシー アビリティ ======
+    if (mode === 'flutter') {
+        // ダッシュ移動 + 通過マスを森に変換
+        let fStepR = Math.sign(targetR - se.r);
+        let fStepC = Math.sign(targetC - se.c);
+        let fDist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
+        let fForest = 0;
+        const forestTiles = ['plains','desert','graveyard_ground','nighttown_ground','castle_tile','mountain_tile','snow','lava_ground','arena_floor','lake_ground','dungeon_ground','fortress_floor','swamp_tile','factory_conveyor','factory_skip_1','factory_skip_2','volcano_summit_ground','skyfort_bridge'];
+        for (let fi = 1; fi <= fDist; fi++) {
+            let fR = se.r + fStepR * fi; let fC = se.c + fStepC * fi;
+            if (fi < fDist && forestTiles.includes(board[fR]?.[fC]) && !entities.some(e=>e.hp>0&&e.r===fR&&e.c===fC)) {
+                board[fR][fC] = 'forest'; fForest++;
+            }
+        }
+        se.r = targetR; se.c = targetC;
+        useAbility(se, mode);
+        msg(`🧚 羽ばたき！${fForest}マスを森に変えながら飛んだ！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'gremlin_trick') {
+        // グレムリン召喚 + 自分が闇属性に
+        const gId = `gremlin_${Date.now()}`;
+        entities.push({
+            id: gId, type: 'gremlin', name: 'グレムリン', team: se.team,
+            r: targetR, c: targetC, hp: 2, maxHp: 2, ap: 1, maxAp: 1,
+            abilities: { swap_position: 999 }, initialAbilities: { swap_position: 999 },
+            skillUsed: false, stealth: false, stealthTimer: 0,
+            invin: false, invinTimer: 0, poisonTimer: 0,
+            element: 'dark', turnBorn: turn
+        });
+        se.element = 'dark';
+        useAbility(se, mode);
+        msg(`👾 グレムリン召喚！敵の陣地突破勝利が無効化される！次ターン開始時に消滅。自身が闇属性に！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'gnome_hammer') {
+        const ghTarget = entities.find(e => e.hp>0 && e.r===targetR && e.c===targetC && e.team!==se.team);
+        if (ghTarget && !ghTarget.invin) {
+            const ghOrigR = ghTarget.r, ghOrigC = ghTarget.c;
+            ghTarget.hp -= 1 + (se.atkBonus||0);
+            if (ghTarget.hp > 0) {
+                // 後方半径3のランダム空きマスに転送
+                let ghCands = [];
+                for (let dr=-3; dr<=3; dr++) for (let dc=-3; dc<=3; dc++) {
+                    let nr=ghOrigR+dr, nc=ghOrigC+dc;
+                    if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+                    if (!isWalkable(nr,nc)) continue;
+                    if (entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc)) continue;
+                    ghCands.push({r:nr,c:nc});
+                }
+                if (ghCands.length > 0) {
+                    let ghDst = ghCands[Math.floor(Math.random()*ghCands.length)];
+                    ghTarget.r = ghDst.r; ghTarget.c = ghDst.c;
+                }
+                // 4種封印
+                let ghKeys = Object.keys(ghTarget.abilities||{}).filter(k=>k!=='drop_rock'&&(ghTarget.abilities[k]>0||ghTarget.abilities[k]===999));
+                if (ghKeys.length > 0) sealAbilities(ghTarget, ghKeys.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            }
+            // 元の場所に罠
+            if (isWalkable(ghOrigR, ghOrigC)) { board[ghOrigR][ghOrigC] = 'trap'; trapOwnerMap[`${ghOrigR},${ghOrigC}`] = se.team; }
+            msg(`🔨 ノームの木槌！1ダメ+転送+4封印+罠設置！`);
+        }
+        se.element = 'grass';
+        useAbility(se, mode);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'greenman_arrow') {
+        const gaTarget = entities.find(e => e.hp>0 && e.r===targetR && e.c===targetC && e.team!==se.team);
+        if (gaTarget && !gaTarget.invin) {
+            gaTarget.hp -= 2 + (se.atkBonus||0);
+            applyPoison(gaTarget, 1);
+            msg(`🌿 グリーンマンの毒矢！2ダメ+毒！`);
+        }
+        se.element = 'grass';
+        useAbility(se, mode);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'redcap_scythe') {
+        let rcHits = 0;
+        entities.filter(e => e.hp>0 && e.team!==se.team && Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1).forEach(e => {
+            if (e.invin) return;
+            e.hp -= 2 + (se.atkBonus||0);
+            knockback(e, 1, se); rcHits++;
+        });
+        se.element = 'fire';
+        useAbility(se, mode);
+        msg(`🪓 レッドキャップの鎌！半径1全敵${rcHits}体に2ダメ+吹き飛ばし！自身が炎属性に！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'siren_song') {
+        const ssTarget = entities.find(e => e.hp>0 && e.r===targetR && e.c===targetC && e.team!==se.team);
+        if (ssTarget && !ssTarget.invin) {
+            ssTarget.hp -= 1 + (se.atkBonus||0);
+            // 隣接空きマスに forest_guardian 召喚
+            const ssAdj = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+            let ssSpawned = false;
+            for (let [dr,dc] of ssAdj) {
+                let sr=ssTarget.r+dr, sc=ssTarget.c+dc;
+                if (sr<0||sr>=SIZE||sc<0||sc>=SIZE) continue;
+                if (!isWalkable(sr,sc)) continue;
+                if (entities.some(e=>e.hp>0&&e.r===sr&&e.c===sc)) continue;
+                entities.push({
+                    id: `fg_${Date.now()}`, type: 'forest_guardian', name: '森の守護者', team: se.team,
+                    r: sr, c: sc, hp: 6, maxHp: 6, ap: 2, maxAp: 2,
+                    abilities: { tackle: 3 }, initialAbilities: { tackle: 3 },
+                    skillUsed: false, stealth: false, stealthTimer: 0,
+                    invin: false, invinTimer: 0, poisonTimer: 0, element: 'grass'
+                });
+                ssSpawned = true; break;
+            }
+            msg(`🎵 セイレーンの歌声！1ダメ${ssSpawned?'＋森の守護者召喚！':''}！`);
+        }
+        se.element = 'water';
+        useAbility(se, mode);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'pixie_illusion') {
+        // 自身に無敵1T
+        se.invin = true; se.invinTimer = 1;
+        se.element = 'light';
+        // 半径2マス全コマのゲージ類リセット + 全敵に効果
+        let piHits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0) return;
+            if (Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c)) > 2) return;
+            // ゲージリセット
+            if (e.waterGauge !== undefined) e.waterGauge = 0;
+            if (e.senninGauge !== undefined) e.senninGauge = 0;
+            if (e.mafiaGauge !== undefined) e.mafiaGauge = 0;
+            if (e.fallenGauge !== undefined) e.fallenGauge = 0;
+            if (e.plantLevel !== undefined) e.plantLevel = 0;
+            if (e.junkPoint !== undefined) e.junkPoint = 0;
+            if (e.soulCount !== undefined) e.soulCount = 0;
+            if (e.team !== se.team && !e.invin) {
+                e.hp -= 1 + (se.atkBonus||0);
+                e.ap = Math.max(0, (e.ap||0) - 1);
+                let piKeys = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]>0||e.abilities[k]===999));
+                if (piKeys.length > 0) sealAbilities(e, piKeys.sort(()=>Math.random()-0.5).slice(0,4), 1);
+                piHits++;
+            }
+        });
+        useAbility(se, mode);
+        msg(`✨ ピクシーの幻惑！自身1T無敵＋半径2全コマゲージリセット＋全敵${piHits}体に1ダメ+AP-1+4封印！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    if (mode === 'swap_position') {
+        const swTarget = entities.find(e => e.hp>0 && e.r===targetR && e.c===targetC);
+        if (swTarget) {
+            const swOldR = se.r, swOldC = se.c;
+            se.r = swTarget.r; se.c = swTarget.c;
+            swTarget.r = swOldR; swTarget.c = swOldC;
+            if (swTarget.team !== se.team && !swTarget.invin) {
+                swTarget.hp -= 1 + (se.atkBonus||0);
+                swTarget.ap = Math.max(0, (swTarget.ap||0) - 1);
+                msg(`🔄 位置替え！敵と位置を入れ替え！1ダメ+AP-1！`);
+            } else if (swTarget.team === se.team) {
+                swTarget.hp = Math.min(swTarget.maxHp||99, (swTarget.hp||0) + 1);
+                msg(`🔄 位置替え！味方と位置を入れ替え！HP+1！`);
+            }
+        }
+        // swap_position uses are infinite, don't call useAbility
         checkWin(); render(); updateUI();
         if (isOnlineMode) syncState();
         return;
@@ -10759,6 +11063,59 @@ function cpuLogic() {
                 }
             }
             return false;
+        }
+
+        // === GREMLIN (cpu team): swap_position with nearest enemy ===
+        if (cpu.type === 'gremlin') {
+            let gTargets = entities.filter(e=>e.hp>0&&e.team!==cpu.team&&!JOB_DATA[e.type]===false).sort((a,b)=>Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c)));
+            if (gTargets.length > 0 && Math.max(Math.abs(cpu.r-gTargets[0].r),Math.abs(cpu.c-gTargets[0].c)) <= 8) {
+                let gt = gTargets[0];
+                let or=cpu.r,oc=cpu.c; cpu.r=gt.r; cpu.c=gt.c; gt.r=or; gt.c=oc;
+                if (!gt.invin) { gt.hp -= 1; gt.ap = Math.max(0,(gt.ap||0)-1); }
+                msg(`👾 グレムリンが${gt.name}と位置替え！1ダメ+AP-1！`,true);
+            } else {
+                // 移動
+                if (gTargets.length > 0) {
+                    let path=findPath(cpu.r,cpu.c,gTargets[0].r,gTargets[0].c);
+                    if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)){cpu.r=path[0].r;cpu.c=path[0].c;}
+                }
+            }
+            cpu.ap--;
+            checkWin(); render(); setTimeout(cpuLogic, 100); return;
+        }
+
+        // === FOREST_GUARDIAN (cpu team): tackle nearest enemy ===
+        if (cpu.type === 'forest_guardian') {
+            let fgTargets = targets.sort((a,b)=>Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c)));
+            if (fgTargets.length > 0) {
+                let ft = fgTargets[0];
+                let fgD = Math.max(Math.abs(cpu.r-ft.r),Math.abs(cpu.c-ft.c));
+                if (fgD <= 1 && !ft.invin) {
+                    ft.hp -= 3; knockback(ft, 1, cpu);
+                    msg(`🦌 森の守護者のタックル！3ダメ+吹き飛ばし！`,true);
+                } else {
+                    let path=findPath(cpu.r,cpu.c,ft.r,ft.c);
+                    if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)){cpu.r=path[0].r;cpu.c=path[0].c;}
+                }
+            }
+            cpu.ap--;
+            checkWin(); render(); setTimeout(cpuLogic, 100); return;
+        }
+
+        // === PIXIE FAIRY NPCs (cpu team): simple melee or ability attack ===
+        if (['pixie_fairy','redcap_npc','siren_npc','gnome_npc','greenman_npc'].includes(cpu.type)) {
+            let fTargets = targets.sort((a,b)=>Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c)));
+            if (fTargets.length > 0) {
+                let ft = fTargets[0];
+                let fd = Math.max(Math.abs(cpu.r-ft.r),Math.abs(cpu.c-ft.c));
+                if (fd <= 1 && !ft.invin) { ft.hp -= 1; msg(`${cpu.name}の攻撃！1ダメ！`,true); }
+                else {
+                    let path=findPath(cpu.r,cpu.c,ft.r,ft.c);
+                    if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)){cpu.r=path[0].r;cpu.c=path[0].c;}
+                }
+            }
+            cpu.ap--;
+            checkWin(); render(); setTimeout(cpuLogic, 100); return;
         }
 
         if (targets.length > 0) {
@@ -11600,6 +11957,34 @@ function npcLogic() {
             n.ap = 0; checkWin(); render(); setTimeout(npcLogic, 100); return;
         }
 
+        // === GREMLIN (npc team): swap_position with nearest non-npc ===
+        if (n.type === 'gremlin') {
+            let gTgts = entities.filter(e=>e.hp>0&&e.team!=='npc'&&e.team!=='vehicle').sort((a,b)=>Math.max(Math.abs(n.r-a.r),Math.abs(n.c-a.c))-Math.max(Math.abs(n.r-b.r),Math.abs(n.c-b.c)));
+            if (gTgts.length>0 && Math.max(Math.abs(n.r-gTgts[0].r),Math.abs(n.c-gTgts[0].c))<=8) {
+                let gt=gTgts[0], or=n.r, oc=n.c;
+                n.r=gt.r; n.c=gt.c; gt.r=or; gt.c=oc;
+                if (!gt.invin) { gt.hp-=1; gt.ap=Math.max(0,(gt.ap||0)-1); }
+                msg(`👾 グレムリンが${gt.name}と位置替え！1ダメ+AP-1！`,true);
+            } else if (gTgts.length>0) {
+                let path=findPath(n.r,n.c,gTgts[0].r,gTgts[0].c);
+                if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)){n.r=path[0].r;n.c=path[0].c;}
+            }
+            n.ap--;
+            checkWin(); render(); setTimeout(npcLogic, 100); return;
+        }
+
+        // === FOREST_GUARDIAN (npc team): tackle nearest non-npc ===
+        if (n.type === 'forest_guardian') {
+            let fgTgts = entities.filter(e=>e.hp>0&&e.team!=='npc'&&e.team!=='vehicle').sort((a,b)=>Math.max(Math.abs(n.r-a.r),Math.abs(n.c-a.c))-Math.max(Math.abs(n.r-b.r),Math.abs(n.c-b.c)));
+            if (fgTgts.length>0) {
+                let ft=fgTgts[0], fgD=Math.max(Math.abs(n.r-ft.r),Math.abs(n.c-ft.c));
+                if (fgD<=1 && !ft.invin) { ft.hp-=3; knockback(ft,1,n); msg(`🦌 森の守護者のタックル！3ダメ+吹き飛ばし！`,true); }
+                else { let path=findPath(n.r,n.c,ft.r,ft.c); if(path&&path.length>0&&isWalkable(path[0].r,path[0].c)){n.r=path[0].r;n.c=path[0].c;} }
+            }
+            n.ap--;
+            checkWin(); render(); setTimeout(npcLogic, 100); return;
+        }
+
         // === SALAMANDER: walks on lava, moves toward nearest target ===
         if (n.type === 'salamander') {
             let sTargets = entities.filter(e => e.team !== 'npc' && e.team !== 'vehicle' && e.hp > 0 && !e.stealth);
@@ -11884,6 +12269,18 @@ function checkWin() {
         cWin = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r >= SIZE-1) || pTrapped;
     }
 
+    // グレムリン強制勝利
+    if (window._gremlinForcedWin === 'cpu') { cWin = true; delete window._gremlinForcedWin; }
+    if (window._gremlinForcedWin === 'player') { pWin = true; delete window._gremlinForcedWin; }
+
+    // グレムリンによる陣地突破ブロック: 生存中のグレムリンがいる間は相手の突破勝利を無効
+    let playerGremlinAlive = entities.some(e => e.hp>0 && e.type==='gremlin' && e.team==='player');
+    let cpuGremlinAlive    = entities.some(e => e.hp>0 && e.type==='gremlin' && e.team==='cpu');
+    // player グレムリン生存 → cpu の陣地突破(cWin)を岩包囲以外では無効
+    if (playerGremlinAlive && cWin && !pTrapped) cWin = false;
+    // cpu グレムリン生存 → player の陣地突破(pWin)を岩包囲以外では無効
+    if (cpuGremlinAlive && pWin && !cTrapped) pWin = false;
+
     let isEnd = false;
     let title = "";
 
@@ -12043,6 +12440,8 @@ function isSkillConditionMet(se) {
     if (t === 'macho') return (se.dopingTimer||0) <= 0;
     // 仙人: 常時使用可能（ゲージ0でもスケール最小で発動）
     if (t === 'sennin') return true;
+    // ピクシー: 常時使用可能
+    if (t === 'pixie') return true;
     return false;
 }
 
