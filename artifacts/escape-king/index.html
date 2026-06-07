@@ -2754,10 +2754,25 @@ function joinRoom() {
 
 // ---- CPU fallback helpers ----
 function getCpuFallbackConfig(rank) {
-    if (rank <= 2) return { diff: 1, cpuCount: 1 };
-    if (rank <= 4) return { diff: 2, cpuCount: 1 };
-    if (rank <= 7) return { diff: 3, cpuCount: 2 };
-    return { diff: 4, cpuCount: 3 };
+    // diff = total CPUs desired (used for addExtraEnemies spawn count)
+    // cpuCount = CPU units to keep after trim (must equal diff here — we
+    //   then trim extras to hit cpuCount, keeping diff as the AI budget)
+    // hpMult / apBonus = stat boosts applied to CPU units for real difficulty scaling
+    if (rank <= 2) return { diff: 1, cpuCount: 1, hpMult: 1.0, apBonus: 0 };
+    if (rank <= 4) return { diff: 2, cpuCount: 1, hpMult: 1.3, apBonus: 1 };
+    if (rank <= 7) return { diff: 3, cpuCount: 2, hpMult: 1.5, apBonus: 1 };
+    return { diff: 4, cpuCount: 3, hpMult: 1.7, apBonus: 2 };
+}
+
+// Apply post-init difficulty stat boosts to CPU units (call after initEntities + trim)
+function applyCpuDifficultyBoost(hpMult, apBonus) {
+    if (hpMult === 1.0 && apBonus === 0) return;
+    entities.filter(e => e.team === 'cpu').forEach(e => {
+        e.maxHp = Math.ceil(e.maxHp * hpMult);
+        e.hp = e.maxHp;
+        e.maxAp = (e.maxAp || e.ap) + apBonus;
+        e.ap = e.maxAp;
+    });
 }
 
 function computeCpuRankedRp(won, rank) {
@@ -2796,6 +2811,8 @@ function startCpuRankedMatch() {
             if (idx >= 0) entities.splice(idx, 1);
         }
     }
+    // Apply HP/AP difficulty boost independent of CPU count
+    applyCpuDifficultyBoost(hpMult, apBonus);
     showVictoryCondition(job);
 
     document.getElementById('online-lobby').style.display = 'none';
@@ -3015,10 +3032,19 @@ window.addEventListener('DOMContentLoaded', () => {
         const rematchStage = isCpuRankedMatch ? 'plains' : activeStage;
         initBoard(rematchStage);
         let pJob = entities.find(e => e.id === 'p1').type;
-        let difficulty = isCpuRankedMatch
-            ? String(getCpuFallbackConfig(getRank()).diff)
-            : document.getElementById('difficulty-select').value;
-        initEntities(pJob, difficulty);
+        if (isCpuRankedMatch) {
+            const cfg = getCpuFallbackConfig(getRank());
+            initEntities(pJob, String(cfg.diff));
+            const extraEnts = entities.filter(e => e.id && e.id.startsWith('extra_job_'));
+            const toTrim = extraEnts.length - (cfg.cpuCount - 1);
+            for (let i = 0; i < toTrim; i++) {
+                const idx = entities.findIndex(e => e.id && e.id.startsWith('extra_job_'));
+                if (idx >= 0) entities.splice(idx, 1);
+            }
+            applyCpuDifficultyBoost(cfg.hpMult, cfg.apBonus);
+        } else {
+            initEntities(pJob, document.getElementById('difficulty-select').value);
+        }
         showVictoryCondition(pJob);
         turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
