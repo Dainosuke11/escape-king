@@ -471,6 +471,37 @@
             0%,100% { box-shadow: 0 0 0 4px rgba(230,126,34,0.5); }
             50%      { box-shadow: 0 0 0 10px rgba(230,126,34,0.15); }
         }
+        /* ===== Job Unit Burst Effect ===== */
+        @keyframes burst-core {
+            0%   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+            40%  { transform: translate(-50%,-50%) scale(3.2); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(4.5); opacity: 0; }
+        }
+        @keyframes burst-ring {
+            0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.9; border-width: 6px; }
+            100% { transform: translate(-50%,-50%) scale(3.5); opacity: 0;   border-width: 1px; }
+        }
+        @keyframes burst-particle {
+            0%   { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .burst-overlay { pointer-events: none; position: fixed; z-index: 9999; }
+        .burst-core {
+            position: absolute; top: 50%; left: 50%;
+            font-size: 2em; line-height: 1;
+            animation: burst-core 0.6s ease-out forwards;
+        }
+        .burst-ring {
+            position: absolute; top: 50%; left: 50%;
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 6px solid #ff4444;
+            box-sizing: border-box;
+            animation: burst-ring 0.6s ease-out forwards;
+        }
+        .burst-particle {
+            position: absolute; font-size: 1.1em; line-height: 1;
+            animation: burst-particle 0.8s ease-out forwards;
+        }
         /* ===== Turn Hint Bar ===== */
         #hint-bar {
             display: none; width: 100%;
@@ -2972,6 +3003,53 @@ function cancelRankedSearch() {
 }
 
 // ---- Per-turn 80s timer (online only) ----
+// ===== Job Unit Burst Effect =====
+let _burstPlayed = new Set();
+
+function burstEffect(r, c, emoji) {
+    const vr = (isOnlineMode && myPlayerIndex === 1) ? (SIZE - 1 - r) : r;
+    const tileEl = document.getElementById(`tile-${vr}-${c}`);
+    if (!tileEl) return;
+    const rect = tileEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'burst-overlay';
+    overlay.style.left = cx + 'px';
+    overlay.style.top  = cy + 'px';
+
+    // core emoji burst
+    const core = document.createElement('div');
+    core.className = 'burst-core';
+    core.textContent = emoji;
+    overlay.appendChild(core);
+
+    // shockwave ring
+    const ring = document.createElement('div');
+    ring.className = 'burst-ring';
+    overlay.appendChild(ring);
+
+    // scatter particles
+    const particles = ['💥','✨','💢','⚡','🌟'];
+    const angles = [0, 60, 120, 180, 240, 300];
+    angles.forEach((deg, i) => {
+        const p = document.createElement('div');
+        p.className = 'burst-particle';
+        p.textContent = particles[i % particles.length];
+        const rad = deg * Math.PI / 180;
+        const dist = 45 + Math.random() * 25;
+        p.style.left = (Math.cos(rad) * dist) + 'px';
+        p.style.top  = (Math.sin(rad) * dist) + 'px';
+        p.style.animationDuration = (0.6 + Math.random() * 0.4) + 's';
+        p.style.transform = `translate(-50%,-50%)`;
+        overlay.appendChild(p);
+    });
+
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 900);
+}
+
 function startTurnTimer(from) {
     stopTurnTimer();
     stopOpponentTimer();
@@ -3305,6 +3383,7 @@ function startGame() {
 }
 
 function initBoard(stageType) {
+    _burstPlayed = new Set();
     board = [];
     for (let i = 0; i < SIZE; i++) {
         let row = [];
@@ -10620,12 +10699,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
                     knockback(hit, 1, se);
                     hits++;
                 }
-                // 効果範囲を浅瀬マスに固定（deep_water化しない）
-                const skipTiles = ['sea_trench','deep_water','river','whirlpool','rock','volcano','mine','bridge_up','sky_void','fallen_floor','gravestone','vortex_tile'];
-                if (wr>=0&&wr<SIZE&&wc>=0&&wc<SIZE&&!skipTiles.includes(board[wr][wc])) {
-                    board[wr][wc] = 'shallow_water';
-                    waterHitsMap[wr+','+wc] = 0;
-                }
+                floodTile(wr, wc);
             }
         }
         se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + 5);
@@ -12846,6 +12920,18 @@ function checkWin() {
     let otherPlayerAlive = entities.some(e => e.team === 'player' && e.hp > 0 && e.id !== 'p1');
     let cpuJobDead = cpu && cpu.hp <= 0;
     let playerJobDead = player && player.hp <= 0;
+
+    // 撃破時の一度だけ破裂エフェクト
+    if (cpuJobDead && !_burstPlayed.has('c1') && cpu) {
+        _burstPlayed.add('c1');
+        const meta = JOB_GUIDE_META[cpu.type];
+        burstEffect(cpu.r, cpu.c, meta ? meta.emoji : '💀');
+    }
+    if (playerJobDead && !_burstPlayed.has('p1') && player) {
+        _burstPlayed.add('p1');
+        const meta = JOB_GUIDE_META[player.type];
+        burstEffect(player.r, player.c, meta ? meta.emoji : '💀');
+    }
 
     if (isOnlineMode) {
         // Online: frame from myPlayerIndex's perspective
