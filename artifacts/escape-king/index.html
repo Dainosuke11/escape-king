@@ -342,6 +342,19 @@
         #entity-info-panel .eip-name { font-weight:bold; color:#e74c3c; margin-bottom:4px; }
         #entity-info-panel .eip-stat { color:#ecf0f1; }
         #entity-info-panel .eip-ability { color:#95a5a6; font-size:11px; }
+        #sentai-member-panel { background:#12122a; border:1px solid #4a4a7a; border-radius:6px; padding:6px 8px; margin-bottom:8px; display:none; }
+        #sentai-member-panel .sm-title { color:#a8d8ea; font-size:11px; font-weight:bold; margin-bottom:5px; letter-spacing:1px; text-transform:uppercase; }
+        #sentai-member-panel .sm-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; font-size:12px; }
+        #sentai-member-panel .sm-row.dead { opacity:0.4; }
+        #sentai-member-panel .sm-icon { width:18px; text-align:center; flex-shrink:0; }
+        #sentai-member-panel .sm-name { width:52px; color:#ddd; flex-shrink:0; }
+        #sentai-member-panel .sm-dead-mark { color:#e74c3c; font-weight:bold; font-size:13px; }
+        #sentai-member-panel .sm-hp-text { width:30px; color:#e74c3c; font-size:11px; text-align:right; flex-shrink:0; }
+        #sentai-member-panel .sm-hp-bar { flex:1; height:6px; background:#2a2a40; border-radius:3px; overflow:hidden; }
+        #sentai-member-panel .sm-hp-fill { height:100%; border-radius:3px; transition:width 0.15s; }
+        #sentai-member-panel .sm-hp-fill.hp-high { background:#2ecc71; }
+        #sentai-member-panel .sm-hp-fill.hp-mid  { background:#f39c12; }
+        #sentai-member-panel .sm-hp-fill.hp-low  { background:#e74c3c; }
         .selected { box-shadow: 0 0 15px 5px #3498db !important; z-index: 15; transform: translate(-50%, -50%) scale(1.15) !important; border-color: #3498db; }
         
         .stealth { opacity: 0.5; border-style: dashed; }
@@ -728,6 +741,7 @@
                 <span>HP: <span id="ui-hp" style="color:#e74c3c;">-</span></span>
                 <span>属性: <span id="ui-element" style="color:#888;">-</span></span>
             </div>
+            <div id="sentai-member-panel"></div>
             <button class="btn" style="margin-bottom:15px; background: #2980b9;" id="btn-move">移動 / 決定 (AP 1)</button>
             <hr style="border: 1px solid #444; margin-bottom: 15px;">
             <div id="ability-list"></div>
@@ -11687,6 +11701,8 @@ function updateUI() {
         document.getElementById('ui-hp').innerText = "-";
         document.getElementById('ui-element').textContent = "-";
         document.getElementById('ui-element').style.color = '#888';
+        const _spEl = document.getElementById('sentai-member-panel');
+        if (_spEl) { _spEl.innerHTML = ''; _spEl.style.display = 'none'; }
         btnM.disabled = true;
         return;
     }
@@ -11709,6 +11725,37 @@ function updateUI() {
     } else {
         _uiElemSpan.textContent = '無';
         _uiElemSpan.style.color = '#888';
+    }
+
+    // 戦隊ヒーロー チームメンバーパネル（味方・敵どちらでも表示）
+    const _sentaiPanel = document.getElementById('sentai-member-panel');
+    if (selectedEntity.type === 'sentai_hero' && selectedEntity.sentaiMembers) {
+        let _spHtml = '<div class="sm-title">🦸 チームメンバー</div>';
+        SENTAI_COLOR_ORDER.forEach(col => {
+            const m = selectedEntity.sentaiMembers[col];
+            const info = SENTAI_COLOR_INFO[col];
+            if (!m) return;
+            const isDead = !m.alive;
+            const hpPct = isDead ? 0 : Math.max(0, Math.min(100, (m.hp / m.maxHp) * 100));
+            const fillCls = hpPct > 66 ? 'hp-high' : hpPct > 33 ? 'hp-mid' : 'hp-low';
+            const isActive = !isDead && selectedEntity.activeMember === col;
+            _spHtml += `<div class="sm-row${isDead ? ' dead' : ''}" title="${info.name}：HP ${m.hp}/${m.maxHp}">`;
+            _spHtml += `<span class="sm-icon">${info.icon}</span>`;
+            _spHtml += `<span class="sm-name" style="${isActive ? 'color:#ffe066;font-weight:bold;' : ''}">${info.name}${isActive ? '▶' : ''}</span>`;
+            if (isDead) {
+                _spHtml += `<span class="sm-dead-mark">✕</span>`;
+                _spHtml += `<div class="sm-hp-bar"><div class="sm-hp-fill hp-low" style="width:0%"></div></div>`;
+            } else {
+                _spHtml += `<span class="sm-hp-text">${m.hp}/${m.maxHp}</span>`;
+                _spHtml += `<div class="sm-hp-bar"><div class="sm-hp-fill ${fillCls}" style="width:${hpPct}%"></div></div>`;
+            }
+            _spHtml += `</div>`;
+        });
+        _sentaiPanel.innerHTML = _spHtml;
+        _sentaiPanel.style.display = 'block';
+    } else {
+        _sentaiPanel.innerHTML = '';
+        _sentaiPanel.style.display = 'none';
     }
 
     if (selectedEntity.team !== myTeam()) {
