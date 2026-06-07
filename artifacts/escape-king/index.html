@@ -6174,7 +6174,7 @@ function startTurn(team, skipEffects = false) {
             document.getElementById('turn-indicator').textContent = `Player's Turn (Turn: ${turn})`;
         }
         updateHintBar();
-        if (tutorialMode && tutorialStep === 6 && turn > 1) advanceTutorial();
+        if (tutorialMode && tutorialStep === 7 && turn > 1) advanceTutorial();
 
     } else if (team === 'cpu') {
         // playerターン終了→cpuターン開始：playerチームの残AP温存回復
@@ -10378,7 +10378,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         checkWin();
     }
     if (used) {
-        if (tutorialMode && tutorialStep === 3) advanceTutorial();
+        { const _ts = tutorialStep;
+          if (tutorialMode && _ts === 3) advanceTutorial();
+          else if (tutorialMode && _ts === 4 && actionMode === 'drop_rock') advanceTutorial();
+          else if (tutorialMode && _ts === 2 && actionMode === 'dash') advanceTutorial();
+          if (tutorialMode && _ts === 5 && targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) advanceTutorial(); }
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 魔法使い: 使ったアビリティ/スキルの属性に変化
@@ -11741,7 +11745,7 @@ function applyApRestRecovery(team) {
 
 function endTurn() {
     if (!canIAct()) return;
-    if (tutorialMode && tutorialStep === 5) advanceTutorial();
+    if (tutorialMode && tutorialStep === 6) advanceTutorial();
     selectedEntity = null;
     hideAbilityPreview();
     stopTurnTimer();
@@ -13999,93 +14003,63 @@ function hideAbilityPreview() {
 //  TUTORIAL SYSTEM
 // =====================================================================
 const TUTORIAL_STEPS = [
-    {
-        msg: '🎓 ようこそ！<br>これがゲームボードです。<br><br>あなたのコマ（青）は画面下側にいます。<br>まず<b>青いコマをクリック</b>して選択してみましょう。',
+    {   // Step 0: コマを選択
+        msg: '🎓 <b>ようこそ！「Escape the King」へ！</b><br><br>あなたのコマ（青）が画面の下側にいます。<br><br>まず<b>青いコマをクリック</b>して選択してみましょう！',
         highlight: 'board',
         advanceOn: 'entity_select',
     },
-    {
-        msg: '✅ コマを選択しました！<br><br><b>「移動/決定」ボタン</b>を押して移動モードにしてから、<br><b>目の前のマス（上側）をクリック</b>してコマを前に進めてみましょう。',
+    {   // Step 1: 1マス移動
+        msg: '✅ <b>コマを前に進めよう！</b><br><br>① <b>「移動/決定」ボタン</b>を押して移動モードにする<br>② <b>隣のマス（上側）をクリック</b>して1マス前進！<br><br>💡 APが許す限り1ターンに何度でも動けます。',
         highlight: 'btn-move',
         advanceOn: 'move',
     },
-    {
-        msg: '💨 <b>ダッシュで素早く移動しよう！</b><br><br>移動モード中に<b>2マス以上離れたマス</b>をクリックするとダッシュ移動ができます。<br>AP（行動ポイント）を1消費しますが、一気に距離を詰められます。<br><br>残りAPは画面のコマ情報エリアで確認できます。',
+    {   // Step 2: ダッシュ（インタラクティブ）
+        msg: '💨 <b>ダッシュで一気に駆け抜けよう！</b><br><br>「移動/決定」を押してから<b>2マス以上離れたマス</b>をクリックするとダッシュできます！<br>AP（行動力）を1消費して一気に距離を詰められます。<br><br>▶ やってみよう！',
         highlight: 'btn-move',
-        advanceOn: null,
+        advanceOn: 'dash',
     },
-    {
-        msg: '⚔️ <b>アビリティを使ってみよう！</b><br><br>コマを選択してから<b>アビリティボタン</b>を押して対象を選択してください。<br><br>💡 アビリティの種類（斬撃・魔法・召喚など）は<b>ジョブによって全て異なります</b>。ジョブ図鑑で詳細を確認できます！',
+    {   // Step 3: アビリティ（インタラクティブ）
+        msg: '⚔️ <b>アビリティを使ってみよう！</b><br><br>① コマを選択<br>② <b>アビリティボタン</b>を押して技を選ぶ<br>③ 対象マスをクリック<br><br>💡 ジョブごとに斬撃・魔法・召喚など全く違う技が使えます。<br><br>▶ 何でもいいので1つ使ってみよう！',
         highlight: 'btn-attack',
         advanceOn: 'ability_used',
     },
-    {
-        msg: '✨ <b>スキルを使ってみよう！</b><br><br>アビリティボタンを押すと複数の技が表示されます。<br>その中に<b>スキル（特殊技）</b>が含まれている場合があります。<br><br>🎯 スキルは1試合に1回しか使えない強力な必殺技です。<br>普通のアビリティと同じく使い方はジョブごとに全く異なります。<br>大事な場面で使いましょう！',
+    {   // Step 4: 岩落とし（インタラクティブ）
+        msg: '🪨 <b>岩を置いてみよう！</b><br><br>「岩落とし」は<b>999回使える</b>妨害の基本アビリティ。<br>好きなマスに岩を設置して敵の進路を塞ごう！<br><br>① アビリティボタン → <b>「岩落とし」</b>を選ぶ<br>② 任意のマスをクリック！<br><br>▶ 岩を1個置いてみよう！',
         highlight: 'btn-attack',
-        advanceOn: null,
+        advanceOn: 'drop_rock_used',
     },
-    {
-        msg: '🔚 <b>ターン終了をしよう！</b><br><br>行動が終わったら<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。',
+    {   // Step 5: 敵を撃破（インタラクティブ）
+        msg: '💥 <b>練習用の敵を倒そう！</b><br><br>近くに<b>練習ダミー（HP3）</b>を置きました。<br>アビリティで攻撃してHPを0にしてください！<br><br>撃破すると<b>HP回復・アビリティ強化</b>などの報酬が得られます。<br><br>▶ ダミーを撃破しよう！',
+        highlight: 'btn-attack',
+        advanceOn: 'enemy_defeated',
+    },
+    {   // Step 6: ターン終了（インタラクティブ）
+        msg: '🔚 <b>ターンを終了しよう！</b><br><br>行動が終わったら<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。<br><br>💡 APが残っていてもターン終了できます。温存するか使い切るかが戦略の鍵！<br><br>▶ ターン終了ボタンを押してみよう！',
         highlight: 'btn-end-turn',
         advanceOn: 'end_turn',
     },
-    {
-        msg: '⏳ 相手のターンです。<br><br>相手が動き終わるまで少し待ちましょう。<br>（自動で次のステップへ進みます）',
+    {   // Step 7: 相手ターン（自動進行）
+        msg: '⏳ <b>相手のターンです。</b><br><br>相手（CPU）が行動するまで待ちましょう。<br>（終わると自動で次へ進みます）<br><br>💡 相手の動きをよく観察して次の手を考えよう！',
         highlight: null,
         advanceOn: 'player_turn_again',
     },
-    {
-        msg: '⚔️ <b>敵を攻撃しよう！</b><br><br>隣接した敵コマにアビリティを使うとダメージを与えられます。<br>HP（❤️）が0になった敵コマは撃破されます。<br><br>「剣」「弓」「蹴り」など、ジョブごとに異なる攻撃技があります。',
+    {   // Step 8: 勝利条件
+        msg: '🏆 <b>勝利条件を覚えよう！</b><br><br>① 自分のコマが<b>敵の陣地（画面の反対側の端）に到達</b>すると勝利！<br>② 敵のメインコマの<b>HPを0にする</b>と勝利！<br><br>⚠️ 四方を岩に囲まれ、岩砕きが0のコマは<b>その場で敗北！</b><br>人斬り武者だけは「撃破のみ」で勝利します。<br><br>▶「次へ」で続きの説明を見よう',
         highlight: null,
         advanceOn: null,
     },
-    {
-        msg: '👾 <b>紫コマ（NPCモンスター）を倒そう！</b><br><br>ボード上には紫色のNPCモンスターが出現することがあります。<br>倒すと<b>アイテム・HP回復・追加アビリティ</b>などの報酬が得られます。<br><br>難易度を上げるほど強いNPCが増えます！',
+    {   // Step 9: ゲームシステム早わかり
+        msg: '🌍 <b>ゲームシステム早わかり！</b><br><br>⚡ <b>属性相性</b>：🔥火→🌿草→💧水→🔥 / ☀️光↔😈闇<br>&emsp;弱点属性で攻撃すると<b>ダメージ+1</b>！<br><br>🪙 <b>鉱山</b>：踏むと銅→銀→金→白金とグレードアップ！先取りが大事。<br><br>👾 <b>NPC（紫コマ）</b>：倒すとHP・アビリティ強化などの報酬あり。<br><br>🌲 <b>森</b>：停止すると姿を隠して敵から見えなくなる！<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
     },
-    {
-        msg: '⛏️ <b>鉱山（⛏️マス）を強化しよう！</b><br><br>鉱山マスを踏むと銅・銀・金・白金のお宝が獲得できます。<br>何度も踏むと<b>グレードアップ</b>して価値が上がります！<br><br>敵に先に取られないよう注意しましょう。',
+    {   // Step 10: 上級テクニック
+        msg: '🎯 <b>上級テクニック！</b><br><br>🪨 <b>岩崩れ大技</b>：敵の<b>上下左右4マスを岩で囲んで</b>さらに岩落としを使うと<b>30ダメージ</b>の大技発動！<br><br>🎯 <b>スキル</b>：1試合1回だけ使える必殺技。大事な場面に温存！<br><br>🌟 <b>ステージ属性ボーナス</b>：ステージと同属性のジョブを使うと<b>HP+5・アビリティ+1</b>！<br><br>🌉 <b>橋を渡る</b>：中央の橋を渡るとボーナス発生することも！<br><br>▶「次へ」でチュートリアル完了！',
         highlight: null,
         advanceOn: null,
     },
-    {
-        msg: '🎯 <b>中央突破ボーナスをもらおう！</b><br><br>ボードの中央（川・橋付近）を通過すると<b>crossBonusボーナス</b>が発生します。<br>中央の橋を素早く渡ることで有利なアビリティ強化が得られることも！',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🪨 <b>岩で敵の進路を邪魔しよう！</b><br><br>「岩落とし」アビリティを使うと任意のマスに岩を設置できます（999回使用可）。<br>敵の進路上に岩を置いて<b>進軍を妨害</b>しましょう！<br><br>橋の前に置くと特に効果的です。',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🪨 <b>敵の四方を囲んで頭上に岩を落とそう！</b><br><br>「岩落とし」で敵コマの<b>上下左右4マスに岩を置いてから「岩落とし」をもう1回</b>使うと――<br>敵の頭上に岩崩れが発生し<b>30ダメージ</b>の大技が炸裂！<br><br>💡 敵を動けなくしてから一気に決めるのがコツです。',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '💥 <b>邪魔な岩は岩砕きで除去！</b><br><br>自分の進路を塞ぐ岩には「岩砕き」アビリティを使いましょう。<br>隣接した岩を破壊して進路を確保できます。<br><br>岩を壊すと<b>岩の欠片</b>が残り、特定の場面で役立つことも。',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🏁 <b>敵陣に辿り着こう！</b><br><br>あなたのコマが<b>敵の陣地（画面の反対側の端）</b>に到達すると勝利です！<br>（人斬り武者は例外：撃破のみで勝利）<br><br>または敵のジョブコマ（メインコマ）のHPを0にしても勝利になります。',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🔥 <b>敵の弱点属性をつこう！</b><br><br>各コマには属性（火・水・草・光・闇）があります。<br>属性の相性：🔥火→🌿草、🌿草→💧水、💧水→🔥火<br>☀️光→😈闇、😈闇→☀️光<br><br>弱点属性で攻撃すると<b>ダメージ+2</b>のボーナスが入ります！',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🌟 <b>ステージとキャラの属性を合わせよう！</b><br><br>各ステージにも属性があります（例：溶岩地帯🔥・海底神殿💧）。<br>ステージと同じ属性のジョブを使うと<b>HP+5・アビリティ+1</b>のボーナス！<br><br>逆に弱点属性だとデメリットがあるので注意。ジョブ図鑑で属性を確認しよう。',
-        highlight: null,
-        advanceOn: null,
-    },
-    {
-        msg: '🎉 <b>チュートリアル完了！</b><br><br>これで基本はバッチリです。自由にプレイしてみましょう！<br><br>💡 <i>ヒント：地形タイルを右クリック（スマホは長押し）すると地形の説明が見られます！<br>キャラクター図鑑でジョブの詳細も確認できます。</i>',
+    {   // Step 11: 完了！
+        msg: '🎉 <b>チュートリアル完了！お疲れ様でした！</b><br><br>基本操作はバッチリです。さっそく試合を始めてみましょう！<br><br>💡 <i>困ったときは：<br>・タイルをクリックすると地形解説が表示されます<br>・キャラクター図鑑でジョブの詳細を確認できます<br>・右上のメニューからいつでもヘルプを見られます</i>',
         highlight: null,
         advanceOn: null,
         final: true,
@@ -14104,6 +14078,28 @@ function startTutorial() {
     turn = 1; tempRocks = [];
     isPlayerTurn = true;
     _cpuWentFirst = false;
+    // チュートリアル練習用ダミー敵（HP3、動かない、攻撃しない）
+    const _playerEnt = entities.find(e => e.team === 'player');
+    if (_playerEnt) {
+        entities.push({
+            id: 'tutorial_dummy_' + Date.now(),
+            type: 'tutorial_dummy',
+            tutorialDummy: true,
+            name: '練習ダミー',
+            team: 'cpu',
+            r: Math.max(0, _playerEnt.r - 4),
+            c: _playerEnt.c,
+            hp: 3, maxHp: 3,
+            ap: 0, maxAp: 0,
+            abilities: {},
+            initialAbilities: {},
+            skillUsed: true,
+            stealth: false, stealthTimer: 0,
+            invin: false, invinTimer: 0,
+            poisonTimer: 0,
+            element: 'none',
+        });
+    }
     render();
     startTurn('player');
     showTutorialStep();
