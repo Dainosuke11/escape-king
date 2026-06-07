@@ -9972,7 +9972,8 @@ function executeRushSkill(se, targetR, targetC, mode) {
                 floodTile(wr, wc);
             }
         }
-        msg(`💦 ハイドロポンプ発射！ゲージ${gauge}・射程${range}・威力${dmg}・幅${width}(命中${hits}体)！通過マスが浅瀬化！`);
+        se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + 5);
+        msg(`💦 ハイドロポンプ発射！ゲージ${gauge}・射程${range}・威力${dmg}・幅${width}(命中${hits}体)！通過マスが浅瀬化！💧ゲージ+5！`);
         se.skillUsed = true;
         return;
     }
