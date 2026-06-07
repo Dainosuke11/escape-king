@@ -254,8 +254,8 @@
         .cooled_lava::after { content: "🪨"; font-size: calc(var(--tile-size)*0.35); }
         /* Volcano Summit stage */
         .volcano_summit_ground { background: #2a1005; }
-        .ash-mist { box-shadow: inset 0 0 10px rgba(180,140,60,0.95) !important; background: rgba(70,50,20,0.55) !important; }
-        .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); }
+        .ash-mist { box-shadow: inset 0 0 14px rgba(180,140,60,0.5) !important; background: rgba(100,70,20,0.22) !important; }
+        .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); opacity: 0.65; position: absolute; pointer-events: none; }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
         .thorn-field { background-image: repeating-linear-gradient(45deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%), repeating-linear-gradient(135deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%) !important; background-size: 8px 8px !important; box-shadow: inset 0 0 8px rgba(34,139,34,0.7) !important; border: 1px solid #2d8a27 !important; }
         .thorn-field::after { content: "🌿"; font-size: calc(var(--tile-size)*0.28); opacity: 0.65; pointer-events: none; }
@@ -3625,8 +3625,8 @@ function initEntities(pJob, difficulty = "1") {
             }
         });
     }
-    scatterRocks(4, 10, 5);
-    scatterRocks(16, 10, 5);
+    scatterRocks(2 + Math.floor(Math.random()*5), 10, 5);
+    scatterRocks(14 + Math.floor(Math.random()*5), 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
     trapOwnerMap = {};
@@ -3764,8 +3764,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
             }
         });
     }
-    scatterRocks(4, 10, 5);
-    scatterRocks(16, 10, 5);
+    scatterRocks(2 + Math.floor(Math.random()*5), 10, 5);
+    scatterRocks(14 + Math.floor(Math.random()*5), 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
     mafiaTerritory = null;
@@ -4982,7 +4982,7 @@ function startTurn(team, skipEffects = false) {
 
             // 5. Rock fall near each living player/cpu entity
             const bigEruption = (turn > 0 && turn % 3 === 0);
-            const rocksPerEntity = bigEruption ? 9 : 3;
+            const rocksPerEntity = bigEruption ? 7 : 2;
             let aliveMain = entities.filter(e => e.hp>0 && (e.team==='player'||e.team==='cpu'));
             let anyRockFell = false;
             aliveMain.forEach(target => {
@@ -10198,16 +10198,19 @@ function executeRushSkill(se, targetR, targetC, mode) {
 }
 
 function breakMine(mineR, mineC) {
-    if (treasures.length === 0) { msg("鉱山破壊！しかし何も見つからなかった…"); return; }
     let posKey = (mineR !== undefined && mineC !== undefined) ? `${mineR},${mineC}` : null;
     let t;
     if (posKey && copperForcedMines.has(posKey)) {
         copperForcedMines.delete(posKey);
         t = 'copper';
-        let ci = treasures.indexOf('copper');
-        if (ci !== -1) treasures.splice(ci, 1);
+    } else if (activeStage === 'dungeon') {
+        // 地下迷宮: 銅70%、銀・金・プラチナ各10%
+        let r = Math.random();
+        t = r < 0.7 ? 'copper' : r < 0.8 ? 'silver' : r < 0.9 ? 'gold' : 'platinum';
     } else {
-        t = treasures.splice(Math.floor(Math.random()*treasures.length), 1)[0];
+        // 全ステージ: 均等確率
+        const _ores = ['platinum','gold','silver','copper'];
+        t = _ores[Math.floor(Math.random()*4)];
     }
     
     let msgText = "鉱山破壊！";
