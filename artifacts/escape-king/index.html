@@ -483,6 +483,7 @@
             <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
             <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
             <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
+            <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
         </select>
     </div>
     <div class="select-group">
@@ -580,6 +581,7 @@
                 <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
+            <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -618,6 +620,7 @@
                 <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
+            <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             </select>
         </div>
         <div class="select-group">
@@ -687,6 +690,7 @@
                 <option value="mafia">🤵 マフィア (拳銃・縄張り・子分盾)</option>
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
+            <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -1184,7 +1188,14 @@ const ABILITY_NAMES = {
     holy_light: '⚪ホーリーライト(自中心半径2AoE/光属性威2+HP+2)',
     dark_revenge: '⚫ダークリベンジ(隣接1/闇属性威4+AP-2)',
     tacit_agreement: '暗黙の了解(半径3敵AP-2+前方3岩/1死亡隊員復活)',
-    combination_blast: '合体必殺技(幅3/深さ7/威=生存数×2)'
+    combination_blast: '合体必殺技(幅3/深さ7/威=生存数×2)',
+    unzan_angya: '雲水行脚(AP+2/G+1~4)',
+    fundo_gekkoh: '憤怒激昂(r1全体/威4/炎/吹飛/G1消費)',
+    kako_tosen: '羽化登仙(r2全体/威3/草/G1消費)',
+    kyoshin_tankai: '虚心坦懐(直線5/威4/水/吹飛/G1消費)',
+    meikyo_shisui: '明鏡止水(1T無敵/AP+1/G+1/敵r2AP-2+4封印)',
+    banzai_jiai: '万物慈愛(r1/5吹飛/威3/連鎖3/水/G+1)',
+    seisei_ruten: '生々流転(狼+隼+岩召喚/2T消滅/5T~/G+1)'
 };
 
 const ABILITY_TIPS = {
@@ -1415,7 +1426,8 @@ const JOB_DATA = {
     devil:   { name: 'デビル', abilities: { drop_rock: 999, shatter: 5, claw_slash: 10, slow_assault: 5, sweet_honey: 3, activation_curse: 3, reward_trap: 3, bat_infiltration: 2, fate_choice: 3, gold_addiction: 3, fun_present: 1 }, hp: 30, ap: 2, flying: true },
     mafia:   { name: 'マフィア', abilities: { drop_rock: 999, shatter: 3, tail_cut: 5, pistol: 6, penance: 1, snipe: 1, backroom_deal: 3, debt_note: 3, torture_mafia: 3, extortion: 3 }, hp: 30, ap: 2, mafiaUnit: true },
     dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 10, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1 }, hp: 30, ap: 2, dwarfUnit: true },
-    sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 }
+    sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 },
+    sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true }
 };
 
 const ELEMENT_DATA = {
@@ -1433,7 +1445,7 @@ const JOB_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass',
 };
 
 const NPC_ELEMENT = {
@@ -1467,6 +1479,8 @@ const ABILITY_ELEMENT = {
     balance_break: 'dark', grudge_strike: 'dark',
     fire_burst: 'fire', aqua_beam: 'water', gaia_smash: 'grass',
     holy_light: 'light', dark_revenge: 'dark',
+    fundo_gekkoh: 'fire', kako_tosen: 'grass', kyoshin_tankai: 'water',
+    banzai_jiai: 'water', meikyo_shisui: 'light', seisei_ruten: 'grass',
 };
 
 const STAGE_ELEMENT = {
@@ -1483,7 +1497,7 @@ const JOB_SKILL_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -1491,6 +1505,7 @@ const SKILL_MODE_ELEMENT = {
     skill_hydro: 'water',
     skill_root_bind: 'grass',
     skill_coffin: 'dark', skill_necro_release: 'dark',
+    skill_sennin_tota: 'water',
 };
 
 const JOB_SKILL_NAMES = {
@@ -1516,6 +1531,7 @@ const JOB_SKILL_NAMES = {
     mafia:         '縄張り宣言',
     dwarf:         '合体',
     sentai_hero:   '合体必殺技',
+    sennin:        '自然淘汰',
 };
 
 const JOB_GUIDE_META = {
@@ -1541,6 +1557,7 @@ const JOB_GUIDE_META = {
     mafia:         { emoji: '🤵', fullName: 'マフィア', note: '【マフィアゲージ】悪事で増加・消費系アビリティに必要\n【子分】HP1/AP2/拳銃∞。マフィアが攻撃を受けると代わりにランダムな子分が食らう。子分消滅でG+1\n【返済】敵に付与。ターン開始時(回数1以上):封印3+AP-1+自2ダメ→マフィアHP+2・全アビ+1・G+2' },
     dwarf:         { emoji: '⚙️', fullName: 'ドワーフエンジニア', note: '【JP：ジャンクポイント】岩砕き/素材集めで増加。パーツ製造・タレット建設・キャノンで消費\n★スキル「合体」：全5パーツ∞が揃うと使用可能。半径1にドワーフロボ(HP25/AP2)召喚。撃破時JP+10・アビリティ初期化' },
     sentai_hero:   { emoji: '🦸', fullName: '戦隊ヒーロー', note: '【5人チーム】レッド🔴ブルー🔵グリーン🟢ホワイト⚪ブラック⚫\n各隊員HP6、合計HP30を共有。隊員が倒れると担当アビリティが封印される。\n「暗黙の了解」で死亡隊員を復活可。\n★スキル「合体必殺技」：生存隊員×2の威力で幅3×深さ7AoE発射！' },
+    sennin:        { emoji: '🧘', fullName: '仙人', note: '【仙人ゲージ】AP温存でゲージ増加。ゲージ消費技に必要。\n属性は草と水を1ターンごとに交替(奇数ターン=水/偶数ターン=草)。\n「雲水行脚」でAP+2。スキル不使用で終えるとゲージ+4、使用でゲージ+1。\n★スキル「自然淘汰」：ゲージ全消費→消費量で半径2~8/威2~8のAoE。AP-2+吹飛+4封印。使用後ゲージ+3。' },
 };
 
 const ENTITY_ICONS = {
@@ -2922,7 +2939,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -3571,8 +3588,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -3704,8 +3721,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -3772,6 +3789,7 @@ function addExtraEnemies(difficulty) {
             ...(t === 'angel' ? {fallenGauge:0, fallen:false} : {}),
             ...(jd.mafiaUnit ? {mafiaGauge:0} : {}),
             ...(jd.dwarfUnit ? {junkPoint:0} : {}),
+            ...(jd.senninUnit ? {senninGauge:0} : {}),
             element: JOB_ELEMENT[t] ?? 'none',
         });
     }
@@ -3884,6 +3902,34 @@ function processTurnStartEffects(e) {
         e.ap = Math.max(0, e.ap - e._sentaiSkillPenalty);
         msg(`🦸 合体必殺技後遺症！${e.name} AP-${e._sentaiSkillPenalty}！`, true);
         e._sentaiSkillPenalty = 0;
+    }
+    // 仙人: 属性交替(奇数ターン=水/偶数ターン=草) + 雲水行脚ゲージボーナス + 生々流転召喚消滅
+    if (e.type === 'sennin') {
+        e.element = (turn % 2 === 1) ? 'water' : 'grass';
+        if (e._unzanTurn === turn - 1) {
+            let _uGainBonus = (e._senninSkillUsedTurn === turn - 1) ? 0 : 3;
+            if (_uGainBonus > 0) {
+                e.senninGauge = (e.senninGauge||0) + _uGainBonus;
+                msg(`🧘 ${e.name} 雲水行脚ゲージ補填+${_uGainBonus}(計${e.senninGauge})！`, true);
+            }
+            delete e._unzanTurn;
+        }
+        if (e._senninSummons && e._senninSummons.length > 0) {
+            e._senninSummons = e._senninSummons.filter(s => {
+                if (s.expireAt <= turn) {
+                    if (s.type === 'rock') {
+                        if (board[s.r]?.[s.c] === 'rock') board[s.r][s.c] = defaultGround();
+                        msg(`🌿 ${e.name}の生々流転の岩が消滅！`, true);
+                    } else {
+                        let _ssEnt = entities.find(x => x.id === s.id && x.hp > 0);
+                        if (_ssEnt) { _ssEnt.hp = 0; _ssEnt.soulCounted = true; }
+                        msg(`🌿 ${e.name}の生々流転の${s.type === 'wolf' ? 'オオカミ' : 'ハヤブサ'}が消滅！`, true);
+                    }
+                    return false;
+                }
+                return true;
+            });
+        }
     }
     if (e.type === 'world_manager') {
         e._managerDmgCountPrev = e._managerDmgCount || 0;
@@ -5864,6 +5910,15 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'holy_light') return maxDist === 0;
     if (mode === 'dark_revenge') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'tacit_agreement') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
+    // 仙人
+    if (mode === 'unzan_angya') return maxDist === 0;
+    if (mode === 'fundo_gekkoh') return maxDist === 0;
+    if (mode === 'kako_tosen') return maxDist === 0;
+    if (mode === 'kyoshin_tankai') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'meikyo_shisui') return maxDist === 0;
+    if (mode === 'banzai_jiai') return maxDist===1 && target && target.team!==se.team;
+    if (mode === 'seisei_ruten') return maxDist === 0;
+    if (mode === 'skill_sennin_tota') return maxDist === 0;
     return false;
 }
 
@@ -6101,8 +6156,9 @@ function showEntityInfo(e) {
     }
     let mafiaGaugeStr = (e.mafiaGauge !== undefined) ? ` &nbsp; 🏴G${e.mafiaGauge}` : '';
     let junkPointStr = (e.junkPoint !== undefined || e.dwarfUnit || e.isDwarfRobot) ? ` &nbsp; ⚙️JP${e.junkPoint||0}` : '';
+    let senninGaugeStr = (e.senninGauge !== undefined) ? ` &nbsp; 🧘G${e.senninGauge}` : '';
     const entityIcon = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] + ' ' : '';
-    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -9264,6 +9320,126 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         }
         msg(`🤝 暗黙の了解！${targetEntity.name}AP-2！前方岩${taRockCells.length}個設置！${revivedMsg}`); used = true;
+    } else if (actionMode === 'unzan_angya') {
+        // 雲水行脚: AP+2・ゲージ+1・スキル不使用でターン終了すれば+3ボーナス
+        if (se.abilities['unzan_angya'] !== 999) se.abilities['unzan_angya']--;
+        se.ap += 2;
+        se._unzanTurn = turn;
+        se.senninGauge = (se.senninGauge||0) + 1;
+        msg(`🧘 雲水行脚！AP+2！ゲージ+1(${se.senninGauge})！スキル不使用でターン終了するとゲージさらに+3！`); used = true;
+    } else if (actionMode === 'fundo_gekkoh') {
+        // 憤怒激昂: r1全体4ダメ+吹飛/炎属性/ゲージ1消費必須
+        if ((se.senninGauge||0) < 1) { msg("🔥 憤怒激昂：仙人ゲージが足りない！(ゲージ1以上必要)"); actionMode = 'move'; render(); return; }
+        if (se.abilities['fundo_gekkoh'] !== 999) se.abilities['fundo_gekkoh']--;
+        se.senninGauge--;
+        let _fgHits = 0;
+        entities.forEach(t => {
+            if (t.hp <= 0 || t.team === se.team) return;
+            if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > 1) return;
+            let _fgDmg = 4 + (se.atkBonus||0) + (t.defDebuff||0);
+            if (!t.invin) { t.hp -= _fgDmg; knockback(t, 1, se); _fgHits++; }
+        });
+        msg(`🔥 憤怒激昂！半径1全体4ダメ+吹飛(命中${_fgHits}体)！ゲージ-1(残${se.senninGauge})！`); used = true;
+    } else if (actionMode === 'kako_tosen') {
+        // 羽化登仙: r2全体3ダメ/草属性/ゲージ1消費必須
+        if ((se.senninGauge||0) < 1) { msg("🌿 羽化登仙：仙人ゲージが足りない！(ゲージ1以上必要)"); actionMode = 'move'; render(); return; }
+        if (se.abilities['kako_tosen'] !== 999) se.abilities['kako_tosen']--;
+        se.senninGauge--;
+        let _ktHits = 0;
+        entities.forEach(t => {
+            if (t.hp <= 0 || t.team === se.team) return;
+            if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > 2) return;
+            let _ktDmg = 3 + (se.atkBonus||0) + (t.defDebuff||0);
+            if (!t.invin) { t.hp -= _ktDmg; _ktHits++; }
+        });
+        msg(`🌿 羽化登仙！半径2全体3ダメ(命中${_ktHits}体)！ゲージ-1(残${se.senninGauge})！`); used = true;
+    } else if (actionMode === 'kyoshin_tankai') {
+        // 虚心坦懐: 直線5/威4/水/吹飛/ゲージ1消費必須
+        if ((se.senninGauge||0) < 1) { msg("💧 虚心坦懐：仙人ゲージが足りない！(ゲージ1以上必要)"); actionMode = 'move'; render(); return; }
+        if (se.abilities['kyoshin_tankai'] !== 999) se.abilities['kyoshin_tankai']--;
+        se.senninGauge--;
+        let _kcDr = Math.sign(r - se.r), _kcDc = Math.sign(c - se.c);
+        let _kcHits = 0;
+        for (let step = 1; step <= 5; step++) {
+            let _nr = se.r + _kcDr * step, _nc = se.c + _kcDc * step;
+            if (_nr < 0 || _nr >= SIZE || _nc < 0 || _nc >= SIZE) break;
+            let _hit = entities.find(ev => ev.hp > 0 && ev.r === _nr && ev.c === _nc && ev.team !== se.team);
+            if (_hit && !_hit.invin) {
+                let _kcDmg = 4 + (se.atkBonus||0) + (_hit.defDebuff||0);
+                _hit.hp -= _kcDmg; knockback(_hit, 2, se); _kcHits++;
+            }
+        }
+        msg(`💧 虚心坦懐！直線5マス4ダメ+吹飛(命中${_kcHits}体)！ゲージ-1(残${se.senninGauge})！`); used = true;
+    } else if (actionMode === 'meikyo_shisui') {
+        // 明鏡止水: 1T無敵+AP+1+ゲージ+1 / 半径2敵AP-2+4封印
+        if (se.abilities['meikyo_shisui'] !== 999) se.abilities['meikyo_shisui']--;
+        se.invin = true; se.invinTimer = 1;
+        se.ap = Math.min(se.ap + 1, se.maxAp);
+        se.senninGauge = (se.senninGauge||0) + 1;
+        let _msTargetNames = [];
+        entities.forEach(t => {
+            if (t.hp <= 0 || t.team === se.team) return;
+            if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > 2) return;
+            t.ap = Math.max(0, t.ap - 2);
+            let _msKs = Object.keys(t.abilities||{}).filter(k => k !== 'drop_rock' && (t.abilities[k] > 0 || t.abilities[k] === 999));
+            if (_msKs.length > 0) sealAbilities(t, _msKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            _msTargetNames.push(t.name);
+        });
+        msg(`🔮 明鏡止水！1T無敵+AP+1+ゲージ+1(${se.senninGauge})！半径2敵AP-2+4封印(${_msTargetNames.join('/')})！`); used = true;
+    } else if (actionMode === 'banzai_jiai') {
+        // 万物慈愛: r1/5マス吹飛/威3/連鎖3ダメ/水/ゲージ+1
+        if (se.abilities['banzai_jiai'] !== 999) se.abilities['banzai_jiai']--;
+        if (!targetEntity.invin) {
+            let _bjDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _bjDmg;
+            let _bjDr = Math.sign(targetEntity.r - se.r), _bjDc = Math.sign(targetEntity.c - se.c);
+            if (_bjDr === 0 && _bjDc === 0) _bjDr = (se.team === 'player' ? -1 : 1);
+            let _curR = targetEntity.r, _curC = targetEntity.c;
+            let _chainMsg = '';
+            for (let i = 0; i < 5; i++) {
+                let _nr = _curR + _bjDr, _nc = _curC + _bjDc;
+                if (_nr < 0 || _nr >= SIZE || _nc < 0 || _nc >= SIZE || !isWalkable(_nr, _nc)) break;
+                let _blocker = entities.find(ev => ev.hp > 0 && ev.r === _nr && ev.c === _nc && ev !== targetEntity);
+                if (_blocker) {
+                    if (_blocker.team !== se.team && !_blocker.invin) { _blocker.hp -= 3; _chainMsg = ` ${_blocker.name}に連鎖3ダメ！`; }
+                    break;
+                }
+                _curR = _nr; _curC = _nc;
+            }
+            targetEntity.r = _curR; targetEntity.c = _curC;
+            se.senninGauge = (se.senninGauge||0) + 1;
+            msg(`🌊 万物慈愛！${targetEntity.name}に3ダメ+5マス吹飛！${_chainMsg}ゲージ+1(${se.senninGauge})！`); used = true;
+        }
+    } else if (actionMode === 'seisei_ruten') {
+        // 生々流転: 狼+隼+岩を正面に設置/2T後消滅/5T~/ゲージ+1
+        if (turn < 5) { msg("🌿 生々流転：ゲーム開始から5ターン経過しないと使えない！"); actionMode = 'move'; render(); return; }
+        if (se.abilities['seisei_ruten'] !== 999) se.abilities['seisei_ruten']--;
+        let _ssDir = se.team === 'player' ? -1 : 1;
+        let _ssPositions = [
+            {r: se.r + _ssDir, c: se.c, stype: 'wolf'},
+            {r: se.r + _ssDir, c: se.c - 1, stype: 'falcon'},
+            {r: se.r + _ssDir, c: se.c + 1, stype: 'rock'},
+        ].filter(p => p.r >= 0 && p.r < SIZE && p.c >= 0 && p.c < SIZE);
+        if (!se._senninSummons) se._senninSummons = [];
+        let _ssPlaced = 0;
+        _ssPositions.forEach(pos => {
+            if (entities.some(ev => ev.hp > 0 && ev.r === pos.r && ev.c === pos.c)) return;
+            if (pos.stype === 'rock') {
+                if (!isWalkable(pos.r, pos.c)) return;
+                board[pos.r][pos.c] = 'rock';
+                se._senninSummons.push({type:'rock', r:pos.r, c:pos.c, expireAt: turn + 2});
+            } else {
+                let _tmpl = monsterTemplate(pos.stype, pos.r, pos.c);
+                if (!_tmpl) return;
+                _tmpl.id = 'sss_' + Date.now() + '_' + pos.stype;
+                _tmpl.team = se.team;
+                entities.push(_tmpl);
+                se._senninSummons.push({type:pos.stype, id:_tmpl.id, expireAt: turn + 2});
+            }
+            _ssPlaced++;
+        });
+        se.senninGauge = (se.senninGauge||0) + 1;
+        msg(`🌿 生々流転！正面に${_ssPlaced}体を召喚(2T後消滅)！ゲージ+1(${se.senninGauge})！`); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -9667,6 +9843,23 @@ function executeSkill(se) {
         se.skillUsed = true;
         return true;
     }
+    // ====== 仙人 スキル: 自然淘汰 ======
+    if (se.type === 'sennin') {
+        let _stGauge = se.senninGauge || 0;
+        let _stRange, _stDmg;
+        if (_stGauge <= 1)       { _stRange = 2; _stDmg = 2; }
+        else if (_stGauge <= 3)  { _stRange = 3; _stDmg = 3; }
+        else if (_stGauge <= 5)  { _stRange = 4; _stDmg = 4; }
+        else if (_stGauge <= 7)  { _stRange = 5; _stDmg = 5; }
+        else if (_stGauge <= 9)  { _stRange = 6; _stDmg = 6; }
+        else if (_stGauge <= 11) { _stRange = 7; _stDmg = 7; }
+        else                      { _stRange = 8; _stDmg = 8; }
+        msg(`🧘 自然淘汰！ゲージ${_stGauge}消費(半径${_stRange}・威力${_stDmg})！発動マス(自分)を選んでください！`);
+        se._senninSkillUsedTurn = turn;
+        se._senninSkillGauge = _stGauge;
+        se.senninGauge = 0;
+        actionMode = 'skill_sennin_tota'; render(); return false;
+    }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
     if (se.type === 'world_manager') {
         if (turn < 5) { msg(`⚖️ 世界の作り直し：ゲーム開始から5ターン以降でないと使用できない！(現在${turn}ターン)`); return false; }
@@ -9901,6 +10094,40 @@ function executeRushSkill(se, targetR, targetC, mode) {
         msg(`🤖 合体！ドワーフロボ(HP15/AP2/射程+2)を召喚！ドワーフはパーツ収集を最初からやり直し！`);
         return;
     }
+    // ====== 仙人 スキル: 自然淘汰 (ターゲット選択後の実行) ======
+    if (mode === 'skill_sennin_tota') {
+        // ゲージはexecuteSkillで消費済み。ここでは_stRange/_stDmgを再計算してAoE実行
+        // (ゲージはすでに0にリセット済み → 消費量は_senninSkillGaugeに保存する必要がある)
+        // _stGaugeをexecuteSkillで_senninSkillGaugeに記録しておくことにする
+        let _stG2 = se._senninSkillGauge || 0;
+        let _sr2, _sd2;
+        if (_stG2 <= 1)       { _sr2 = 2; _sd2 = 2; }
+        else if (_stG2 <= 3)  { _sr2 = 3; _sd2 = 3; }
+        else if (_stG2 <= 5)  { _sr2 = 4; _sd2 = 4; }
+        else if (_stG2 <= 7)  { _sr2 = 5; _sd2 = 5; }
+        else if (_stG2 <= 9)  { _sr2 = 6; _sd2 = 6; }
+        else if (_stG2 <= 11) { _sr2 = 7; _sd2 = 7; }
+        else                   { _sr2 = 8; _sd2 = 8; }
+        let _stHits = 0;
+        entities.forEach(t => {
+            if (t.hp <= 0 || t.team === se.team) return;
+            if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > _sr2) return;
+            if (t.invin) return;
+            t.hp -= _sd2 + (se.atkBonus||0) + (t.defDebuff||0);
+            t.ap = Math.max(0, t.ap - 2);
+            knockback(t, 1, se);
+            let _stKs = Object.keys(t.abilities||{}).filter(k => k !== 'drop_rock' && (t.abilities[k] > 0 || t.abilities[k] === 999));
+            if (_stKs.length > 0) sealAbilities(t, _stKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            _stHits++;
+        });
+        se.senninGauge = (se.senninGauge||0) + 3;
+        se.skillUsed = true;
+        delete se._senninSkillGauge;
+        msg(`🧘 自然淘汰発動！半径${_sr2}・威力${_sd2}・AP-2・吹飛・4封印(命中${_stHits}体)！使用後ゲージ+3(${se.senninGauge})！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
     // ====== 既存スキルモード ======
     let stepR = Math.sign(targetR - se.r);
     let stepC = Math.sign(targetC - se.c);
@@ -10035,6 +10262,9 @@ function monsterTemplate(type, r, c) {
         case 'skeleton_soldier':return {...base, type, name:'スケルトンソルジャー', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{sword:999}, soulValue:1};
         case 'necro_chimera':   return {...base, type, name:'ネクロキメラ', hp:6, maxHp:6, ap:2, maxAp:2, abilities:{corpse_throw:999}, soulValue:3};
         case 'skull':           return {...base, type, name:'ドクロ', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{dark_magic:999}, soulValue:1};
+        // 仙人の生々流転召喚
+        case 'wolf':         return {...base, type, name:'オオカミ', hp:2, maxHp:2, ap:3, maxAp:3, abilities:{bite:999}, soulValue:1};
+        case 'falcon':       return {...base, type, name:'ハヤブサ', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{peck:999}, flying:true, soulValue:1};
         // 陰陽師の式神・鬼
         case 'fox_fire':     return {...base, type, name:'狐火', hp:1, maxHp:1, ap:2, maxAp:2, abilities:{charge:999}, soulValue:1};
         case 'oni_crow':     return {...base, type, name:'鬼カラス', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{peck:999}, flying:true, soulValue:1};
@@ -10134,6 +10364,27 @@ function defaultGround() {
 
 // Item tile pickup effects
 function applyItem(entity, item) {
+    // 戦隊ヒーロー: ヒーローは道具に頼らない。star/shoes/swordはアクティブメンバー1人のみ有効
+    if (entity.type === 'sentai_hero' && entity.sentaiMembers) {
+        if (item === 'star') {
+            // 現在のアクティブメンバーのHPだけ+10（チーム全体のmaxHpは+10するが他メンバーは変わらず）
+            let _actCol = entity._activeColor || 'red';
+            let _actMem = entity.sentaiMembers[_actCol];
+            if (_actMem) { _actMem.maxHp = (_actMem.maxHp||6) + 10; _actMem.hp = Math.min((_actMem.hp||6) + 10, _actMem.maxHp); }
+            entity.maxHp += 10; entity.hp = Math.min(entity.hp + 10, entity.maxHp);
+            return `🌠 流れ星のかけら！${SENTAI_COLOR_INFO[_actCol]?.icon||''}${SENTAI_COLOR_INFO[_actCol]?.name||_actCol}のみ最大HP+10！他メンバーには効果なし！`;
+        } else if (item === 'shoes') {
+            // アクティブメンバーにのみ靴の効果（チーム全体のAP+1はしない）
+            entity.shoesTimer = 3; entity.ap += 1;
+            let _actCol2 = entity._activeColor || 'red';
+            return `👟 新作の靴！${SENTAI_COLOR_INFO[_actCol2]?.icon||''}${SENTAI_COLOR_INFO[_actCol2]?.name||_actCol2}のみ3ターン行動力+1！他メンバーには効果なし！`;
+        } else if (item === 'sword') {
+            // 鋼の剣は1人だけに有効（atkBonusは既存流用、ヒーロー用に別フラグ不要）
+            entity.atkBonus = (entity.atkBonus || 0) + 1;
+            let _actCol3 = entity._activeColor || 'red';
+            return `⚔️ 鋼の剣！${SENTAI_COLOR_INFO[_actCol3]?.icon||''}${SENTAI_COLOR_INFO[_actCol3]?.name||_actCol3}のみ攻撃力+1！他メンバーには効果なし！`;
+        }
+    }
     if (item === 'star') {
         entity.hp += 10; entity.maxHp += 10;
         return "🌠 流れ星のかけら！最大HP+10＆HP回復！";
@@ -10268,6 +10519,12 @@ function applyApRestRecovery(team) {
         if (e.hp <= 0 || e.team !== team) return;
         let remainAp = e.ap || 0;
         if (remainAp <= 0) return;
+        // 仙人: AP温存で仙人ゲージ増加（通常回復なし）
+        if (e.type === 'sennin' || e.senninUnit) {
+            e.senninGauge = (e.senninGauge||0) + remainAp;
+            msgs.push(`${e.name}(AP${remainAp}温存)→🧘ゲージ+${remainAp}(計${e.senninGauge})`);
+            return;
+        }
         // HP回復（maxHpを超えない）
         let hpGain = Math.min(remainAp, e.maxHp - e.hp);
         if (hpGain > 0) e.hp += hpGain;
@@ -11752,6 +12009,8 @@ function isSkillConditionMet(se) {
     if (t === 'cyborg') return (se.limiterReleased||0) <= 0 && turn >= 2;
     // マッチョ: ドーピング未発動（再使用可能）
     if (t === 'macho') return (se.dopingTimer||0) <= 0;
+    // 仙人: 常時使用可能（ゲージ0でもスケール最小で発動）
+    if (t === 'sennin') return true;
     return false;
 }
 
@@ -11799,7 +12058,8 @@ function updateUI() {
         + (selectedEntity.fallenGauge !== undefined ? ` 堕天:${selectedEntity.fallenGauge}` : '')
         + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
-        + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '');
+        + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '')
+        + (selectedEntity.senninGauge !== undefined ? ` 🧘G${selectedEntity.senninGauge}` : '');
     const _uiSoulRow = document.getElementById('ui-soul-row');
     if (selectedEntity.type === 'necromancer') {
         document.getElementById('ui-soul').textContent = selectedEntity.soulCount || 0;
