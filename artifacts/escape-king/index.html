@@ -438,6 +438,68 @@
         .ability-btn.element-pulse {
             animation: element-pulse 0.9s ease-in-out infinite;
         }
+
+        /* ===== Tutorial Overlay ===== */
+        #tutorial-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.25); z-index: 20000;
+            align-items: flex-end; justify-content: center;
+            padding-bottom: 50px; box-sizing: border-box;
+            pointer-events: none;
+        }
+        .tutorial-bubble {
+            background: #1a1a2a; border: 2px solid var(--accent); border-radius: 14px;
+            padding: 20px 24px; max-width: 480px; width: 90%; position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8); font-size: 15px; line-height: 1.7;
+            pointer-events: auto;
+        }
+        .tutorial-bubble::after {
+            content: ''; position: absolute; bottom: -13px; left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent; border-top-color: var(--accent);
+        }
+        #tutorial-msg { color: #f0f0f0; margin-bottom: 14px; }
+        .tutorial-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+        .tutorial-btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; }
+        #tutorial-next-btn { background: var(--accent); color: #fff; }
+        #tutorial-close-btn { background: #445; color: #aaa; }
+        .tutorial-highlight {
+            outline: 3px solid var(--accent) !important;
+            animation: tut-pulse 1s ease-in-out infinite;
+        }
+        @keyframes tut-pulse {
+            0%,100% { box-shadow: 0 0 0 4px rgba(230,126,34,0.5); }
+            50%      { box-shadow: 0 0 0 10px rgba(230,126,34,0.15); }
+        }
+        /* ===== Turn Hint Bar ===== */
+        #hint-bar {
+            display: none; width: 100%;
+            background: #1a2530; border: 1px solid #2c4a5a; border-radius: 6px;
+            padding: 8px 14px; font-size: 13px; color: #7ec8e3; margin-top: 8px;
+            box-sizing: border-box; text-align: center;
+        }
+        /* ===== Ability Preview Card ===== */
+        #ability-preview-card {
+            display: none; position: fixed; z-index: 9500;
+            background: #1e1e30; border: 2px solid var(--accent); border-radius: 10px;
+            padding: 12px 16px; max-width: 240px; font-size: 13px; line-height: 1.6;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.7); pointer-events: none;
+        }
+        #ability-preview-card .apc-name { font-weight: bold; color: var(--accent); font-size: 15px; margin-bottom: 6px; }
+        #ability-preview-card .apc-desc { color: #ddd; }
+        #ability-preview-card .apc-ap { font-size: 12px; color: #f0c040; margin-top: 6px; font-weight: bold; }
+        #ability-preview-card .apc-hint { font-size: 11px; color: #888; margin-top: 8px; text-align: right; }
+        /* ===== Terrain Hint Popup ===== */
+        #terrain-popup {
+            display: none; position: fixed; z-index: 9500;
+            background: #1e1e30; border: 2px solid #546e7a; border-radius: 10px;
+            padding: 10px 14px; max-width: 240px; font-size: 13px; line-height: 1.6;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+        }
+        #terrain-popup .tp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        #terrain-popup .tp-name { font-weight: bold; color: #7ec8e3; font-size: 14px; }
+        #terrain-popup .tp-close { color: #888; cursor: pointer; font-size: 16px; padding: 0 4px; }
+        #terrain-popup .tp-desc { color: #ccc; }
         
         .select-group { margin: 20px 0; text-align: left; }
         .select-group label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
@@ -570,6 +632,7 @@
     </div>
     <button id="btn-start" class="btn" style="padding: 15px; font-size: 18px; background: var(--accent); margin-bottom: 10px;">CPU対戦スタート</button>
     <button id="btn-online" class="btn" style="padding: 15px; font-size: 18px; background: #27ae60; margin-bottom: 10px;">🌐 オンライン対戦</button>
+    <button class="btn" onclick="startTutorial()" style="padding: 12px; font-size: 16px; background: #1abc9c; margin-bottom: 10px;">🎓 チュートリアル（初めての方へ）</button>
     <button class="btn" onclick="openGuide()" style="padding: 12px; font-size: 16px; background: #546e7a;">📖 キャラクター図鑑</button>
     <div id="error-log"></div>
 </div>
@@ -785,6 +848,7 @@
         </div>
     </div>
     <div id="online-game-info"></div>
+    <div id="hint-bar"></div>
     <div id="board-container">
         <div id="board"></div>
         <div id="ui-panel">
@@ -852,6 +916,8 @@ let currentTurnMsgs = []; // 現ターンのメッセージ蓄積
 let skyfortLiftPos = 9; // top row of 2x2 floating lift (cols 13-14)
 let magicCircleTimer = 5; 
 let usedAbilities = {};
+let tutorialMode = false;
+let tutorialStep = 0;
 // craft-pulse animation state: edge-trigger when JP crosses 2
 let craftJpWasReady = {};     // entityId → boolean (was JP >= 2 at last pre-loop check)
 let craftReadyActive = {};    // 'entityId|key' → boolean (should animate; cleared each turn)
@@ -5905,6 +5971,8 @@ function startTurn(team, skipEffects = false) {
         } else {
             document.getElementById('turn-indicator').textContent = `Player's Turn (Turn: ${turn})`;
         }
+        updateHintBar();
+        if (tutorialMode && tutorialStep === 4 && turn > 1) advanceTutorial();
 
     } else if (team === 'cpu') {
         // playerターン終了→cpuターン開始：playerチームの残AP温存回復
@@ -6398,6 +6466,19 @@ function render() {
             }
 
             d.onclick = () => handleTileClick(vr, c);
+            d.addEventListener('contextmenu', (ev) => {
+                ev.preventDefault();
+                showTerrainPopup(ar, c, ev.clientX, ev.clientY);
+            });
+            let _lpt = null;
+            d.addEventListener('touchstart', (ev) => {
+                _lpt = setTimeout(() => {
+                    const t = ev.touches[0];
+                    showTerrainPopup(ar, c, t.clientX, t.clientY);
+                }, 600);
+            }, { passive: true });
+            d.addEventListener('touchend', () => { if (_lpt) { clearTimeout(_lpt); _lpt = null; } });
+            d.addEventListener('touchmove', () => { if (_lpt) { clearTimeout(_lpt); _lpt = null; } });
             b.appendChild(d);
         }
     }
@@ -6510,6 +6591,7 @@ function selectEntity(e) {
     if (actionMode === 'move') {
         if (e.team === myTeam()) {
             selectedEntity = e;
+            if (tutorialMode && tutorialStep === 0) advanceTutorial();
             render();
         } else {
             // Clicked NPC or enemy — show info panel + attack if something selected
@@ -6549,6 +6631,7 @@ function setMode(mode) {
 
     if (actionMode === mode) {
         actionMode = 'move';
+        hideAbilityPreview();
         updateUI();
         render();
         return;
@@ -6565,6 +6648,8 @@ function setMode(mode) {
     }
     
     actionMode = mode;
+    if (mode !== 'move') showAbilityPreview(mode);
+    else hideAbilityPreview();
 
     if (mode === 'spin_slash') {
         handleAbilityTarget(selectedEntity.r, selectedEntity.c, selectedEntity);
@@ -6990,6 +7075,7 @@ function handleTileClick(vr, c) {
                 selectedEntity.r = r; selectedEntity.c = c;
                 selectedEntity.actedThisTurn = true;
                 selectedEntity.ap -= cost;
+                if (tutorialMode && tutorialStep === 1) advanceTutorial();
                 // ケーブルカーを降りた瞬間にAP補正を除去する
                 if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(_prevMoveTile) && !['cable_tile','cable_board'].includes(board[r]?.[c])) {
                     selectedEntity.ap = Math.min(selectedEntity.ap, selectedEntity.maxAp);
@@ -7056,6 +7142,12 @@ function handleTileClick(vr, c) {
                 checkWin();
                 render();
                 if (isOnlineMode) syncState();
+            } else {
+                const tileEl = document.getElementById(`tile-${r}-${c}`);
+                if (tileEl) {
+                    const rect = tileEl.getBoundingClientRect();
+                    showTerrainPopup(r, c, rect.left + rect.width / 2, rect.top);
+                }
             }
         }
     } else {
@@ -7229,6 +7321,7 @@ function applyCounterReflect(attacker, defender, dmg, apLost, burnStacks) {
 }
 
 function handleAbilityTarget(r, c, targetEntity) {
+    hideAbilityPreview();
     let se = selectedEntity;
     let used = false;
     let prevTargetHp = targetEntity ? targetEntity.hp : undefined;
@@ -9987,6 +10080,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
     }
     if (used) {
+        if (tutorialMode && tutorialStep === 2) advanceTutorial();
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 魔法使い: 使ったアビリティ/スキルの属性に変化
@@ -11338,7 +11432,9 @@ function applyApRestRecovery(team) {
 
 function endTurn() {
     if (!canIAct()) return;
+    if (tutorialMode && tutorialStep === 3) advanceTutorial();
     selectedEntity = null;
+    hideAbilityPreview();
     stopTurnTimer();
     render();
     
@@ -13413,7 +13509,295 @@ function updateUI() {
             addStatus(`👑 号令コマ：あと${selectedEntity.despawnOnTurn - turn}T で消滅`, '#8e44ad');
     }
 }
+
+// =====================================================================
+//  TERRAIN HINT MAP & POPUP
+// =====================================================================
+const TERRAIN_HINT_MAP = {
+    plains: { name: '草原', desc: '通常の地形です。特別な効果はありません。移動コストも普通です。' },
+    river: { name: '川', desc: '水の流れです。渡れません（飛行コマ・水泳コマは除く）。橋を使って渡りましょう。' },
+    bridge: { name: '橋', desc: '川を渡れるマスです。誰でも通行できます。' },
+    forest: { name: '森', desc: 'このマスにいるコマは相手から見えにくくなります（潜伏状態）。' },
+    rock: { name: '岩', desc: '通行不可の障害物です。岩砕きアビリティで破壊できます。' },
+    mine: { name: '鉱山', desc: '通行不可の鉱山です。破壊するとアビリティ回数が回復する場合があります。' },
+    volcano: { name: '火山', desc: '通行不可の火山です。破壊すると周囲に爆発ダメージが発生します。' },
+    desert: { name: '砂漠', desc: 'ラクダを持っていないコマは通過時にAPを余分に消費します。' },
+    magic_circle: { name: '魔法陣', desc: 'コマが踏むと消えます。相手が踏むと敵に有利な効果が発動します。' },
+    curse_tile: { name: '呪いのタイル', desc: 'コマが踏むとそのコマのアビリティが一定ターン封印されます。' },
+    cannon: { name: '大砲', desc: 'このマスに乗ると「大砲発射」ボタンが現れ、遠距離攻撃ができます。' },
+    castle_tile: { name: '城壁の床', desc: '城の内部の床です。通行できます。' },
+    bridge_ns: { name: '南北橋', desc: '城の南北の橋です。スイッチを踏むと上げ下げできます。' },
+    bridge_ew: { name: '東西橋', desc: '城の東西の橋です。スイッチを踏むと上げ下げできます。' },
+    bridge_up: { name: '跳ね橋（上がっている）', desc: '橋が上がっている状態で渡れません。スイッチを踏んで降ろしましょう。' },
+    bridge_switch: { name: '橋スイッチ', desc: 'コマが踏むと橋を開閉します。' },
+    mountain_tile: { name: '山道', desc: '山岳ステージの通路です。通行できます。' },
+    snow: { name: '雪原', desc: '雪に覆われた地面です。通行可能。' },
+    summit: { name: '山頂', desc: '山の頂上です。ケーブルカー乗り場と接続されています。' },
+    cable_tile: { name: 'ケーブルカー路', desc: 'ケーブルカーのレールです。乗り場からのみ乗れます。' },
+    cable_board: { name: 'ケーブルカー乗り場', desc: 'ここに乗るとAP+2ボーナスを受け、山頂まで移動できます。' },
+    graveyard_ground: { name: '墓場の地面', desc: '墓場ステージの地面です。NPCゾンビが徘徊しています。' },
+    gravestone: { name: '墓石', desc: '通行不可の障害物です。壊すと魂が現れることがあります。' },
+    church: { name: '教会', desc: 'ここで魂を消費するとHP回復＆アビリティ回数を全回復できます。' },
+    nighttown_ground: { name: '夜の街の地面', desc: '夜の街ステージの地面。毎ターン敵NPCが現れます。' },
+    fortress_floor: { name: '天空要塞の床', desc: '天空要塞の足場です。一部は崩落することがあります。' },
+    sky_void: { name: '虚空', desc: '落下地点です。通行不可（飛行コマは通過できます）。' },
+    dungeon_ground: { name: 'ダンジョンの地面', desc: '地下迷宮の地面です。視界が限られています（松明を集めよう）。' },
+    dungeon_chest: { name: '宝箱', desc: '踏むとランダムなアイテムが手に入ります。' },
+    dungeon_switch: { name: 'ダンジョンスイッチ', desc: '踏むと扉が開閉します。' },
+    dungeon_torch: { name: '松明', desc: '踏むと周囲5マスが照らされ視界が広がります。' },
+    sea_floor: { name: '海底の地面', desc: '海底神殿の地面です。酸素ゲージが減るので酸素タイルを踏もう。' },
+    sea_trench: { name: '海溝', desc: '深い溝です。通行不可。' },
+    shallow_water: { name: '浅瀬', desc: '浅い水域です。水泳コマ（サメ戦士など）のみ通行可能。' },
+    deep_water: { name: '深海', desc: '深い水域です。水泳コマのみ通行可能。' },
+    oxygen_tile: { name: '酸素供給タイル', desc: '踏むと酸素が全回復します。' },
+    lava_ground: { name: '溶岩地帯の地面', desc: '溶岩地帯ステージの地面。溶岩が徐々に広がってきます。' },
+    lava: { name: '溶岩', desc: '通行不可の即死地形。飛行コマは通過できますが着地はできません。' },
+    lava_bridge: { name: '溶岩橋', desc: '溶岩上の橋です。一定ターン後に崩落します。' },
+    swamp_tile: { name: '毒沼', desc: 'ネクロマンサーが作る呪われた地形。踏むとダメージを受けます。' },
+    arena_floor: { name: '闘技場の地面', desc: 'コロシアムの地面。旗が出現したマスを踏むと得点になります。' },
+    lake_ground: { name: '湖の地面', desc: '霧の湖ステージの地面。通行できます。' },
+    lotus_pad: { name: '蓮の葉', desc: '水上に浮かぶ蓮の葉。通行可能ですが、ターンが経つと沈むこともあります。' },
+    factory_conveyor: { name: 'コンベアベルト', desc: 'コマを自動で移動させます。速度と方向はターンによって変わります。' },
+    factory_furnace: { name: '溶鉱炉', desc: '通行不可の危険地形。隣に立つとダメージを受けることがあります。' },
+    trap: { name: '罠', desc: '踏んだコマはHP-1・AP-2のダメージを受けます。設置したチームには無害です。' },
+    hole: { name: '落とし穴', desc: '踏むと落下してダメージを受けます。' },
+    item_tile: { name: '？タイル', desc: '踏むとランダムなアイテムや効果が手に入ります。' },
+    hell_ground: { name: '地獄の炎地', desc: '炎に覆われた地面。毎ターン上に乗っているコマにダメージを与えます。' },
+    magic_circle_active: { name: '魔法陣（活性）', desc: '魔界の魔法陣。踏んだコマに効果を与えます。' },
+    volcano_summit_ground: { name: '活火山の地面', desc: '活火山山頂の地面。噴火により岩・溶岩が降り注ぎます。' },
+    lake_island: { name: '島', desc: '霧の湖の小島です。通行できます。' },
+};
+
+function showTerrainPopup(r, c, px, py) {
+    const rawType = board[r]?.[c];
+    if (!rawType) return;
+    const hint = TERRAIN_HINT_MAP[rawType];
+    if (!hint) return;
+    const popup = document.getElementById('terrain-popup');
+    if (!popup) return;
+    document.getElementById('tp-name').textContent = hint.name;
+    document.getElementById('tp-desc').textContent = hint.desc;
+    const pw = 260, ph = 110;
+    let left = Math.min(px + 12, window.innerWidth - pw - 10);
+    let top = Math.min(py + 12, window.innerHeight - ph - 10);
+    if (top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.style.display = 'block';
+    clearTimeout(popup._hideTimer);
+    popup._hideTimer = setTimeout(() => hideTerrainPopup(), 5000);
+}
+
+function hideTerrainPopup() {
+    const popup = document.getElementById('terrain-popup');
+    if (!popup) return;
+    popup.style.display = 'none';
+    clearTimeout(popup._hideTimer);
+}
+
+// =====================================================================
+//  HINT BAR (turn-start contextual hints)
+// =====================================================================
+function updateHintBar() {
+    const bar = document.getElementById('hint-bar');
+    if (!bar) return;
+    if (!isPlayerTurn) { bar.style.display = 'none'; return; }
+
+    const myEnts = entities.filter(e => e.hp > 0 && e.team === myTeam());
+    const hints = [];
+
+    // King danger: enemy within Chebyshev 2
+    const myKing = myEnts.find(e => e.type === 'king');
+    if (myKing) {
+        const threatened = entities.some(e =>
+            e.hp > 0 && e.team !== myTeam() && e.team !== 'npc' &&
+            Math.max(Math.abs(e.r - myKing.r), Math.abs(e.c - myKing.c)) <= 2);
+        if (threatened) hints.push('⚠️ キングが危険な位置にいます！優先してキングを守りましょう。');
+    }
+
+    // Units with AP remaining
+    const movable = myEnts.filter(e => e.ap > 0);
+    if (movable.length > 0) {
+        hints.push(`⚡ APが残っているコマが${movable.length}体います。まだ動けます！`);
+    }
+
+    // Enemy king close
+    const enemyKing = entities.find(e => e.hp > 0 && e.team === enemyTeam() && e.type === 'king');
+    if (enemyKing && myKing) {
+        const dist = Math.max(Math.abs(myKing.r - enemyKing.r), Math.abs(myKing.c - enemyKing.c));
+        if (dist <= 4) hints.push('🎯 相手のキングが接近中！攻撃のチャンスです。');
+    }
+
+    if (hints.length === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+    bar.style.display = 'block';
+    bar.textContent = '💡 ' + hints[0];
+}
+
+// =====================================================================
+//  ABILITY PREVIEW CARD
+// =====================================================================
+function showAbilityPreview(mode) {
+    const card = document.getElementById('ability-preview-card');
+    if (!card) return;
+    let name = ABILITY_NAMES[mode];
+    let desc = ABILITY_TIPS[mode];
+    if (mode === 'skill' || mode.startsWith('skill_')) {
+        name = selectedEntity ? (JOB_SKILL_NAMES[selectedEntity.type] || '固有スキル') : '固有スキル';
+        desc = desc || 'このジョブの固有スキルを発動します。詳細は図鑑を参照してください。';
+    }
+    if (!name && !desc) { card.style.display = 'none'; return; }
+
+    document.getElementById('apc-name').textContent = name || mode;
+    document.getElementById('apc-desc').textContent = desc || '';
+    const apCost = (typeof ABILITY_AP_COSTS !== 'undefined') ? (ABILITY_AP_COSTS[mode] || 0) : 0;
+    const apEl = document.getElementById('apc-ap');
+    if (apEl) apEl.textContent = apCost > 0 ? `消費AP: ${apCost}` : 'AP消費なし';
+    card.style.display = 'block';
+
+    const uiPanel = document.getElementById('ui-panel');
+    if (uiPanel) {
+        const rect = uiPanel.getBoundingClientRect();
+        let left = rect.left - 256;
+        if (left < 4) left = rect.right + 8;
+        let top = rect.top + 80;
+        if (top + 160 > window.innerHeight) top = window.innerHeight - 164;
+        card.style.left = Math.max(4, left) + 'px';
+        card.style.top = Math.max(4, top) + 'px';
+    }
+}
+
+function hideAbilityPreview() {
+    const card = document.getElementById('ability-preview-card');
+    if (card) card.style.display = 'none';
+}
+
+// =====================================================================
+//  TUTORIAL SYSTEM
+// =====================================================================
+const TUTORIAL_STEPS = [
+    {
+        msg: '🎓 ようこそ！<br>これがゲームボードです。<br><br>まず<b>青いコマをクリック</b>して選択してみましょう。',
+        highlight: 'board',
+        advanceOn: 'entity_select',
+    },
+    {
+        msg: '✅ コマを選択しました！<br><br><b>「移動/決定」ボタン</b>を押して移動モードにしてから、<br>隣のマスをクリックして<b>コマを動かして</b>みましょう。',
+        highlight: 'btn-move',
+        advanceOn: 'move',
+    },
+    {
+        msg: '🚶 移動できました！<br><br>次は<b>アビリティボタン（攻撃や特技）</b>を押して、表示されたカードを確認してみましょう。<br>コマを選んでからボタンを押してね。',
+        highlight: 'btn-attack',
+        advanceOn: 'ability_used',
+    },
+    {
+        msg: '⚔️ アビリティを使いました！<br><br>次は<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。',
+        highlight: 'btn-end-turn',
+        advanceOn: 'end_turn',
+    },
+    {
+        msg: '⏳ 相手のターンです。<br><br>相手が動き終わるまで少し待ちましょう。<br>（自動で次のステップへ進みます）',
+        highlight: null,
+        advanceOn: 'player_turn_again',
+    },
+    {
+        msg: '🎉 <b>チュートリアル完了！</b><br><br>基本操作をマスターしました。自由にプレイしてみましょう！<br><br>💡 <i>ヒント：地形タイルを右クリック（スマホは長押し）すると地形の説明が見られます！</i>',
+        highlight: null,
+        advanceOn: null,
+        final: true,
+    },
+];
+
+function startTutorial() {
+    tutorialMode = true;
+    tutorialStep = 0;
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    activeStage = 'plains';
+    initBoard('plains');
+    initEntities('knight', '1');
+    showVictoryCondition('knight');
+    turn = 1; tempRocks = [];
+    isPlayerTurn = true;
+    _cpuWentFirst = false;
+    render();
+    startTurn('player');
+    showTutorialStep();
+}
+
+function showTutorialStep() {
+    if (!tutorialMode) return;
+    const overlay = document.getElementById('tutorial-overlay');
+    if (!overlay) return;
+    if (tutorialStep >= TUTORIAL_STEPS.length) {
+        overlay.style.display = 'none';
+        tutorialMode = false;
+        return;
+    }
+    const step = TUTORIAL_STEPS[tutorialStep];
+    const total = TUTORIAL_STEPS.length;
+    document.getElementById('tutorial-msg').innerHTML =
+        `<div style="font-size:11px;color:#aaa;margin-bottom:8px;">ステップ ${tutorialStep + 1} / ${total}</div>${step.msg}`;
+    overlay.style.display = 'flex';
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    if (step.highlight) {
+        const el = document.getElementById(step.highlight);
+        if (el) el.classList.add('tutorial-highlight');
+    }
+    const nextBtn = document.getElementById('tutorial-next-btn');
+    if (nextBtn) nextBtn.textContent = step.final ? '閉じる ✓' : '次へスキップ ▶';
+}
+
+function advanceTutorial() {
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    tutorialStep++;
+    if (tutorialStep >= TUTORIAL_STEPS.length) {
+        const overlay = document.getElementById('tutorial-overlay');
+        if (overlay) overlay.style.display = 'none';
+        tutorialMode = false;
+    } else {
+        showTutorialStep();
+    }
+}
+
+function closeTutorial() {
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay) overlay.style.display = 'none';
+    tutorialMode = false;
+}
 </script>
+
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay">
+    <div class="tutorial-bubble">
+        <div id="tutorial-msg"></div>
+        <div class="tutorial-btn-row">
+            <button class="tutorial-btn" id="tutorial-close-btn" onclick="closeTutorial()">終了</button>
+            <button class="tutorial-btn" id="tutorial-next-btn" onclick="advanceTutorial()">次へスキップ ▶</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ability Preview Card -->
+<div id="ability-preview-card">
+    <div class="apc-name" id="apc-name"></div>
+    <div class="apc-desc" id="apc-desc"></div>
+    <div class="apc-ap" id="apc-ap"></div>
+    <div class="apc-hint">ターゲット選択またはキャンセルで閉じます</div>
+</div>
+
+<!-- Terrain Hint Popup -->
+<div id="terrain-popup">
+    <div class="tp-header">
+        <span class="tp-name" id="tp-name"></span>
+        <span class="tp-close" onclick="hideTerrainPopup()">✕</span>
+    </div>
+    <div class="tp-desc" id="tp-desc"></div>
+</div>
 
 <div id="kofi-section" style="
     width: 100%;
