@@ -244,7 +244,7 @@ const pingInterval = setInterval(() => {
     wsAlive.set(client, false);
     client.ping();
   });
-}, 30000);
+}, 15000);
 
 wss.on("close", () => {
   clearInterval(pingInterval);

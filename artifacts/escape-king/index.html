@@ -1026,10 +1026,8 @@ let thornTileMap = {}; // "r,c" → {timer, ownerTeam} — 根っこバインド
 //  ONLINE MODE STATE
 // ============================================================
 
-// Fly.io production WebSocket URL.
-// Development (Replit dev environment): uses the current Replit host automatically.
-// Production (Replit Deployments / *.replit.app): connects to Fly.io.
-const FLY_IO_WS_URL = 'wss://escape-king.fly.dev/api/ws';
+// WebSocket always connects to the same host that served the page.
+// Works for both dev (*.replit.dev) and production (*.replit.app) without any Fly.io dependency.
 
 let isOnlineMode = false;
 let myPlayerIndex = -1;   // 0 = P1 (player team, starts row 20), 1 = P2 (cpu team, starts row 0)
@@ -1836,7 +1834,7 @@ function startClientPing() {
         if (wsConn && wsConn.readyState === WebSocket.OPEN) {
             wsConn.send(JSON.stringify({ type: 'clientPing', clientTs: Date.now() }));
         }
-    }, 30000);
+    }, 15000);
     // Send an immediate ping so the indicator updates quickly.
     if (wsConn && wsConn.readyState === WebSocket.OPEN) {
         wsConn.send(JSON.stringify({ type: 'clientPing', clientTs: Date.now() }));
@@ -1852,16 +1850,8 @@ function stopClientPing() {
 }
 
 function connectWS(onOpen) {
-    // In Replit dev environments (*.replit.dev, *.repl.co, localhost) use the
-    // proxied local API. In production deployments (*.replit.app etc.) connect
-    // directly to Fly.io so the API stays live even when Replit sleeps.
-    const h = location.hostname;
-    const isDev = h === 'localhost' ||
-                  h.endsWith('.replit.dev') ||
-                  h.endsWith('.repl.co');
-    const wsUrl = isDev
-        ? `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/ws`
-        : FLY_IO_WS_URL;
+    // Always connect to the same host that served the page (dev + production unified).
+    const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/ws`;
     wsConn = new WebSocket(wsUrl);
     wsConn.onopen = onOpen;
     wsConn.onmessage = handleWsMessage;
@@ -2009,7 +1999,19 @@ function getGameState() {
 }
 
 function applyGameState(state) {
-    board = state.board;
+    // --- Board: full replacement OR delta patch ---
+    if (state._delta) {
+        // Delta sync: only patch tiles that changed since last turnEnd
+        if (state.boardDelta) {
+            for (const [key, tile] of Object.entries(state.boardDelta)) {
+                const [r, c] = key.split(',').map(Number);
+                if (r >= 0 && r < 21 && c >= 0 && c < 21) board[r][c] = tile;
+            }
+        }
+    } else {
+        // Full state sync (turnEnd or reconnect)
+        board = state.board;
+    }
     entities = state.entities;
     // Re-derive element for any entity that lost it during serialisation/reconnect.
     for (const e of entities) {
@@ -2042,9 +2044,58 @@ function applyGameState(state) {
     usedAbilities = {};
 }
 
+// ---- Delta sync system ----
+// _syncDeltaBase: snapshot of the board at the last full/delta sync (null = send full board next time)
+// _syncDebounceTimer: pending debounced stateSync timer
+let _syncDeltaBase = null;
+let _syncDebounceTimer = null;
+
+// Call this from ability/action handlers instead of syncState() directly.
+// Coalesces rapid consecutive calls into a single send after 400ms.
+function syncStateDebounced() {
+    if (!isOnlineMode) return;
+    if (_syncDebounceTimer) clearTimeout(_syncDebounceTimer);
+    _syncDebounceTimer = setTimeout(() => {
+        _syncDebounceTimer = null;
+        syncState('stateSync');
+    }, 400);
+}
+
 function syncState(type = 'stateSync') {
     if (!isOnlineMode) return;
-    wsSend({ type, state: getGameState() });
+    if (type === 'turnEnd') {
+        // Cancel any pending debounced intermediate sync — turnEnd supersedes it.
+        if (_syncDebounceTimer) { clearTimeout(_syncDebounceTimer); _syncDebounceTimer = null; }
+        // Send full state and reset delta baseline so the next stateSync after this
+        // turn starts fresh (first intermediate sync sends full board again).
+        _syncDeltaBase = null;
+        wsSend({ type: 'turnEnd', state: getGameState() });
+    } else {
+        // stateSync: use delta if we have a baseline, otherwise send full state.
+        const fullState = getGameState();
+        if (_syncDeltaBase === null) {
+            // No baseline yet (first sync after turn start or reconnect): send full board,
+            // then establish the delta baseline from this snapshot.
+            _syncDeltaBase = fullState.board; // deep-copied by getGameState()
+            wsSend({ type: 'stateSync', state: fullState });
+        } else {
+            // Compute board delta vs last sent snapshot.
+            const boardDelta = {};
+            let changed = false;
+            for (let r = 0; r < 21; r++) {
+                for (let c = 0; c < 21; c++) {
+                    if (fullState.board[r][c] !== _syncDeltaBase[r][c]) {
+                        boardDelta[`${r},${c}`] = fullState.board[r][c];
+                        changed = true;
+                    }
+                }
+            }
+            // Advance the baseline regardless of whether tiles changed.
+            _syncDeltaBase = fullState.board;
+            const { board: _omit, ...restState } = fullState;
+            wsSend({ type: 'stateSync', state: { ...restState, boardDelta: changed ? boardDelta : {}, _delta: true } });
+        }
+    }
 }
 
 function handleWsMessage(event) {
@@ -2170,10 +2221,11 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'peerReconnected') {
-        // The other player came back; resend our current state for full sync.
+        // The other player came back; resend full state immediately (reset delta baseline too).
         hideSuspendOverlay();
         msg("✅ 相手が再接続しました！試合を再開します。");
-        syncState();
+        _syncDeltaBase = null; // force full board on next sync
+        syncState('stateSync'); // sends full board since _syncDeltaBase was just reset
         return;
     }
 
@@ -3156,19 +3208,19 @@ function updateOnlineInfo() {
     const el = document.getElementById('online-game-info');
     if (!isOnlineMode) { el.style.display = 'none'; return; }
     const myRole = myPlayerIndex === 0 ? '先攻(下)' : '後攻(上)';
-    let pingLabel;
+    let connLabel;
     if (connStatus === 'disconnected') {
-        pingLabel = ` | <span id="ping-indicator" style="color:#e74c3c;font-weight:bold;">切断 ⚠️</span>`;
+        connLabel = ` | <span id="ping-indicator" style="color:#e74c3c;font-weight:bold;">接続切断 ⚠️ 再接続中...</span>`;
     } else if (connStatus === 'reconnected') {
-        pingLabel = ` | <span id="ping-indicator" style="color:#2ecc71;font-weight:bold;">再接続 ✓</span>`;
+        connLabel = ` | <span id="ping-indicator" style="color:#2ecc71;font-weight:bold;">再接続完了 ✓</span>`;
     } else if (lastPingMs !== null) {
-        const color = lastPingMs < 100 ? '#2ecc71' : lastPingMs < 250 ? '#f39c12' : '#e74c3c';
-        pingLabel = ` | <span id="ping-indicator" style="color:${color}">${lastPingMs}ms</span>`;
+        const dot = lastPingMs < 150 ? '🟢' : lastPingMs < 300 ? '🟡' : '🔴';
+        connLabel = ` | <span id="ping-indicator">${dot}</span>`;
     } else {
-        pingLabel = ` | <span id="ping-indicator" style="color:#aaa;">接続中...</span>`;
+        connLabel = ` | <span id="ping-indicator" style="color:#aaa;">⚪</span>`;
     }
     el.style.display = 'block';
-    el.innerHTML = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}${pingLabel}`;
+    el.innerHTML = `🌐 オンライン対戦 | あなた: ${myRole} | ルーム: ${onlineRoomCode}${connLabel}`;
 }
 
 // ============================================================
@@ -7298,7 +7350,7 @@ function handleTileClick(vr, c) {
                 checkEnemyTerritory(selectedEntity);
                 checkWin();
                 render();
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
             } else {
                 const tileEl = document.getElementById(`tile-${r}-${c}`);
                 if (tileEl) {
@@ -10269,7 +10321,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         checkWin();
         render();
         updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
     }
 }
 
@@ -10693,7 +10745,7 @@ function executeSkill(se) {
         });
         msg(`🧚 妖精の里！半径${fvRange}の味方${fvAllied}体に1T無敵バリア！敵${fvEnemyHit}体にAP-1+4封印！妖精${fvSpawned}体召喚！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return true;
     }
     // ====== 人斬り武者 スキル: 冥府送り ======
@@ -10900,7 +10952,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.skillUsed = true;
         msg(`⚰️ 棺桶ナイフ！${coffinT.name}を棺桶に閉じ込めた！3ターン行動不能＋毎ターン2ダメ！他のコマが隣接すれば棺桶壊しで解放できる！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'skill_ryujin') {
@@ -10967,7 +11019,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         delete se._senninSkillGauge;
         msg(`🧘 自然淘汰発動！半径${_sr2}・威力${_sd2}・AP-2・吹飛・4封印(命中${_stHits}体)！使用後ゲージ+3(${se.senninGauge})！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     // ====== 人斬り武者 スキル ======
@@ -10987,7 +11039,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.skillUsed = true;
         msg(`💀 冥府送り！半径5の敵${_mfHits}体を相手陣地奥へ強制転送！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     // ====== ピクシー アビリティ ======
@@ -11008,7 +11060,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         useAbility(se, mode);
         msg(`🧚 羽ばたき！${fForest}マスを森に変えながら飛んだ！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'gremlin_trick') {
@@ -11026,7 +11078,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         useAbility(se, mode);
         msg(`👾 グレムリン召喚！敵の陣地突破勝利が無効化される！次ターン開始時に消滅。自身が闇属性に！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'gnome_hammer') {
@@ -11059,7 +11111,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.element = 'grass';
         useAbility(se, mode);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'greenman_arrow') {
@@ -11072,7 +11124,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.element = 'grass';
         useAbility(se, mode);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'redcap_scythe') {
@@ -11086,7 +11138,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         useAbility(se, mode);
         msg(`🪓 レッドキャップの鎌！半径1全敵${rcHits}体に2ダメ+吹き飛ばし！自身が炎属性に！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'siren_song') {
@@ -11115,7 +11167,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.element = 'water';
         useAbility(se, mode);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'pixie_illusion') {
@@ -11146,7 +11198,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         useAbility(se, mode);
         msg(`✨ ピクシーの幻惑！自身1T無敵＋半径2全コマゲージリセット＋全敵${piHits}体に1ダメ+AP-1+4封印！`);
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     if (mode === 'swap_position') {
@@ -11166,7 +11218,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
         }
         // swap_position uses are infinite, don't call useAbility
         checkWin(); render(); updateUI();
-        if (isOnlineMode) syncState();
+        syncStateDebounced();
         return;
     }
     // ====== 既存スキルモード ======
@@ -11457,7 +11509,7 @@ function doPurify(entity) {
     souls[team] = 0;
     msg(`⛪ 浄化！魂${n}を消化しHP+${n}＆全アビリティ使用回数+${n}！`, true);
     updateUI(); render();
-    if (isOnlineMode) syncState();
+    syncStateDebounced();
 }
 
 // Two nearby spirits (radius 3) merge into a single great spirit (HP5).
@@ -13493,7 +13545,7 @@ function updateUI() {
                 coffinedAlly.ap = Math.min(1, coffinedAlly.maxAp);
                 selectedEntity.ap--;
                 msg(`⚰️ 棺桶壊し！${coffinedAlly.name}を救出した！AP1回復！`);
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
                 render(); updateUI();
             };
             list.appendChild(cfb);
@@ -13548,7 +13600,7 @@ function updateUI() {
                 selectedEntity.invin = true; selectedEntity.invinTimer = 999; // 乗車中は無敵
                 msg(`🚂 ${selectedEntity.name}が列車に乗った！次の発車で次の駅へ！乗車中は無敵！`);
                 render(); updateUI();
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
             };
             list.appendChild(tb);
         }
@@ -13569,7 +13621,7 @@ function updateUI() {
                 selectedEntity.flying = true;
                 msg(`🚁 ${selectedEntity.name}が飛行ドローンに騎乗した！飛行コマになった！`);
                 checkWin(); render(); updateUI();
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
             };
             list.appendChild(wb);
         }
@@ -13600,7 +13652,7 @@ function updateUI() {
                     msg(`🎁⭐ プレゼントを開けた！星のカケラ！${selectedEntity.name}のHP+3！`);
                 }
                 updateUI(); render();
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
             };
             list.appendChild(pb2);
         }
@@ -13621,7 +13673,7 @@ function updateUI() {
                 selectedEntity.ap += 1;
                 msg(`🚤 ${selectedEntity.name}が${adjBoat.name}に乗り込んだ！川を渡れる！AP+1！`);
                 checkWin(); render(); updateUI();
-                if (isOnlineMode) syncState();
+                syncStateDebounced();
             };
             list.appendChild(bb);
         }
