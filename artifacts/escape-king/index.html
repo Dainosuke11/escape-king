@@ -10633,6 +10633,55 @@ function cpuLogic() {
             // 優先度4.5: 戦隊ヒーロー専用アビリティ
             // ====================================================
             if (!attacked && cpu.type === 'sentai_hero') {
+                // === 属性カウンター切替: プレイヤーの弱点を突く隊員を先発に選出 ===
+                if (cpu.sentaiMembers) {
+                    const _pElem = playerMain ? (playerMain.element || 'none') : 'none';
+                    let _switchTarget = null;
+
+                    if (_pElem !== 'none') {
+                        // プレイヤー属性の弱点を突ける隊員を探す
+                        _switchTarget = SENTAI_COLOR_ORDER.find(col =>
+                            cpu.sentaiMembers[col]?.alive &&
+                            ELEMENT_DATA[_pElem]?.weakTo === SENTAI_COLOR_INFO[col].element
+                        ) || null;
+                    }
+
+                    // 属性カウンターがなければ状況優先で隊員を選択
+                    if (!_switchTarget) {
+                        if (cpu.hp <= 15 &&
+                            (cpu.abilities.holy_light||0) > 0 &&
+                            !(cursedAbilities[cpu.id]?.['holy_light'] > 0) &&
+                            cpu.sentaiMembers.white?.alive) {
+                            _switchTarget = 'white'; // HP低下 → 回復準備
+                        } else if (dist <= 1 &&
+                            (cpu.abilities.dark_revenge||0) > 0 &&
+                            !(cursedAbilities[cpu.id]?.['dark_revenge'] > 0) &&
+                            cpu.sentaiMembers.black?.alive) {
+                            _switchTarget = 'black'; // 隣接 → ブラックで強打
+                        } else if (dist <= 1 &&
+                            (cpu.abilities.gaia_smash||0) > 0 &&
+                            !(cursedAbilities[cpu.id]?.['gaia_smash'] > 0) &&
+                            cpu.sentaiMembers.green?.alive) {
+                            _switchTarget = 'green'; // 隣接 → グリーンで吹飛
+                        } else if (dist <= 2 &&
+                            (cpu.abilities.fire_burst||0) > 0 &&
+                            !(cursedAbilities[cpu.id]?.['fire_burst'] > 0) &&
+                            cpu.sentaiMembers.red?.alive) {
+                            _switchTarget = 'red';   // 近距離 → レッドで爆発
+                        } else if ((cpu.r === p.r || cpu.c === p.c) && dist <= 4 &&
+                            (cpu.abilities.aqua_beam||0) > 0 &&
+                            !(cursedAbilities[cpu.id]?.['aqua_beam'] > 0) &&
+                            cpu.sentaiMembers.blue?.alive) {
+                            _switchTarget = 'blue';  // 同列遠距離 → ブルービーム
+                        }
+                    }
+
+                    // 現在と異なる隊員が選ばれた場合のみバトンタッチ
+                    if (_switchTarget && _switchTarget !== cpu.activeMember) {
+                        sentaiSwitchMember(cpu, _switchTarget);
+                    }
+                }
+
                 // --- holy_light: 周囲2マスに敵2体以上 or 自HP <= 15 (AoE回復技) ---
                 let _hlNearEnemies = targets.filter(t=>Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2);
                 if (!attacked && (cpu.abilities.holy_light||0) > 0 && !(cursedAbilities[cpu.id]?.['holy_light']>0) &&
