@@ -4958,34 +4958,25 @@ function processTurnStartEffects(e) {
         let _hkSelf = turn > 10 ? 2 : 1;
         e.hp -= _hkSelf;
         msg(`⚔️ ${e.name}に業火自傷${_hkSelf}ダメ！(残HP:${e.hp > 0 ? e.hp : '討ち取られた'})`, true);
-        // 修羅化 (HP≤20初回)
+        // 修羅化 (HP≤20初回) - 永続maxAp増加なし、今ターンのみAP+1
         if (e.hp <= 20 && e.hp > 0 && !e._shuraFirst) {
             e._shuraFirst = true;
             e.invin = true; e.invinTimer = 1;
-            e.maxAp = Math.min((e.maxAp||2) + 1, 5);
-            e.ap = Math.min(e.ap + 1, e.maxAp);
-            msg(`🔥 ${e.name}【修羅】化！1Tバリア+AP+1！`, true);
+            e.ap = Math.min((e.ap||0) + 1, (e.maxAp||2) + 1);
+            msg(`🔥 ${e.name}【修羅】化！1Tバリア＋今ターンAP+1！アビ威力上昇！`, true);
         }
-        // 阿修羅化 (HP≤10初回)
+        // 阿修羅化 (HP≤10初回) - 今ターンのみAP+2、ATK+1とアビ+1は永続
         if (e.hp <= 10 && e.hp > 0 && !e._asuraFirst) {
             e._asuraFirst = true;
             e.invin = true; e.invinTimer = 1;
-            e.maxAp = Math.min((e.maxAp||2) + 2, 6);
-            e.ap = Math.min(e.ap + 2, e.maxAp);
+            e.ap = Math.min((e.ap||0) + 2, (e.maxAp||2) + 2);
             e.atkBonus = (e.atkBonus||0) + 1;
             Object.keys(e.abilities).forEach(k => { if (k !== 'drop_rock' && e.abilities[k] !== 999) e.abilities[k] = (e.abilities[k]||0) + 1; });
-            msg(`💀 ${e.name}【阿修羅】化！1Tバリア+AP+2+ATK+1+全アビ+1！`, true);
+            msg(`💀 ${e.name}【阿修羅】化！1Tバリア＋今ターンAP+2＋ATK+1＋全アビ+1！`, true);
         }
-        // 居合カウンター発動
-        if (e._iaiActive && e._iaiTurn !== undefined && e._iaiTurn < turn) {
-            let _iaiHits = 0;
-            entities.forEach(t => {
-                if (t.hp<=0||t.team===e.team) return;
-                if (Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c)) <= 1 && !t.invin) { t.hp -= 5; _iaiHits++; }
-            });
-            e._iaiActive = false;
-            if (_iaiHits > 0) msg(`⚔️ ${e.name}の居合迎撃！${_iaiHits}体に5ダメ！`, true);
-            else msg(`⚔️ ${e.name}の居合：隣接敵なし。`, true);
+        // 居合カウンター: 攻撃を受けた瞬間にトリガーされるので turn-startでは不要（削除）
+        if (e._iaiActive && !e.invin) {
+            e._iaiActive = false; // バリア切れ後は解除
         }
         // 怨念返し発動
         if (e._onnenKaeshi && e._onnenKaeshiTurn !== undefined && e._onnenKaeshiTurn < turn) {
@@ -6552,9 +6543,10 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'skill_sennin_tota') return maxDist === 0;
     // ピクシー
     if (mode === 'flutter') {
+        // 羽ばたきはダッシュと同じ距離（最大2マス）
         let canPhaseF = se.flying || se.invin;
-        if (canPhaseF) return dist>0 && dist<=4 && isWalkable(r,c,true);
-        if (dist===0||dist>4) return false;
+        if (canPhaseF) return dist>0 && dist<=2 && isWalkable(r,c,true);
+        if (dist===0||dist>2) return false;
         if (!isWalkable(r,c)) return false;
         return true;
     }
@@ -6567,7 +6559,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'swap_position') return maxDist>0 && maxDist<=8+(se.rangeBonus||0) && target;
     if (mode === 'skill_fairy_village') return maxDist===0;
     // 人斬り武者
-    if (mode === 'gouka_shingun') return dist >= 1 && dist <= 4+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (mode === 'gouka_shingun') return dist >= 1 && dist <= 2+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
     if (mode === 'jigoku_giri') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'shura_ranbu') return r === se.r && c === se.c;
     if (mode === 'gouka_sangeki') {
@@ -6575,10 +6567,15 @@ function isValidTarget(se, r, c, mode) {
         return (se.r===r||se.c===c) && maxDist>=1 && maxDist<=_gsRange+(se.rangeBonus||0) && target && target.team!==se.team;
     }
     if (mode === 'onnen_kaeshi') return r === se.r && c === se.c;
-    if (mode === 'oni_giri') return maxDist >= 1 && maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
+    if (mode === 'oni_giri') return r === se.r && c === se.c; // 自マス選択でAoE
     if (mode === 'iai') return r === se.r && c === se.c;
     if (mode === 'abikyokan') return r === se.r && c === se.c;
-    if (mode === 'skill_meifu') return r === se.r && c === se.c;
+    if (mode === 'skill_meifu') {
+        // 冥府送り: r1基本、修羅r2、阿修羅r3の範囲内の敵1体に斬撃
+        let _mfR = se.hp <= 10 ? 3 : se.hp <= 20 ? 2 : 1;
+        _mfR += (se.rangeBonus||0);
+        return maxDist >= 1 && maxDist <= _mfR && target && target.team !== se.team;
+    }
     return false;
 }
 
@@ -7201,7 +7198,14 @@ function triggerAvalanche(triggerR, triggerC, entity) {
 
 function handleTileClick(vr, c) {
     let r = actualRowFor(vr);
-    if (!canIAct() || !selectedEntity || selectedEntity.team !== myTeam()) return;
+    if (!canIAct() || !selectedEntity || selectedEntity.team !== myTeam()) {
+        // コマ未選択 or 自ターン外でもタイルクリックで地形解説を表示
+        if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+            const tileEl = document.getElementById(`tile-${r}-${c}`);
+            if (tileEl) { const rect = tileEl.getBoundingClientRect(); showTerrainPopup(r, c, rect.left + rect.width / 2, rect.top); }
+        }
+        return;
+    }
 
     if (actionMode === 'move') {
         if (Math.abs(selectedEntity.r - r) + Math.abs(selectedEntity.c - c) === 1) {
@@ -7635,6 +7639,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         let dashOldR = se.r, dashOldC = se.c;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         if (isOceanUnit(se) && se.waterMode && !isWaterTile(board[r]?.[c])) se.waterGauge = Math.max(0, (se.waterGauge||0) - 1);
+        // 中間タイルの効果を適用（2マスダッシュの場合）
+        if (Math.abs(r-se.r)+Math.abs(c-se.c) === 2) {
+            let _dmidR = se.r + Math.sign(r-se.r), _dmidC = se.c + Math.sign(c-se.c);
+            let _dsaveR = se.r, _dsaveC = se.c;
+            se.r = _dmidR; se.c = _dmidC; checkTileEffects(se); se.r = _dsaveR; se.c = _dsaveC;
+        }
         se.r = r; se.c = c; used = true;
         // 産み付けダッシュ: エイリアンは元の場所に卵を産む
         if (se.type === 'alien' && isWalkable(dashOldR, dashOldC) && !entities.some(x=>x.hp>0&&x.r===dashOldR&&x.c===dashOldC)) {
@@ -10149,56 +10159,72 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.senninGauge = (se.senninGauge||0) + 1;
         msg(`🌿 生々流転！正面に${_ssPlaced}体を召喚(2T後消滅)！ゲージ+1(${se.senninGauge})！`); used = true;
     } else if (actionMode === 'gouka_shingun') {
-        // 業火進軍: r4ダッシュ/元位置スケルトン召喚/HP≤敵max→AP+2
+        // 業火進軍: 最大2マスダッシュ/元位置に紫スケルトン召喚/HP≤敵max→AP+2
         let _ghOldR = se.r, _ghOldC = se.c;
+        // 中間タイルの効果を適用
+        if (Math.abs(r-se.r)+Math.abs(c-se.c) === 2) {
+            let _midR = se.r + Math.sign(r-se.r), _midC = se.c + Math.sign(c-se.c);
+            let _tmpR = se.r, _tmpC = se.c;
+            se.r = _midR; se.c = _midC; checkTileEffects(se); se.r = _tmpR; se.c = _tmpC;
+        }
         se.r = r; se.c = c;
         checkTileEffects(se);
         if (!entities.some(e=>e.hp>0&&e.r===_ghOldR&&e.c===_ghOldC)) {
-            entities.push({ id:'sk_hk_'+Date.now(), type:'skeleton', name:'スケルトン', team:se.team, r:_ghOldR, c:_ghOldC, hp:3, maxHp:3, ap:1, maxAp:1, abilities:{bite:3}, element:'dark', skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+            entities.push({ id:'sk_hk_'+Date.now(), type:'skeleton', name:'スケルトン(紫)', team:'npc', r:_ghOldR, c:_ghOldC, hp:3, maxHp:3, ap:1, maxAp:1, abilities:{bite:3}, element:'dark', skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
         }
         let _ghEnemyMaxHp = Math.max(0, ...entities.filter(e=>e.hp>0&&e.team!==se.team).map(e=>e.hp));
         let _ghApBonus = se.hp <= _ghEnemyMaxHp;
         if (_ghApBonus) { se.ap = Math.min(se.ap + 2, se.maxAp + 2); }
         if (se.abilities['gouka_shingun'] !== 999) se.abilities['gouka_shingun']--;
-        msg(`🔥 業火進軍！元の場所にスケルトン召喚${_ghApBonus ? '！HP≤敵最大HP→AP+2' : ''}！`); used = true;
+        msg(`🔥 業火進軍！元の場所に紫スケルトン召喚${_ghApBonus ? '！HP≤敵最大HP→AP+2！' : '！'}`); used = true;
     } else if (actionMode === 'jigoku_giri') {
-        // 地獄切り: r1炎3ダメ+業火の呪い3T
+        // 地獄斬り: r1炎ダメ+業火の呪い+自AP-1。修羅→4、阿修羅→6
         if (targetEntity && !targetEntity.invin) {
-            let _jgDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            let _jgBaseDmg = se.hp <= 10 ? 6 : se.hp <= 20 ? 4 : 2;
+            let _jgDmg = _jgBaseDmg + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.hp -= _jgDmg;
-            targetEntity.goukaCurseTimer = 3;
+            targetEntity.goukaCurseTimer = Math.max(targetEntity.goukaCurseTimer||0, 3);
+            se.ap = Math.max(0, se.ap - 1);
             if (targetEntity.hp <= 0) {
                 se.hp = Math.min(se.hp + 2, se.maxHp + 5);
                 let _ks = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
                 for (let _ki=0; _ki<4&&_ks.length>0; _ki++) { let _kk=_ks.splice(Math.floor(Math.random()*_ks.length),1)[0]; se.abilities[_kk]++; }
-                msg(`⚔️ ${targetEntity.name}を討ち取った！HP+2+4アビ+1！`);
+                msg(`⚔️ ${targetEntity.name}を討ち取った！HP+2＋4アビ+1！`);
             }
-            msg('🔥 地獄切り！炎3ダメ+業火の呪い3T！');
-        } else { msg('🔥 地獄切り：無効！'); }
+            let _jgState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+            msg(`🔥 地獄斬り${_jgState}！炎${_jgDmg}ダメ＋業火の呪い付与＋自AP-1！`);
+        } else { msg('🔥 地獄斬り：無効！'); }
         if (se.abilities['jigoku_giri'] !== 999) se.abilities['jigoku_giri']--;
         used = true;
     } else if (actionMode === 'shura_ranbu') {
-        // 修羅乱舞: 半径1全敵2炎ダメ+吹飛
+        // 修羅乱舞: 半径1全敵炎ダメ+業火の呪い+自AP-1。修羅→4、阿修羅→6
+        let _srBaseDmg = se.hp <= 10 ? 6 : se.hp <= 20 ? 4 : 2;
         let _srHits = 0;
         entities.forEach(t => {
             if (t.hp<=0||t.team===se.team) return;
             if (Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) > 1) return;
             if (!t.invin) {
-                let _srDmg = 2 + (se.atkBonus||0) + (t.defDebuff||0);
-                t.hp -= _srDmg; knockback(t, 1, se); _srHits++;
+                let _srDmg = _srBaseDmg + (se.atkBonus||0) + (t.defDebuff||0);
+                t.hp -= _srDmg;
+                t.goukaCurseTimer = Math.max(t.goukaCurseTimer||0, 3);
+                _srHits++;
                 if (t.hp <= 0) {
                     se.hp = Math.min(se.hp + 2, se.maxHp + 5);
                     let _ks2 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
                     for (let _ki=0; _ki<4&&_ks2.length>0; _ki++) { let _kk=_ks2.splice(Math.floor(Math.random()*_ks2.length),1)[0]; se.abilities[_kk]++; }
-                    msg(`⚔️ 討ち取った！HP+2+4アビ+1！`);
+                    msg(`⚔️ 討ち取った！HP+2＋4アビ+1！`);
                 }
             }
         });
+        se.ap = Math.max(0, se.ap - 1);
         if (se.abilities['shura_ranbu'] !== 999) se.abilities['shura_ranbu']--;
-        msg(`🔥 修羅乱舞！半径1全体2炎ダメ+吹飛(${_srHits}体)！`); used = true;
+        let _srState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+        msg(`🔥 修羅乱舞${_srState}！半径1全体${_srBaseDmg}炎ダメ＋業火の呪い(${_srHits}体)＋自AP-1！`); used = true;
     } else if (actionMode === 'gouka_sangeki') {
-        // 業火三撃: 直線炎3ダメ/射程は修羅状態で拡大/修羅以降は接近
+        // 業火斬撃: 直線炎ダメ+業火の呪い+自AP-1。修羅→5(射程5,接近1)、阿修羅→7(射程6,接近2)
         let _gsRange = se.hp <= 10 ? 6 : se.hp <= 20 ? 5 : 4;
+        let _gsBaseDmg = se.hp <= 10 ? 7 : se.hp <= 20 ? 5 : 3;
+        let _gsClose = se.hp <= 10 ? 2 : se.hp <= 20 ? 1 : 0;
         _gsRange += (se.rangeBonus||0);
         let _gsDr = Math.sign(r - se.r), _gsDc = Math.sign(c - se.c);
         let _gsHit = null;
@@ -10208,20 +10234,26 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (_gt) { _gsHit = _gt; break; }
         }
         if (_gsHit && !_gsHit.invin) {
-            let _gsDmg = 3 + (se.atkBonus||0) + (_gsHit.defDebuff||0);
+            let _gsDmg = _gsBaseDmg + (se.atkBonus||0) + (_gsHit.defDebuff||0);
             _gsHit.hp -= _gsDmg;
-            if (se.hp <= 20) {
+            _gsHit.goukaCurseTimer = Math.max(_gsHit.goukaCurseTimer||0, 3);
+            // 接近移動
+            for (let _ci=0; _ci<_gsClose; _ci++) {
                 let _nr = _gsHit.r - _gsDr, _nc = _gsHit.c - _gsDc;
-                if (_nr>=0&&_nr<SIZE&&_nc>=0&&_nc<SIZE&&!entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc)) { se.r=_nr; se.c=_nc; }
+                if (_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE) break;
+                if (entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc&&e!==se)) break;
+                se.r = _nr; se.c = _nc;
             }
+            se.ap = Math.max(0, se.ap - 1);
             if (_gsHit.hp <= 0) {
                 se.hp = Math.min(se.hp + 2, se.maxHp + 5);
                 let _ks3 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
                 for (let _ki=0; _ki<4&&_ks3.length>0; _ki++) { let _kk=_ks3.splice(Math.floor(Math.random()*_ks3.length),1)[0]; se.abilities[_kk]++; }
-                msg(`⚔️ 討ち取った！HP+2+4アビ+1！`);
+                msg(`⚔️ 討ち取った！HP+2＋4アビ+1！`);
             }
-            msg(`🔥 業火三撃！炎3ダメ(射程${_gsRange})${se.hp<=20?'・接近！':''}！`);
-        } else { msg('🔥 業火三撃：命中なし！'); }
+            let _gsState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+            msg(`🔥 業火斬撃${_gsState}！炎${_gsDmg}ダメ(射程${_gsRange})＋業火の呪い${_gsClose>0?`＋${_gsClose}マス接近`:''}＋自AP-1！`);
+        } else { msg('🔥 業火斬撃：命中なし！'); }
         if (se.abilities['gouka_sangeki'] !== 999) se.abilities['gouka_sangeki']--;
         used = true;
     } else if (actionMode === 'onnen_kaeshi') {
@@ -10232,43 +10264,88 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['onnen_kaeshi'] !== 999) se.abilities['onnen_kaeshi']--;
         msg('⚫ 怨念返し！次ターン開始時、受けたダメージ×2を最寄りの敵に返す！'); used = true;
     } else if (actionMode === 'oni_giri') {
-        // 鬼切り: r3闇4ダメ+業火の呪い3T
-        if (targetEntity && !targetEntity.invin) {
-            let _ogDmg = 4 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
-            targetEntity.hp -= _ogDmg;
-            targetEntity.goukaCurseTimer = 3;
-            if (targetEntity.hp <= 0) {
-                se.hp = Math.min(se.hp + 2, se.maxHp + 5);
-                let _ks4 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
-                for (let _ki=0; _ki<4&&_ks4.length>0; _ki++) { let _kk=_ks4.splice(Math.floor(Math.random()*_ks4.length),1)[0]; se.abilities[_kk]++; }
-                msg(`⚔️ ${targetEntity.name}を討ち取った！HP+2+4アビ+1！`);
+        // 鬼斬り: 半径1 AoE 闇4ダメ+敵AP-2。修羅→r2、阿修羅→r2+6ダメ
+        let _ogRadius = se.hp <= 20 ? 2 : 1;
+        let _ogBaseDmg = se.hp <= 10 ? 6 : 4;
+        let _ogHits = 0;
+        entities.forEach(t => {
+            if (t.hp<=0||t.team===se.team) return;
+            if (Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) > _ogRadius) return;
+            if (!t.invin) {
+                let _ogDmg = _ogBaseDmg + (se.atkBonus||0) + (t.defDebuff||0);
+                t.hp -= _ogDmg;
+                t.ap = Math.max(0, (t.ap||0) - 2);
+                _ogHits++;
+                if (t.hp <= 0) {
+                    se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                    let _ks4 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                    for (let _ki=0; _ki<4&&_ks4.length>0; _ki++) { let _kk=_ks4.splice(Math.floor(Math.random()*_ks4.length),1)[0]; se.abilities[_kk]++; }
+                    msg(`⚔️ ${t.name}を討ち取った！HP+2＋4アビ+1！`);
+                }
             }
-            msg('👹 鬼切り！闇4ダメ+業火の呪い3T！');
-        } else { msg('👹 鬼切り：無効！'); }
+        });
+        let _ogState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+        msg(`👹 鬼斬り${_ogState}！半径${_ogRadius}の敵${_ogHits}体に闇${_ogBaseDmg}ダメ＋AP-2！`);
         if (se.abilities['oni_giri'] !== 999) se.abilities['oni_giri']--;
         used = true;
     } else if (actionMode === 'iai') {
-        // 居合: 構え→次ターン開始時に隣接敵を迎撃
+        // 居合: 1Tバリア+カウンター状態。攻撃を受けるたびに半径3の敵全体に反撃
         se._iaiActive = true;
-        se._iaiTurn = turn;
+        se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1);
         if (se.abilities['iai'] !== 999) se.abilities['iai']--;
-        msg('⚔️ 居合の構え！次のターン開始時、隣接した全敵に5ダメ迎撃！'); used = true;
+        let _iaiDmgPreview = se.hp <= 10 ? 6 : se.hp <= 20 ? 4 : 2;
+        msg(`⚔️ 居合の構え！1Tバリア＋カウンター発動中！攻撃を受けるたびに半径3の敵全体に${_iaiDmgPreview}ダメ！`); used = true;
     } else if (actionMode === 'abikyokan') {
-        // 阿鼻叫喚: 前方エリアに業火地獄マス3T展開
-        let _abDr = se.team === 'player' ? -1 : 1;
-        for (let _ri=1; _ri<=5; _ri++) {
-            for (let _ci=-2; _ci<=2; _ci++) {
-                let _tr = se.r + _abDr*_ri, _tc = se.c + _ci;
+        // 阿鼻叫喚: 半径2(修羅→3,阿修羅→4)に業火地獄マス1T展開+敵にAP-1+4封印+スケルトン/鬼NPC召喚
+        let _abRadius = se.hp <= 10 ? 4 : se.hp <= 20 ? 3 : 2;
+        let _abEnemyHit = 0;
+        entities.forEach(t => {
+            if (t.hp<=0||t.team===se.team) return;
+            if (Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) > _abRadius) return;
+            if (t.invin) return;
+            t.ap = Math.max(0, (t.ap||0) - 1);
+            let _abKeys = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&((t.abilities[k]>0)||t.abilities[k]===999));
+            if (_abKeys.length > 0) sealAbilities(t, _abKeys.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            _abEnemyHit++;
+        });
+        // 地獄マスを1T展開
+        for (let _adr=-_abRadius; _adr<=_abRadius; _adr++) {
+            for (let _adc=-_abRadius; _adc<=_abRadius; _adc++) {
+                if (Math.max(Math.abs(_adr),Math.abs(_adc)) > _abRadius) continue;
+                let _tr = se.r+_adr, _tc = se.c+_adc;
                 if (_tr>=0&&_tr<SIZE&&_tc>=0&&_tc<SIZE) {
-                    hellGroundTiles.push({r:_tr, c:_tc, expireAt: turn+3, ownerTeam: se.team});
+                    hellGroundTiles.push({r:_tr, c:_tc, expireAt: turn+1, ownerTeam: se.team});
                 }
             }
         }
+        // 紫コマ(スケルトン/鬼)をランダムに召喚
+        const _abNpcPool = [
+            { type:'skeleton', name:'スケルトン', hp:3, ap:1, abilities:{bite:3}, element:'dark' },
+            { type:'goblin', name:'小鬼', hp:2, ap:1, abilities:{punch:3, bite:2}, element:'dark' },
+            { type:'blue_oni_npc', name:'青鬼', hp:4, ap:2, abilities:{sword:3, oni_arm:2}, element:'water' },
+            { type:'red_oni_npc', name:'赤鬼', hp:4, ap:1, abilities:{sword:3, fire:2}, element:'fire' },
+            { type:'oni_npc', name:'大鬼', hp:5, ap:2, abilities:{sword:3, punch:2, oni_arm:3}, element:'dark' },
+        ];
+        let _abCands = [];
+        for (let _adr2=-_abRadius; _adr2<=_abRadius; _adr2++) for (let _adc2=-_abRadius; _adc2<=_abRadius; _adc2++) {
+            let _nr=se.r+_adr2, _nc=se.c+_adc2;
+            if (_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE||!isWalkable(_nr,_nc)) continue;
+            if (!entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc)) _abCands.push({r:_nr,c:_nc});
+        }
+        _abCands.sort(()=>Math.random()-0.5);
+        let _abSpawned = 0;
+        _abNpcPool.slice(0, Math.min(3, _abCands.length)).forEach((npc, i) => {
+            let pos = _abCands[i];
+            entities.push({ id:`ab_npc_${npc.type}_${Date.now()}_${i}`, type:npc.type, name:npc.name, team:'npc', r:pos.r, c:pos.c, hp:npc.hp, maxHp:npc.hp, ap:npc.ap, maxAp:npc.ap, abilities:npc.abilities, initialAbilities:{...npc.abilities}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, element:npc.element, turnBorn:turn });
+            _abSpawned++;
+        });
         if (se.abilities['abikyokan'] !== 999) se.abilities['abikyokan']--;
-        msg('🔥 阿鼻叫喚！前方に業火地獄マス展開！敵は毎T1ダメ！3T持続！'); used = true;
-    } else if (actionMode.startsWith('skill_')) {
+        let _abState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+        msg(`🔥 阿鼻叫喚${_abState}！半径${_abRadius}に業火地獄1T展開！敵${_abEnemyHit}体にAP-1+4封印！NPC${_abSpawned}体召喚！`); used = true;
+    } else if (actionMode.startsWith('skill_') ||
+               ['flutter','gremlin_trick','gnome_hammer','greenman_arrow','redcap_scythe','siren_song','pixie_illusion','swap_position'].includes(actionMode)) {
         executeRushSkill(se, r, c, actionMode);
-        used = true;
+        // ピクシー/swap系ハンドラは内部でreturnするため used は立てない
     }
 
     // 属性弱点ダメージ+1
@@ -10289,6 +10366,16 @@ function handleAbilityTarget(r, c, targetEntity) {
     if (used && se.fallen && !actionMode.startsWith('skill_') &&
         !['feather_dash','bind_arrow','light_bind','scales','light_barrier','sin_mark','death_scythe','balance_break','light_whip','grudge_strike'].includes(actionMode)) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
+    }
+    // 居合カウンター: iai状態の人斬り武者が攻撃を受けた時に反撃
+    if (targetEntity && targetEntity._iaiActive && targetEntity.team !== se.team && attackModes.includes(actionMode)) {
+        let _iaiDmg = targetEntity.hp <= 10 ? 6 : targetEntity.hp <= 20 ? 4 : 2;
+        let _iaiHits = 0;
+        entities.filter(e => e.hp > 0 && e.team !== targetEntity.team &&
+            Math.max(Math.abs(e.r-targetEntity.r), Math.abs(e.c-targetEntity.c)) <= 3)
+            .forEach(e => { if (!e.invin) { e.hp -= _iaiDmg; _iaiHits++; } });
+        if (_iaiHits > 0) msg(`⚔️ ${targetEntity.name}の居合カウンター！半径3の敵${_iaiHits}体に${_iaiDmg}ダメ！`, true);
+        checkWin();
     }
     if (used) {
         if (tutorialMode && tutorialStep === 3) advanceTutorial();
@@ -10752,7 +10839,9 @@ function executeSkill(se) {
     }
     // ====== 人斬り武者 スキル: 冥府送り ======
     if (se.type === 'hitokiri_musha') {
-        msg('💀 冥府送り！発動マス(自分)をタップしてください！半径5の全敵を相手陣地奥へ転送！');
+        let _mfRange = se.hp <= 10 ? 3 : se.hp <= 20 ? 2 : 1;
+        let _mfState2 = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+        msg(`💀 冥府送り${_mfState2}！半径${_mfRange}の敵1体をクリックしてください！6ダメ斬撃＋業火の呪い！`);
         actionMode = 'skill_meifu'; render(); return false;
     }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
@@ -11026,20 +11115,24 @@ function executeRushSkill(se, targetR, targetC, mode) {
     }
     // ====== 人斬り武者 スキル ======
     if (mode === 'skill_meifu') {
-        // 冥府送り: 半径5の全敵を相手陣地後方へ強制転送
-        let _mfEnemies = entities.filter(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=5);
-        let _mfHits = 0;
-        _mfEnemies.forEach(t => {
-            if (t.invin) return;
-            let _mfRow = se.team === 'player' ? 0 : SIZE-1;
-            for (let _at=0; _at<50; _at++) {
-                let _tr = Math.max(0, Math.min(SIZE-1, _mfRow + (se.team==='player' ? Math.floor(Math.random()*3) : -Math.floor(Math.random()*3))));
-                let _tc = Math.floor(Math.random()*SIZE);
-                if (!entities.some(e=>e.hp>0&&e.r===_tr&&e.c===_tc) && isWalkable(_tr,_tc)) { t.r=_tr; t.c=_tc; _mfHits++; break; }
+        // 冥府送り: 半径1(修羅→2,阿修羅→3)の敵1体に6ダメ斬撃+業火の呪い(炎属性)
+        let _mfTarget = entities.find(e=>e.hp>0&&e.r===targetR&&e.c===targetC&&e.team!==se.team);
+        if (_mfTarget && !_mfTarget.invin) {
+            let _mfDmg = 6 + (se.atkBonus||0) + (_mfTarget.defDebuff||0);
+            _mfTarget.hp -= _mfDmg;
+            _mfTarget.goukaCurseTimer = Math.max(_mfTarget.goukaCurseTimer||0, 3);
+            let _mfState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
+            if (_mfTarget.hp <= 0) {
+                se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                let _mfKs = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                for (let _mi=0; _mi<4&&_mfKs.length>0; _mi++) { let _mk=_mfKs.splice(Math.floor(Math.random()*_mfKs.length),1)[0]; se.abilities[_mk]++; }
+                msg(`⚔️ ${_mfTarget.name}を討ち取った！HP+2＋4アビ+1！`);
             }
-        });
+            msg(`💀 冥府送り${_mfState}！炎${_mfDmg}ダメ斬撃＋業火の呪い付与！`);
+        } else {
+            msg('💀 冥府送り：無効！');
+        }
         se.skillUsed = true;
-        msg(`💀 冥府送り！半径5の敵${_mfHits}体を相手陣地奥へ強制転送！`);
         checkWin(); render(); updateUI();
         syncStateDebounced();
         return;
@@ -11052,10 +11145,15 @@ function executeRushSkill(se, targetR, targetC, mode) {
         let fDist = Math.max(Math.abs(targetR - se.r), Math.abs(targetC - se.c));
         let fForest = 0;
         const forestTiles = ['plains','desert','graveyard_ground','nighttown_ground','castle_tile','mountain_tile','snow','lava_ground','arena_floor','lake_ground','dungeon_ground','fortress_floor','swamp_tile','factory_conveyor','factory_skip_1','factory_skip_2','volcano_summit_ground','skyfort_bridge'];
+        let fSaveR = se.r, fSaveC = se.c;
         for (let fi = 1; fi <= fDist; fi++) {
             let fR = se.r + fStepR * fi; let fC = se.c + fStepC * fi;
             if (fi < fDist && forestTiles.includes(board[fR]?.[fC]) && !entities.some(e=>e.hp>0&&e.r===fR&&e.c===fC)) {
                 board[fR][fC] = 'forest'; fForest++;
+            }
+            // 中間タイルの罠・アイテム効果を適用
+            if (fi < fDist) {
+                se.r = fR; se.c = fC; checkTileEffects(se); se.r = fSaveR; se.c = fSaveC;
             }
         }
         se.r = targetR; se.c = targetC;
@@ -13958,6 +14056,11 @@ const TUTORIAL_STEPS = [
     },
     {
         msg: '🪨 <b>岩で敵の進路を邪魔しよう！</b><br><br>「岩落とし」アビリティを使うと任意のマスに岩を設置できます（999回使用可）。<br>敵の進路上に岩を置いて<b>進軍を妨害</b>しましょう！<br><br>橋の前に置くと特に効果的です。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🪨 <b>敵の四方を囲んで頭上に岩を落とそう！</b><br><br>「岩落とし」で敵コマの<b>上下左右4マスに岩を置いてから「岩落とし」をもう1回</b>使うと――<br>敵の頭上に岩崩れが発生し<b>30ダメージ</b>の大技が炸裂！<br><br>💡 敵を動けなくしてから一気に決めるのがコツです。',
         highlight: null,
         advanceOn: null,
     },
