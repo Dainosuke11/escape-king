@@ -10620,7 +10620,12 @@ function executeRushSkill(se, targetR, targetC, mode) {
                     knockback(hit, 1, se);
                     hits++;
                 }
-                floodTile(wr, wc);
+                // 効果範囲を浅瀬マスに固定（deep_water化しない）
+                const skipTiles = ['sea_trench','deep_water','river','whirlpool','rock','volcano','mine','bridge_up','sky_void','fallen_floor','gravestone','vortex_tile'];
+                if (wr>=0&&wr<SIZE&&wc>=0&&wc<SIZE&&!skipTiles.includes(board[wr][wc])) {
+                    board[wr][wc] = 'shallow_water';
+                    waterHitsMap[wr+','+wc] = 0;
+                }
             }
         }
         se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + 5);
