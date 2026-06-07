@@ -143,6 +143,8 @@
         .mine::after { content: "💎"; }
         .desert { background: #e1b12c; }
         .forest { background: #27ae60; }
+        .hell_ground { background: #1a0020 !important; border: 1px solid #4a0060 !important; }
+        .hell_ground::after { content: "🔥"; font-size: calc(var(--tile-size) * 0.35); position: absolute; opacity: 0.7; pointer-events: none; }
         .magic_circle { background: #8e44ad; }
         .magic_circle::after { content: "🔯"; font-size: calc(var(--tile-size) * 0.45); }
         .camel_tile { background: #f39c12; }
@@ -821,6 +823,7 @@ let cursedAbilities = {};       // entityId → { abilityKey: turnsRemaining }
 let lightBarrierZones = [];    // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 let pentagramZones = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 let darknessFields = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
+let hellGroundTiles = [];      // [{r,c,expireAt,ownerTeam}] 人斬り武者の阿鼻叫喚
 let copperForcedMines = new Set(); // positions "r,c" forced to yield copper
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
@@ -1204,7 +1207,15 @@ const ABILITY_NAMES = {
     redcap_scythe: '🪓レッドキャップの鎌(r1全体/2ダメ+吹飛/自炎属性)',
     siren_song: '🎵セイレーンの歌声(r5/1ダメ+守護者召喚/自水属性)',
     pixie_illusion: '✨ピクシーの幻惑(r2全体/ゲージ0+1ダメ+AP-1+4封印/自光属性)',
-    swap_position: '🔄位置替え(r8/敵味方入れ替え/敵1ダメAP-1/味方HP+1)'
+    swap_position: '🔄位置替え(r8/敵味方入れ替え/敵1ダメAP-1/味方HP+1)',
+    gouka_shingun: '🔥業火進軍(r4ダッシュ/原位置スケルトン/HP≤敵max→AP+2)',
+    jigoku_giri: '⚔️地獄切り(r1/炎3ダメ+業火呪3T)',
+    shura_ranbu: '🔥修羅乱舞(r1全体/炎2ダメ+吹飛)',
+    gouka_sangeki: '🔥業火三撃(直線r4~6/炎3ダメ/修羅接近)',
+    onnen_kaeshi: '⚫怨念返し(次T/受ダメ×2返撃)',
+    oni_giri: '👹鬼切り(r3/闇4ダメ+業火呪3T)',
+    iai: '⚔️居合(次T/隣接敵5ダメ迎撃)',
+    abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)'
 };
 
 const ABILITY_TIPS = {
@@ -1418,7 +1429,15 @@ const ABILITY_TIPS = {
     holy_light: '⚪ホワイトの技。生存中の全隊員にHP+1と1T無敵バリアを付与。回数5。',
     dark_revenge: '⚫ブラックの技。隣接した敵に闇属性(1+死亡隊員数×2)ダメ+AP-2。全員生存時1ダメ、全員死亡時11ダメ。回数5。',
     tacit_agreement: '半径3マスの敵1体のAP-2。自分前方幅3マスに岩設置(次T消滅)。死亡済みの隊員1人をHP1で復活させ、封印アビリティを解除する。回数5。',
-    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)。複合属性弱点判定あり。使用後次ターン自AP-2。'
+    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)。複合属性弱点判定あり。使用後次ターン自AP-2。',
+    gouka_shingun: '🔥 前方4マスまでダッシュ。元いた場所にスケルトン(HP3)を召喚。移動後のHPが最大敵HP以下の場合、AP+2。回数5。',
+    jigoku_giri: '⚔️ 隣接した敵に炎属性3ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
+    shura_ranbu: '🔥 半径1マス内の全敵に炎属性2ダメ＋後方吹き飛ばし。討ち取るとHP+2+4種アビ+1。回数5。',
+    gouka_sangeki: '🔥 直線方向の敵1体に炎属性3ダメ。射程はHP>20で4/HP≤20で5/HP≤10で6。修羅・阿修羅状態では命中後に敵の隣接マスへ接近。討ち取るとHP+2+4種アビ+1。回数5。',
+    onnen_kaeshi: '⚫ 怨念返しの構えをとる。次のターン開始時、前ターンに受けたダメージの2倍を最寄りの敵に返す。回数5。',
+    oni_giri: '👹 半径3マスの敵1体に闇属性4ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
+    iai: '⚔️ 居合の構えをとる。次のターン開始時、隣接する全敵に5ダメの迎撃を行う。回数5。',
+    abikyokan: '🔥 前方エリア(幅5×奥行5)に業火地獄マス展開。地獄マスにいる敵は毎ターン1ダメ。3ターン持続。回数5。'
 };
 
 const JOB_DATA = {
@@ -1445,7 +1464,8 @@ const JOB_DATA = {
     dwarf:   { name: 'ドワーフエンジニア', abilities: { drop_rock: 999, shatter: 10, material_gather: 5, junk_wall: 5, ore_mine: 1, volcano_shot: 1, arm_craft: 1, leg_craft: 1, body_craft: 1, head_craft: 1, cannon_craft: 1, turret_build: 1, part_repair: 1 }, hp: 30, ap: 2, dwarfUnit: true },
     sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 },
     sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true },
-    pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true }
+    pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true },
+    hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true }
 };
 
 const ELEMENT_DATA = {
@@ -1463,7 +1483,7 @@ const JOB_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light', hitokiri_musha: 'fire',
 };
 
 const NPC_ELEMENT = {
@@ -1477,6 +1497,7 @@ const NPC_ELEMENT = {
     oni_snake: 'dark', blue_oni: 'dark', red_oni: 'dark', great_oni: 'dark',
     gremlin: 'dark', forest_guardian: 'grass',
     pixie_fairy: 'light', gnome_npc: 'grass', greenman_npc: 'grass', redcap_npc: 'fire', siren_npc: 'water',
+    small_oni: 'dark',
 };
 
 const ABILITY_ELEMENT = {
@@ -1504,6 +1525,8 @@ const ABILITY_ELEMENT = {
     holy_light: 'light', dark_revenge: 'dark',
     fundo_gekkoh: 'fire', kako_tosen: 'grass', kyoshin_tankai: 'water',
     banzai_jiai: 'water', meikyo_shisui: 'light', seisei_ruten: 'grass',
+    gouka_shingun: 'fire', jigoku_giri: 'fire', shura_ranbu: 'fire', gouka_sangeki: 'fire',
+    onnen_kaeshi: 'dark', oni_giri: 'dark', iai: 'fire', abikyokan: 'fire',
 };
 
 const STAGE_ELEMENT = {
@@ -1520,7 +1543,7 @@ const JOB_SKILL_ELEMENT = {
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
-    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light',
+    devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light', hitokiri_musha: 'dark',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -1529,6 +1552,7 @@ const SKILL_MODE_ELEMENT = {
     skill_root_bind: 'grass',
     skill_coffin: 'dark', skill_necro_release: 'dark',
     skill_sennin_tota: 'water',
+    skill_meifu: 'dark',
 };
 
 const JOB_SKILL_NAMES = {
@@ -1556,6 +1580,7 @@ const JOB_SKILL_NAMES = {
     dwarf:         '合体',
     sentai_hero:   '合体必殺技',
     sennin:        '自然淘汰',
+    hitokiri_musha: '冥府送り',
 };
 
 const JOB_GUIDE_META = {
@@ -1583,6 +1608,7 @@ const JOB_GUIDE_META = {
     sentai_hero:   { emoji: '🦸', fullName: '戦隊ヒーロー', note: '【5人チーム】レッド🔴ブルー🔵グリーン🟢ホワイト⚪ブラック⚫\n各隊員HP6、合計HP30を共有。隊員が倒れると担当アビリティが封印される。\n「暗黙の了解」で死亡隊員を復活可。\n★スキル「合体必殺技」：生存隊員×2の威力で幅3×深さ7AoE発射！' },
     sennin:        { emoji: '🧘', fullName: '仙人', note: '【仙人ゲージ】AP温存でゲージ増加。ゲージ消費技に必要。\n属性は草と水を1ターンごとに交替(奇数ターン=水/偶数ターン=草)。\n「雲水行脚」でAP+2。スキル不使用で終えるとゲージ+4、使用でゲージ+1。\n★スキル「自然淘汰」：ゲージ全消費→消費量で半径2~8/威2~8のAoE。AP-2+吹飛+4封印。使用後ゲージ+3。' },
     pixie:         { emoji: '🧚', fullName: 'ピクシー', note: '【イタズラ好きのトリックスター】光属性・飛行ユニット。\n技ごとに属性が変わる変幻自在の戦士。\n「グレムリンのイタズラ」：5T以降。グレムリン召喚中は敵の陣地突破勝利が無効化。\n「妖精の里」スキル：半径3マスに結界を張り6体の妖精を召喚。敵を封印・味方を守る。' },
+    hitokiri_musha: { emoji: '⚔️', fullName: '人斬り武者', note: '【火炎×冥府の呪われ二刀剣士】毎ターン自傷1ダメ(10T後は2ダメ)・属性が炎/闇で交替。\nHP≤20で【修羅】化(1Tバリア+AP+1)、HP≤10で【阿修羅】化(1Tバリア+AP+2+ATK+1+全アビ+1)。\n敵を討ち取るとHP+2+4アビ+1。陣地突破勝利なし(撃破のみで勝利)。\n業火の呪い：技で付与、毎T1ダメ(3T持続)。\n「阿鼻叫喚」：前方に業火地獄マス展開・敵は毎T1ダメ。\n★スキル「冥府送り」：半径5の敵全員を相手陣地奥へ強制転送！' },
 };
 
 const ENTITY_ICONS = {
@@ -1644,6 +1670,7 @@ const ENTITY_ICONS = {
     greenman_npc:     '🌿',
     redcap_npc:       '🪓',
     siren_npc:        '🎵',
+    small_oni:        '👿',
 };
 
 // ============================================================
@@ -2974,7 +3001,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -3624,8 +3651,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -3667,6 +3694,7 @@ function initEntities(pJob, difficulty = "1") {
     lightBarrierZones = [];
     pentagramZones = [];
     darknessFields = [];
+    hellGroundTiles = [];
     copperForcedMines = new Set();
     dungeonGoggles = 0;
     // Reset new stage globals
@@ -3763,8 +3791,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -4440,6 +4468,69 @@ function processTurnStartEffects(e) {
         const newElem = e._onmyojiLight ? 'light' : 'dark';
         e.element = newElem;
         msg(`☯️ ${e.name}の属性が${ELEMENT_DATA[newElem]?.label ?? newElem}に転じた！`);
+    }
+    // 人斬り武者: 特殊処理
+    if (e.hitokiriUnit && e.hp > 0) {
+        // 属性交替 (炎/闇)
+        e.element = turn % 2 === 1 ? 'fire' : 'dark';
+        // 自傷ダメージ (無敵無視)
+        let _hkSelf = turn > 10 ? 2 : 1;
+        e.hp -= _hkSelf;
+        msg(`⚔️ ${e.name}に業火自傷${_hkSelf}ダメ！(残HP:${e.hp > 0 ? e.hp : '討ち取られた'})`, true);
+        // 修羅化 (HP≤20初回)
+        if (e.hp <= 20 && e.hp > 0 && !e._shuraFirst) {
+            e._shuraFirst = true;
+            e.invin = true; e.invinTimer = 1;
+            e.maxAp = Math.min((e.maxAp||2) + 1, 5);
+            e.ap = Math.min(e.ap + 1, e.maxAp);
+            msg(`🔥 ${e.name}【修羅】化！1Tバリア+AP+1！`, true);
+        }
+        // 阿修羅化 (HP≤10初回)
+        if (e.hp <= 10 && e.hp > 0 && !e._asuraFirst) {
+            e._asuraFirst = true;
+            e.invin = true; e.invinTimer = 1;
+            e.maxAp = Math.min((e.maxAp||2) + 2, 6);
+            e.ap = Math.min(e.ap + 2, e.maxAp);
+            e.atkBonus = (e.atkBonus||0) + 1;
+            Object.keys(e.abilities).forEach(k => { if (k !== 'drop_rock' && e.abilities[k] !== 999) e.abilities[k] = (e.abilities[k]||0) + 1; });
+            msg(`💀 ${e.name}【阿修羅】化！1Tバリア+AP+2+ATK+1+全アビ+1！`, true);
+        }
+        // 居合カウンター発動
+        if (e._iaiActive && e._iaiTurn !== undefined && e._iaiTurn < turn) {
+            let _iaiHits = 0;
+            entities.forEach(t => {
+                if (t.hp<=0||t.team===e.team) return;
+                if (Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c)) <= 1 && !t.invin) { t.hp -= 5; _iaiHits++; }
+            });
+            e._iaiActive = false;
+            if (_iaiHits > 0) msg(`⚔️ ${e.name}の居合迎撃！${_iaiHits}体に5ダメ！`, true);
+            else msg(`⚔️ ${e.name}の居合：隣接敵なし。`, true);
+        }
+        // 怨念返し発動
+        if (e._onnenKaeshi && e._onnenKaeshiTurn !== undefined && e._onnenKaeshiTurn < turn) {
+            let _dmgTaken = (e._onnenKaeshiHp||e.hp) - e.hp;
+            if (_dmgTaken > 0) {
+                let _near = entities.filter(a=>a.hp>0&&a.team!==e.team).sort((x,y)=>Math.max(Math.abs(x.r-e.r),Math.abs(x.c-e.c))-Math.max(Math.abs(y.r-e.r),Math.abs(y.c-e.c)))[0];
+                if (_near && !_near.invin) {
+                    let _ref = Math.min(_dmgTaken * 2, 12);
+                    _near.hp -= _ref;
+                    msg(`⚫ ${e.name}の怨念返し！${_ref}ダメ(${_dmgTaken}×2)を${_near.name}に！`, true);
+                }
+            }
+            e._onnenKaeshi = false;
+        }
+        // 業火地獄マスのクリーンアップ
+        hellGroundTiles = hellGroundTiles.filter(t => t.expireAt >= turn);
+    }
+    // 業火の呪いダメージ
+    if ((e.goukaCurseTimer||0) > 0) {
+        e.goukaCurseTimer--;
+        if (!e.invin) { e.hp -= 1; msg(`🔥 ${e.name}が業火の呪いで1ダメ！(残${e.goukaCurseTimer}T)`, true); }
+    }
+    // 業火地獄マスダメージ (人斬り武者の阿鼻叫喚)
+    if (hellGroundTiles.length > 0) {
+        let _hgTile = hellGroundTiles.find(t => t.r === e.r && t.c === e.c && t.expireAt >= turn && t.ownerTeam !== e.team);
+        if (_hgTile && !e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は業火地獄マスで1ダメ！`, true); }
     }
     reapNecroSouls();
 }
@@ -5992,6 +6083,19 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'pixie_illusion') return maxDist===0;
     if (mode === 'swap_position') return maxDist>0 && maxDist<=8+(se.rangeBonus||0) && target;
     if (mode === 'skill_fairy_village') return maxDist===0;
+    // 人斬り武者
+    if (mode === 'gouka_shingun') return dist >= 1 && dist <= 4+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (mode === 'jigoku_giri') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'shura_ranbu') return r === se.r && c === se.c;
+    if (mode === 'gouka_sangeki') {
+        let _gsRange = se.hp <= 10 ? 6 : se.hp <= 20 ? 5 : 4;
+        return (se.r===r||se.c===c) && maxDist>=1 && maxDist<=_gsRange+(se.rangeBonus||0) && target && target.team!==se.team;
+    }
+    if (mode === 'onnen_kaeshi') return r === se.r && c === se.c;
+    if (mode === 'oni_giri') return maxDist >= 1 && maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
+    if (mode === 'iai') return r === se.r && c === se.c;
+    if (mode === 'abikyokan') return r === se.r && c === se.c;
+    if (mode === 'skill_meifu') return r === se.r && c === se.c;
     return false;
 }
 
@@ -6037,6 +6141,7 @@ function render() {
             d.id = `tile-${vr}-${c}`;
             
             if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
+            if (hellGroundTiles.some(t => t.r === ar && t.c === c && t.expireAt >= turn)) d.classList.add('hell_ground');
             
             if ((activeStage === 'desert' || activeStage === 'chaos') && sandwormTarget) {
                 if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= 1) {
@@ -6943,7 +7048,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     }
 
     // 岩隠れバリア初撃ブレーク: 攻撃系アビリティが敵のrockHideActiveに当たると即時破壊
-    const attackModes = ['sword','punch','spear','bow','magic','bite','throw_net','stone_punch','rock_throw','drop_rock_heavy','fire','fire_breath','hell_breath','ice_throw','dark_shot','tentacle','branch_whip','claw','dash_attack','wave_slash','rising_slash','cannon_shot','snipe','bomb','knife','knife_juggling','thunder','para_arrow','poison_arrow','net_arrow','vine_arrow','grapple','lasso','chain_pull','chain_sickle','ram','gore','trunk_slam','pounce','mow_down','seed_bazooka','multi_shot','acid_shot','drill','rocket_punch','roar','charge','poison_bite','oni_arm','peck'];
+    const attackModes = ['sword','punch','spear','bow','magic','bite','throw_net','stone_punch','rock_throw','drop_rock_heavy','fire','fire_breath','hell_breath','ice_throw','dark_shot','tentacle','branch_whip','claw','dash_attack','wave_slash','rising_slash','cannon_shot','snipe','bomb','knife','knife_juggling','thunder','para_arrow','poison_arrow','net_arrow','vine_arrow','grapple','lasso','chain_pull','chain_sickle','ram','gore','trunk_slam','pounce','mow_down','seed_bazooka','multi_shot','acid_shot','drill','rocket_punch','roar','charge','poison_bite','oni_arm','peck','jigoku_giri','shura_ranbu','gouka_sangeki','oni_giri'];
     if (targetEntity && targetEntity.team !== se.team && targetEntity.rockHideActive && attackModes.includes(actionMode)) {
         if (triggerRockHideBreak(targetEntity, se)) {
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
@@ -9535,6 +9640,124 @@ function handleAbilityTarget(r, c, targetEntity) {
         });
         se.senninGauge = (se.senninGauge||0) + 1;
         msg(`🌿 生々流転！正面に${_ssPlaced}体を召喚(2T後消滅)！ゲージ+1(${se.senninGauge})！`); used = true;
+    } else if (actionMode === 'gouka_shingun') {
+        // 業火進軍: r4ダッシュ/元位置スケルトン召喚/HP≤敵max→AP+2
+        let _ghOldR = se.r, _ghOldC = se.c;
+        se.r = r; se.c = c;
+        checkTileEffects(se);
+        if (!entities.some(e=>e.hp>0&&e.r===_ghOldR&&e.c===_ghOldC)) {
+            entities.push({ id:'sk_hk_'+Date.now(), type:'skeleton', name:'スケルトン', team:se.team, r:_ghOldR, c:_ghOldC, hp:3, maxHp:3, ap:1, maxAp:1, abilities:{bite:3}, element:'dark', skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+        }
+        let _ghEnemyMaxHp = Math.max(0, ...entities.filter(e=>e.hp>0&&e.team!==se.team).map(e=>e.hp));
+        let _ghApBonus = se.hp <= _ghEnemyMaxHp;
+        if (_ghApBonus) { se.ap = Math.min(se.ap + 2, se.maxAp + 2); }
+        if (se.abilities['gouka_shingun'] !== 999) se.abilities['gouka_shingun']--;
+        msg(`🔥 業火進軍！元の場所にスケルトン召喚${_ghApBonus ? '！HP≤敵最大HP→AP+2' : ''}！`); used = true;
+    } else if (actionMode === 'jigoku_giri') {
+        // 地獄切り: r1炎3ダメ+業火の呪い3T
+        if (targetEntity && !targetEntity.invin) {
+            let _jgDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _jgDmg;
+            targetEntity.goukaCurseTimer = 3;
+            if (targetEntity.hp <= 0) {
+                se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                let _ks = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                for (let _ki=0; _ki<4&&_ks.length>0; _ki++) { let _kk=_ks.splice(Math.floor(Math.random()*_ks.length),1)[0]; se.abilities[_kk]++; }
+                msg(`⚔️ ${targetEntity.name}を討ち取った！HP+2+4アビ+1！`);
+            }
+            msg('🔥 地獄切り！炎3ダメ+業火の呪い3T！');
+        } else { msg('🔥 地獄切り：無効！'); }
+        if (se.abilities['jigoku_giri'] !== 999) se.abilities['jigoku_giri']--;
+        used = true;
+    } else if (actionMode === 'shura_ranbu') {
+        // 修羅乱舞: 半径1全敵2炎ダメ+吹飛
+        let _srHits = 0;
+        entities.forEach(t => {
+            if (t.hp<=0||t.team===se.team) return;
+            if (Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) > 1) return;
+            if (!t.invin) {
+                let _srDmg = 2 + (se.atkBonus||0) + (t.defDebuff||0);
+                t.hp -= _srDmg; knockback(t, 1, se); _srHits++;
+                if (t.hp <= 0) {
+                    se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                    let _ks2 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                    for (let _ki=0; _ki<4&&_ks2.length>0; _ki++) { let _kk=_ks2.splice(Math.floor(Math.random()*_ks2.length),1)[0]; se.abilities[_kk]++; }
+                    msg(`⚔️ 討ち取った！HP+2+4アビ+1！`);
+                }
+            }
+        });
+        if (se.abilities['shura_ranbu'] !== 999) se.abilities['shura_ranbu']--;
+        msg(`🔥 修羅乱舞！半径1全体2炎ダメ+吹飛(${_srHits}体)！`); used = true;
+    } else if (actionMode === 'gouka_sangeki') {
+        // 業火三撃: 直線炎3ダメ/射程は修羅状態で拡大/修羅以降は接近
+        let _gsRange = se.hp <= 10 ? 6 : se.hp <= 20 ? 5 : 4;
+        _gsRange += (se.rangeBonus||0);
+        let _gsDr = Math.sign(r - se.r), _gsDc = Math.sign(c - se.c);
+        let _gsHit = null;
+        for (let _gi=1; _gi<=_gsRange; _gi++) {
+            let _gr = se.r + _gsDr*_gi, _gc = se.c + _gsDc*_gi;
+            let _gt = entities.find(e=>e.hp>0&&e.r===_gr&&e.c===_gc&&e.team!==se.team);
+            if (_gt) { _gsHit = _gt; break; }
+        }
+        if (_gsHit && !_gsHit.invin) {
+            let _gsDmg = 3 + (se.atkBonus||0) + (_gsHit.defDebuff||0);
+            _gsHit.hp -= _gsDmg;
+            if (se.hp <= 20) {
+                let _nr = _gsHit.r - _gsDr, _nc = _gsHit.c - _gsDc;
+                if (_nr>=0&&_nr<SIZE&&_nc>=0&&_nc<SIZE&&!entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc)) { se.r=_nr; se.c=_nc; }
+            }
+            if (_gsHit.hp <= 0) {
+                se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                let _ks3 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                for (let _ki=0; _ki<4&&_ks3.length>0; _ki++) { let _kk=_ks3.splice(Math.floor(Math.random()*_ks3.length),1)[0]; se.abilities[_kk]++; }
+                msg(`⚔️ 討ち取った！HP+2+4アビ+1！`);
+            }
+            msg(`🔥 業火三撃！炎3ダメ(射程${_gsRange})${se.hp<=20?'・接近！':''}！`);
+        } else { msg('🔥 業火三撃：命中なし！'); }
+        if (se.abilities['gouka_sangeki'] !== 999) se.abilities['gouka_sangeki']--;
+        used = true;
+    } else if (actionMode === 'onnen_kaeshi') {
+        // 怨念返し: 構え→次ターン開始時に受けたダメージ×2返撃
+        se._onnenKaeshi = true;
+        se._onnenKaeshiHp = se.hp;
+        se._onnenKaeshiTurn = turn;
+        if (se.abilities['onnen_kaeshi'] !== 999) se.abilities['onnen_kaeshi']--;
+        msg('⚫ 怨念返し！次ターン開始時、受けたダメージ×2を最寄りの敵に返す！'); used = true;
+    } else if (actionMode === 'oni_giri') {
+        // 鬼切り: r3闇4ダメ+業火の呪い3T
+        if (targetEntity && !targetEntity.invin) {
+            let _ogDmg = 4 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _ogDmg;
+            targetEntity.goukaCurseTimer = 3;
+            if (targetEntity.hp <= 0) {
+                se.hp = Math.min(se.hp + 2, se.maxHp + 5);
+                let _ks4 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
+                for (let _ki=0; _ki<4&&_ks4.length>0; _ki++) { let _kk=_ks4.splice(Math.floor(Math.random()*_ks4.length),1)[0]; se.abilities[_kk]++; }
+                msg(`⚔️ ${targetEntity.name}を討ち取った！HP+2+4アビ+1！`);
+            }
+            msg('👹 鬼切り！闇4ダメ+業火の呪い3T！');
+        } else { msg('👹 鬼切り：無効！'); }
+        if (se.abilities['oni_giri'] !== 999) se.abilities['oni_giri']--;
+        used = true;
+    } else if (actionMode === 'iai') {
+        // 居合: 構え→次ターン開始時に隣接敵を迎撃
+        se._iaiActive = true;
+        se._iaiTurn = turn;
+        if (se.abilities['iai'] !== 999) se.abilities['iai']--;
+        msg('⚔️ 居合の構え！次のターン開始時、隣接した全敵に5ダメ迎撃！'); used = true;
+    } else if (actionMode === 'abikyokan') {
+        // 阿鼻叫喚: 前方エリアに業火地獄マス3T展開
+        let _abDr = se.team === 'player' ? -1 : 1;
+        for (let _ri=1; _ri<=5; _ri++) {
+            for (let _ci=-2; _ci<=2; _ci++) {
+                let _tr = se.r + _abDr*_ri, _tc = se.c + _ci;
+                if (_tr>=0&&_tr<SIZE&&_tc>=0&&_tc<SIZE) {
+                    hellGroundTiles.push({r:_tr, c:_tc, expireAt: turn+3, ownerTeam: se.team});
+                }
+            }
+        }
+        if (se.abilities['abikyokan'] !== 999) se.abilities['abikyokan']--;
+        msg('🔥 阿鼻叫喚！前方に業火地獄マス展開！敵は毎T1ダメ！3T持続！'); used = true;
     } else if (actionMode.startsWith('skill_')) {
         executeRushSkill(se, r, c, actionMode);
         used = true;
@@ -10018,6 +10241,11 @@ function executeSkill(se) {
         if (isOnlineMode) syncState();
         return true;
     }
+    // ====== 人斬り武者 スキル: 冥府送り ======
+    if (se.type === 'hitokiri_musha') {
+        msg('💀 冥府送り！発動マス(自分)をタップしてください！半径5の全敵を相手陣地奥へ転送！');
+        actionMode = 'skill_meifu'; render(); return false;
+    }
     // ====== 世界の管理者 スキル: 世界の作り直し ======
     if (se.type === 'world_manager') {
         if (turn < 5) { msg(`⚖️ 世界の作り直し：ゲーム開始から5ターン以降でないと使用できない！(現在${turn}ターン)`); return false; }
@@ -10283,6 +10511,26 @@ function executeRushSkill(se, targetR, targetC, mode) {
         se.skillUsed = true;
         delete se._senninSkillGauge;
         msg(`🧘 自然淘汰発動！半径${_sr2}・威力${_sd2}・AP-2・吹飛・4封印(命中${_stHits}体)！使用後ゲージ+3(${se.senninGauge})！`);
+        checkWin(); render(); updateUI();
+        if (isOnlineMode) syncState();
+        return;
+    }
+    // ====== 人斬り武者 スキル ======
+    if (mode === 'skill_meifu') {
+        // 冥府送り: 半径5の全敵を相手陣地後方へ強制転送
+        let _mfEnemies = entities.filter(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=5);
+        let _mfHits = 0;
+        _mfEnemies.forEach(t => {
+            if (t.invin) return;
+            let _mfRow = se.team === 'player' ? 0 : SIZE-1;
+            for (let _at=0; _at<50; _at++) {
+                let _tr = Math.max(0, Math.min(SIZE-1, _mfRow + (se.team==='player' ? Math.floor(Math.random()*3) : -Math.floor(Math.random()*3))));
+                let _tc = Math.floor(Math.random()*SIZE);
+                if (!entities.some(e=>e.hp>0&&e.r===_tr&&e.c===_tc) && isWalkable(_tr,_tc)) { t.r=_tr; t.c=_tc; _mfHits++; break; }
+            }
+        });
+        se.skillUsed = true;
+        msg(`💀 冥府送り！半径5の敵${_mfHits}体を相手陣地奥へ強制転送！`);
         checkWin(); render(); updateUI();
         if (isOnlineMode) syncState();
         return;
@@ -12280,6 +12528,10 @@ function checkWin() {
     if (playerGremlinAlive && cWin && !pTrapped) cWin = false;
     // cpu グレムリン生存 → player の陣地突破(pWin)を岩包囲以外では無効
     if (cpuGremlinAlive && pWin && !cTrapped) pWin = false;
+
+    // 人斬り武者: 陣地突破勝利なし（撃破のみ）
+    if (!pTrapped && pWin && entities.some(e => e.hitokiriUnit && e.team === 'player' && e.hp > 0)) pWin = false;
+    if (!cTrapped && cWin && entities.some(e => e.hitokiriUnit && e.team === 'cpu' && e.hp > 0)) cWin = false;
 
     let isEnd = false;
     let title = "";
