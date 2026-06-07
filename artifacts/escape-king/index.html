@@ -2761,7 +2761,7 @@ function getCpuFallbackConfig(rank) {
 
 function computeCpuRankedRp(won, rank) {
     if (won) return Math.max(1, Math.min(3, Math.floor(rank / 3) + 1));
-    return rank <= 2 ? 0 : rank <= 5 ? -3 : -5;
+    return rank <= 5 ? -3 : -5;
 }
 
 function startCpuRankedMatch() {
@@ -2776,13 +2776,24 @@ function startCpuRankedMatch() {
 
     const job = resolveJob(document.getElementById('ranked-job-select').value);
     const rank = getRank();
-    const { diff } = getCpuFallbackConfig(rank);
+    const { diff, cpuCount } = getCpuFallbackConfig(rank);
     isCpuRankedMatch = true;
     isOnlineMode = false;
     activeStage = 'plains';
 
     initBoard('plains');
     initEntities(job, String(diff));
+    // Trim excess extra CPU entities so total CPU count matches cpuCount
+    // (addExtraEnemies spawns diff-1 extras; we want cpuCount-1 extras)
+    {
+        const extraEnts = entities.filter(e => e.id && e.id.startsWith('extra_job_'));
+        const wanted = cpuCount - 1;
+        const toTrim = extraEnts.length - wanted;
+        for (let i = 0; i < toTrim; i++) {
+            const idx = entities.findIndex(e => e.id && e.id.startsWith('extra_job_'));
+            if (idx >= 0) entities.splice(idx, 1);
+        }
+    }
     showVictoryCondition(job);
 
     document.getElementById('online-lobby').style.display = 'none';
