@@ -10682,10 +10682,12 @@ function cpuLogic() {
                     }
                 }
 
-                // --- holy_light: 周囲2マスに敵2体以上 or 自HP <= 15 (AoE回復技) ---
+                // --- holy_light: 周囲2マスに敵2体以上 or 自HP <= 15 or 隊員がHP<=2で封印寸前 (AoE回復技) ---
                 let _hlNearEnemies = targets.filter(t=>Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2);
+                let _hlDyingMember = cpu.sentaiMembers && SENTAI_COLOR_ORDER.some(col =>
+                    cpu.sentaiMembers[col]?.alive && (cpu.sentaiMembers[col]?.hp || 0) <= 2);
                 if (!attacked && (cpu.abilities.holy_light||0) > 0 && !(cursedAbilities[cpu.id]?.['holy_light']>0) &&
-                    (_hlNearEnemies.length >= 2 || cpu.hp <= 15)) {
+                    (_hlNearEnemies.length >= 2 || cpu.hp <= 15 || _hlDyingMember)) {
                     sentaiSwitchMember(cpu, 'white');
                     if (cpu.abilities.holy_light !== 999) cpu.abilities.holy_light--;
                     let _hlDmg = 2 + (cpu.atkBonus||0);
