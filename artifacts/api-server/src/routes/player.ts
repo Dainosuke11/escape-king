@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { ekPlayersTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -46,6 +46,27 @@ router.post("/player", async (req, res) => {
         set: { playerName: safeName, rank: safeRank, rp: safeRp, spWins: safeWins, updatedAt: new Date() },
       });
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: "db error" });
+  }
+});
+
+// GET /api/leaderboard — top 20 players by RP desc
+router.get("/leaderboard", async (_req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(ekPlayersTable)
+      .orderBy(desc(ekPlayersTable.rp))
+      .limit(20);
+    res.json(
+      rows.map((p) => ({
+        userId: p.userId,
+        playerName: p.playerName,
+        rank: p.rank,
+        rp: p.rp,
+      })),
+    );
   } catch (e) {
     res.status(500).json({ error: "db error" });
   }

@@ -324,6 +324,40 @@
             padding:28px 44px; border-radius:14px; z-index:10000; text-align:center;
             box-shadow:0 8px 32px rgba(0,0,0,0.6);
         }
+        /* Victory condition overlay */
+        #victory-condition-overlay {
+            display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+            background:rgba(10,0,20,0.93); color:#fff; font-size:20px; font-weight:bold;
+            padding:24px 40px; border-radius:14px; z-index:10001; text-align:center;
+            border:2px solid var(--accent); box-shadow:0 8px 32px rgba(0,0,0,0.7);
+            line-height:1.7; pointer-events:none;
+        }
+        /* Leaderboard modal */
+        #leaderboard-modal {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75);
+            z-index:9000; align-items:center; justify-content:center;
+        }
+        .lb-inner {
+            background:var(--ui-bg); border:1px solid #444; border-radius:12px;
+            padding:24px; min-width:300px; max-width:480px; width:90%; max-height:85vh;
+            overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,0.7);
+        }
+        .lb-inner h3 { margin-top:0; color:var(--accent); font-size:22px; text-align:center; }
+        .lb-row {
+            display:flex; align-items:center; gap:8px; padding:8px 6px;
+            border-bottom:1px solid #2a2a35; font-size:14px;
+        }
+        .lb-row:last-child { border-bottom:none; }
+        .lb-mine { background:rgba(142,68,173,0.3); border-radius:6px; font-weight:bold; }
+        .lb-pos { width:28px; color:#aaa; font-size:13px; flex-shrink:0; text-align:right; }
+        .lb-name { flex:1; color:#eee; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .lb-rank { width:80px; color:#f39c12; font-size:12px; text-align:center; flex-shrink:0; }
+        .lb-rp { width:62px; color:#3498db; font-size:13px; text-align:right; font-weight:bold; flex-shrink:0; }
+        .lb-close-btn {
+            display:block; width:100%; margin-top:16px; padding:10px; border:none;
+            background:#34495e; color:#fff; border-radius:6px; cursor:pointer; font-size:15px;
+        }
+        .lb-close-btn:hover { background:#415b76; }
         
         .entity { 
             position: absolute; width: 85%; height: 85%; border-radius: 6px; 
@@ -541,7 +575,7 @@
 </div>
 
 <div id="online-lobby">
-    <h2>🌐 オンライン対戦 <span class="online-badge">ONLINE</span></h2>
+    <h2>🌐 オンライン対戦 <span class="online-badge">ONLINE</span> <button onclick="showLeaderboard()" style="background:none;border:1px solid #f39c12;color:#f39c12;font-size:16px;border-radius:6px;padding:4px 10px;cursor:pointer;vertical-align:middle;margin-left:8px;">🏆</button></h2>
     <div class="lobby-tabs">
         <button class="lobby-tab active" id="tab-ranked" onclick="switchLobbyTab('ranked')">ランクマッチ</button>
         <button class="lobby-tab" id="tab-create" onclick="switchLobbyTab('create')">ルームを作成</button>
@@ -584,6 +618,8 @@
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
+            <option value="pixie">✨ ピクシー (幻惑・岩落とし・蛮族召喚)</option>
+            <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -593,6 +629,7 @@
         <div id="ranked-status" style="color:#f1c40f; margin:10px 0; min-height:20px; font-weight:bold;"></div>
         <button class="btn" id="btn-find-ranked" style="background:#8e44ad; padding:15px; font-size:18px;" onclick="startRankedSearch()">対戦相手を探す</button>
         <button class="btn" id="btn-cancel-ranked" style="background:#c0392b; padding:15px; font-size:18px; display:none;" onclick="cancelRankedSearch()">検索をキャンセル</button>
+        <button class="btn" id="btn-cpu-fallback" style="background:#e67e22; padding:15px; font-size:17px; display:none;" onclick="startCpuRankedMatch()">🤖 CPU対戦を開始（ランク戦）</button>
     </div>
 
     <div id="create-panel" style="display:none;">
@@ -722,6 +759,16 @@
 </div>
 
 <div id="match-toast">🎮 マッチング成功！<br>対戦を開始します！</div>
+
+<div id="victory-condition-overlay"></div>
+
+<div id="leaderboard-modal">
+    <div class="lb-inner">
+        <h3>🏆 ランキング TOP 20</h3>
+        <div id="leaderboard-body"></div>
+        <button class="lb-close-btn" onclick="document.getElementById('leaderboard-modal').style.display='none'">閉じる</button>
+    </div>
+</div>
 
 <div id="game-screen">
     <div class="panel">
@@ -899,6 +946,8 @@ let savedTurnTimeLeft = null; // preserved across reconnect
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
+let isCpuRankedMatch = false;
+let rankedCountdownInterval = null;
 // Latency tracking
 let lastPingMs = null;
 let clientPingIntervalId = null;
@@ -1922,6 +1971,10 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'gameStart') {
+        // Real match found — cancel any CPU fallback countdown
+        if (rankedCountdownInterval) { clearInterval(rankedCountdownInterval); rankedCountdownInterval = null; }
+        document.getElementById('btn-cpu-fallback').style.display = 'none';
+        isCpuRankedMatch = false;
         myPlayerIndex = data.playerIndex;
         isOnlineMode = true;
         onlineSessionId = data.sessionId || onlineSessionId;
@@ -1942,6 +1995,7 @@ function handleWsMessage(event) {
             initBoard(settings.stage);
             initEntitiesOnline(job, cpuJob, settings.difficulty);
         });
+        showVictoryCondition(job);
 
         turn = 1; tempRocks = [];
         isPlayerTurn = settings.p1First;
@@ -2697,25 +2751,126 @@ function joinRoom() {
     });
 }
 
+// ---- CPU fallback helpers ----
+function getCpuFallbackConfig(rank) {
+    if (rank <= 2) return { diff: 1, cpuCount: 1 };
+    if (rank <= 4) return { diff: 2, cpuCount: 1 };
+    if (rank <= 7) return { diff: 3, cpuCount: 2 };
+    return { diff: 4, cpuCount: 3 };
+}
+
+function computeCpuRankedRp(won, rank) {
+    if (won) return Math.max(1, Math.min(3, Math.floor(rank / 3) + 1));
+    return rank <= 2 ? 0 : rank <= 5 ? -3 : -5;
+}
+
+function startCpuRankedMatch() {
+    if (rankedCountdownInterval) { clearInterval(rankedCountdownInterval); rankedCountdownInterval = null; }
+    if (wsConn) { try { wsSend({ type: 'cancelRanked' }); } catch(e){} wsConn.close(); wsConn = null; }
+    intentionalClose = true;
+    document.getElementById('btn-find-ranked').style.display = 'inline-block';
+    document.getElementById('btn-cancel-ranked').style.display = 'none';
+    document.getElementById('btn-cpu-fallback').style.display = 'none';
+    let s = document.getElementById('ranked-status');
+    if (s) s.textContent = '';
+
+    const job = resolveJob(document.getElementById('ranked-job-select').value);
+    const rank = getRank();
+    const { diff } = getCpuFallbackConfig(rank);
+    isCpuRankedMatch = true;
+    isOnlineMode = false;
+    activeStage = 'plains';
+
+    initBoard('plains');
+    initEntities(job, String(diff));
+    showVictoryCondition(job);
+
+    document.getElementById('online-lobby').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    turn = 1; tempRocks = [];
+    isPlayerTurn = Math.random() < 0.5;
+    _cpuWentFirst = !isPlayerTurn;
+    render();
+    startTurn(isPlayerTurn ? 'player' : 'cpu');
+    const maxRp = computeCpuRankedRp(true, rank);
+    msg(`⚔️ ランク戦CPU対戦開始！（難易度${diff}）勝利でRP最大+${maxRp}！`);
+}
+
+async function showLeaderboard() {
+    const modal = document.getElementById('leaderboard-modal');
+    const body = document.getElementById('leaderboard-body');
+    if (!modal || !body) return;
+    modal.style.display = 'flex';
+    body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">読み込み中...</div>';
+    try {
+        const res = await fetch(getApiBase() + '/leaderboard');
+        const data = await res.json();
+        const myId = getUserId();
+        const rankNames = {1:'ブロンズ',2:'シルバー',3:'ゴールド',4:'プラチナ',5:'ダイヤ',6:'マスター',7:'ランクA',8:'ランクS',9:'ランクSS',10:'ランクSSS'};
+        if (!Array.isArray(data) || data.length === 0) {
+            body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">データがありません</div>';
+            return;
+        }
+        let html = '';
+        data.forEach((p, i) => {
+            const isMine = p.userId === myId;
+            const rnk = rankNames[p.rank] || `ランク${p.rank}`;
+            const name = String(p.playerName).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            html += `<div class="lb-row${isMine ? ' lb-mine' : ''}"><span class="lb-pos">${i+1}</span><span class="lb-name">${name}${isMine?' 👈':''}</span><span class="lb-rank">${rnk}</span><span class="lb-rp">${p.rp} RP</span></div>`;
+        });
+        body.innerHTML = html;
+    } catch(e) {
+        body.innerHTML = '<div style="color:#e74c3c;padding:20px;text-align:center;">読み込みに失敗しました</div>';
+    }
+}
+
+function showVictoryCondition(job) {
+    const overlay = document.getElementById('victory-condition-overlay');
+    if (!overlay) return;
+    const hitokiriActive = (typeof entities !== 'undefined') && entities.some(e => e.hitokiriUnit && e.hp > 0);
+    const isHitokiri = hitokiriActive || job === 'hitokiri_musha';
+    overlay.innerHTML = isHitokiri
+        ? '⚔️ <strong>敵を全滅させろ！</strong><br><span style="font-size:14px;color:#ffaa88;">（人斬り武者：陣地突破は無効）</span>'
+        : '⚔️ <strong>敵陣に辿り着くか 敵を全滅させろ！</strong>';
+    overlay.style.display = 'block';
+    setTimeout(() => { overlay.style.display = 'none'; }, 2500);
+}
+
 // ---- Ranked matchmaking ----
 function startRankedSearch() {
     const job = resolveJob(document.getElementById('ranked-job-select').value);
     intentionalClose = false;
     document.getElementById('btn-find-ranked').style.display = 'none';
     document.getElementById('btn-cancel-ranked').style.display = 'inline-block';
+    document.getElementById('btn-cpu-fallback').style.display = 'none';
     let s = document.getElementById('ranked-status');
     if (s) s.textContent = 'サーバーに接続中...';
+    // 30s countdown → show CPU fallback button
+    let countdown = 30;
+    if (rankedCountdownInterval) clearInterval(rankedCountdownInterval);
+    rankedCountdownInterval = setInterval(() => {
+        countdown--;
+        if (s) s.textContent = `対戦相手を検索中...（残${countdown}秒でCPU代替可能）`;
+        if (countdown <= 0) {
+            clearInterval(rankedCountdownInterval);
+            rankedCountdownInterval = null;
+            document.getElementById('btn-cpu-fallback').style.display = 'inline-block';
+            if (s) s.textContent = '対戦相手が見つかりませんでした。CPU対戦で代替できます。';
+        }
+    }, 1000);
     connectWS(() => {
         wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job });
     });
 }
 
 function cancelRankedSearch() {
+    if (rankedCountdownInterval) { clearInterval(rankedCountdownInterval); rankedCountdownInterval = null; }
     wsSend({ type: 'cancelRanked' });
     intentionalClose = true;
     if (wsConn) { wsConn.close(); wsConn = null; }
     document.getElementById('btn-find-ranked').style.display = 'inline-block';
     document.getElementById('btn-cancel-ranked').style.display = 'none';
+    document.getElementById('btn-cpu-fallback').style.display = 'none';
     let s = document.getElementById('ranked-status');
     if (s) s.textContent = '';
 }
@@ -2843,10 +2998,14 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-rematch').addEventListener('click', () => {
         if (isOnlineMode) { location.reload(); return; }
         document.getElementById('result-screen').style.display = 'none';
-        initBoard(activeStage);
+        const rematchStage = isCpuRankedMatch ? 'plains' : activeStage;
+        initBoard(rematchStage);
         let pJob = entities.find(e => e.id === 'p1').type;
-        let difficulty = document.getElementById('difficulty-select').value;
+        let difficulty = isCpuRankedMatch
+            ? String(getCpuFallbackConfig(getRank()).diff)
+            : document.getElementById('difficulty-select').value;
         initEntities(pJob, difficulty);
+        showVictoryCondition(pJob);
         turn = 1; tempRocks = [];
         isPlayerTurn = Math.random() < 0.5;
         _cpuWentFirst = !isPlayerTurn;
@@ -2854,6 +3013,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-change').addEventListener('click', () => {
         if (isOnlineMode) { location.reload(); return; }
+        isCpuRankedMatch = false;
         document.getElementById('result-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('home-screen').style.display = 'block';
@@ -2864,6 +3024,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('home-screen').style.display = 'block';
         if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
         isOnlineMode = false;
+        isCpuRankedMatch = false;
         resetConnState();
     });
 
@@ -3020,6 +3181,7 @@ function startGame() {
         
         initBoard(activeStage);
         initEntities(job, difficulty);
+        showVictoryCondition(job);
         
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
@@ -12578,6 +12740,17 @@ function checkWin() {
                 // Report the result to the server, which computes RP for both sides.
                 wsSend({ type: 'gameEnd', won: iWon });
             }
+        } else if (isCpuRankedMatch) {
+            // CPU ranked match: compute limited RP and save
+            const rpDelta = computeCpuRankedRp(iWon, getRank());
+            const before = { rank: getRank(), rp: getRP() };
+            const after = applyRpDelta(rpDelta);
+            syncPlayerToServer();
+            const sign = rpDelta >= 0 ? '+' : '';
+            let rpLine = `\n🤖 CPU対戦ランク戦  RP ${sign}${rpDelta}  (ランク${after.rank} / ${after.rp}RP)`;
+            if (after.rank > before.rank) rpLine += '  ⬆️ ランクアップ！';
+            else if (after.rank < before.rank) rpLine += '  ⬇️ ランクダウン';
+            title += rpLine;
         } else {
             // Single-player: count victories; unlock ranked at 8 wins.
             if (iWon) {
