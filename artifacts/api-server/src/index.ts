@@ -23,6 +23,7 @@ interface PlayerSlot {
   sessionId: string;
   userId: string;
   rank: number;
+  playerName?: string;
 }
 
 interface Room {
@@ -41,6 +42,7 @@ interface QueueEntry {
   userId: string;
   rank: number;
   job: string;
+  playerName: string;
   ts: number;
   searchTimer: NodeJS.Timeout | null;
 }
@@ -52,9 +54,9 @@ const recentOpponents = new Map<string, string[]>();
 const RECONNECT_GRACE_MS = 120000; // 2 minutes to reconnect before forfeit
 
 function generateRoomCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const chars = "0123456789";
   let code = "";
-  for (let i = 0; i < 4; i++)
+  for (let i = 0; i < 5; i++)
     code += chars[Math.floor(Math.random() * chars.length)];
   return rooms.has(code) ? generateRoomCode() : code;
 }
@@ -118,10 +120,12 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
   const isRanked = !playedRecently(a.userId, b.userId);
   recordOpponents(a.userId, b.userId);
   const hostFirst = Math.random() < 0.5;
+  const ALL_RANKED_STAGES = ["plains","forest","desert","demon","castle","bigriver","mountain","graveyard","nighttown","skyfort","chaos","dungeon","underwater","lavaland","misty_lake","colosseum","factory","volcano_summit"];
+  const randomStage = ALL_RANKED_STAGES[Math.floor(Math.random() * ALL_RANKED_STAGES.length)];
   const settings = {
     p1job: a.job,
     p2job: b.job,
-    stage: "plains",
+    stage: randomStage,
     difficulty: "1",
     seed: Math.floor(Math.random() * 0x7fffffff),
     p1First: hostFirst,
@@ -149,6 +153,7 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     roomCode: code,
     ranked: isRanked,
     opponentRank: b.rank,
+    opponentName: b.playerName || "プレイヤー",
   });
   safeSend(b.ws, {
     type: "gameStart",
@@ -158,6 +163,7 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     roomCode: code,
     ranked: isRanked,
     opponentRank: a.rank,
+    opponentName: a.playerName || "プレイヤー",
   });
   logger.info({ code, isRanked }, "Ranked match started");
 }
@@ -267,6 +273,7 @@ wss.on("connection", (ws: WebSocket) => {
               sessionId,
               userId: String(msg.userId || "anon"),
               rank: Number(msg.rank || 1),
+              playerName: String(msg.playerName || "プレイヤー"),
             },
             null,
           ],
@@ -298,6 +305,7 @@ wss.on("connection", (ws: WebSocket) => {
           sessionId,
           userId: String(msg.userId || "anon"),
           rank: Number(msg.rank || 1),
+          playerName: String(msg.playerName || "プレイヤー"),
         };
         room.status = "playing";
         playerIndex = 1;
@@ -313,6 +321,8 @@ wss.on("connection", (ws: WebSocket) => {
           sessionId: room.players[0]?.sessionId,
           roomCode: code,
           ranked: false,
+          opponentRank: room.players[1]?.rank ?? 1,
+          opponentName: room.players[1]?.playerName ?? "プレイヤー",
         });
         safeSend(ws, {
           type: "gameStart",
@@ -321,6 +331,8 @@ wss.on("connection", (ws: WebSocket) => {
           sessionId,
           roomCode: code,
           ranked: false,
+          opponentRank: room.players[0]?.rank ?? 1,
+          opponentName: room.players[0]?.playerName ?? "プレイヤー",
         });
         logger.info({ code }, "Room started");
       } else if (msg.type === "findRanked") {
@@ -330,6 +342,7 @@ wss.on("connection", (ws: WebSocket) => {
           userId: String(msg.userId || "anon"),
           rank: Number(msg.rank || 1),
           job: String(msg.job || "king"),
+          playerName: String(msg.playerName || "プレイヤー"),
           ts: Date.now(),
           searchTimer: null,
         };

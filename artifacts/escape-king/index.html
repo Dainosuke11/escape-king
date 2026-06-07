@@ -712,7 +712,7 @@
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
-            <option value="pixie">✨ ピクシー (幻惑・岩落とし・蛮族召喚)</option>
+            <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
             <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
             </select>
         </div>
@@ -754,6 +754,8 @@
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
+            <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
+            <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
             </select>
         </div>
         <div class="select-group">
@@ -824,10 +826,12 @@
                 <option value="dwarf">⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)</option>
                 <option value="sentai_hero">🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)</option>
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
+            <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
+            <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
-        <input type="text" class="code-input" id="ol-join-code" placeholder="ABCD" maxlength="4">
+        <input type="text" class="code-input" id="ol-join-code" placeholder="00000" maxlength="5" inputmode="numeric" pattern="[0-9]*">
         <div id="join-waiting" style="display:none;">
             <div class="waiting-indicator"><span class="dot-anim">接続中</span></div>
         </div>
@@ -2103,11 +2107,14 @@ function handleWsMessage(event) {
         render();
         startClientPing();
 
-        // マッチング成功通知
+        // マッチング成功通知（相手名・ランク表示）
         const toast = document.getElementById('match-toast');
         if (toast) {
+            const oppName = String(data.opponentName || 'プレイヤー').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const oppRankDisp = data.opponentRank || 1;
+            toast.innerHTML = `⚔️ マッチング成功！<br>vs <b>${oppName}</b>（ランク${oppRankDisp}）`;
             toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+            setTimeout(() => { toast.style.display = 'none'; toast.innerHTML = '⚔️ マッチング成功！対戦開始！'; }, 3000);
         }
 
         if (isPlayerTurn) {
@@ -2817,11 +2824,13 @@ function createRoom() {
     document.getElementById('btn-create-room').disabled = true;
     intentionalClose = false;
 
+    const pNameCreate = localStorage.getItem('etk_player_name') || 'プレイヤー';
     connectWS(() => {
         wsSend({
             type: 'create',
             userId: getUserId(),
             rank: getRank(),
+            playerName: pNameCreate,
             settings: {
                 p1job: job,
                 p2job: 'king', // Will be overridden by guest's choice
@@ -2833,10 +2842,10 @@ function createRoom() {
 }
 
 function joinRoom() {
-    const code = document.getElementById('ol-join-code').value.toUpperCase().trim();
+    const code = document.getElementById('ol-join-code').value.trim();
     const job = resolveJob(document.getElementById('ol-join-job-select').value);
-    if (code.length < 4) {
-        document.getElementById('join-error').textContent = '4文字のコードを入力してください';
+    if (code.length < 5) {
+        document.getElementById('join-error').textContent = '5桁の数字コードを入力してください';
         return;
     }
     document.getElementById('btn-join-room').disabled = true;
@@ -2844,8 +2853,9 @@ function joinRoom() {
     document.getElementById('join-error').textContent = '';
     intentionalClose = false;
 
+    const pNameJoin = localStorage.getItem('etk_player_name') || 'プレイヤー';
     connectWS(() => {
-        wsSend({ type: 'join', roomCode: code, guestJob: job, userId: getUserId(), rank: getRank() });
+        wsSend({ type: 'join', roomCode: code, guestJob: job, userId: getUserId(), rank: getRank(), playerName: pNameJoin });
     });
 }
 
@@ -2893,9 +2903,10 @@ function startCpuRankedMatch() {
     isCpuRankedMatch = true;
     cpuRankResultApplied = false;
     isOnlineMode = false;
-    activeStage = 'plains';
+    const _rankedStages = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
+    activeStage = _rankedStages[Math.floor(Math.random() * _rankedStages.length)];
 
-    initBoard('plains');
+    initBoard(activeStage);
     initEntities(job, String(diff));
     // Trim excess extra CPU entities so total CPU count matches cpuCount
     // (addExtraEnemies spawns diff-1 extras; we want cpuCount-1 extras)
@@ -2985,8 +2996,9 @@ function startRankedSearch() {
             if (s) s.textContent = '対戦相手が見つかりませんでした。CPU対戦で代替できます。';
         }
     }, 1000);
+    const pName = localStorage.getItem('etk_player_name') || 'プレイヤー';
     connectWS(() => {
-        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job });
+        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job, playerName: pName });
     });
 }
 
@@ -4178,6 +4190,72 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     duneTimer = 1;
     mafiaTerritory = null;
     thornTileMap = {};
+    // ---- stage-specific globals & entities (mirrors initEntities) ----
+    trapOwnerMap = {};
+    rollRockPending = null; rollRockWarnTiles = [];
+    cursedAbilities = {}; lightBarrierZones = []; pentagramZones = [];
+    darknessFields = []; hellGroundTiles = []; copperForcedMines = new Set();
+    dungeonGoggles = 0; fallenSkyfortBridges = [];
+    worldManagerHitFromAfar = false; pendingEarthquake = null;
+    mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
+    lotusPadSteps = {}; lotusSunkenTimers = {};
+    colosseumPoints = {player:0,cpu:0};
+    colosseumGoalSpawned = {player:false,cpu:false};
+    colosseumGoalPos = {player:null,cpu:null};
+    colosseumLastScoreTurn = {player:-1,cpu:-1};
+    colosseumShrinkLayer = 0;
+    laneSpeedMap = []; factoryPressTarget = null; factoryPressWarning = false;
+    volcanoCraterRadius = 0; volcanoSplatterTiles = []; volcanoAshMistSet = new Set();
+    if (activeStage === 'bigriver') {
+        let boatPos = [{r:6,c:4},{r:6,c:16},{r:14,c:4},{r:14,c:16}];
+        boatPos.forEach((p,i) => {
+            entities.push({id:'boat'+i, type:'boat', name:'小舟', team:'vehicle', r:p.r, c:p.c, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        });
+        let wsCpuCol = 2 + Math.floor(Math.random() * 17);
+        let wsPlayerCol = 2 + Math.floor(Math.random() * 17);
+        entities.push({id:'warship0', type:'warship', name:'大型船', team:'vehicle', r:6, c:wsCpuCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        entities.push({id:'warship1', type:'warship', name:'大型船', team:'vehicle', r:14, c:wsPlayerCol, hp:10, maxHp:10, ap:2, maxAp:2, abilities:{cannon:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        stageKrakenSpawned = false;
+    }
+    if (activeStage === 'skyfort') {
+        let wPos = [{r:2,c:15},{r:4,c:9},{r:18,c:15},{r:16,c:9}];
+        wPos.forEach((p,i) => {
+            entities.push({id:'fdrone'+i, type:'flying_drone', name:'飛行ドローン', team:'vehicle', r:p.r, c:p.c, hp:999, maxHp:0, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, flying:true});
+        });
+        const islandItems = ['star','shoes','sword'];
+        [{r:8,c:2},{r:8,c:4},{r:12,c:2},{r:12,c:4}].forEach(p => {
+            board[p.r][p.c] = 'item_tile';
+            itemTileMap[`${p.r},${p.c}`] = islandItems[Math.floor(Math.random()*islandItems.length)];
+        });
+    }
+    if (activeStage === 'factory') {
+        let _p1 = entities.find(e => e.id === 'p1');
+        let _c1 = entities.find(e => e.id === 'c1');
+        if (_p1) { _p1.r = 19; _p1.c = 3; }
+        if (_c1) { _c1.r = 1; _c1.c = 4; }
+        entities.filter(e => e.team === 'cpu' && e.id !== 'c1').forEach((e, i) => { e.r = Math.min(2, i); e.c = 3 + (i % 3); });
+        entities.filter(e => e.team === 'player' && e.id !== 'p1').forEach((e, i) => { e.r = 19 - (i % 3); e.c = 3 + (i % 3); });
+        factoryPressTarget = null; factoryPressWarning = false;
+    }
+    if (activeStage === 'volcano_summit') {
+        let _p1 = entities.find(e => e.id === 'p1');
+        let _c1 = entities.find(e => e.id === 'c1');
+        if (_p1) { _p1.r = 19; _p1.c = 10; }
+        if (_c1) { _c1.r = 1; _c1.c = 10; }
+        entities.filter(e => e.team === 'player' && e.id !== 'p1').forEach((e, i) => { e.r = 19 - (i % 2); e.c = 10 + (i % 2 === 0 ? i : -i); });
+        entities.filter(e => e.team === 'cpu' && e.id !== 'c1').forEach((e, i) => { e.r = 1 + (i % 2); e.c = 10 + (i % 2 === 0 ? i : -i); });
+        volcanoCraterRadius = 0; volcanoSplatterTiles = []; volcanoAshMistSet = new Set();
+    }
+    if (activeStage === 'nighttown') {
+        let _p1 = entities.find(e => e.id === 'p1');
+        let _c1 = entities.find(e => e.id === 'c1');
+        if (_p1) { _p1.c = 0; _p1.r = 20; }
+        if (_c1) { _c1.c = 20; _c1.r = 0; }
+        entities.push({id:'ntboat0', type:'boat', name:'小舟', team:'vehicle', r:10, c:6, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        entities.push({id:'ntboat1', type:'boat', name:'小舟', team:'vehicle', r:5, c:10, hp:5, maxHp:5, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0});
+        entities.push({id:'nttrain', type:'train', name:'🚂', team:'npc', r:2, c:2, hp:999, maxHp:999, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:true, invinTimer:999, poisonTimer:0});
+        ntTrainPhase = 0; ntTrainClockwise = true;
+    }
 }
 
 function addExtraEnemies(difficulty) {
@@ -13770,17 +13848,17 @@ function hideAbilityPreview() {
 // =====================================================================
 const TUTORIAL_STEPS = [
     {
-        msg: '🎓 ようこそ！<br>これがゲームボードです。<br><br>まず<b>青いコマをクリック</b>して選択してみましょう。',
+        msg: '🎓 ようこそ！<br>これがゲームボードです。<br><br>あなたのコマ（青）は画面下側にいます。<br>まず<b>青いコマをクリック</b>して選択してみましょう。',
         highlight: 'board',
         advanceOn: 'entity_select',
     },
     {
-        msg: '✅ コマを選択しました！<br><br><b>「移動/決定」ボタン</b>を押して移動モードにしてから、<br>隣のマスをクリックして<b>コマを動かして</b>みましょう。',
+        msg: '✅ コマを選択しました！<br><br><b>「移動/決定」ボタン</b>を押して移動モードにしてから、<br><b>目の前のマス（上側）をクリック</b>してコマを前に進めてみましょう。',
         highlight: 'btn-move',
         advanceOn: 'move',
     },
     {
-        msg: '🚶 移動できました！<br><br>次は<b>アビリティボタン（攻撃や特技）</b>を押して、表示されたカードを確認してみましょう。<br>コマを選んでからボタンを押してね。',
+        msg: '🚶 移動できました！<br><br>次はアビリティを使ってみましょう。<br>コマを選択してから<b>アビリティボタン</b>を押して対象を選択してください。',
         highlight: 'btn-attack',
         advanceOn: 'ability_used',
     },
@@ -13795,7 +13873,52 @@ const TUTORIAL_STEPS = [
         advanceOn: 'player_turn_again',
     },
     {
-        msg: '🎉 <b>チュートリアル完了！</b><br><br>基本操作をマスターしました。自由にプレイしてみましょう！<br><br>💡 <i>ヒント：地形タイルを右クリック（スマホは長押し）すると地形の説明が見られます！</i>',
+        msg: '⚔️ <b>敵を攻撃しよう！</b><br><br>隣接した敵コマにアビリティを使うとダメージを与えられます。<br>HP（❤️）が0になった敵コマは撃破されます。<br><br>「剣」「弓」「蹴り」など、ジョブごとに異なる攻撃技があります。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '👾 <b>紫コマ（NPCモンスター）を倒そう！</b><br><br>ボード上には紫色のNPCモンスターが出現することがあります。<br>倒すと<b>アイテム・HP回復・追加アビリティ</b>などの報酬が得られます。<br><br>難易度を上げるほど強いNPCが増えます！',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '⛏️ <b>鉱山（⛏️マス）を強化しよう！</b><br><br>鉱山マスを踏むと銅・銀・金・白金のお宝が獲得できます。<br>何度も踏むと<b>グレードアップ</b>して価値が上がります！<br><br>敵に先に取られないよう注意しましょう。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🎯 <b>中央突破ボーナスをもらおう！</b><br><br>ボードの中央（川・橋付近）を通過すると<b>crossBonusボーナス</b>が発生します。<br>中央の橋を素早く渡ることで有利なアビリティ強化が得られることも！',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🪨 <b>岩で敵の進路を邪魔しよう！</b><br><br>「岩落とし」アビリティを使うと任意のマスに岩を設置できます（999回使用可）。<br>敵の進路上に岩を置いて<b>進軍を妨害</b>しましょう！<br><br>橋の前に置くと特に効果的です。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '💥 <b>邪魔な岩は岩砕きで除去！</b><br><br>自分の進路を塞ぐ岩には「岩砕き」アビリティを使いましょう。<br>隣接した岩を破壊して進路を確保できます。<br><br>岩を壊すと<b>岩の欠片</b>が残り、特定の場面で役立つことも。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🏁 <b>敵陣に辿り着こう！</b><br><br>あなたのコマが<b>敵の陣地（画面の反対側の端）</b>に到達すると勝利です！<br>（人斬り武者は例外：撃破のみで勝利）<br><br>または敵のジョブコマ（メインコマ）のHPを0にしても勝利になります。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🔥 <b>敵の弱点属性をつこう！</b><br><br>各コマには属性（火・水・草・光・闇）があります。<br>属性の相性：🔥火→🌿草、🌿草→💧水、💧水→🔥火<br>☀️光→😈闇、😈闇→☀️光<br><br>弱点属性で攻撃すると<b>ダメージ+2</b>のボーナスが入ります！',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🌟 <b>ステージとキャラの属性を合わせよう！</b><br><br>各ステージにも属性があります（例：溶岩地帯🔥・海底神殿💧）。<br>ステージと同じ属性のジョブを使うと<b>HP+5・アビリティ+1</b>のボーナス！<br><br>逆に弱点属性だとデメリットがあるので注意。ジョブ図鑑で属性を確認しよう。',
+        highlight: null,
+        advanceOn: null,
+    },
+    {
+        msg: '🎉 <b>チュートリアル完了！</b><br><br>これで基本はバッチリです。自由にプレイしてみましょう！<br><br>💡 <i>ヒント：地形タイルを右クリック（スマホは長押し）すると地形の説明が見られます！<br>キャラクター図鑑でジョブの詳細も確認できます。</i>',
         highlight: null,
         advanceOn: null,
         final: true,
