@@ -6181,7 +6181,7 @@ function startTurn(team, skipEffects = false) {
             document.getElementById('turn-indicator').textContent = `Player's Turn (Turn: ${turn})`;
         }
         updateHintBar();
-        if (tutorialMode && tutorialStep === 4 && turn > 1) advanceTutorial();
+        if (tutorialMode && tutorialStep === 6 && turn > 1) advanceTutorial();
 
     } else if (team === 'cpu') {
         // playerターン終了→cpuターン開始：playerチームの残AP温存回復
@@ -11641,7 +11641,7 @@ function applyApRestRecovery(team) {
 
 function endTurn() {
     if (!canIAct()) return;
-    if (tutorialMode && tutorialStep === 3) advanceTutorial();
+    if (tutorialMode && tutorialStep === 5) advanceTutorial();
     selectedEntity = null;
     hideAbilityPreview();
     stopTurnTimer();
