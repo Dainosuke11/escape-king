@@ -378,6 +378,29 @@
         .lb-tab { flex:1; padding:8px; border:1px solid #444; background:#1a1a28; color:#aaa;
             border-radius:6px; cursor:pointer; font-size:14px; }
         .lb-tab.active { background:#8e44ad; color:#fff; border-color:#8e44ad; }
+        /* Online result modal */
+        #online-result-modal {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82);
+            z-index:9300; align-items:center; justify-content:center;
+        }
+        .or-box {
+            background:#1a1a28; border-radius:16px; padding:28px 32px; max-width:380px; width:90%;
+            text-align:center; border:2px solid #555; box-shadow:0 8px 40px rgba(0,0,0,0.8);
+        }
+        .or-header { font-size:32px; font-weight:bold; margin-bottom:10px; }
+        .or-header.win { color:#f1c40f; text-shadow:0 0 16px rgba(241,196,15,0.5); }
+        .or-header.lose { color:#e74c3c; }
+        .or-rp-main { font-size:22px; font-weight:bold; color:#fff; margin:8px 0 4px; }
+        .or-rp-main.plus { color:#2ecc71; }
+        .or-rp-main.minus { color:#e74c3c; }
+        .or-rank-info { font-size:14px; color:#aaa; margin-bottom:8px; }
+        .or-rank-up { color:#f39c12; font-weight:bold; }
+        .or-rank-down { color:#e74c3c; }
+        .or-bonus-section { background:#12121a; border-radius:8px; padding:10px 14px; margin:10px 0; text-align:left; font-size:13px; color:#ccc; line-height:1.8; }
+        .or-bonus-label { color:#aaa; }
+        .or-bonus-divider { border:none; border-top:1px solid #333; margin:4px 0; }
+        .or-ok-btn { margin-top:16px; width:100%; padding:12px; border:none; background:#8e44ad; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; font-weight:bold; transition:background .15s; }
+        .or-ok-btn:hover { background:#9b59b6; }
         .lb-tier-header { padding:8px 6px 4px; font-size:13px; font-weight:bold;
             color:#f39c12; border-bottom:1px solid #3a3a50; margin-top:8px; }
         .lb-fav-btn { background:none; border:none; cursor:pointer; font-size:16px;
@@ -394,7 +417,9 @@
             border-bottom:1px solid #2a2a35; font-size:13px; }
         .ranked-ranker-row:last-child { border-bottom:none; }
         .ranked-ranker-pos { width:22px; color:#888; font-size:12px; text-align:right; flex-shrink:0; }
-        .ranked-ranker-name { flex:1; color:#eee; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ranked-ranker-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .lb-name-btn { background:none; border:none; cursor:pointer; color:#7ec8e3; font-size:inherit; padding:0; text-align:left; text-decoration:underline dotted #7ec8e355; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; transition:color .15s; }
+        .lb-name-btn:hover { color:#a8daee; }
         .ranked-ranker-rp { color:#3498db; font-size:12px; flex-shrink:0; }
         .ranked-fav-btn { background:none; border:none; cursor:pointer; font-size:14px;
             flex-shrink:0; padding:0 2px; opacity:0.45; transition:opacity .15s; }
@@ -1088,6 +1113,16 @@
         </div>
         <div id="pc-chars" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
         <button onclick="document.getElementById('profile-card-modal').style.display='none'" style="margin-top:16px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
+    </div>
+</div>
+
+<div id="online-result-modal">
+    <div class="or-box">
+        <div class="or-header" id="or-header"></div>
+        <div class="or-rp-main" id="or-rp-main"></div>
+        <div class="or-rank-info" id="or-rank-info"></div>
+        <div class="or-bonus-section" id="or-bonus-section" style="display:none;"></div>
+        <button class="or-ok-btn" onclick="closeOnlineResultModal()">OK</button>
     </div>
 </div>
 
@@ -2880,6 +2915,10 @@ function handleWsMessage(event) {
 }
 
 // Apply RP change from the server and show the result screen.
+function closeOnlineResultModal() {
+    document.getElementById('online-result-modal').style.display = 'none';
+}
+
 function handleRankResult(data) {
     if (rankResultApplied) return;
     rankResultApplied = true;
@@ -2888,40 +2927,67 @@ function handleRankResult(data) {
 
     if (!data.ranked || !isRankedMatch) {
         syncPlayerToServer();
-        setTimeout(() => { alert('フレンドマッチのためRP変動なし'); }, 300);
+        _showOnlineResultModal({ won: null, rpDelta: 0, after: { rank: getRank(), rp: getRP() }, before: { rank: getRank(), rp: getRP() }, bonuses: [], friendMatch: true });
         return;
     }
 
     const before = { rank: getRank(), rp: getRP() };
     const after = applyRpDelta(data.rpDelta);
 
-    // Update charUsage locally and sync rank/RP to server
     const myJob = window._lastOnlineJob || '';
     if (myJob) updateCharUsage(myJob);
     syncPlayerToServer();
-    // Refresh authoritative W/L/D from server after a short delay (server increments in finishRanked)
     setTimeout(() => { loadPlayerFromServer().then(() => refreshProfileUI()); }, 3000);
 
-    const sign = data.rpDelta >= 0 ? '+' : '';
-    const header = data.won ? '🏆 勝利！' : '敗北...';
+    _showOnlineResultModal({ won: data.won, rpDelta: data.rpDelta, before, after, bonuses: data.bonuses || [], baseRpDelta: data.baseRpDelta, friendMatch: false });
+}
 
-    let bonusSection = '';
-    if (data.bonuses && data.bonuses.length > 0) {
-        const baseSign = (data.baseRpDelta ?? data.rpDelta) >= 0 ? '+' : '';
-        bonusSection += `\n基本RP: ${baseSign}${data.baseRpDelta ?? data.rpDelta}`;
-        for (const b of data.bonuses) {
-            bonusSection += `\n${b.label}: +${b.rp} RP`;
-        }
-        bonusSection += `\n─────────────`;
+function _showOnlineResultModal({ won, rpDelta, before, after, bonuses, baseRpDelta, friendMatch }) {
+    const modal = document.getElementById('online-result-modal');
+    if (!modal) return;
+
+    if (friendMatch) {
+        document.getElementById('or-header').className = 'or-header';
+        document.getElementById('or-header').textContent = '🤝 フレンドマッチ終了';
+        document.getElementById('or-rp-main').textContent = 'RP変動なし';
+        document.getElementById('or-rp-main').className = 'or-rp-main';
+        document.getElementById('or-rank-info').textContent = '';
+        document.getElementById('or-bonus-section').style.display = 'none';
+        modal.style.display = 'flex';
+        return;
     }
 
-    let rpLine = `RP ${sign}${data.rpDelta}　(ランク${after.rank} / ${after.rp}RP)`;
-    if (after.rank > before.rank) rpLine += '　⬆️ ランクアップ！';
-    else if (after.rank < before.rank) rpLine += '　⬇️ ランクダウン';
+    const headerEl = document.getElementById('or-header');
+    const rpMainEl = document.getElementById('or-rp-main');
+    const rankInfoEl = document.getElementById('or-rank-info');
+    const bonusEl = document.getElementById('or-bonus-section');
 
-    setTimeout(() => {
-        alert(`${header}\n${bonusSection}\n${rpLine}`);
-    }, 300);
+    headerEl.textContent = won ? '🏆 勝利！' : '💀 敗北...';
+    headerEl.className = 'or-header ' + (won ? 'win' : 'lose');
+
+    const sign = rpDelta >= 0 ? '+' : '';
+    rpMainEl.textContent = `RP ${sign}${rpDelta}`;
+    rpMainEl.className = 'or-rp-main ' + (rpDelta >= 0 ? 'plus' : 'minus');
+
+    let rankStr = `ランク ${after.rank}　/ ${after.rp} RP`;
+    if (after.rank > before.rank) rankStr += ' <span class="or-rank-up">⬆️ ランクアップ！</span>';
+    else if (after.rank < before.rank) rankStr += ' <span class="or-rank-down">⬇️ ランクダウン</span>';
+    rankInfoEl.innerHTML = rankStr;
+
+    if (bonuses.length > 0) {
+        const baseSign = (baseRpDelta ?? rpDelta) >= 0 ? '+' : '';
+        let html = `<span class="or-bonus-label">基本RP:</span> ${baseSign}${baseRpDelta ?? rpDelta}<br>`;
+        for (const b of bonuses) {
+            html += `<span class="or-bonus-label">${_esc(b.label)}:</span> +${b.rp} RP<br>`;
+        }
+        html += `<hr class="or-bonus-divider"><strong>合計: ${sign}${rpDelta} RP</strong>`;
+        bonusEl.innerHTML = html;
+        bonusEl.style.display = 'block';
+    } else {
+        bonusEl.style.display = 'none';
+    }
+
+    modal.style.display = 'flex';
 }
 
 // ============================================================
@@ -3641,13 +3707,15 @@ function _renderLbTiers(tiers) {
             const name = _esc(p.playerName);
             const icon = p.profileIcon || '🎮';
             const favBtn = p.userId !== myId ? _favBtnHtml(p.userId, p.playerName, 'lb-fav-btn') : '';
-            const profBtn = p.userId !== myId ? `<button onclick="showOpponentProfile('${_esc(p.userId)}')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;opacity:0.6;" title="プロフィール">📋</button>` : '';
+            const nameEl = isMine
+                ? `<span class="lb-name">${name} 👈</span>`
+                : `<button class="lb-name-btn lb-name" onclick="showOpponentProfile('${_esc(p.userId)}')" title="プロフィールを見る">${name}</button>`;
             html += `<div class="lb-row${isMine?' lb-mine':''}">
                 <span class="lb-pos">${i+1}</span>
                 <span class="lb-icon">${icon}</span>
-                <span class="lb-name">${name}${isMine?' 👈':''}</span>
+                ${nameEl}
                 <span class="lb-rp">${p.rp} RP</span>
-                ${profBtn}${favBtn}
+                ${favBtn}
             </div>`;
         });
     }
@@ -3681,13 +3749,19 @@ async function showLeaderboard() {
     document.getElementById('lb-tab-tiers')?.classList.add('active');
     document.getElementById('lb-tab-fav')?.classList.remove('active');
     modal.style.display = 'flex';
-    body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">読み込み中...</div>';
+    if (_lbTiersCache) {
+        _renderLbTiers(_lbTiersCache);
+    } else {
+        body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">読み込み中...</div>';
+    }
     try {
         const res = await fetch(getApiBase() + '/leaderboard/tiers');
         _lbTiersCache = await res.json();
         _renderLbTiers(_lbTiersCache);
     } catch(e) {
-        body.innerHTML = '<div style="color:#e74c3c;padding:20px;text-align:center;">読み込みに失敗しました</div>';
+        if (!_lbTiersCache) {
+            body.innerHTML = '<div style="color:#e74c3c;padding:20px;text-align:center;">読み込みに失敗しました</div>';
+        }
     }
 }
 
@@ -3707,7 +3781,7 @@ async function _refreshRankerSection() {
         list.innerHTML = players.slice(0, 10).map((p, i) => {
             const name = _esc(p.playerName);
             const favBtn = `<button class="ranked-fav-btn${isFavorite(p.userId)?' active':''}" onclick="onToggleFav(this,'${_esc(p.userId)}','${_esc(p.playerName)}')" title="お気に入り">${isFavorite(p.userId)?'⭐':'☆'}</button>`;
-            return `<div class="ranked-ranker-row"><span class="ranked-ranker-pos">${i+1}</span><span class="ranked-ranker-name">${name}</span><span class="ranked-ranker-rp">${p.rp}RP</span>${favBtn}</div>`;
+            return `<div class="ranked-ranker-row"><span class="ranked-ranker-pos">${i+1}</span><button class="lb-name-btn ranked-ranker-name" onclick="showOpponentProfile('${_esc(p.userId)}')">${name}</button><span class="ranked-ranker-rp">${p.rp}RP</span>${favBtn}</div>`;
         }).join('');
     } catch(e) { sec.style.display = 'none'; }
 }
