@@ -10908,7 +10908,8 @@ function handleAbilityTarget(r, c, targetEntity) {
           if (tutorialMode && _ts === 3) advanceTutorial();
           else if (tutorialMode && _ts === 4 && actionMode === 'drop_rock') advanceTutorial();
           else if (tutorialMode && _ts === 2 && actionMode === 'dash') advanceTutorial();
-          if (tutorialMode && _ts === 5 && targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) advanceTutorial(); }
+          if (tutorialMode && _ts === 5 && targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) advanceTutorial();
+          else if (tutorialMode && _ts === 14 && targetEntity && targetEntity.hp <= 0 && targetEntity.team === 'npc') advanceTutorial(); }
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 魔法使い: 使ったアビリティ/スキルの属性に変化
@@ -15132,15 +15133,53 @@ const TUTORIAL_STEPS = [
         highlightAbility: 'shatter',
         advanceOn: 'shatter_used',
     },
-    {   // Step 14: 紫コマNPC
-        msg: '👾 <b>紫コマ（NPCモンスター）を倒して強くなろう！</b><br><br>ボード上に出現する<b>紫色のコマ</b>はNPCモンスターです。<br>プレイヤーでもCPUでもなく、どちらも倒すことができます。<br><br>倒したときの報酬（ランダム）：<br>❤️ <b>HP回復</b>・アビリティの<b>使用回数+1</b><br>💰 <b>お宝アイテム</b>・<b>特殊強化</b>など<br><br>💡 強いNPCほど報酬も豪華！<br>相手（CPU）がNPCを倒す前に先取りしよう。<br>難易度を上げるほど強力なNPCが増えます。<br><br>▶「次へ」で続きを見よう',
-        highlight: null,
-        advanceOn: null,
+    {   // Step 14: 紫コマNPC（インタラクティブ）
+        msg: '👾 <b>紫コマ（NPCモンスター）に注意！</b><br><br>ボード上に出現する<b>紫色のコマ</b>はNPCモンスターです。<br>プレイヤーでもCPUでもなく、<b>どちらも攻撃できる</b>中立の敵！<br><br>💡 <b>邪魔なら倒す・逃げる・敵に押し付ける</b>、状況に合わせて判断しよう！<br><br>▶「やってみよう！」を押して目の前の小鬼を倒そう！',
+        highlight: 'board',
+        advanceOn: 'npc_killed_tutorial',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            entities = entities.filter(e => !e.tutorialNpcDemo);
+            if (_pe) {
+                const _gr = Math.max(0, _pe.r - 1), _gc = _pe.c;
+                if (board[_gr]?.[_gc] === 'rock') board[_gr][_gc] = 'plains';
+                entities.push({
+                    id: 'tut_goblin_' + Date.now(),
+                    type: 'goblin_small', name: '小鬼',
+                    team: 'npc',
+                    r: _gr, c: _gc,
+                    hp: 2, maxHp: 2,
+                    ap: 1, maxAp: 1,
+                    abilities: { sword: 3 },
+                    skillUsed: true,
+                    stealth: false, stealthTimer: 0,
+                    invin: false, invinTimer: 0,
+                    poisonTimer: 0,
+                    tutorialNpcDemo: true,
+                    soulValue: 0
+                });
+                _pe.ap = Math.max(_pe.ap, 2);
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
     },
     {   // Step 15: 魔法陣（インタラクティブ）
         msg: '🔮 <b>魔法陣を踏んで消そう！</b><br><br>ボード上に現れる<b>紫のマス（魔法陣）</b>はコマで踏むと消えます。<br>放置すると相手に有利な効果が発動することも！<br><br>▶ コマを目の前の魔法陣のマスに移動して踏み消そう！',
         highlight: 'board',
         advanceOn: 'magic_circle_stepped',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                const _mr = Math.max(0, _pe.r - 1), _mc = _pe.c;
+                if (board[_mr]?.[_mc] !== undefined) board[_mr][_mc] = 'magic_circle';
+                _pe.ap = Math.max(_pe.ap, 2);
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
     },
     {   // Step 16: 鉱山
         msg: '⛏️ <b>鉱山（⛏️マス）を踏んで宝を集めよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br>コマを移動してその上に乗るだけで宝が自動取得されます！<br><br>グレードアップシステム：<br>1回目：🥉 <b>銅</b> → 2回目：🥈 <b>銀</b> → 3回目：🥇 <b>金</b> → 4回目：💎 <b>白金</b><br>同じ鉱山を踏むたびに価値がアップします！<br><br>💡 戦略のコツ：<br>・序盤に鉱山を確保して先行リードを狙おう<br>・相手に踏まれると相手が強化されてしまう<br>・鉱山争奪戦が試合の流れを左右することも！<br><br>▶「次へ」で続きを見よう',
