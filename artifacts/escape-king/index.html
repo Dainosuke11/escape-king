@@ -473,6 +473,20 @@
             0%,100% { box-shadow: 0 0 0 4px rgba(230,126,34,0.5); }
             50%      { box-shadow: 0 0 0 10px rgba(230,126,34,0.15); }
         }
+        #tutorial-arrow {
+            display: none;
+            position: fixed;
+            z-index: 9998;
+            font-size: 30px;
+            color: #e67e22;
+            text-shadow: 0 0 12px rgba(230,126,34,0.9);
+            pointer-events: none;
+            animation: tut-arrow-bounce 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes tut-arrow-bounce {
+            0%   { transform: translateY(0px); }
+            100% { transform: translateY(10px); }
+        }
         /* ===== Job Unit Burst Effect ===== */
         @keyframes burst-core {
             0%   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
@@ -15183,6 +15197,20 @@ function showTutorialStep() {
     }
 }
 
+function showTutorialArrow(targetEl) {
+    const arrow = document.getElementById('tutorial-arrow');
+    if (!arrow || !targetEl) return;
+    const rect = targetEl.getBoundingClientRect();
+    arrow.style.left = (rect.left + rect.width / 2 - 15) + 'px';
+    arrow.style.top  = Math.max(4, rect.top - 38) + 'px';
+    arrow.style.display = 'block';
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideTutorialArrow() {
+    const arrow = document.getElementById('tutorial-arrow');
+    if (arrow) arrow.style.display = 'none';
+}
+
 function hideTutorialAndWait() {
     // オーバーレイを非表示にしてプレイヤーが行動するのを待つ
     // tutorialMode/tutorialStep はそのまま保持
@@ -15190,6 +15218,12 @@ function hideTutorialAndWait() {
     if (overlay) overlay.style.display = 'none';
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     tutorialAwaitingAction = true;
+    // ターン終了ステップ: ボタンを光らせ矢印で誘導
+    const _curStep = TUTORIAL_STEPS[tutorialStep];
+    if (_curStep?.advanceOn === 'end_turn') {
+        const _endBtn = document.getElementById('btn-end-turn');
+        if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
+    }
     // 行動力を2補充してターンが終わらないようにする
     const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
     if (_pe) { _pe.ap = Math.max(_pe.ap, 2); updateUI(); }
@@ -15197,6 +15231,7 @@ function hideTutorialAndWait() {
 
 function advanceTutorial() {
     tutorialAwaitingAction = false;
+    hideTutorialArrow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     tutorialStep++;
     if (tutorialStep >= TUTORIAL_STEPS.length) {
@@ -15211,18 +15246,23 @@ function advanceTutorial() {
 function goBackTutorial() {
     if (tutorialStep <= 0) return;
     tutorialAwaitingAction = false;
+    hideTutorialArrow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     tutorialStep--;
     showTutorialStep();
 }
 
 function closeTutorial() {
+    hideTutorialArrow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     const overlay = document.getElementById('tutorial-overlay');
     if (overlay) overlay.style.display = 'none';
     tutorialMode = false;
 }
 </script>
+
+<!-- Tutorial scroll arrow -->
+<div id="tutorial-arrow">⬇</div>
 
 <!-- Tutorial Overlay -->
 <div id="tutorial-overlay">
