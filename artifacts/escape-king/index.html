@@ -10528,7 +10528,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'sabaki_kaminari', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c});
+        { let _wt=[[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:r+dr,c:c+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+          se._pendingGuruAbils.push({type:'sabaki_kaminari', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['sabaki_kaminari'] !== 999) se.abilities['sabaki_kaminari']--;
         msg(`⚡ 裁きの雷(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
     } else if (actionMode === 'fujo_yukai') {
@@ -10536,28 +10537,33 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'fujo_yukai', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c});
+        { let _wt=[[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:r+dr,c:c+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+          se._pendingGuruAbils.push({type:'fujo_yukai', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['fujo_yukai'] !== 999) se.abilities['fujo_yukai']--;
         msg(`🌋 不浄の融解(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
     } else if (actionMode === 'shintaku_daiko') {
         // 信託の大洪水(予知): G1消費
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'shintaku_daiko', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        { let _wt=[]; for(let _dr=-2;_dr<=2;_dr++) for(let _dc=-2;_dc<=2;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'shintaku_daiko', ownerTeam:se.team, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['shintaku_daiko'] !== 999) se.abilities['shintaku_daiko']--;
         msg(`🌊 信託の大洪水(予知)！次ターン開始時に半径2四方の敵に4ダメ＋吹飛＋AP-1＋4封印！`); used = true;
     } else if (actionMode === 'gyokuza_jishin') {
         // 玉座の地鳴り(予知): G1消費
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'gyokuza_jishin', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        { let _wt=[]; for(let _dr=-4;_dr<=4;_dr++) for(let _dc=-4;_dc<=4;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'gyokuza_jishin', ownerTeam:se.team, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['gyokuza_jishin'] !== 999) se.abilities['gyokuza_jishin']--;
         msg(`🌍 玉座の地鳴り(予知)！次ターン開始時に半径4四方の敵に2ダメ＋AP-1！`); used = true;
     } else if (actionMode === 'fukuin_bofuu') {
         // 福音の暴風(予知): G1消費
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'fukuin_bofuu', ownerTeam:se.team, casterR:se.r, casterC:se.c, dir:turn%2===1?'up':'down'});
+        { let _stepR=se.team==='player'?-1:1; let _wt=[];
+          for(let _dd=1;_dd<=5;_dd++) for(let _ddc=-2;_ddc<=2;_ddc++){let _wr=se.r+_stepR*_dd,_wc=se.c+_ddc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'fukuin_bofuu', ownerTeam:se.team, casterR:se.r, casterC:se.c, dir:turn%2===1?'up':'down', warnTiles:_wt}); }
         if (se.abilities['fukuin_bofuu'] !== 999) se.abilities['fukuin_bofuu']--;
         msg(`🌪️ 福音の暴風(予知)！次ターン開始時に前方5×5の敵に2ダメ＋吹飛！`); used = true;
     } else if (actionMode === 'tenkei_hoshiotoshi') {
@@ -10565,21 +10571,24 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.shinGauge = Math.max(0,(se.shinGauge||0)-2);
         entities.forEach(t => { if(t.hp>0&&t.team!==se.team&&!t.invin) t.ap=Math.max(0,(t.ap||0)-1); });
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'tenkei_hoshiotoshi', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        { let _wt=[]; for(let _dr=-5;_dr<=5;_dr++) for(let _dc=-5;_dc<=5;_dc++){if(Math.max(Math.abs(_dr),Math.abs(_dc))>5)continue; let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'tenkei_hoshiotoshi', ownerTeam:se.team, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['tenkei_hoshiotoshi'] !== 999) se.abilities['tenkei_hoshiotoshi']--;
         msg(`🌠 天啓の星堕とし(予知)！全敵AP-1！次ターン：半径5の敵に4ダメ＋吹飛＋元位置に岩！`); used = true;
     } else if (actionMode === 'fushinkoh_fushoku') {
         // 不信仰の腐食(予知): G1消費
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'fushinkoh_fushoku', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        { let _wt=[]; for(let _dr=-3;_dr<=3;_dr++) for(let _dc=-3;_dc<=3;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'fushinkoh_fushoku', ownerTeam:se.team, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['fushinkoh_fushoku'] !== 999) se.abilities['fushinkoh_fushoku']--;
         msg(`☠️ 不信仰の腐食(予知)！次ターン：半径3に疫病マス2T展開！踏んだ敵2ダメ＋AP-1＋4封印！`); used = true;
     } else if (actionMode === 'tamashii_kiga') {
         // 魂の飢餓(予知): G1消費
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        se._pendingGuruAbils.push({type:'tamashii_kiga', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        { let _wt=[]; for(let _dr=-4;_dr<=4;_dr++) for(let _dc=-4;_dc<=4;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+          se._pendingGuruAbils.push({type:'tamashii_kiga', ownerTeam:se.team, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['tamashii_kiga'] !== 999) se.abilities['tamashii_kiga']--;
         msg(`🌵 魂の飢餓(予知)！次ターン：半径4の敵にAP-2＋1ダメ＋4封印！`); used = true;
     } else if (actionMode.startsWith('skill_') ||
@@ -11094,7 +11103,24 @@ function executeSkill(se) {
         se._pendingGuruAbils = se._pendingGuruAbils || [];
         _gmSelected.forEach(abl => {
             let _tgt = _enemies[Math.floor(Math.random()*_enemies.length)];
-            se._pendingGuruAbils.push({type:abl, ownerTeam:se.team, targetR:_tgt?_tgt.r:se.r, targetC:_tgt?_tgt.c:se.c, casterR:se.r, casterC:se.c, dir:'up'});
+            let _tr = _tgt?_tgt.r:se.r, _tc = _tgt?_tgt.c:se.c;
+            let _stepR = se.team==='player'?-1:1;
+            let _wt = [];
+            if (abl==='sabaki_kaminari'||abl==='fujo_yukai') {
+                _wt = [[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:_tr+dr,c:_tc+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+            } else if (abl==='shintaku_daiko') {
+                for(let _dr=-2;_dr<=2;_dr++) for(let _dc=-2;_dc<=2;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+            } else if (abl==='gyokuza_jishin'||abl==='tamashii_kiga') {
+                let _rad = abl==='gyokuza_jishin'?4:4;
+                for(let _dr=-_rad;_dr<=_rad;_dr++) for(let _dc=-_rad;_dc<=_rad;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+            } else if (abl==='fukuin_bofuu') {
+                for(let _dd=1;_dd<=5;_dd++) for(let _ddc=-2;_ddc<=2;_ddc++){let _wr=se.r+_stepR*_dd,_wc=se.c+_ddc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+            } else if (abl==='tenkei_hoshiotoshi') {
+                for(let _dr=-5;_dr<=5;_dr++) for(let _dc=-5;_dc<=5;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+            } else if (abl==='fushinkoh_fushoku') {
+                for(let _dr=-3;_dr<=3;_dr++) for(let _dc=-3;_dc<=3;_dc++){let _wr=se.r+_dr,_wc=se.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+            }
+            se._pendingGuruAbils.push({type:abl, ownerTeam:se.team, targetR:_tr, targetC:_tc, casterR:se.r, casterC:se.c, dir:'up', warnTiles:_wt});
         });
         if (se.abilities['tenkei_hoshiotoshi'] !== 999 && _gmSelected.includes('tenkei_hoshiotoshi')) {
             entities.forEach(t => { if(t.hp>0&&t.team!==se.team&&!t.invin) t.ap=Math.max(0,(t.ap||0)-1); });
@@ -12489,6 +12515,11 @@ function cpuLogic() {
                     if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
                 } else if (cpu.type==='mage' && dist<=5) {
                     executeRushSkill(cpu,p.r,p.c,'skill_mage'); cpu.ap--;attacked=true;
+                } else if (cpu.type==='guru') {
+                    // 終末論: shinGauge >= 4 なら積極的に発動
+                    if ((cpu.shinGauge||0) >= 4) {
+                        if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
+                    }
                 } else if (cpu.type==='sentai_hero') {
                     // 合体必殺技: 前方3×7レーンに2体以上の敵 + 生存隊員2体以上
                     let _cbAlive = sentaiAliveCount(cpu);
@@ -12718,6 +12749,136 @@ function cpuLogic() {
                         msg(`🔵ブルー${_abBTag}敵のアクアビーム！しかし${p.name}は防いだ！`);
                     }
                     attacked = true; cpu.ap--;
+                }
+            }
+
+            // ====================================================
+            // 優先度4.6: 教祖(guru)専用アビリティ
+            // ====================================================
+            if (!attacked && cpu.type === 'guru') {
+                const _gp = entities.find(e=>e.team!=='cpu'&&e.hp>0);
+                const _gDist = _gp ? Math.max(Math.abs(cpu.r-_gp.r),Math.abs(cpu.c-_gp.c)) : 99;
+                // kourin: 移動しながらG+1+信者召喚。プレイヤーに近づく方向へダッシュ
+                if (!attacked && (cpu.abilities.kourin||0) > 0 && !(cursedAbilities[cpu.id]?.['kourin']>0) && cpu.ap >= 1) {
+                    let _kBest = null, _kBestDist = _gDist;
+                    for (let _dr=-3;_dr<=3;_dr++) for (let _dc=-3;_dc<=3;_dc++) {
+                        if (_dr===0&&_dc===0) continue;
+                        let _nr=cpu.r+_dr,_nc=cpu.c+_dc;
+                        if (_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE) continue;
+                        if (!isWalkable(_nr,_nc)) continue;
+                        if (entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc)) continue;
+                        let _nd = _gp ? Math.max(Math.abs(_nr-_gp.r),Math.abs(_nc-_gp.c)) : 99;
+                        if (_nd < _kBestDist) { _kBestDist=_nd; _kBest={r:_nr,c:_nc}; }
+                    }
+                    if (_kBest) {
+                        cpu.r = _kBest.r; cpu.c = _kBest.c;
+                        cpu.shinGauge = (cpu.shinGauge||0) + 1;
+                        let _shinCands2=[];
+                        for(let _dr2=-1;_dr2<=1;_dr2++) for(let _dc2=-1;_dc2<=1;_dc2++){
+                            if(_dr2===0&&_dc2===0) continue;
+                            let _sr=cpu.r+_dr2,_sc=cpu.c+_dc2;
+                            if(_sr>=0&&_sr<SIZE&&_sc>=0&&_sc<SIZE&&isWalkable(_sr,_sc)&&!entities.some(e=>e.hp>0&&e.r===_sr&&e.c===_sc)) _shinCands2.push({r:_sr,c:_sc});
+                        }
+                        if (_shinCands2.length>0){
+                            let _sp2=_shinCands2[Math.floor(Math.random()*_shinCands2.length)];
+                            entities.push({id:'shinja_'+Date.now(),type:'shinja',name:'信者',team:cpu.team,r:_sp2.r,c:_sp2.c,hp:1,maxHp:1,ap:2,maxAp:2,abilities:{jibaku_tokkoh:999},initialAbilities:{jibaku_tokkoh:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,element:'light',shinjaFreezeUntil:0});
+                        }
+                        if ((cpu.shinGauge||0)>=5){cpu.invin=true;cpu.invinTimer=Math.max(cpu.invinTimer||0,1);}
+                        if (cpu.abilities.kourin!==999) cpu.abilities.kourin--;
+                        msg(`⛪ 敵教祖が降臨！移動＋信者召喚＋神ゲージ+1(${cpu.shinGauge})！`);
+                        attacked=true; cpu.ap--;
+                    }
+                }
+                // 広範囲予知アビリティ: 敵が射程内なら使用
+                // gyokuza_jishin (r4): 広範囲・最優先
+                if (!attacked && _gDist<=4 && (cpu.abilities.gyokuza_jishin||0)>0 && !(cursedAbilities[cpu.id]?.['gyokuza_jishin']>0)) {
+                    let _wt=[]; for(let _dr=-4;_dr<=4;_dr++) for(let _dc=-4;_dc<=4;_dc++){let _wr=cpu.r+_dr,_wc=cpu.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'gyokuza_jishin',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.gyokuza_jishin!==999) cpu.abilities.gyokuza_jishin--;
+                    msg(`🌍 敵教祖：玉座の地鳴り(予知)！次ターン半径4の全敵に2ダメ＋AP-1！`);
+                    attacked=true; cpu.ap--;
+                }
+                // tamashii_kiga (r4): AP封殺
+                if (!attacked && _gDist<=4 && (cpu.abilities.tamashii_kiga||0)>0 && !(cursedAbilities[cpu.id]?.['tamashii_kiga']>0)) {
+                    let _wt=[]; for(let _dr=-4;_dr<=4;_dr++) for(let _dc=-4;_dc<=4;_dc++){let _wr=cpu.r+_dr,_wc=cpu.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'tamashii_kiga',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.tamashii_kiga!==999) cpu.abilities.tamashii_kiga--;
+                    msg(`🌵 敵教祖：魂の飢餓(予知)！次ターン半径4の全敵にAP-2＋1ダメ＋4封印！`);
+                    attacked=true; cpu.ap--;
+                }
+                // tenkei_hoshiotoshi (r5, G2): G>=2のときだけ
+                if (!attacked && _gDist<=5 && (cpu.shinGauge||0)>=2 && (cpu.abilities.tenkei_hoshiotoshi||0)>0 && !(cursedAbilities[cpu.id]?.['tenkei_hoshiotoshi']>0)) {
+                    let _wt=[]; for(let _dr=-5;_dr<=5;_dr++) for(let _dc=-5;_dc<=5;_dc++){let _wr=cpu.r+_dr,_wc=cpu.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'tenkei_hoshiotoshi',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    cpu.shinGauge = Math.max(0,(cpu.shinGauge||0)-2);
+                    entities.forEach(t=>{if(t.hp>0&&t.team!==cpu.team&&!t.invin) t.ap=Math.max(0,(t.ap||0)-1);});
+                    if(cpu.abilities.tenkei_hoshiotoshi!==999) cpu.abilities.tenkei_hoshiotoshi--;
+                    msg(`🌠 敵教祖：天啓の星堕とし(予知)！全敵AP-1！次ターン半径5・4ダメ＋吹飛＋岩！`);
+                    attacked=true; cpu.ap--;
+                }
+                // fushinkoh_fushoku (r3): 疫病展開
+                if (!attacked && _gDist<=3 && (cpu.abilities.fushinkoh_fushoku||0)>0 && !(cursedAbilities[cpu.id]?.['fushinkoh_fushoku']>0)) {
+                    let _wt=[]; for(let _dr=-3;_dr<=3;_dr++) for(let _dc=-3;_dc<=3;_dc++){let _wr=cpu.r+_dr,_wc=cpu.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'fushinkoh_fushoku',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.fushinkoh_fushoku!==999) cpu.abilities.fushinkoh_fushoku--;
+                    msg(`☠️ 敵教祖：不信仰の腐食(予知)！次ターン半径3・疫病2T展開！`);
+                    attacked=true; cpu.ap--;
+                }
+                // shintaku_daiko (r2): 近距離洪水
+                if (!attacked && _gDist<=2 && (cpu.abilities.shintaku_daiko||0)>0 && !(cursedAbilities[cpu.id]?.['shintaku_daiko']>0)) {
+                    let _wt=[]; for(let _dr=-2;_dr<=2;_dr++) for(let _dc=-2;_dc<=2;_dc++){let _wr=cpu.r+_dr,_wc=cpu.c+_dc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'shintaku_daiko',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.shintaku_daiko!==999) cpu.abilities.shintaku_daiko--;
+                    msg(`🌊 敵教祖：信託の大洪水(予知)！次ターン半径2・4ダメ＋吹飛＋AP-1＋4封印！`);
+                    attacked=true; cpu.ap--;
+                }
+                // sabaki_kaminari (r1, target): 隣接敵に即時AP-1+予知
+                if (!attacked && _gDist<=1 && _gp && (cpu.abilities.sabaki_kaminari||0)>0 && !(cursedAbilities[cpu.id]?.['sabaki_kaminari']>0)) {
+                    if (!_gp.invin) { _gp.ap = Math.max(0,(_gp.ap||0)-1); }
+                    let _wt=[[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:_gp.r+dr,c:_gp.c+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'sabaki_kaminari',ownerTeam:cpu.team,targetR:_gp.r,targetC:_gp.c,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.sabaki_kaminari!==999) cpu.abilities.sabaki_kaminari--;
+                    msg(`⚡ 敵教祖：裁きの雷(予知)！次ターン隣接範囲4ダメ＋AP-1！`);
+                    attacked=true; cpu.ap--;
+                }
+                // fujo_yukai (r1, target): 隣接敵に即時AP-1+予知
+                if (!attacked && _gDist<=1 && _gp && (cpu.abilities.fujo_yukai||0)>0 && !(cursedAbilities[cpu.id]?.['fujo_yukai']>0)) {
+                    if (!_gp.invin) { _gp.ap = Math.max(0,(_gp.ap||0)-1); }
+                    let _wt=[[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:_gp.r+dr,c:_gp.c+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+                    cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                    cpu._pendingGuruAbils.push({type:'fujo_yukai',ownerTeam:cpu.team,targetR:_gp.r,targetC:_gp.c,casterR:cpu.r,casterC:cpu.c,warnTiles:_wt});
+                    if(cpu.shinGauge>0) cpu.shinGauge--;
+                    if(cpu.abilities.fujo_yukai!==999) cpu.abilities.fujo_yukai--;
+                    msg(`🌋 敵教祖：不浄の融解(予知)！次ターン隣接範囲4ダメ＋炎＋燃焼！`);
+                    attacked=true; cpu.ap--;
+                }
+                // fukuin_bofuu (前方5×5)
+                if (!attacked && (cpu.abilities.fukuin_bofuu||0)>0 && !(cursedAbilities[cpu.id]?.['fukuin_bofuu']>0)) {
+                    let _fwStepR = 1; // CPU は下方向(プレイヤー方向)
+                    let _fwEnemyCount = entities.filter(e=>e.hp>0&&e.team!=='cpu').filter(e=>{
+                        let _dr=(e.r-cpu.r)*_fwStepR, _dc=e.c-cpu.c;
+                        return _dr>=1&&_dr<=5&&Math.abs(_dc)<=2;
+                    }).length;
+                    if (_fwEnemyCount >= 1) {
+                        let _wt=[]; for(let _dd=1;_dd<=5;_dd++) for(let _ddc=-2;_ddc<=2;_ddc++){let _wr=cpu.r+_fwStepR*_dd,_wc=cpu.c+_ddc; if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE) _wt.push({r:_wr,c:_wc});}
+                        cpu._pendingGuruAbils = cpu._pendingGuruAbils||[];
+                        cpu._pendingGuruAbils.push({type:'fukuin_bofuu',ownerTeam:cpu.team,casterR:cpu.r,casterC:cpu.c,dir:'down',warnTiles:_wt});
+                        if(cpu.shinGauge>0) cpu.shinGauge--;
+                        if(cpu.abilities.fukuin_bofuu!==999) cpu.abilities.fukuin_bofuu--;
+                        msg(`🌪️ 敵教祖：福音の暴風(予知)！次ターン前方5×5の敵に2ダメ＋吹飛！`);
+                        attacked=true; cpu.ap--;
+                    }
                 }
             }
 
