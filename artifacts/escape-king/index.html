@@ -7493,7 +7493,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'kaiten_giri') return true;
     if (mode === 'kyukaku_tsuiseki') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
     if (mode === 'ono_nage') return (se.r===r||se.c===c) && maxDist > 0 && maxDist <= 4 && target && target.team !== se.team;
-    if (mode === 'mure_de_karu') return r === se.r && c === se.c;
+    if (mode === 'mure_de_karu') return maxDist === 1 && isWalkable(r, c) && !entities.some(ev => ev.hp > 0 && ev.r === r && ev.c === c);
     if (mode === 'toki_no_sakebi') return true;
     // ピエロ
     if (mode === 'knife_juggling') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
@@ -11994,25 +11994,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['ono_nage'] !== 999) se.abilities['ono_nage']--;
         msg(`🪓 ${se.name}の斧投げ！直線4マス 4ダメ！次ターン攻撃力-1！`); used = true;
     } else if (actionMode === 'mure_de_karu') {
-        // 群れで刈る: 前方クローン(HP1/ATK-1)を召喚。次T開始時消滅 / デメリット: defDebuff+1(1T)
-        let _mdFrontR = se.team === 'player' ? se.r - 1 : se.r + 1;
-        let _mdFrontC = se.c;
-        let _mdSpawn = null;
-        const _mdDirs = [[_mdFrontR, _mdFrontC],[se.r-1,se.c],[se.r+1,se.c],[se.r,se.c-1],[se.r,se.c+1]];
-        for (let [_mr, _mc] of _mdDirs) {
-            if (_mr>=0&&_mr<SIZE&&_mc>=0&&_mc<SIZE&&isWalkable(_mr,_mc)&&!entities.some(ev=>ev.hp>0&&ev.r===_mr&&ev.c===_mc)) {
-                _mdSpawn = {r:_mr, c:_mc}; break;
-            }
-        }
-        if (_mdSpawn) {
-            entities.push({ id:'barb_clone'+Date.now(), type:'barbarian_clone', name:'バーバリアン分身', team:se.team,
-                r:_mdSpawn.r, c:_mdSpawn.c, hp:1, maxHp:1, ap:1, maxAp:1,
-                abilities:{chimatsuri_giri:999, ono_renbu:999, kaiten_giri:999, ono_nage:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0,
-                poisonTimer:0, atkBonus:-1, _cloneExpiry: turn+1, element: se.element });
-            msg(`👥 ${se.name}の群れで刈る！バーバリアン分身を召喚！次ターン消滅・被ダメ+1(1T)！`);
-        } else {
-            msg(`👥 ${se.name}の群れで刈る！召喚場所がない！`);
-        }
+        // 群れで刈る: r1指定マスにクローン(HP1/ATK-1)を召喚。次T開始時消滅 / デメリット: defDebuff+1(1T)
+        entities.push({ id:'barb_clone'+Date.now(), type:'barbarian_clone', name:'バーバリアン分身', team:se.team,
+            r:r, c:c, hp:1, maxHp:1, ap:1, maxAp:1,
+            abilities:{chimatsuri_giri:999, ono_renbu:999, kaiten_giri:999, ono_nage:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0,
+            poisonTimer:0, atkBonus:-1, _cloneExpiry: turn+1, element: se.element });
+        msg(`👥 ${se.name}の群れで刈る！バーバリアン分身を召喚！次ターン消滅・被ダメ+1(1T)！`);
         se.defDebuff = (se.defDebuff||0) + 1; se.defDebuffTimer = 1;
         if (se.abilities['mure_de_karu'] !== 999) se.abilities['mure_de_karu']--;
         used = true;
