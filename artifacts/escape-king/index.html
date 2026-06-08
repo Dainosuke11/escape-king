@@ -151,7 +151,7 @@
         .magic_circle::after { content: "🔯"; font-size: calc(var(--tile-size) * 0.45); }
         .camel_tile { background: #f39c12; }
         .camel_tile::after { content: "🐪"; font-size: calc(var(--tile-size) * 0.45); }
-        .trap { background: #8d6e63; }
+        .trap { background: #bdbdbd; }
         .trap::after { content: "🕸️"; font-size: calc(var(--tile-size) * 0.45); }
         .hole { background: #3e2723; }
         .hole::after { content: "🕳️"; font-size: calc(var(--tile-size) * 0.45); }
@@ -1411,7 +1411,17 @@ const ABILITY_NAMES = {
     tenkei_hoshiotoshi: '🌠天啓の星堕とし(予知/次T:r5全敵4ダメ+吹飛+元位置岩/G2消費)',
     fushinkoh_fushoku: '☠️不信仰の腐食(予知/次T:r3疫病マス2T/踏んだ敵2ダメ+AP-1+4封印/G1消費)',
     tamashii_kiga: '🌵魂の飢餓(予知/次T:r4四方AP-2+1ダメ+4封印/G1消費)',
-    jibaku_tokkoh: '💥自爆特攻(r1全体3ダメ/自爆5ダメ/∞)'
+    jibaku_tokkoh: '💥自爆特攻(r1全体3ダメ/自爆5ダメ/∞)',
+    ruru_mai: '⛩️流々舞(ダッシュ+G+1/AP0:前進+r1火1ダメ)',
+    kiriki_mai: '⚔️斬り斬り舞(r1光2ダメ+吹飛+G+1/AP0:前進+再攻撃)',
+    kagura: '🎶神楽(G+3+1Tバリア+HP+3+3アビ回復+前進1/次TターンAP-1)',
+    kagami_no_ma: '🪞鏡の間(r1鏡設置/巫女潜伏+射程+1)',
+    joka_hiya: '🏹浄化の火矢(直線5火3ダメ+燃焼/次TターンAP-1/G1消費→直線7・5ダメ)',
+    reibu_kekkai: '🔯霊符結界(r2光マス1T+敵AP-1+4封印+バリア/次TターンAP-1)',
+    oharae: '🔥大祓え(r2全敵3ダメ+吹飛+燃焼+4封印/次TターンAP-2)',
+    kamioroshi: '🐉神降し(1T龍神技使用可+流々舞+1/次TターンAP-2)',
+    ryuen: '🔥龍炎(直線5全敵4ダメ+燃焼/炎属性)',
+    shinkou: '✨神光(r3全敵2ダメ+AP-1/光属性)'
 };
 
 const ABILITY_TIPS = {
@@ -1662,7 +1672,8 @@ const JOB_DATA = {
     sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true },
     pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true },
     hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true },
-    guru: { name: '教祖', abilities: { drop_rock: 999, shatter: 5, kourin: 10, sabaki_kaminari: 5, shintaku_daiko: 5, gyokuza_jishin: 5, fukuin_bofuu: 5, fujo_yukai: 5, tenkei_hoshiotoshi: 3, fushinkoh_fushoku: 5, tamashii_kiga: 5 }, hp: 30, ap: 2, guruUnit: true }
+    guru: { name: '教祖', abilities: { drop_rock: 999, shatter: 5, kourin: 10, sabaki_kaminari: 5, shintaku_daiko: 5, gyokuza_jishin: 5, fukuin_bofuu: 5, fujo_yukai: 5, tenkei_hoshiotoshi: 3, fushinkoh_fushoku: 5, tamashii_kiga: 5 }, hp: 30, ap: 2, guruUnit: true },
+    miko: { name: '巫女', abilities: { drop_rock: 999, shatter: 3, ruru_mai: 5, kiriki_mai: 5, kagura: 5, kagami_no_ma: 5, joka_hiya: 5, reibu_kekkai: 5, oharae: 5, kamioroshi: 5 }, hp: 30, ap: 2, mikoUnit: true }
 };
 
 const ELEMENT_DATA = {
@@ -1681,7 +1692,11 @@ const JOB_ELEMENT = {
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light', hitokiri_musha: 'fire',
-    guru: 'light',
+    guru: 'light', miko: 'light',
+};
+
+const JOB_SECONDARY_ELEMENT = {
+    guru: 'water', miko: 'fire', hitokiri_musha: 'dark',
 };
 
 const NPC_ELEMENT = {
@@ -1696,6 +1711,7 @@ const NPC_ELEMENT = {
     gremlin: 'dark', forest_guardian: 'grass',
     pixie_fairy: 'light', gnome_npc: 'grass', greenman_npc: 'grass', redcap_npc: 'fire', siren_npc: 'water',
     small_oni: 'dark',
+    ryujin_npc: 'light', kagami_mirror: 'light',
 };
 
 const ABILITY_ELEMENT = {
@@ -1730,6 +1746,10 @@ const ABILITY_ELEMENT = {
     fujo_yukai: 'fire', tenkei_hoshiotoshi: 'fire', fushinkoh_fushoku: 'dark',
     gyokuza_jishin: 'none', tamashii_kiga: 'dark', kourin: 'light', jibaku_tokkoh: 'light',
     skill_shumatsuron: 'light',
+    ruru_mai: 'fire', kiriki_mai: 'light', kagura: 'light', kagami_no_ma: 'light',
+    joka_hiya: 'fire', reibu_kekkai: 'light', oharae: 'fire', kamioroshi: 'light',
+    ryuen: 'fire', shinkou: 'light',
+    skill_ryujin_korin: 'light',
 };
 
 const STAGE_ELEMENT = {
@@ -1748,6 +1768,7 @@ const JOB_SKILL_ELEMENT = {
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light', hitokiri_musha: 'dark',
     guru: 'light',
+    miko: 'light',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -1786,6 +1807,7 @@ const JOB_SKILL_NAMES = {
     sennin:        '自然淘汰',
     hitokiri_musha: '冥府送り',
     guru:           '終末論',
+    miko:           '龍神降臨',
 };
 
 const JOB_GUIDE_META = {
@@ -1815,6 +1837,7 @@ const JOB_GUIDE_META = {
     pixie:         { emoji: '🧚', fullName: 'ピクシー', note: '【イタズラ好きのトリックスター】光属性・飛行ユニット。\n技ごとに属性が変わる変幻自在の戦士。\n「グレムリンのイタズラ」：5T以降。グレムリン召喚中は敵の陣地突破勝利が無効化。\n「妖精の里」スキル：半径3マスに結界を張り6体の妖精を召喚。敵を封印・味方を守る。' },
     hitokiri_musha: { emoji: '⚔️', fullName: '人斬り武者', note: '【火炎×冥府の呪われ二刀剣士】毎ターン自傷1ダメ(10T後は2ダメ)・属性が炎/闇で交替。\nHP≤20で【修羅】化(1Tバリア+AP+1)、HP≤10で【阿修羅】化(1Tバリア+AP+2+ATK+1+全アビ+1)。\n敵を討ち取るとHP+2+4アビ+1。陣地突破勝利なし(撃破のみで勝利)。\n業火の呪い：技で付与、毎T1ダメ(3T持続)。\n「阿鼻叫喚」：前方に業火地獄マス展開・敵は毎T1ダメ。\n★スキル「冥府送り」：半径5の敵全員を相手陣地奥へ強制転送！' },
     guru: { emoji: '⛪', fullName: '教祖', note: '【神ゲージ制・予知警告システム】毎ターン開始時に神ゲージ+1・属性が光/水で交替(奇数=光/偶数=水)。\n予知警告アビリティは発動ターンに警告マスを表示し、翌ターン開始時に効果発動。\n「降臨」ダッシュで信者(HP1/AP2/自爆特攻)を元の場所に召喚。ゲージ+1。ゲージ≥5なら1Tバリア。\n信者撃破時：教祖HP+1・ゲージ+1。\n★スキル「終末論」：ゲージ最大8消費→1Tバリア→消費数分の天罰技を同時即時発動！' },
+    miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
 };
 
 const ENTITY_ICONS = {
@@ -1844,6 +1867,8 @@ const ENTITY_ICONS = {
     gladiator:        '⚔️',
     monk:             '🥋',
     shinja:           '🙏',
+    ryujin_npc:       '🐉',
+    kagami_mirror:    '🪞',
     golem:            '🪨',
     slime:            '🟩',
     octopus:          '🐙',
@@ -3513,7 +3538,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
