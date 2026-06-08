@@ -14272,6 +14272,11 @@ function cpuLogic() {
                     if ((cpu.shinGauge||0) >= 4) {
                         if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
                     }
+                } else if (cpu.type==='barbarian') {
+                    // 野生の解放: HP >= 20 かつ敵が射程2以内
+                    if (cpu.hp >= 20 && dist <= 2) {
+                        if (executeSkill(cpu)){cpu.skillUsed=true;cpu.ap--;attacked=true;}
+                    }
                 } else if (cpu.type==='sentai_hero') {
                     // 合体必殺技: 前方3×7レーンに2体以上の敵 + 生存隊員2体以上
                     let _cbAlive = sentaiAliveCount(cpu);
@@ -14703,6 +14708,121 @@ function cpuLogic() {
                     cpu._nextTurnApCost=(cpu._nextTurnApCost||0)+1;
                     if(cpu.abilities.kagura!==999) cpu.abilities.kagura--;
                     msg(`🎶 敵巫女の神楽！G+3+バリア+HP+3+回復！`); attacked=true; cpu.ap--;
+                }
+            }
+
+            // ====================================================
+            // 優先度4.8: バーバリアン専用アビリティ
+            // ====================================================
+            if (!attacked && cpu.type === 'barbarian') {
+                const _bp = entities.find(e=>e.team!=='cpu'&&e.hp>0);
+                const _bDist = _bp ? Math.max(Math.abs(cpu.r-_bp.r),Math.abs(cpu.c-_bp.c)) : 99;
+                const _bAdjacentEnemies = entities.filter(e=>e.team!=='cpu'&&e.hp>0&&Math.max(Math.abs(e.r-cpu.r),Math.abs(e.c-cpu.c))<=1).length;
+
+                // 回転斬り: dist=1 かつ隣接敵が複数いるときAoE優先
+                if (!attacked && _bDist<=1 && _bAdjacentEnemies>=2 && (cpu.abilities.kaiten_giri||0)>0 && !(cursedAbilities[cpu.id]?.['kaiten_giri']>0)) {
+                    let _kgHits=0;
+                    entities.forEach(t=>{if(t.hp>0&&t.team!=='cpu'&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin&&!necroShieldBlock(t)){let _kgDmg=3+(cpu.atkBonus||0)+(t.defDebuff||0);t.hp-=_kgDmg;knockback(t,1,cpu);_kgHits++;}});
+                    cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
+                    if(cpu.abilities.kaiten_giri!==999) cpu.abilities.kaiten_giri--;
+                    msg(`🌀 敵バーバリアンの回転斬り！${_kgHits}体に3ダメ+後退！被ダメ+1(1T)！`); attacked=true; cpu.ap--;
+                }
+                // 斧連舞: dist=1 で強力な単体攻撃(3ダメ×2)
+                if (!attacked && _bDist<=1 && _bp && (cpu.abilities.ono_renbu||0)>0 && !(cursedAbilities[cpu.id]?.['ono_renbu']>0)) {
+                    let _orDmg=3+(cpu.atkBonus||0)+(_bp.defDebuff||0);
+                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=_orDmg*2; _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);}
+                    cpu._atkPenalty=true;
+                    if(cpu.abilities.ono_renbu!==999) cpu.abilities.ono_renbu--;
+                    msg(`🪓 敵バーバリアンの斧連舞！${_bp.name}に3ダメ×2+AP-1！次T攻撃-1！`); attacked=true; cpu.ap--;
+                }
+                // 回転斬り: dist=1 の単体時もAoEとして使える
+                if (!attacked && _bDist<=1 && (cpu.abilities.kaiten_giri||0)>0 && !(cursedAbilities[cpu.id]?.['kaiten_giri']>0)) {
+                    let _kgHits=0;
+                    entities.forEach(t=>{if(t.hp>0&&t.team!=='cpu'&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=1&&!t.invin&&!necroShieldBlock(t)){let _kgDmg=3+(cpu.atkBonus||0)+(t.defDebuff||0);t.hp-=_kgDmg;knockback(t,1,cpu);_kgHits++;}});
+                    cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
+                    if(cpu.abilities.kaiten_giri!==999) cpu.abilities.kaiten_giri--;
+                    msg(`🌀 敵バーバリアンの回転斬り！${_kgHits}体に3ダメ+後退！被ダメ+1(1T)！`); attacked=true; cpu.ap--;
+                }
+                // 血祭り斬り: dist=1 の近接フォールバック
+                if (!attacked && _bDist<=1 && _bp && (cpu.abilities.chimatsuri_giri||0)>0 && !(cursedAbilities[cpu.id]?.['chimatsuri_giri']>0)) {
+                    let _cgDmg=3+(cpu.atkBonus||0)+(_bp.defDebuff||0);
+                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=_cgDmg; _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);}
+                    cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
+                    if(cpu.abilities.chimatsuri_giri!==999) cpu.abilities.chimatsuri_giri--;
+                    msg(`⚔️ 敵バーバリアンの血祭り斬り！${_bp.name}に3ダメ+AP-1！被ダメ+1(1T)！`); attacked=true; cpu.ap--;
+                }
+                // 斧投げ: 同行列で距離1-4の遠距離攻撃(4ダメ)
+                if (!attacked && _bp && (cpu.r===_bp.r||cpu.c===_bp.c) && _bDist>0 && _bDist<=4 && (cpu.abilities.ono_nage||0)>0 && !(cursedAbilities[cpu.id]?.['ono_nage']>0)) {
+                    let _onDmg=4+(cpu.atkBonus||0)+(_bp.defDebuff||0);
+                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=_onDmg;}
+                    cpu._atkPenalty=true;
+                    if(cpu.abilities.ono_nage!==999) cpu.abilities.ono_nage--;
+                    msg(`🪓 敵バーバリアンの斧投げ！${_bp.name}に4ダメ！次T攻撃-1！`); attacked=true; cpu.ap--;
+                }
+                // 雄叫び: 半径2内に敵がいる場合AP-1+2アビ封印
+                if (!attacked && _bDist<=2 && (cpu.abilities.toki_no_sakebi||0)>0 && !(cursedAbilities[cpu.id]?.['toki_no_sakebi']>0)) {
+                    let _tsHits=0;
+                    entities.forEach(t=>{
+                        if(t.hp<=0) return;
+                        let _td=Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c));
+                        if(_td>2) return;
+                        if(t.team!=='cpu'){
+                            t.ap=Math.max(0,(t.ap||0)-1);
+                            let _tks=Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]||0)>0&&t.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,2);
+                            _tks.forEach(k=>{cursedAbilities[t.id]=cursedAbilities[t.id]||{};cursedAbilities[t.id][k]=(cursedAbilities[t.id][k]||0)+1;});
+                            _tsHits++;
+                        } else if(t!==cpu){
+                            t.invin=true; t.invinTimer=1;
+                        }
+                    });
+                    if(cpu.abilities.toki_no_sakebi!==999) cpu.abilities.toki_no_sakebi--;
+                    msg(`📣 敵バーバリアンの雄叫び！${_tsHits}体にAP-1+2アビ封印！`); attacked=true; cpu.ap--;
+                }
+                // 嗅覚追跡: 半径3内に敵 — ステルス+AP+1+2アビ封印
+                if (!attacked && _bDist<=3 && _bp && (cpu.abilities.kyukaku_tsuiseki||0)>0 && !(cursedAbilities[cpu.id]?.['kyukaku_tsuiseki']>0)) {
+                    cpu.stealth=true; cpu.stealthTimer=1;
+                    cpu.ap=Math.min((cpu.ap||0)+1,(cpu.maxAp||2)+2);
+                    let _kkKeys=Object.keys(_bp.abilities||{}).filter(k=>k!=='drop_rock'&&(_bp.abilities[k]||0)>0&&_bp.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,2);
+                    _kkKeys.forEach(k=>{cursedAbilities[_bp.id]=cursedAbilities[_bp.id]||{};cursedAbilities[_bp.id][k]=(cursedAbilities[_bp.id][k]||0)+1;});
+                    if(cpu.abilities.kyukaku_tsuiseki!==999) cpu.abilities.kyukaku_tsuiseki--;
+                    msg(`👃 敵バーバリアンの嗅覚追跡！ステルス+AP+1+${_bp.name}の[${_kkKeys.map(k=>ABILITY_NAMES[k]||k).join('・')}]を封印！`); attacked=true; cpu.ap--;
+                }
+                // 走って寝る: アビリティ残量が少ない or 敵が遠い(>3)ときにダッシュ接近+HP回復
+                const _bTotalAbils=Object.keys(cpu.abilities||{}).filter(k=>k!=='drop_rock'&&cpu.abilities[k]!==999).reduce((s,k)=>s+(cpu.abilities[k]||0),0);
+                if (!attacked && (cpu.abilities.hashitte_neru||0)>0 && !(cursedAbilities[cpu.id]?.['hashitte_neru']>0) && (_bTotalAbils<=8||_bDist>3)) {
+                    let _hnBest=null, _hnBestDist=_bDist;
+                    for(let _dr=-2;_dr<=2;_dr++) for(let _dc=-2;_dc<=2;_dc++){
+                        if(_dr===0&&_dc===0) continue;
+                        let _nr=cpu.r+_dr, _nc=cpu.c+_dc;
+                        if(_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE) continue;
+                        if(!isWalkable(_nr,_nc)) continue;
+                        if(entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc)) continue;
+                        if(Math.abs(_dr)===2&&_dc===0){let mR=cpu.r+Math.sign(_dr);if(!isWalkable(mR,cpu.c)||entities.some(e=>e.hp>0&&e.r===mR&&e.c===cpu.c))continue;}
+                        if(Math.abs(_dc)===2&&_dr===0){let mC=cpu.c+Math.sign(_dc);if(!isWalkable(cpu.r,mC)||entities.some(e=>e.hp>0&&e.r===cpu.r&&e.c===mC))continue;}
+                        if(_bp){let _nd=Math.max(Math.abs(_nr-_bp.r),Math.abs(_nc-_bp.c));if(_nd<_hnBestDist){_hnBestDist=_nd;_hnBest={r:_nr,c:_nc};}}
+                    }
+                    if(_hnBest){
+                        cpu.r=_hnBest.r; cpu.c=_hnBest.c;
+                        cpu.hp=Math.min(cpu.maxHp,(cpu.hp||0)+1);
+                        let _hnBoostKeys=Object.keys(cpu.abilities||{}).filter(k=>k!=='drop_rock'&&cpu.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,2);
+                        _hnBoostKeys.forEach(k=>{cpu.abilities[k]++;});
+                        cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
+                        if(cpu.abilities.hashitte_neru!==999) cpu.abilities.hashitte_neru--;
+                        msg(`🏃 敵バーバリアンの走って寝る！ダッシュ+HP+1+[${_hnBoostKeys.map(k=>ABILITY_NAMES[k]||k).join('・')}]+1！`); attacked=true; cpu.ap--;
+                    }
+                }
+                // 群れで刈る: 接近中の囮として前方にクローンを召喚
+                if (!attacked && _bDist<=3 && (cpu.abilities.mure_de_karu||0)>0 && !(cursedAbilities[cpu.id]?.['mure_de_karu']>0)) {
+                    let _mdFrontR=cpu.r+1; // CPUは下向き(プレイヤー方向)
+                    let _mdSpawn=null;
+                    const _mdDirs=[[_mdFrontR,cpu.c],[cpu.r-1,cpu.c],[cpu.r+1,cpu.c],[cpu.r,cpu.c-1],[cpu.r,cpu.c+1]];
+                    for(let[_mr,_mc]of _mdDirs){if(_mr>=0&&_mr<SIZE&&_mc>=0&&_mc<SIZE&&isWalkable(_mr,_mc)&&!entities.some(ev=>ev.hp>0&&ev.r===_mr&&ev.c===_mc)){_mdSpawn={r:_mr,c:_mc};break;}}
+                    if(_mdSpawn){
+                        entities.push({id:'barb_clone'+Date.now(),type:'barbarian_clone',name:'バーバリアン分身',team:cpu.team,r:_mdSpawn.r,c:_mdSpawn.c,hp:1,maxHp:1,ap:1,maxAp:1,abilities:{chimatsuri_giri:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:-1,_cloneExpiry:turn+1,element:cpu.element});
+                        cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
+                        if(cpu.abilities.mure_de_karu!==999) cpu.abilities.mure_de_karu--;
+                        msg(`👥 敵バーバリアンの群れで刈る！前方に分身を召喚！`); attacked=true; cpu.ap--;
+                    }
                 }
             }
 
