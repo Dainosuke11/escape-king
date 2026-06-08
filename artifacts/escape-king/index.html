@@ -10653,6 +10653,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1);
             se.hp = 0;
             msg(`🙏 信者が自爆特攻！${targetEntity.name}に${_jtDmg}ダメ＋AP-1！信者は果てた！`);
+            reapShinjaDeath();
         } else { msg('🙏 自爆特攻：無効！'); }
         used = true;
     } else if (actionMode === 'kourin') {
@@ -10669,7 +10670,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         if (_shinCands.length > 0) {
             let _sp = _shinCands[Math.floor(Math.random()*_shinCands.length)];
-            entities.push({ id:`shinja_${Date.now()}`, type:'shinja', name:'信者', team:se.team, r:_sp.r, c:_sp.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{jibaku_tokkoh:999}, initialAbilities:{jibaku_tokkoh:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, element:'light', shinjaFreezeUntil:0 });
+            entities.push({ id:`shinja_${Date.now()}`, type:'shinja', name:'信者', team:se.team, r:_sp.r, c:_sp.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{jibaku_tokkoh:999}, initialAbilities:{jibaku_tokkoh:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, element:'light', shinjaFreezeUntil:turn+5 });
         }
         if ((se.shinGauge||0) >= 5) { se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1); msg(`⛪ 降臨！移動＋信者召喚＋神ゲージ+1(${se.shinGauge})！【神の加護】1Tバリア発動！`); }
         else { msg(`⛪ 降臨！移動＋信者召喚＋神ゲージ+1(${se.shinGauge})！`); }
@@ -13211,7 +13212,7 @@ function cpuLogic() {
                         }
                         if (_shinCands2.length>0){
                             let _sp2=_shinCands2[Math.floor(Math.random()*_shinCands2.length)];
-                            entities.push({id:'shinja_'+Date.now(),type:'shinja',name:'信者',team:cpu.team,r:_sp2.r,c:_sp2.c,hp:1,maxHp:1,ap:2,maxAp:2,abilities:{jibaku_tokkoh:999},initialAbilities:{jibaku_tokkoh:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,element:'light',shinjaFreezeUntil:0});
+                            entities.push({id:'shinja_'+Date.now(),type:'shinja',name:'信者',team:cpu.team,r:_sp2.r,c:_sp2.c,hp:1,maxHp:1,ap:2,maxAp:2,abilities:{jibaku_tokkoh:999},initialAbilities:{jibaku_tokkoh:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,element:'light',shinjaFreezeUntil:turn+5});
                         }
                         if ((cpu.shinGauge||0)>=5){cpu.invin=true;cpu.invinTimer=Math.max(cpu.invinTimer||0,1);}
                         if (cpu.abilities.kourin!==999) cpu.abilities.kourin--;
