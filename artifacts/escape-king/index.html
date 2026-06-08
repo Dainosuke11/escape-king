@@ -12029,7 +12029,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 _tsKeys.sort(()=>Math.random()-0.5);
                 for (let i=0; i<2&&i<_tsKeys.length; i++) sealAbilities(t, [_tsKeys[i]], 1);
                 _tsEnemies++;
-            } else if (t !== se) {
+            } else {
                 t.invin = true; t.invinTimer = 1;
                 msg(`📣 ${t.name}に1Tバリア！`, true);
             }
