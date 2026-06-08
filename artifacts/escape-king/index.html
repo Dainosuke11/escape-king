@@ -2954,6 +2954,8 @@ function handleWsMessage(event) {
         } else {
             // Resume whichever timer was running before the suspension.
             if (canIAct()) {
+                // Restore normal turn indicator now that opponent is back.
+                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 startTurnTimer(turnTimeLeft > 0 ? turnTimeLeft : undefined);
             } else {
                 startOpponentTimer();
@@ -2972,6 +2974,11 @@ function handleWsMessage(event) {
         // Pause both timers while opponent is away.
         stopTurnTimer();
         stopOpponentTimer();
+        // If it is already our turn, switch the indicator to a waiting message
+        // so players know the game is paused for reconnection, not frozen.
+        if (canIAct()) {
+            document.getElementById('turn-indicator').textContent = "相手の再接続を待機中…";
+        }
         return;
     }
 
@@ -2994,7 +3001,11 @@ function handleWsMessage(event) {
         updateOnlineInfo();
         if (canIAct()) {
             const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
-            document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
+            if (isOpponentSuspended) {
+                document.getElementById('turn-indicator').textContent = "相手の再接続を待機中…";
+            } else {
+                document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
+            }
             msg("あなたのターンです！");
             // Don't start the timer if the opponent is still suspended; peerReconnected will resume it.
             if (!isOpponentSuspended) {
@@ -7717,7 +7728,7 @@ function startTurn(team, skipEffects = false) {
 
         if (isOnlineMode) {
             if (myPlayerIndex === 0) {
-                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                document.getElementById('turn-indicator').textContent = isOpponentSuspended ? "相手の再接続を待機中…" : `あなたのターン (Turn: ${turn})`;
                 syncState('stateSync');
                 msg("あなたのターンです！");
                 if (!isOpponentSuspended) startTurnTimer();
@@ -7760,7 +7771,7 @@ function startTurn(team, skipEffects = false) {
                 document.getElementById('turn-indicator').textContent = "相手のターン中...";
                 msg("相手のターン中...");
             } else {
-                document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
+                document.getElementById('turn-indicator').textContent = isOpponentSuspended ? "相手の再接続を待機中…" : `あなたのターン (Turn: ${turn})`;
                 msg("あなたのターンです！");
                 updateOnlineInfo();
                 if (!isOpponentSuspended) startTurnTimer();
