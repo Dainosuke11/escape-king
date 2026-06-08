@@ -2006,12 +2006,12 @@ const ABILITY_TIPS = {
     fire_breath: '半径2マス内の敵1体に2ダメージ。回数無限。',
     peck: '隣接した敵をつつく。攻撃力1。回数無限。',
     hell_breath: '半径3マス内の全敵に3ダメージ＋AP-1＋吹き飛ばし。ドラゴンNPCに1回付与。',
-    thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2。範囲広め。使用回数1。',
+    thunder_magic: '対象マス周囲半径1マスの全敵に2ダメ・AP-2・目潰し。範囲広め。使用回数1。',
     meditation: 'AP-2して全アビリティ使用回数を+1する。使用回数1。',
     power_charge: 'AP-1してHP+5回復（上限まで）。機械兵の回復手段。回数5。',
     jet_boost: 'AP-1・HP-1して半径2マスに飛行移動。着地後に隣接敵1ダメ。回数5。',
     laser_blade: '隣接した敵に3ダメ・AP-1。自身HP-1のコスト。回数3。',
-    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし。自身AP-1・HP-1消費。回数3。',
+    sweep: '自身周囲半径2マスの全敵に2ダメ・吹き飛ばし・目潰し。自身AP-1・HP-1消費。回数3。',
     laser_snipe: '直線5マスの敵1体に4ダメ・AP-1。貫通なし。回数2。',
     laser_bazooka: '対象マス周囲半径1マスの全敵に3ダメ・吹き飛ばし。爆発攻撃。回数2。',
     incinerate: '自身AP-2消費。直線3マスの敵に5ダメ・敵AP-2・2ターン燃焼(毎ターン1ダメ)。使用には行動力2必要。回数2。',
@@ -2076,10 +2076,10 @@ const ABILITY_TIPS = {
     coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
     scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。',
     dark_magic: '半径2マス内の敵1体に1ダメ＋毒を付与する遠距離攻撃。回数5。',
-    swamp_magic: '半径2マス内の敵1体に2ダメ。命中した敵の周囲半径1マスに1Tの毒沼(毒+AP-1)を生成。回数1。',
+    swamp_magic: '半径2マス内の敵1体に2ダメ・目潰し。命中した敵の周囲半径1マスに1Tの毒沼(毒+AP-1)を生成。回数1。',
     soul_absorb: '半径1マス内の味方コマを全て破壊。破壊数ぶん繰り返し：HP+1・魂+5・ランダム4アビリティ(岩落とし/岩砕き除く)+1。回数1。',
     bone_armor: '魂1消費＆半径1マスの味方コマ1体を破壊して発動。1T無敵バリア＋全攻撃力+1＋全射程+1＋ぶん殴り追加(半径1/威2/吹飛)。回数1。',
-    skull_head: '魂1消費。隣接マスにドクロ(HP1/AP2/闇魔法)を召喚。ドクロが代わりにダメージを受け、体力0で半径1マスに爆発(1ダメ＋吹飛)。回数1。',
+    skull_head: '魂1消費。隣接マスにドクロ(HP1/AP2/闇魔法)を召喚。ドクロが代わりにダメージを受け、体力0で半径1マスに爆発(1ダメ＋吹飛＋目潢し)。回数1。',
     necro_bind: '魂1消費。半径3マス内の敵にAP-1＋ランダム5アビリティを1T封印。効果終了後、その敵の足元にゾンビが出現。回数1。',
     necro_summon: 'ゲーム開始5T後から使用可。半径1マスの空きに召喚。魂なし：ゾンビ/悪霊/スケルトン。魂1消費：フランケン/大悪霊/スケルトンソルジャー。回数3。',
     undead_party: '魂3消費。5T後から使用可。周囲半径2マスにゾンビ・悪霊・スケルトン・フランケン・大悪霊・スケルトンソルジャー・ドクロを1体ずつ召喚。次のターン開始時に全消滅。回数1。',
@@ -2165,7 +2165,7 @@ const ABILITY_TIPS = {
     holy_light: '⚪ホワイトの技。生存中の全隊員にHP+1と1T無敵バリアを付与。回数5。',
     dark_revenge: '⚫ブラックの技。隣接した敵に闇属性(1+死亡隊員数×2)ダメ+AP-2。全員生存時1ダメ、全員死亡時11ダメ。回数5。',
     tacit_agreement: '半径3マスの敵1体のAP-2。自分前方幅3マスに岩設置(次T消滅)。死亡済みの隊員1人をHP1で復活させ、封印アビリティを解除する。回数5。',
-    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)。複合属性弱点判定あり。使用後次ターン自AP-2。',
+    combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)・目潢し。複合属性弱点判定あり。使用後次ターン自AP-2。',
     gouka_shingun: '🔥 前方4マスまでダッシュ。元いた場所にスケルトン(HP3)を召喚。移動後のHPが最大敵HP以下の場合、AP+2。回数5。',
     jigoku_giri: '⚔️ 半径1マス内の敵1体に炎属性2ダメ＋業火の呪い(3T/毎T1ダメ)付与＋自AP-1。修羅状態で4ダメ、阿修羅状態で6ダメ。討ち取るとHP+2+4種アビ+1。回数5。',
     shura_ranbu: '🔥 半径1マス内の全敵に炎属性2ダメ＋業火の呪い付与＋自AP-1。修羅状態で4ダメ、阿修羅状態で6ダメ。討ち取るとHP+2+4種アビ+1。回数5。',
@@ -6101,10 +6101,10 @@ function processTurnStartEffects(e) {
         e.skullExploded = true;
         entities.forEach(t => {
             if (t.hp>0 && t!==e && Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c))<=1 && !t.invin) {
-                t.hp -= 1; knockback(t, 1, e);
+                t.hp -= 1; knockback(t, 1, e); applyBlind(t);
             }
         });
-        msg(`💀 ドクロが爆発！周囲に1ダメ！`, true);
+        msg(`💀 ドクロが爆発！周囲に1ダメ・目潰し！`, true);
     }
     // Necro bind: spawn zombie when effect expires
     if (e.necroBindZombieAt && turn >= e.necroBindZombieAt) {
@@ -6547,10 +6547,10 @@ function necroShieldBlock(entity) {
     // Skull explosion: radius 1 damage + knockback to enemies
     entities.forEach(t => {
         if (t.hp>0 && t.team!==entity.team && Math.max(Math.abs(t.r-sr),Math.abs(t.c-sc))<=1 && !t.invin) {
-            t.hp -= 1; knockback(t, 1, {r:sr, c:sc});
+            t.hp -= 1; knockback(t, 1, {r:sr, c:sc}); applyBlind(t);
         }
     });
-    msg(`💀 ドクロバリア！ドクロが${entity.name}への攻撃を肩代わり！周囲に爆発！`, true);
+    msg(`💀 ドクロバリア！ドクロが${entity.name}への攻撃を肩代わり！周囲に爆発・目潰し！`, true);
     return true;
 }
 
@@ -6703,7 +6703,7 @@ function startTurn(team, skipEffects = false) {
                 let droneExpHits = 0;
                 entities.forEach(t => {
                     if (t.hp>0 && t.team!==e.team && Math.max(Math.abs(t.r-e.r),Math.abs(t.c-e.c))<=1 && !t.invin) {
-                        t.hp-=1; knockback(t,1,e); droneExpHits++;
+                        t.hp-=1; knockback(t,1,e); applyBlind(t); droneExpHits++;
                     }
                 });
                 const explosible = ['plains','desert','graveyard_ground','nighttown_ground','fortress_floor','mountain_tile','snow','summit','castle_tile','dungeon_ground','forest','shallow_water','volcano_summit_ground'];
@@ -6736,10 +6736,10 @@ function startTurn(team, skipEffects = false) {
             if (nearEnemy) {
                 entities.forEach(t => {
                     if (t.hp>0 && t.team!==pb.team && Math.max(Math.abs(t.r-pb.r),Math.abs(t.c-pb.c))<=1 && !t.invin) {
-                        t.hp-=1; knockback(t,1,pb);
+                        t.hp-=1; knockback(t,1,pb); applyBlind(t);
                     }
                 });
-                msg(`🎁💥 プレゼント箱が爆発！周囲1マスの敵にダメージ＆吹き飛ばし！`, true);
+                msg(`🎁💥 プレゼント箱が爆発！周囲1マスの敵にダメージ＆吹き飛ばし・目潰し！`, true);
                 return false;
             }
             return true;
@@ -9839,11 +9839,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         let tmHit = 0;
         entities.forEach(t => {
             if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c)) <= 1) {
-                if (!t.invin) { t.hp -= 2; t.ap = Math.max(0,t.ap-2); tmHit++; }
+                if (!t.invin) { t.hp -= 2; t.ap = Math.max(0,t.ap-2); applyBlind(t); tmHit++; }
             }
         });
         lightCastEffect(r, c);
-        msg(`✨ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2！`); used = true;
+        msg(`✨ 雷魔法！ターゲット周囲の敵${tmHit}体に2ダメ・AP-2・目潰し！`); used = true;
     } else if (actionMode === 'barrier_magic') {
         se.abilities['barrier_magic']--;
         let bHit = 0;
@@ -10049,10 +10049,10 @@ function handleAbilityTarget(r, c, targetEntity) {
         let swpHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
-                if (!t.invin) { t.hp -= 2; knockback(t,1,se); swpHit++; }
+                if (!t.invin) { t.hp -= 2; knockback(t,1,se); applyBlind(t); swpHit++; }
             }
         });
-        msg(`⚔️ 薙ぎ払い！反動2ダメ・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし！`); used = true;
+        msg(`⚔️ 薙ぎ払い！反動2ダメ・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし・目潰し！`); used = true;
     } else if (actionMode === 'laser_snipe') {
         se.abilities['laser_snipe']--;
         if (!se.invin) se.hp -= 2;
@@ -10883,6 +10883,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['swamp_magic']--;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= 2+(se.atkBonus||0)+(targetEntity.defDebuff||0);
+            applyBlind(targetEntity);
         }
         let swampCount = 0;
         if (targetEntity) {
@@ -12951,7 +12952,7 @@ function breakVolcano() {
     let enemy = entities.find(e => e.team === enemyTeam() && e.id === (myPlayerIndex === 0 ? 'c1' : 'p1'));
     if (!enemy) enemy = entities.find(e => e.team === 'cpu');
     if (!enemy) return;
-    if (!enemy.invin) enemy.hp -= 4;
+    if (!enemy.invin) { enemy.hp -= 4; applyBlind(enemy); }
     let count = 0;
     for (let i=0; i<50 && count<5; i++) {
         let rr = enemy.r + Math.floor(Math.random()*7) - 3;
@@ -13303,6 +13304,7 @@ function executeSkill(se) {
                 if (cbTgt && !cbTgt.invin) {
                     let prevHp = cbTgt.hp;
                     cbTgt.hp -= cbDmg + (se.atkBonus||0) + (cbTgt.defDebuff||0);
+                    applyBlind(cbTgt);
                     if (!cbPrevHps.has(cbTgt.id)) cbPrevHps.set(cbTgt.id, prevHp);
                     cbHits++;
                 }
@@ -13686,10 +13688,10 @@ function executeRushSkill(se, targetR, targetC, mode) {
             let splashHit = 0;
             entities.forEach(t => {
                 if (t !== target && t.hp > 0 && t.team !== se.team && !t.invin && Math.max(Math.abs(t.r-targetR),Math.abs(t.c-targetC)) <= 1) {
-                    t.hp -= 2; splashHit++;
+                    t.hp -= 2; applyBlind(t); splashHit++;
                 }
             });
-            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : `大火球魔法！ダメージ(6)を与え、吹き飛ばし行動力を奪った！${splashHit>0?`飛び火で隣接${splashHit}体に2ダメ！`:''}`);
+            msg(target.invin ? "大火球魔法！しかし無敵で防がれた！" : `大火球魔法！ダメージ(6)を与え、吹き飛ばし行動力を奪った！${splashHit>0?`飛び火で隣接${splashHit}体に2ダメ・目潢し！`:''}`);
         }
         se.skillUsed = true;
         return;
@@ -15054,6 +15056,7 @@ function cpuLogic() {
                                 if (_cbTgt && !_cbTgt.invin && !necroShieldBlock(_cbTgt)) {
                                     let _cbPrevHp = _cbTgt.hp;
                                     _cbTgt.hp -= _cbDmg + (_cbTgt.defDebuff||0);
+                                    applyBlind(_cbTgt);
                                     if (_cbTgt.sentaiMembers) sentaiProcessDamage(_cbTgt, _cbPrevHp);
                                     _cbHits++;
                                 }
