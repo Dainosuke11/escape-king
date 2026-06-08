@@ -11938,7 +11938,6 @@ function handleAbilityTarget(r, c, targetEntity) {
             let _cgDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.hp -= _cgDmg;
             targetEntity.ap = Math.max(0, (targetEntity.ap||0) - 1);
-            knockback(targetEntity, 1, se);
         }
         se.defDebuff = (se.defDebuff||0) + 1; se.defDebuffTimer = 1;
         if (se.abilities['chimatsuri_giri'] !== 999) se.abilities['chimatsuri_giri']--;
@@ -11998,7 +11997,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'mure_de_karu') {
         // 群れで刈る: r1指定マスにクローン(HP1/ATK-1)を召喚。次T開始時消滅 / デメリット: defDebuff+1(1T)
         entities.push({ id:'barb_clone'+Date.now(), type:'barbarian_clone', name:'バーバリアン分身', team:se.team,
-            r:r, c:c, hp:1, maxHp:1, ap:1, maxAp:1,
+            r:r, c:c, hp:1, maxHp:1, ap:2, maxAp:2,
             abilities:{chimatsuri_giri:999, ono_renbu:999, kaiten_giri:999, ono_nage:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0,
             poisonTimer:0, atkBonus:-1, _cloneExpiry: turn+1, element: se.element });
         msg(`👥 ${se.name}の群れで刈る！バーバリアン分身を召喚！次ターン消滅・被ダメ+1(1T)！`);
@@ -14186,7 +14185,6 @@ function cpuLogic() {
                     let bcDmg = 3 + (cpu.atkBonus||0) + (bcTgt.defDebuff||0);
                     bcTgt.hp -= bcDmg;
                     bcTgt.ap = Math.max(0, (bcTgt.ap||0) - 1);
-                    knockback(bcTgt, 1, cpu);
                     cpu.defDebuff = (cpu.defDebuff||0) + 1; cpu.defDebuffTimer = 1;
                     msg(`⚔️🪓 バーバリアン分身の血祭り斬り！${bcTgt.name}に${bcDmg}ダメ+AP-1！`, true);
                 } else {
@@ -14909,7 +14907,7 @@ function cpuLogic() {
                     const _mdDirs=[[_mdFrontR,cpu.c],[cpu.r-1,cpu.c],[cpu.r+1,cpu.c],[cpu.r,cpu.c-1],[cpu.r,cpu.c+1]];
                     for(let[_mr,_mc]of _mdDirs){if(_mr>=0&&_mr<SIZE&&_mc>=0&&_mc<SIZE&&isWalkable(_mr,_mc)&&!entities.some(ev=>ev.hp>0&&ev.r===_mr&&ev.c===_mc)){_mdSpawn={r:_mr,c:_mc};break;}}
                     if(_mdSpawn){
-                        entities.push({id:'barb_clone'+Date.now(),type:'barbarian_clone',name:'バーバリアン分身',team:cpu.team,r:_mdSpawn.r,c:_mdSpawn.c,hp:1,maxHp:1,ap:1,maxAp:1,abilities:{chimatsuri_giri:999,ono_renbu:999,kaiten_giri:999,ono_nage:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:-1,_cloneExpiry:turn+1,element:cpu.element});
+                        entities.push({id:'barb_clone'+Date.now(),type:'barbarian_clone',name:'バーバリアン分身',team:cpu.team,r:_mdSpawn.r,c:_mdSpawn.c,hp:1,maxHp:1,ap:2,maxAp:2,abilities:{chimatsuri_giri:999,ono_renbu:999,kaiten_giri:999,ono_nage:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:-1,_cloneExpiry:turn+1,element:cpu.element});
                         cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
                         if(cpu.abilities.mure_de_karu!==999) cpu.abilities.mure_de_karu--;
                         msg(`👥 敵バーバリアンの群れで刈る！前方に分身を召喚！`); attacked=true; cpu.ap--;
@@ -15427,7 +15425,6 @@ function npcLogic() {
                     let bcDmg = 3 + (n.atkBonus||0) + (bcT.defDebuff||0);
                     bcT.hp -= bcDmg;
                     bcT.ap = Math.max(0, (bcT.ap||0) - 1);
-                    knockback(bcT, 1, n);
                     msg(`⚔️🪓 バーバリアン分身の血祭り斬り！${bcT.name}に${bcDmg}ダメ+AP-1！`, true);
                 } else {
                     let path = findPath(n.r, n.c, bcT.r, bcT.c);
