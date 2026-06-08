@@ -487,6 +487,13 @@
             0%   { transform: translateY(0px); }
             100% { transform: translateY(10px); }
         }
+        .tutorial-hp-flash {
+            animation: tut-hp-flash 0.6s ease-in-out 4 !important;
+        }
+        @keyframes tut-hp-flash {
+            0%,100% { color: #e74c3c; text-shadow: none; }
+            50%     { color: #ff4444; text-shadow: 0 0 12px #ff0000, 0 0 4px #fff; font-size: 1.3em; }
+        }
         /* ===== Job Unit Burst Effect ===== */
         @keyframes burst-core {
             0%   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
@@ -12454,6 +12461,20 @@ function applyApRestRecovery(team) {
 function endTurn() {
     if (!canIAct()) return;
     if (tutorialMode && tutorialStep === 6) advanceTutorial();
+    // Step 9: APを余らせてHP回復を体験
+    if (tutorialMode && tutorialStep === 9) {
+        const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+        if (_pe) {
+            _pe.hp = Math.min(_pe.maxHp, _pe.hp + 1);
+            msg('💚 待機ボーナス！APを余らせた！HP+1回復！', true);
+        }
+        selectedEntity = null;
+        hideAbilityPreview();
+        stopTurnTimer();
+        render();
+        setTimeout(() => advanceTutorial(), 1400);
+        return;
+    }
     selectedEntity = null;
     hideAbilityPreview();
     stopTurnTimer();
@@ -15016,10 +15037,34 @@ const TUTORIAL_STEPS = [
         highlight: 'btn-attack',
         advanceOn: null,
     },
-    {   // Step 9: AP余らせてHP回復
-        msg: '💚 <b>行動力（AP）を余らせると回復できる！</b><br><br>ターン終了時に<b>APが1以上残っている</b>と、<b>HP+1回復</b>のボーナスが入ります！<br><br>つまり：<br>・ガンガン動いて攻める → APを使い切って前進<br>・守りに徹して体力を温存する → APを余らせてじわじわ回復<br><br>⚔️ 戦況に応じて使い分けるのが上級者の戦略です。<br>回復が積み重なると終盤で大きな差になります！<br><br>▶「次へ」で続きを見よう',
-        highlight: 'btn-end-turn',
-        advanceOn: null,
+    {   // Step 9: AP余らせてHP回復（インタラクティブ）
+        msg: '💚 <b>APを余らせてHP回復を体験しよう！</b><br><br>敵からダメージを受けた！<br>APを<b>使わずにターン終了</b>すると…<br>➡ <b>HP+1回復</b>のボーナスが入ります！<br><br>守りに徹するときはAPをあえて使わず回復を狙う——それが上級者の戦略！<br><br>▶「やってみよう！」を押して、何もせずターン終了してみよう！',
+        highlight: 'entity-info-panel',
+        advanceOn: 'ap_healed',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (!_pe) return;
+            _pe.hp = Math.max(3, _pe.hp - 8);
+            _pe.actedThisTurn = false;
+            _pe._usedAbilityThisTurn = false;
+            selectedEntity = _pe;
+            updateUI();
+            render();
+            const _uiHp = document.getElementById('ui-hp');
+            if (_uiHp) {
+                _uiHp.classList.remove('tutorial-hp-flash');
+                void _uiHp.offsetWidth;
+                _uiHp.classList.add('tutorial-hp-flash');
+                setTimeout(() => _uiHp.classList.remove('tutorial-hp-flash'), 2600);
+            }
+            const _eip = document.getElementById('entity-info-panel');
+            if (_eip) {
+                _eip.classList.remove('tutorial-hp-flash');
+                void _eip.offsetWidth;
+                _eip.classList.add('tutorial-hp-flash');
+                setTimeout(() => _eip.classList.remove('tutorial-hp-flash'), 2600);
+            }
+        },
     },
     {   // Step 10: 岩落とし大技
         msg: '🪨 <b>岩落とし大技：頭上に岩を落として30ダメ！</b><br><br>岩落としには通常配置以外に<b>超強力な使い方</b>があります！<br><br>手順：<br>① 岩落としで敵コマの<b>上・下・左・右の4マス全てに岩を配置</b><br>② その状態で<b>敵コマに向かってもう1回「岩落とし」</b>を使う<br>③ 頭上から岩崩れが発生して<b>30ダメージ！</b><br><br>💡 コツ：<br>・敵が動けない状況（囲まれている・AP不足）に仕掛けよう<br>・水マス・赤エリア・壁には岩が置けないので注意<br>・橋の上で囲むと渡れなくなり敵がパニックに！<br><br>▶「次へ」で続きを見よう',
@@ -15221,6 +15266,11 @@ function hideTutorialAndWait() {
     // ターン終了ステップ: ボタンを光らせ矢印で誘導
     const _curStep = TUTORIAL_STEPS[tutorialStep];
     if (_curStep?.advanceOn === 'end_turn') {
+        const _endBtn = document.getElementById('btn-end-turn');
+        if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
+    }
+    // AP余らせHP回復ステップ: ターン終了ボタンを光らせ矢印で誘導
+    if (_curStep?.advanceOn === 'ap_healed') {
         const _endBtn = document.getElementById('btn-end-turn');
         if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
     }
