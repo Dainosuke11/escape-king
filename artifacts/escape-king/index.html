@@ -1450,7 +1450,7 @@ const ABILITY_NAMES = {
     fushinkoh_fushoku: '☠️不信仰の腐食(予知/次T:r3疫病マス2T/踏んだ敵2ダメ+AP-1+4封印/G1消費)',
     tamashii_kiga: '🌵魂の飢餓(予知/次T:r4四方AP-2+1ダメ+4封印/G1消費)',
     jibaku_tokkoh: '💥自爆特攻(r1全体3ダメ/自爆5ダメ/∞)',
-    ruru_mai: '⛩️流々舞(ダッシュ+G+1/AP0:前進+r1火1ダメ)',
+    ruru_mai: '⛩️流々舞(半径2移動+G+1/移動後AP0:+r1火1ダメ)',
     kiriki_mai: '⚔️斬り斬り舞(r1光2ダメ+吹飛+G+1/AP0:前進+再攻撃)',
     kagura: '🎶神楽(G+3+1Tバリア+HP+3+3アビ回復+前進1/次TターンAP-1)',
     kagami_no_ma: '🪞鏡の間(r1鏡設置/巫女潜伏+射程+1)',
@@ -6831,8 +6831,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'tamashii_kiga') return r === se.r && c === se.c;
     // 巫女
     if (mode === 'ruru_mai') {
-        if ((se.ap||0) <= 0) return r === se.r && c === se.c;
-        return dist >= 1 && dist <= 5+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(x=>x.hp>0&&x.r===r&&x.c===c);
+        return maxDist >= 1 && maxDist <= 2+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(x=>x.hp>0&&x.r===r&&x.c===c);
     }
     if (mode === 'kiriki_mai') {
         if ((se.ap||0) <= 0) return r === se.r && c === se.c;
@@ -10772,29 +10771,24 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['tamashii_kiga'] !== 999) se.abilities['tamashii_kiga']--;
         msg(`🌵 魂の飢餓(予知)！次ターン：半径4の敵にAP-2＋1ダメ＋4封印！`); used = true;
     } else if (actionMode === 'ruru_mai') {
-        // 流々舞: AP>0ならダッシュ+G+1、AP=0なら前進1+半径1火属性1ダメ
+        // 流々舞: 半径2自由移動+G+1。移動後AP=0なら追加効果(半径1火属性1ダメ)
+        se.r = r; se.c = c;
+        se.mikoGauge = (se.mikoGauge||0) + 1;
         if ((se.ap||0) <= 0) {
-            // AP=0特殊発動: 前進1マス+半径1火属性攻撃
-            let _fwDr = se.team === 'player' ? -1 : 1;
-            let _fwR = se.r + _fwDr, _fwC = se.c;
-            if (_fwR >= 0 && _fwR < SIZE && isWalkable(_fwR, _fwC) && !entities.some(x=>x.hp>0&&x.r===_fwR&&x.c===_fwC)) {
-                se.r = _fwR;
-            }
+            // 移動後AP=0: 半径1火属性攻撃を追加発動
+            let _hits = 0;
             entities.forEach(t => {
                 if (t.team !== se.team && t.hp > 0 && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) <= 1 && !t.invin) {
-                    t.hp -= 1;
-                    msg(`⛩️ 流々舞(AP0)！${t.name}に火属性1ダメ！`, true);
+                    t.hp -= 1; _hits++;
+                    msg(`⛩️ 流々舞(AP0追加)！${t.name}に火属性1ダメ！`, true);
                 }
             });
-            if (se.abilities['ruru_mai'] !== 999) se.abilities['ruru_mai']--;
-            msg(`⛩️ ${se.name}の流々舞(AP0発動)！前進+半径1火攻撃！`); used = true;
+            msg(`⛩️ ${se.name}の流々舞！半径2移動+G+1＋AP0追加効果・半径1火攻撃(${_hits}体)！(G:${se.mikoGauge})`);
         } else {
-            // AP>0: ダッシュ移動+G+1
-            se.r = r; se.c = c;
-            se.mikoGauge = (se.mikoGauge||0) + 1;
-            if (se.abilities['ruru_mai'] !== 999) se.abilities['ruru_mai']--;
-            msg(`⛩️ ${se.name}の流々舞！ダッシュ移動＋ゲージ+1！(G:${se.mikoGauge})`); used = true;
+            msg(`⛩️ ${se.name}の流々舞！半径2移動+G+1！(G:${se.mikoGauge})`);
         }
+        if (se.abilities['ruru_mai'] !== 999) se.abilities['ruru_mai']--;
+        used = true;
     } else if (actionMode === 'kiriki_mai') {
         // 斬り斬り舞: AP>0なら半径1光2ダメ+吹飛+G+1、AP=0なら前進1+攻撃
         if ((se.ap||0) <= 0) {
