@@ -487,6 +487,18 @@
             0%   { transform: translateY(0px); }
             100% { transform: translateY(10px); }
         }
+        .tut-tile-highlight {
+            outline: 3px solid #e67e22 !important;
+            outline-offset: -3px;
+            box-shadow: 0 0 0 4px rgba(230,126,34,0.5), inset 0 0 10px rgba(230,126,34,0.3) !important;
+            animation: tut-tile-pulse 0.8s ease-in-out infinite alternate;
+            z-index: 10;
+            position: relative;
+        }
+        @keyframes tut-tile-pulse {
+            0%   { box-shadow: 0 0 0 4px rgba(230,126,34,0.4), inset 0 0 8px rgba(230,126,34,0.2); }
+            100% { box-shadow: 0 0 0 8px rgba(230,126,34,0.7), inset 0 0 16px rgba(230,126,34,0.5); }
+        }
         .tutorial-hp-flash {
             animation: tut-hp-flash 0.6s ease-in-out 4 !important;
         }
@@ -15061,9 +15073,22 @@ function hideAbilityPreview() {
 // =====================================================================
 const TUTORIAL_STEPS = [
     {   // Step 0: コマを選択
-        msg: '🎓 <b>ようこそ！「Escape the King」へ！</b><br><br>あなたのコマ（青）が画面の下側にいます。<br><br>まず<b>青いコマをクリック</b>して選択してみましょう！',
+        msg: '🎓 <b>ようこそ！「Escape the King」へ！</b><br><br>あなたのコマ（青）が画面の下側にいます。<br><br>まず<b>オレンジの枠で光っているコマをクリック</b>して選択してみましょう！',
         highlight: 'board',
         advanceOn: 'entity_select',
+        onShow() {
+            render();
+            setTimeout(() => {
+                const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+                if (!_pe) return;
+                // チュートリアルはシングルプレイヤーなので displayRow === actualRow
+                const _tileEl = document.getElementById('tile-' + _pe.r + '-' + _pe.c);
+                if (_tileEl) {
+                    _tileEl.classList.add('tut-tile-highlight');
+                    showTutorialArrow(_tileEl);
+                }
+            }, 150);
+        },
     },
     {   // Step 1: 1マス移動
         msg: '✅ <b>コマを前に進めよう！</b><br><br>① <b>「移動/決定」ボタン</b>を押して移動モードにする<br>② <b>隣のマス（上側）をクリック</b>して1マス前進！<br><br>💡 APが許す限り1ターンに何度でも動けます。',
@@ -15497,6 +15522,7 @@ function advanceTutorial() {
     tutorialAwaitingAction = false;
     hideTutorialArrow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    document.querySelectorAll('.tut-tile-highlight').forEach(el => el.classList.remove('tut-tile-highlight'));
     tutorialStep++;
     if (tutorialStep >= TUTORIAL_STEPS.length) {
         const overlay = document.getElementById('tutorial-overlay');
