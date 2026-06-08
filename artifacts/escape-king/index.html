@@ -15269,7 +15269,9 @@ const TUTORIAL_STEPS = [
             const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
             if (_pe) {
                 _pe.ap = Math.max(_pe.ap, 3);
-                if ((_pe.abilities['drop_rock'] || 0) < 1) _pe.abilities['drop_rock'] = 3;
+                _pe.abilities['drop_rock'] = Math.max(_pe.abilities['drop_rock'] || 0, 3);
+                _pe.actedThisTurn = false;
+                _pe._usedAbilityThisTurn = false;
                 selectedEntity = _pe; updateUI();
             }
             render();
