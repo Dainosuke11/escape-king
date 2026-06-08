@@ -5021,8 +5021,8 @@ function processTurnStartEffects(e) {
             }
         }
     }
-    // 待機ボーナス: 前ターンに何も行動しなかったユニットへ
-    if (!e.actedThisTurn && !e._usedAbilityThisTurn && e.hp > 0) {
+    // 待機ボーナス: 前ターンに何も行動しなかったユニットへ（第1ターンは除外）
+    if (turn > 1 && !e.actedThisTurn && !e._usedAbilityThisTurn && e.hp > 0) {
         e.hp = Math.min(e.maxHp, e.hp + 1);
         let idlePool = Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock' && e.abilities[k] !== 999 && (e.abilities[k]||0) > 0);
         if (idlePool.length > 0) {
