@@ -14401,6 +14401,27 @@ function isAbilityConditionMet(key, se) {
     if (key === 'equal_strike') {
         return entities.some(e=>e.hp>0&&e.team!==se.team&&e.team!=='npc'&&e._usedAbilityLastTurn===true);
     }
+    // ─── 巫女: AP=0で追加効果が発動するアビリティ ───
+    if (['ruru_mai','kiriki_mai','kagura'].includes(key)) return (se.ap||0) <= 0;
+    // 浄化の火矢: 巫女ゲージ1以上で射程7・5ダメに強化
+    if (key === 'joka_hiya') return (se.mikoGauge||0) >= 1;
+    // 神降し: すでに龍神技使用可状態（発動中）
+    if (key === 'kamioroshi') return (se._kamioroshiActive||0) >= turn;
+    // 霊符結界: 半径2以内に敵がいる
+    if (key === 'reibu_kekkai') return entities.some(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=2);
+    // 大祓え: 半径2以内に敵がいる
+    if (key === 'oharae') return entities.some(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=2);
+    // ─── 教祖: 神ゲージ条件 ───
+    // 降臨: 神ゲージ5以上でバリア発動
+    if (key === 'kourin') return (se.shinGauge||0) >= 5;
+    // 終末論スキル用アビリティ群: 神ゲージが残っている
+    if (['sabaki_kaminari','shintaku_daiko','gyokuza_jishin','fukuin_bofuu','fujo_yukai','tenkei_hoshiotoshi','fushinkoh_fushoku','tamashii_kiga'].includes(key)) return (se.shinGauge||0) >= 1;
+    // ─── 仙人: 仙人ゲージ条件 ───
+    if (key === 'senninGaugeAbility' || se.senninUnit) {
+        if (['tenbatsu_ken','kekkai_giri','reiki_touha','fuujin_baku','suishin_totsugeki','katon_juuji','konpaku_kyuuin','senryou_kekkai','godo_mugen'].includes(key)) return (se.senninGauge||0) >= 3;
+    }
+    // ─── コマンド汎用: 隣接敵がいるアビリティ ───
+    if (['jibaku_tokkoh'].includes(key)) return entities.some(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
     return false;
 }
 
