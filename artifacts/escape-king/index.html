@@ -3906,6 +3906,9 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('home-screen').style.display = 'block';
     });
     document.getElementById('btn-title').addEventListener('click', () => {
+        stopTurnTimer();
+        stopOpponentTimer();
+        window._tutorialResultShown = false;
         document.getElementById('result-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('home-screen').style.display = 'block';
@@ -14848,7 +14851,7 @@ function checkWin() {
         else if (cWin) { title = "💀 Defeat... 敵に突破されました。"; isEnd = true; }
     }
 
-    if (isEnd && !tutorialMode) {
+    if (isEnd && !tutorialMode && !window._tutorialResultShown) {
         stopTurnTimer();
         const iWon = title.includes('Victory');
         if (isOnlineMode) {
@@ -16232,6 +16235,9 @@ function hideTutorialAndWait() {
 function showTutorialResult() {
     // チュートリアル完了リザルト画面を表示してタイトルへ戻す
     tutorialMode = false;
+    window._tutorialResultShown = true;
+    stopTurnTimer();
+    stopOpponentTimer();
     const overlay = document.getElementById('tutorial-overlay');
     if (overlay) overlay.style.display = 'none';
     document.getElementById('game-screen').style.display = 'none';
