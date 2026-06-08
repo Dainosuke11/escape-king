@@ -1784,7 +1784,6 @@ const ABILITY_NAMES = {
     jigoku_giri: '⚔️地獄切り(r1/炎3ダメ+業火呪3T)',
     shura_ranbu: '🔥修羅乱舞(r1全体/炎2ダメ+吹飛)',
     gouka_sangeki: '🔥業火三撃(直線r4~6/炎3ダメ/修羅接近)',
-    onnen_kaeshi: '⚫怨念返し(次T/受ダメ×2返撃)',
     oni_giri: '👹鬼切り(r3/闇4ダメ+業火呪3T)',
     iai: '⚔️居合(次T/隣接敵5ダメ迎撃)',
     abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)',
@@ -2051,7 +2050,6 @@ const ABILITY_TIPS = {
     jigoku_giri: '⚔️ 隣接した敵に炎属性3ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
     shura_ranbu: '🔥 半径1マス内の全敵に炎属性2ダメ＋後方吹き飛ばし。討ち取るとHP+2+4種アビ+1。回数5。',
     gouka_sangeki: '🔥 直線方向の敵1体に炎属性3ダメ。射程はHP>20で4/HP≤20で5/HP≤10で6。修羅・阿修羅状態では命中後に敵の隣接マスへ接近。討ち取るとHP+2+4種アビ+1。回数5。',
-    onnen_kaeshi: '⚫ 怨念返しの構えをとる。次のターン開始時、前ターンに受けたダメージの2倍を最寄りの敵に返す。回数5。',
     oni_giri: '👹 半径3マスの敵1体に闇属性4ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
     iai: '⚔️ 居合の構えをとる。次のターン開始時、隣接する全敵に5ダメの迎撃を行う。回数5。',
     abikyokan: '🔥 前方エリア(幅5×奥行5)に業火地獄マス展開。地獄マスにいる敵は毎ターン1ダメ。3ターン持続。回数5。',
@@ -2108,7 +2106,7 @@ const JOB_DATA = {
     sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 },
     sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true },
     pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true },
-    hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true },
+    hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true },
     guru: { name: '教祖', abilities: { drop_rock: 999, shatter: 5, kourin: 10, sabaki_kaminari: 5, shintaku_daiko: 5, gyokuza_jishin: 5, fukuin_bofuu: 5, fujo_yukai: 5, tenkei_hoshiotoshi: 3, fushinkoh_fushoku: 5, tamashii_kiga: 5 }, hp: 30, ap: 2, guruUnit: true },
     miko: { name: '巫女', abilities: { drop_rock: 999, shatter: 3, ruru_mai: 5, kiriki_mai: 5, kagura: 5, kagami_no_ma: 5, joka_hiya: 5, reibu_kekkai: 5, oharae: 5, kamioroshi: 5 }, hp: 30, ap: 2, mikoUnit: true },
     barbarian: { name: 'バーバリアン', abilities: { drop_rock: 999, shatter: 5, hashitte_neru: 5, chimatsuri_giri: 5, ono_renbu: 5, kaiten_giri: 5, kyukaku_tsuiseki: 5, ono_nage: 5, mure_de_karu: 5, toki_no_sakebi: 5 }, hp: 30, ap: 2, barbarianUnit: true },
@@ -2186,7 +2184,7 @@ const ABILITY_ELEMENT = {
     fundo_gekkoh: 'fire', kako_tosen: 'grass', kyoshin_tankai: 'water',
     banzai_jiai: 'water', meikyo_shisui: 'light', seisei_ruten: 'grass',
     gouka_shingun: 'fire', jigoku_giri: 'fire', shura_ranbu: 'fire', gouka_sangeki: 'fire',
-    onnen_kaeshi: 'dark', oni_giri: 'dark', iai: 'fire', abikyokan: 'fire',
+    oni_giri: 'dark', iai: 'fire', abikyokan: 'fire',
     sabaki_kaminari: 'light', shintaku_daiko: 'water', fukuin_bofuu: 'grass',
     fujo_yukai: 'fire', tenkei_hoshiotoshi: 'fire', fushinkoh_fushoku: 'dark',
     gyokuza_jishin: 'none', tamashii_kiga: 'dark', kourin: 'light', jibaku_tokkoh: 'light',
@@ -5777,19 +5775,6 @@ function processTurnStartEffects(e) {
         if (e._iaiActive && !e.invin) {
             e._iaiActive = false; // バリア切れ後は解除
         }
-        // 怨念返し発動
-        if (e._onnenKaeshi && e._onnenKaeshiTurn !== undefined && e._onnenKaeshiTurn < turn) {
-            let _dmgTaken = (e._onnenKaeshiHp||e.hp) - e.hp;
-            if (_dmgTaken > 0) {
-                let _near = entities.filter(a=>a.hp>0&&a.team!==e.team).sort((x,y)=>Math.max(Math.abs(x.r-e.r),Math.abs(x.c-e.c))-Math.max(Math.abs(y.r-e.r),Math.abs(y.c-e.c)))[0];
-                if (_near && !_near.invin) {
-                    let _ref = Math.min(_dmgTaken * 2, 12);
-                    _near.hp -= _ref;
-                    msg(`⚫ ${e.name}の怨念返し！${_ref}ダメ(${_dmgTaken}×2)を${_near.name}に！`, true);
-                }
-            }
-            e._onnenKaeshi = false;
-        }
         // 業火地獄マスのクリーンアップ
         hellGroundTiles = hellGroundTiles.filter(t => t.expireAt >= turn);
         // 疫病マスのクリーンアップ
@@ -7551,7 +7536,6 @@ function isValidTarget(se, r, c, mode) {
         let _gsRange = se.hp <= 10 ? 6 : se.hp <= 20 ? 5 : 4;
         return (se.r===r||se.c===c) && maxDist>=1 && maxDist<=_gsRange+(se.rangeBonus||0) && target && target.team!==se.team;
     }
-    if (mode === 'onnen_kaeshi') return r === se.r && c === se.c;
     if (mode === 'oni_giri') return r === se.r && c === se.c; // 自マス選択でAoE
     if (mode === 'iai') return r === se.r && c === se.c;
     if (mode === 'abikyokan') return r === se.r && c === se.c;
@@ -11516,13 +11500,6 @@ function handleAbilityTarget(r, c, targetEntity) {
         } else { msg('🔥 業火斬撃：命中なし！'); }
         if (se.abilities['gouka_sangeki'] !== 999) se.abilities['gouka_sangeki']--;
         used = true;
-    } else if (actionMode === 'onnen_kaeshi') {
-        // 怨念返し: 構え→次ターン開始時に受けたダメージ×2返撃
-        se._onnenKaeshi = true;
-        se._onnenKaeshiHp = se.hp;
-        se._onnenKaeshiTurn = turn;
-        if (se.abilities['onnen_kaeshi'] !== 999) se.abilities['onnen_kaeshi']--;
-        msg('⚫ 怨念返し！次ターン開始時、受けたダメージ×2を最寄りの敵に返す！'); used = true;
     } else if (actionMode === 'oni_giri') {
         // 鬼斬り: 半径1 AoE 闇4ダメ+敵AP-2。修羅→r2、阿修羅→r2+6ダメ
         let _ogRadius = se.hp <= 20 ? 2 : 1;
