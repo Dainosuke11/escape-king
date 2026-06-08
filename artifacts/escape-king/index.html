@@ -6838,7 +6838,7 @@ function isValidTarget(se, r, c, mode) {
         return maxDist >= 1 && maxDist <= 1+(se.rangeBonus||0) && target && target.team !== se.team;
     }
     if (mode === 'kagura') return r === se.r && c === se.c;
-    if (mode === 'kagami_no_ma') return dist >= 1 && dist <= 1+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(x=>x.hp>0&&x.r===r&&x.c===c);
+    if (mode === 'kagami_no_ma') return maxDist >= 1 && maxDist <= 1+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(x=>x.hp>0&&x.r===r&&x.c===c);
     if (mode === 'joka_hiya') return (se.r===r||se.c===c) && maxDist >= 1 && maxDist <= 5+(se.rangeBonus||0) && target && target.team !== se.team;
     if (mode === 'reibu_kekkai') return r === se.r && c === se.c;
     if (mode === 'oharae') return r === se.r && c === se.c;
