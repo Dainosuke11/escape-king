@@ -10906,7 +10906,26 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
-            if (tutorialMode && tutorialStep === 20 && se.team === 'player') advanceTutorial();
+            if (tutorialMode && tutorialStep === 20 && se.team === 'player') {
+                setTimeout(() => {
+                    const _ov2 = document.createElement('div');
+                    _ov2.id = 'tut-weakness-overlay';
+                    _ov2.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#2c1a5c;border:3px solid #f1c40f;border-radius:14px;padding:22px 28px;color:#fff;z-index:10000;text-align:center;max-width:320px;width:90%;box-shadow:0 0 40px rgba(241,196,15,0.7);';
+                    _ov2.innerHTML = `
+                        <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">✨ 弱点属性ヒット！</div>
+                        <div style="font-size:15px;color:#f1c40f;font-weight:bold;margin-bottom:10px;">光属性 → 闇属性<br>追加ダメージ <b>+1</b>！</div>
+                        <div style="font-size:13px;background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.6;">
+                            属性の相性を活かした攻撃で<br><b>ダメージを上乗せ</b>できた！<br>弱点を突くのが上級者の戦い方！
+                        </div>
+                        <button id="tut-weakness-btn" style="padding:10px 28px;background:#f1c40f;border:none;border-radius:8px;color:#111;font-weight:bold;font-size:15px;cursor:pointer;width:100%;">✅ 確認！</button>`;
+                    document.body.appendChild(_ov2);
+                    document.getElementById('tut-weakness-btn').onclick = () => {
+                        const _el2 = document.getElementById('tut-weakness-overlay');
+                        if (_el2) _el2.remove();
+                        advanceTutorial();
+                    };
+                }, 400);
+            }
         }
         // 水属性攻撃で海洋コマのウォーターゲージ+5
         if (_atkElem === 'water' && targetEntity.oceanUnit && targetEntity.hp > 0) {
@@ -15279,31 +15298,31 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 18: 弱点属性攻撃（インタラクティブ）
-        msg: '💧 <b>弱点属性で攻撃してみよう！</b><br><br>属性の弱点関係：💧<b>水</b> → 🔥<b>火</b>（水は火に強い！）<br><br>今サメ戦士（💧水）として竜人族（🔥火）が目の前にいる。<br><b>水流切り(water_cutter)</b>で攻撃すると弱点ヒット+1ダメ！<br><br>▶ アビリティ → 水流切り → 竜人族を攻撃！',
+    {   // Step 20: 弱点属性攻撃（インタラクティブ）
+        msg: '✨ <b>弱点属性で攻撃してみよう！</b><br><br>属性の弱点関係：✨<b>光</b> → 🌑<b>闇</b>（光は闇に強い！）<br><br>今天使（✨光）としてデビル（🌑闇）が目の前にいる。<br><b>光のムチ(light_whip)</b>で攻撃すると弱点ヒット<b>+1ダメ！</b><br><br>▶ アビリティ → <b>光のムチ</b> → デビルを攻撃！',
         highlight: 'btn-attack',
+        highlightAbility: 'light_whip',
         advanceOn: 'weakness_hit',
         onShow() {
             const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
             if (!_pe) return;
-            // プレイヤーをサメ戦士化（水属性・water_cutter付与）
             _pe.r = 13; _pe.c = 10;
-            _pe.element = 'water';
-            _pe.abilities['water_cutter'] = 5;
+            _pe.type = 'angel';
+            _pe.name = '天使';
+            _pe.element = 'light';
+            _pe.abilities['light_whip'] = Math.max(_pe.abilities['light_whip'] || 0, 3);
             _pe.ap = Math.max(_pe.ap, 2);
-            // 既存チュートリアルダミーを除去して竜人族を配置
             entities = entities.filter(e => e.team === 'player' || !e.tutorialDummy);
-            const _ryujinId = 'tutorial_ryujin_' + Date.now();
             entities.push({
-                id: _ryujinId, type: 'ryujin', name: '竜人族', team: 'cpu',
+                id: 'tutorial_devil_' + Date.now(), type: 'devil', name: 'デビル', team: 'cpu',
                 r: 12, c: 10,
                 hp: 5, maxHp: 5, ap: 0, maxAp: 0,
-                abilities: {}, initialAbilities: {},
-                skillUsed: true,
+                abilities: {}, skillUsed: true,
                 stealth: false, stealthTimer: 0,
                 invin: false, invinTimer: 0,
                 poisonTimer: 0,
-                element: 'fire',
+                element: 'dark',
+                flying: true,
                 tutorialDummy: true,
             });
             render();
