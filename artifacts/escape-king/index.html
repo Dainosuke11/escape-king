@@ -3703,7 +3703,7 @@ function buildGuideJobsContent() {
             card.style.cssText = 'filter:grayscale(1);opacity:0.5;';
             card.innerHTML =
                 `<div class="guide-job-name">🔒 ${meta.fullName}</div>` +
-                `<div class="guide-job-desc" style="color:#666;">未解放 — CPU戦3勝またはランクマッチ1勝で順番に解放されます</div>`;
+                `<div class="guide-job-desc" style="color:#666;">未解放 — ランクマッチで1勝するたびに1種ずつ順番に解放されます</div>`;
         } else {
             card.innerHTML =
                 `<div class="guide-job-name">${meta.emoji} ${meta.fullName} (HP${jobData.hp}/AP${jobData.ap}${headerExtra})</div>` +
@@ -4633,9 +4633,9 @@ const JOB_LABELS = {
     barbarian:'🪓 バーバリアン (ランダム三属性・野生の解放)', painter:'🎨 絵描き (色混合・イマジネーション・虹の大傑作)',
 };
 
-// 最初の10種はスターターとして常に使用可能
-const STARTER_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien'];
-// 残り20種はオフライン3勝ごと / ランクマッチ1勝で順次解放
+// 最初は王のみ解放、残りはランクマッチ1勝ごとに順次解放
+const STARTER_JOBS = ['king'];
+// 残り29種はランクマッチ1勝ごとに順次解放
 const UNLOCK_ORDER = ALL_JOBS.filter(j => !STARTER_JOBS.includes(j));
 
 function loadUnlockedJobs() {
@@ -4736,7 +4736,7 @@ function checkJobUnlocked(job, errElId) {
     const label = (JOB_LABELS[job] || job).split('(')[0].trim();
     const unlocked = loadUnlockedJobs();
     const remaining = UNLOCK_ORDER.length - unlocked.filter(j => UNLOCK_ORDER.includes(j)).length;
-    const errMsg = `🔒 ${label}はまだ解放されていません（CPU戦3勝またはランクマッチ1勝で次のジョブが解放されます）`;
+    const errMsg = `🔒 ${label}はまだ解放されていません（ランクマッチで1勝するたびに次のジョブが解放されます）`;
     const el = errElId ? document.getElementById(errElId) : null;
     if (el) el.textContent = errMsg;
     else alert(errMsg);
@@ -16588,16 +16588,7 @@ function checkWin() {
                     }
                     syncPlayerToServer();
                 }
-                // オフライン勝利カウント：3勝ごとに1ジョブ解放
-                const offWins = parseInt(localStorage.getItem('etk_offline_wins') || '0', 10) + 1;
-                localStorage.setItem('etk_offline_wins', String(offWins));
-                if (offWins % 3 === 0) {
-                    const newJob = unlockNextJob();
-                    if (newJob) {
-                        title += `\n🔓 新ジョブ解放: ${(JOB_LABELS[newJob]||newJob).split('(')[0].trim()}`;
-                        setTimeout(() => showUnlockPopup(newJob), 500);
-                    }
-                }
+                // オフライン通常CPU戦ではジョブは解放されない（ランクマッチのみ）
                 // CPU難易度に応じた称号を付与
                 let diff = parseInt(document.getElementById('difficulty-select')?.value || '1');
                 let wasNew = !getEarnedBadges().includes(diff);

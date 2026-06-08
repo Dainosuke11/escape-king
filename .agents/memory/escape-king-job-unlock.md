@@ -1,34 +1,38 @@
 ---
 name: Escape the King job unlock system
-description: Job lock/unlock system gating all 4 job selects by ranked match wins (ek_ranked_wins).
+description: Job lock/unlock system gating all 4 job selects by ranked match wins.
 ---
 
 # Job Unlock System
 
 ## Architecture
 
-- `JOB_UNLOCK_REQUIREMENTS` — const map: job → ranked wins needed (0 = always free)
-- `isJobUnlocked(job)` — compares `getWins()` against requirement
-- `buildJobOptions()` — builds HTML `<option>` string; locked jobs get `disabled` + 🔒 + win count hint
+- `STARTER_JOBS` — only `['king']`; locked to localStorage key `etk_unlocked_jobs`
+- `UNLOCK_ORDER` — all other 29 jobs in `ALL_JOBS` order (knight→assassin→…→painter)
+- `isJobUnlocked(job)` — checks `loadUnlockedJobs()` array
+- `buildJobOptions()` — builds HTML `<option>` string; locked jobs get `disabled` + 🔒 + hint
 - `refreshAllJobSelects()` — rebuilds all 4 selects: `job-select`, `ranked-job-select`, `ol-job-select`, `ol-join-job-select`
-- `checkJobUnlocked(job, errElId)` — validation guard called in each start function; shows error in element or falls back to alert
+- `checkJobUnlocked(job, errElId)` — validation guard called in each start function
 
-## Unlock Tiers (ranked wins)
+## Unlock Rules
 
-| Wins | Jobs unlocked |
-|------|--------------|
-| 0 | king, knight, assassin, infantry, mage, thief, beastmaster, macho |
-| 1 | cyborg, alien, mandrake, ryujin |
-| 3 | shark_warrior, orca_pirate, clown, necromancer |
-| 5 | angel, world_manager, onmyoji, devil |
-| 8 | mafia, dwarf, sentai_hero, sennin |
-| 12 | pixie, hitokiri_musha, guru, miko |
-| 15 | barbarian, painter |
+| Trigger | Effect |
+|---------|--------|
+| ランクマッチ（CPU）1勝 | 次の1ジョブ解放 |
+| ランクマッチ（オンライン）1勝 | 次の1ジョブ解放 |
+| オフラインCPU通常戦 | 解放なし（削除済み） |
+
+## Call sites for unlockNextJob()
+
+- `incrementWins()` — CPUランクマッチ勝利（line ~1419）
+- Online result handler — オンラインランクマッチ勝利（line ~3071）
+- CPU ranked match win block — CPUランクマッチ勝利（line ~16558）
+- ~~Offline 3-win block~~ — 削除済み
 
 ## Call sites for refreshAllJobSelects()
 
-- `DOMContentLoaded` — immediately on page load
-- `loadPlayerFromServer()` — after ranked wins are synced from server (wins are server-authoritative)
+- `DOMContentLoaded` — page load
+- `loadPlayerFromServer()` — after server sync
 
 ## Guards in start functions
 
@@ -38,6 +42,6 @@ description: Job lock/unlock system gating all 4 job selects by ranked match win
 
 ## resolveJob('random')
 
-Modified to pick only from `ALL_JOBS.filter(j => isJobUnlocked(j))` — locked jobs excluded from random selection.
+Picks only from `ALL_JOBS.filter(j => isJobUnlocked(j))` — locked jobs excluded.
 
-**Why:** Prevents players from bypassing the lock system by using random selection, and keeps the system fair in ranked/online modes.
+**Why:** Prevents bypassing lock system via random selection.
