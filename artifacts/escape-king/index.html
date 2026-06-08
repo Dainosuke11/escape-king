@@ -10849,6 +10849,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
+            if (tutorialMode && tutorialStep === 17 && se.team === 'player') advanceTutorial();
         }
         // 水属性攻撃で海洋コマのウォーターゲージ+5
         if (_atkElem === 'water' && targetEntity.oceanUnit && targetEntity.hp > 0) {
@@ -15033,10 +15034,35 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 16: 弱点属性攻撃
-        msg: '🔥 <b>敵の弱点属性で攻撃してダメージアップ！</b><br><br>各コマには<b>属性（エレメント）</b>があります。<br>弱点属性で攻撃すると<b>ダメージ+1ボーナス</b>！<br><br>属性の弱点関係（三角関係）：<br>🔥 <b>火</b> → 🌿 <b>草</b>（火は草に強い）<br>🌿 <b>草</b> → 💧 <b>水</b>（草は水に強い）<br>💧 <b>水</b> → 🔥 <b>火</b>（水は火に強い）<br><br>二元対立：<br>☀️ <b>光</b> ↔ 😈 <b>闇</b>（互いに弱点）<br><br>💡 コツ：<br>・コマのアイコン横に属性マークが表示されています<br>・自分の属性と相手の属性を確認してから攻めよう<br>・ジョブ図鑑でジョブごとの属性を事前確認できます<br><br>▶「次へ」で続きを見よう',
-        highlight: null,
-        advanceOn: null,
+    {   // Step 17: 弱点属性攻撃（インタラクティブ）
+        msg: '💧 <b>弱点属性で攻撃してみよう！</b><br><br>属性の弱点関係：💧<b>水</b> → 🔥<b>火</b>（水は火に強い！）<br><br>今サメ戦士（💧水）として竜人族（🔥火）が目の前にいる。<br><b>水流切り(water_cutter)</b>で攻撃すると弱点ヒット+1ダメ！<br><br>▶ アビリティ → 水流切り → 竜人族を攻撃！',
+        highlight: 'btn-attack',
+        advanceOn: 'weakness_hit',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (!_pe) return;
+            // プレイヤーをサメ戦士化（水属性・water_cutter付与）
+            _pe.r = 13; _pe.c = 10;
+            _pe.element = 'water';
+            _pe.abilities['water_cutter'] = 5;
+            _pe.ap = Math.max(_pe.ap, 2);
+            // 既存チュートリアルダミーを除去して竜人族を配置
+            entities = entities.filter(e => e.team === 'player' || !e.tutorialDummy);
+            const _ryujinId = 'tutorial_ryujin_' + Date.now();
+            entities.push({
+                id: _ryujinId, type: 'ryujin', name: '竜人族', team: 'cpu',
+                r: 12, c: 10,
+                hp: 5, maxHp: 5, ap: 0, maxAp: 0,
+                abilities: {}, initialAbilities: {},
+                skillUsed: true,
+                stealth: false, stealthTimer: 0,
+                invin: false, invinTimer: 0,
+                poisonTimer: 0,
+                element: 'fire',
+                tutorialDummy: true,
+            });
+            render();
+        },
     },
     {   // Step 17: ステージとキャラの属性を合わせよう
         msg: '🌟 <b>ステージとキャラの属性を合わせてボーナス！</b><br><br>実はステージ（マップ）にも属性があります。<br>自分のジョブの属性とステージ属性が<b>一致すると強化ボーナス</b>！<br><br>ボーナス内容：<br>❤️ <b>HP +5</b><br>⚔️ <b>アビリティ使用回数 +1</b><br><br>属性が合うステージの例：<br>🔥 炎ジョブ（炎魔法使いなど）→ 溶岩地帯<br>💧 水ジョブ（サメ戦士など）→ 海底神殿・大河<br>🌿 草ジョブ → 平原・森林<br>☀️ 光ジョブ → 天空要塞<br><br>⚠️ 逆に<b>弱点属性のステージ</b>ではデメリットも。<br>試合前にジョブ図鑑でジョブの属性を確認して選ぼう！<br><br>▶「次へ」で続きを見よう',
