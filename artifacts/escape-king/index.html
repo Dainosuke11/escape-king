@@ -12123,7 +12123,8 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode.startsWith('skill_') ||
                ['flutter','gremlin_trick','gnome_hammer','greenman_arrow','redcap_scythe','siren_song','pixie_illusion','swap_position'].includes(actionMode)) {
         executeRushSkill(se, r, c, actionMode);
-        // ピクシー/swap系ハンドラは内部でreturnするため used は立てない
+        // swap_position は1ターン1回のみ(usedAbilitiesで管理)
+        if (actionMode === 'swap_position') used = true;
         if (tutorialMode && tutorialStep === 8 && se.team === 'player' && actionMode.startsWith('skill_')) {
             setTimeout(() => {
                 render(); // 吹き飛ばし結果を画面に反映
@@ -14109,6 +14110,30 @@ function cpuLogic() {
             checkWin(); render(); setTimeout(cpuLogic, 100); return;
         }
 
+        // === BARBARIAN_CLONE (cpu team): move toward enemy + use chimatsuri_giri if adjacent ===
+        if (cpu.type === 'barbarian_clone') {
+            let bcTargets = targets.sort((a,b)=>Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c)));
+            if (bcTargets.length > 0) {
+                let bcTgt = bcTargets[0];
+                let bcDist = Math.max(Math.abs(cpu.r-bcTgt.r),Math.abs(cpu.c-bcTgt.c));
+                if (bcDist <= 1 && !bcTgt.invin && !necroShieldBlock(bcTgt)) {
+                    let bcDmg = 3 + (cpu.atkBonus||0) + (bcTgt.defDebuff||0);
+                    bcTgt.hp -= bcDmg;
+                    bcTgt.ap = Math.max(0, (bcTgt.ap||0) - 1);
+                    knockback(bcTgt, 1, cpu);
+                    cpu.defDebuff = (cpu.defDebuff||0) + 1; cpu.defDebuffTimer = 1;
+                    msg(`⚔️🪓 バーバリアン分身の血祭り斬り！${bcTgt.name}に${bcDmg}ダメ+AP-1！`, true);
+                } else {
+                    let path = findPath(cpu.r, cpu.c, bcTgt.r, bcTgt.c);
+                    if (path && path.length > 0 && isWalkable(path[0].r, path[0].c)) {
+                        cpu.r = path[0].r; cpu.c = path[0].c;
+                    }
+                }
+            }
+            cpu.ap--;
+            checkWin(); render(); setTimeout(cpuLogic, 100); return;
+        }
+
         // === FOREST_GUARDIAN (cpu team): tackle nearest enemy ===
         if (cpu.type === 'forest_guardian') {
             let fgTargets = targets.sort((a,b)=>Math.max(Math.abs(cpu.r-a.r),Math.abs(cpu.c-a.c))-Math.max(Math.abs(cpu.r-b.r),Math.abs(cpu.c-b.c)));
@@ -15320,6 +15345,28 @@ function npcLogic() {
             } else if (gTgts.length>0) {
                 let path=findPath(n.r,n.c,gTgts[0].r,gTgts[0].c);
                 if (path&&path.length>0&&isWalkable(path[0].r,path[0].c)){n.r=path[0].r;n.c=path[0].c;}
+            }
+            n.ap--;
+            checkWin(); render(); setTimeout(npcLogic, 100); return;
+        }
+
+        // === BARBARIAN_CLONE (npc team): move toward enemy + use chimatsuri_giri if adjacent ===
+        if (n.type === 'barbarian_clone') {
+            let bcNpcTgts = entities.filter(e => e.hp > 0 && e.team !== 'npc' && e.team !== 'vehicle' && !(e.stealth || board[e.r]?.[e.c]==='forest'));
+            bcNpcTgts.sort((a,b) => Math.max(Math.abs(n.r-a.r),Math.abs(n.c-a.c)) - Math.max(Math.abs(n.r-b.r),Math.abs(n.c-b.c)));
+            if (bcNpcTgts.length > 0) {
+                let bcT = bcNpcTgts[0];
+                let bcD = Math.max(Math.abs(n.r-bcT.r), Math.abs(n.c-bcT.c));
+                if (bcD <= 1 && !bcT.invin && !necroShieldBlock(bcT)) {
+                    let bcDmg = 3 + (n.atkBonus||0) + (bcT.defDebuff||0);
+                    bcT.hp -= bcDmg;
+                    bcT.ap = Math.max(0, (bcT.ap||0) - 1);
+                    knockback(bcT, 1, n);
+                    msg(`⚔️🪓 バーバリアン分身の血祭り斬り！${bcT.name}に${bcDmg}ダメ+AP-1！`, true);
+                } else {
+                    let path = findPath(n.r, n.c, bcT.r, bcT.c);
+                    if (path && path.length > 0 && isWalkable(path[0].r, path[0].c)) { n.r=path[0].r; n.c=path[0].c; }
+                }
             }
             n.ap--;
             checkWin(); render(); setTimeout(npcLogic, 100); return;
