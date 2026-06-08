@@ -5184,11 +5184,20 @@ function initBoard(stageType) {
         // === 活火山山頂 STAGE ===
         for (let r2=0; r2<SIZE; r2++) for (let c2=0; c2<SIZE; c2++) board[r2][c2] = 'volcano_summit_ground';
         board[10][10] = 'lava'; // initial crater center (single tile)
-        // Rocky volcanic outcrops — denser midfield, safe zones near player starts
+        // Extra lava tiles (+10) scattered in the midfield
+        let _extraLava = 0;
+        for (let _att=0; _att<300 && _extraLava<10; _att++) {
+            let _lr = 3 + Math.floor(Math.random()*15), _lc = 2 + Math.floor(Math.random()*17);
+            let _ld = Math.max(Math.abs(_lr-10), Math.abs(_lc-10));
+            if (_ld >= 2 && _ld <= 7 && board[_lr][_lc] === 'volcano_summit_ground') {
+                board[_lr][_lc] = 'lava'; _extraLava++;
+            }
+        }
+        // Rocky volcanic outcrops — reduced by ~20 (0.11→0.04, 0.20→0.07)
         for (let r2=1; r2<SIZE-1; r2++) for (let c2=1; c2<SIZE-1; c2++) {
             if (board[r2][c2] !== 'lava' && r2 >= 4 && r2 <= 16) {
                 let d = Math.max(Math.abs(r2-10), Math.abs(c2-10));
-                let chance = d <= 3 ? 0 : d <= 6 ? 0.11 : 0.2;
+                let chance = d <= 3 ? 0 : d <= 6 ? 0.04 : 0.07;
                 if (Math.random() < chance) board[r2][c2] = 'rock';
             }
         }
