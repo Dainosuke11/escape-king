@@ -581,7 +581,7 @@ wss.on("connection", (ws: WebSocket) => {
         // Echo the client's timestamp straight back — client computes RTT = now - clientTs.
         safeSend(ws, { type: "clientPong", clientTs: msg.clientTs });
       } else if (
-        ["stateSync", "turnEnd", "chat"].includes(String(msg.type))
+        ["stateSync", "turnEnd", "chat", "emote"].includes(String(msg.type))
       ) {
         const room = rooms.get(myRoomCode);
         if (!room) return;

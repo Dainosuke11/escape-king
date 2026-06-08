@@ -730,6 +730,70 @@
             .status-row { margin-bottom: 10px; font-size: 14px; }
             .panel { font-size: 14px; margin-bottom: 5px; }
         }
+        /* ===== エモートシステム ===== */
+        .emote-btn-main {
+            position: fixed; bottom: 72px; right: 14px;
+            background: #2c3e50; border: 2px solid #3498db;
+            color: #fff; border-radius: 50%; width: 48px; height: 48px;
+            font-size: 22px; cursor: pointer; z-index: 300; display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .emote-btn-main:hover { background: #3498db; }
+        .emote-menu {
+            position: fixed; bottom: 128px; right: 14px;
+            background: #1a1a2e; border: 2px solid #3498db;
+            border-radius: 10px; padding: 8px; z-index: 301;
+            display: none; flex-direction: column; gap: 5px; min-width: 170px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
+        .emote-menu .emote-count-line {
+            font-size: 11px; color: #aaa; text-align: center;
+            padding: 2px 0 4px; border-bottom: 1px solid #334; margin-bottom: 2px;
+        }
+        .emote-menu button {
+            background: #2c3e50; border: none; color: #fff;
+            padding: 8px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; text-align: left; transition: background 0.15s;
+        }
+        .emote-menu button:hover { background: #2980b9; }
+        .emote-menu button:disabled { color: #555; cursor: not-allowed; background: #1e2a35; }
+        @keyframes emotePop {
+            0% { transform: scale(0.6) translateY(8px); opacity: 0; }
+            15% { transform: scale(1.12) translateY(-3px); opacity: 1; }
+            25% { transform: scale(1) translateY(0); opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-6px); }
+        }
+        .emote-bubble {
+            position: fixed; background: #1a4a7a; border: 2px solid #3498db;
+            border-radius: 14px 14px 14px 2px; padding: 7px 14px;
+            font-size: 14px; font-weight: bold; color: #fff;
+            z-index: 500; pointer-events: none; white-space: nowrap;
+            animation: emotePop 3s forwards;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+        }
+        .emote-bubble.opponent {
+            background: #6c1c1c; border-color: #e74c3c;
+            border-radius: 14px 14px 2px 14px;
+        }
+        /* ===== フレンドシステム ===== */
+        #friend-panel { text-align: left; }
+        .friend-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; background: #1a1a2e;
+            border: 1px solid #334; border-radius: 8px; margin-bottom: 6px;
+        }
+        .friend-icon { font-size: 24px; }
+        .friend-info { flex: 1; }
+        .friend-name { font-weight: bold; font-size: 14px; color: #eee; }
+        .friend-id { font-size: 11px; color: #888; }
+        .friend-remove { background: #7f1d1d; border: none; color: #e57373; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 12px; }
+        .friend-remove:hover { background: #991b1b; }
+        #friend-add-area { display: flex; gap: 8px; margin-top: 12px; }
+        #friend-add-area input { flex: 1; padding: 8px; background: #1a1a2e; border: 1px solid #445; color: #fff; border-radius: 6px; font-size: 13px; }
+        #friend-add-area button { padding: 8px 14px; background: #1a6b3a; border: none; color: #fff; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        #friend-add-area button:hover { background: #27ae60; }
+        #friend-status { font-size: 12px; color: #f1c40f; margin-top: 6px; min-height: 16px; }
     </style>
 </head>
 <body>
@@ -788,26 +852,6 @@
     <div class="select-group">
         <label>ステージ選択:</label>
         <select id="stage-select">
-            <option value="random">🎲 ランダム (ステージおまかせ)</option>
-            <option value="plains">🌾 草原 (オーソドックス)</option>
-            <option value="forest">🌲 森林 (森だらけの迷彩戦)</option>
-            <option value="desert">🏜️ 砂漠 (サンドワームとラクダ)</option>
-            <option value="demon">👿 魔界 (魔法陣だらけ)</option>
-            <option value="castle">🏯 城跡 (跳ね橋と城壁の攻防)</option>
-            <option value="bigriver">🚣 大河 (渡河と船上戦)</option>
-            <option value="mountain">⛰️ 山岳 (雪山越えの過酷な旅)</option>
-            <option value="graveyard">🪦 墓場 (ゾンビと悪霊・魂集め)</option>
-            <option value="nighttown">🌃 夜の街 (毎ターン襲い来る魔物)</option>
-            <option value="skyfort">☁️ 天空要塞 (崩れる足場と空中戦)</option>
-            <option value="chaos">🌀 混沌 (全ギミック入り乱れ)</option>
-            <option value="dungeon">🗝️ 地下迷宮 (霧・スイッチ・宝箱)</option>
-            <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
-            <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
-            <option value="volcano_summit">🌋 活火山山頂 (噴火・溶岩流・竜/サラマンダー)</option>
-            <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
-            <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
-            <option value="factory">🏭 工場 (コンベアベルト・溶鉱炉・プレス機)</option>
-
         </select>
     </div>
     <div class="select-group">
@@ -844,6 +888,7 @@
         <button class="lobby-tab active" id="tab-ranked" onclick="switchLobbyTab('ranked')">ランクマッチ</button>
         <button class="lobby-tab" id="tab-create" onclick="switchLobbyTab('create')">ルームを作成</button>
         <button class="lobby-tab" id="tab-join" onclick="switchLobbyTab('join')">ルームに参加</button>
+        <button class="lobby-tab" id="tab-friend" onclick="switchLobbyTab('friend')">👥 フレンド</button>
     </div>
 
     <div id="ranked-panel">
@@ -876,22 +921,6 @@
                 </select>
                 <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">お気に入りステージ</div>
                 <select id="fav-stage-select" onchange="saveFavStage()" style="width:100%;padding:6px;background:#1a1a20;color:#fff;border:1px solid #444;border-radius:4px;font-size:13px;">
-                    <option value="">— なし —</option>
-                    <option value="plains">🌾 草原</option>
-                    <option value="forest">🌲 森林</option>
-                    <option value="desert">🏜️ 砂漠</option>
-                    <option value="demon">👿 魔界</option>
-                    <option value="castle">🏯 城跡</option>
-                    <option value="bigriver">🚣 大河</option>
-                    <option value="mountain">⛰️ 山岳</option>
-                    <option value="graveyard">🪦 墓場</option>
-                    <option value="nighttown">🌃 夜の街</option>
-                    <option value="skyfort">☁️ 天空要塞</option>
-                    <option value="chaos">🌀 混沌</option>
-                    <option value="factory">🏭 工場</option>
-                    <option value="volcano_summit">🌋 火山</option>
-                    <option value="underwater">🌊 水中</option>
-                    <option value="lavaland">🔥 溶岩地帯</option>
                 </select>
                 <div id="profile-stats-display" style="margin-top:6px;"></div>
             </div>
@@ -986,26 +1015,6 @@
         <div class="select-group">
             <label>ステージ選択:</label>
             <select id="ol-stage-select">
-                <option value="random">🎲 ランダム (ステージおまかせ)</option>
-                <option value="plains">🌾 草原 (オーソドックス)</option>
-                <option value="forest">🌲 森林 (森だらけの迷彩戦)</option>
-                <option value="desert">🏜️ 砂漠 (サンドワームとラクダ)</option>
-                <option value="demon">👿 魔界 (魔法陣だらけ)</option>
-                <option value="castle">🏯 城跡 (跳ね橋と城壁の攻防)</option>
-                <option value="bigriver">🚣 大河 (渡河と船上戦)</option>
-                <option value="mountain">⛰️ 山岳 (雪山越えの過酷な旅)</option>
-                <option value="graveyard">🪦 墓場 (ゾンビと悪霊・魂集め)</option>
-                <option value="nighttown">🌃 夜の街 (毎ターン襲い来る魔物)</option>
-                <option value="skyfort">☁️ 天空要塞 (崩れる足場と空中戦)</option>
-                <option value="chaos">🌀 混沌 (全ギミック入り乱れ)</option>
-                <option value="dungeon">🗝️ 地下迷宮 (霧・スイッチ・宝箱)</option>
-                <option value="underwater">🌊 海底神殿 (酸素管理・潮流・サンゴ礁)</option>
-                <option value="lavaland">🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)</option>
-                <option value="volcano_summit">🌋 活火山山頂 (噴火・溶岩流・竜/サラマンダー)</option>
-                <option value="misty_lake">🌫️ 霧の湖 (霧・蓮の葉・湖上戦)</option>
-                <option value="colosseum">⚔️ コロシアム (闘技場・得点制・剣闘士)</option>
-            <option value="factory">🏭 工場 (コンベアベルト・溶鉱炉・プレス機)</option>
-    
             </select>
         </div>
         <div class="select-group">
@@ -1067,6 +1076,19 @@
         </div>
         <div id="join-error" style="color:#e74c3c; margin-top:8px; font-weight:bold;"></div>
         <button class="btn" id="btn-join-room" style="background: #2980b9; padding: 15px; font-size: 18px; margin-top: 10px;" onclick="joinRoom()">参加する</button>
+    </div>
+
+    <div id="friend-panel" style="display:none;">
+        <h3 style="color:var(--accent);margin-top:0;">👥 フレンドリスト <span id="friend-count" style="font-size:13px;color:#aaa;font-weight:normal;">(0/10)</span></h3>
+        <div id="friend-list"></div>
+        <div id="friend-add-area">
+            <input id="friend-id-input" type="text" placeholder="相手のユーザーIDを入力" />
+            <button onclick="addFriend()">＋追加</button>
+        </div>
+        <div id="friend-status"></div>
+        <div style="font-size:11px;color:#666;margin-top:8px;">
+            あなたのID: <span id="my-user-id-display" style="color:#aaa;"></span>
+        </div>
     </div>
 
     <button class="btn" style="margin-top: 15px; background: #555;" onclick="backToHome()">タイトルに戻る</button>
@@ -1158,6 +1180,15 @@
     </div>
     <div id="online-game-info"></div>
     <div id="hint-bar"></div>
+    <!-- エモートボタン（オンライン対戦中のみ表示） -->
+    <button class="emote-btn-main" id="emote-btn-main" onclick="toggleEmotePanel()" title="エモート送信">💬</button>
+    <div class="emote-menu" id="emote-menu">
+        <div class="emote-count-line">残り <span id="emote-count">3</span> 回</div>
+        <button onclick="sendEmote('👋 こんにちは！')">👋 こんにちは！</button>
+        <button onclick="sendEmote('🙏 よろしくお願いします！')">🙏 よろしく！</button>
+        <button onclick="sendEmote('😱 やられた！')">😱 やられた！</button>
+        <button onclick="sendEmote('😤 どうだ！')">😤 どうだ！</button>
+    </div>
     <div id="board-container">
         <div id="board"></div>
         <div id="ui-panel">
@@ -2716,6 +2747,11 @@ function handleWsMessage(event) {
         return;
     }
 
+    if (data.type === 'emote') {
+        showEmoteBubble(String(data.text || ''), 'opponent');
+        return;
+    }
+
     if (data.type === 'roomCreated') {
         onlineRoomCode = data.roomCode;
         document.getElementById('ol-room-code').textContent = data.roomCode;
@@ -2765,6 +2801,8 @@ function handleWsMessage(event) {
         isPlayerTurn = settings.p1First;
 
         document.getElementById('game-screen').style.display = 'flex';
+        const emoteBtn = document.getElementById('emote-btn-main');
+        if (emoteBtn) emoteBtn.style.display = 'flex';
         updateOnlineInfo();
         render();
         startClientPing();
@@ -3007,11 +3045,132 @@ function switchLobbyTab(tab) {
     document.getElementById('ranked-panel').style.display = tab === 'ranked' ? 'block' : 'none';
     document.getElementById('create-panel').style.display = tab === 'create' ? 'block' : 'none';
     document.getElementById('join-panel').style.display = tab === 'join' ? 'block' : 'none';
+    document.getElementById('friend-panel').style.display = tab === 'friend' ? 'block' : 'none';
     document.getElementById('tab-ranked').classList.toggle('active', tab === 'ranked');
     document.getElementById('tab-create').classList.toggle('active', tab === 'create');
     document.getElementById('tab-join').classList.toggle('active', tab === 'join');
+    document.getElementById('tab-friend').classList.toggle('active', tab === 'friend');
     if (tab === 'ranked') { refreshRankDisplay(); _refreshRankerSection(); }
+    if (tab === 'friend') {
+        loadFriends();
+        const el = document.getElementById('my-user-id-display');
+        if (el) el.textContent = getUserId();
+    }
 }
+
+// ========== フレンドシステム ==========
+async function loadFriends() {
+    const list = document.getElementById('friend-list');
+    const cntEl = document.getElementById('friend-count');
+    if (!list) return;
+    list.innerHTML = '<div style="color:#aaa;font-size:13px;">読み込み中...</div>';
+    try {
+        const res = await fetch(getApiBase() + '/friends/' + encodeURIComponent(getUserId()));
+        if (!res.ok) throw new Error('fetch failed');
+        const friends = await res.json();
+        if (!list) return;
+        if (friends.length === 0) {
+            list.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:16px;">フレンドがいません。IDを入力して追加しましょう！</div>';
+        } else {
+            list.innerHTML = friends.map(f => `
+                <div class="friend-item">
+                    <div class="friend-icon">${f.friend_icon || '🎮'}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${escapeHtml(f.friend_name || 'プレイヤー')}</div>
+                        <div class="friend-id">ID: ${escapeHtml(f.friend_user_id)}</div>
+                    </div>
+                    <button class="friend-remove" onclick="removeFriend('${escapeHtml(f.friend_user_id)}')">削除</button>
+                </div>`).join('');
+        }
+        if (cntEl) cntEl.textContent = `(${friends.length}/10)`;
+    } catch {
+        if (list) list.innerHTML = '<div style="color:#e74c3c;font-size:13px;">読み込みに失敗しました</div>';
+    }
+}
+
+async function addFriend() {
+    const input = document.getElementById('friend-id-input');
+    const status = document.getElementById('friend-status');
+    const friendId = (input?.value || '').trim();
+    if (!friendId) { if (status) status.textContent = 'IDを入力してください'; return; }
+    if (friendId === getUserId()) { if (status) status.textContent = '自分自身は追加できません'; return; }
+    if (status) status.textContent = '追加中...';
+    try {
+        const res = await fetch(getApiBase() + '/friends', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: getUserId(),
+                friendUserId: friendId,
+                friendName: friendId,
+                friendIcon: '🎮',
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) { if (status) status.textContent = data.error || '追加失敗'; return; }
+        if (status) status.textContent = '✅ 追加しました！';
+        if (input) input.value = '';
+        loadFriends();
+    } catch { if (status) status.textContent = '通信エラーが発生しました'; }
+}
+
+async function removeFriend(friendId) {
+    if (!confirm(`フレンド (${friendId}) を削除しますか？`)) return;
+    try {
+        const res = await fetch(getApiBase() + '/friends', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: getUserId(), friendUserId: friendId }),
+        });
+        if (res.ok) loadFriends();
+    } catch { /* ignore */ }
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// ===================================================
+
+// ========== エモートシステム ==========
+let emoteUsedThisTurn = 0;
+
+function toggleEmotePanel() {
+    const m = document.getElementById('emote-menu');
+    if (!m) return;
+    m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+}
+
+function sendEmote(text) {
+    if (!isOnlineMode) return;
+    if (emoteUsedThisTurn >= 3) { msg('このターンのエモートは3回までです'); return; }
+    emoteUsedThisTurn++;
+    const ec = document.getElementById('emote-count');
+    if (ec) ec.textContent = String(3 - emoteUsedThisTurn);
+    wsSend({ type: 'emote', text });
+    showEmoteBubble(text, 'self');
+    const m = document.getElementById('emote-menu');
+    if (m) m.style.display = 'none';
+}
+
+function showEmoteBubble(text, side) {
+    const selfTeam = side === 'self' ? 'player' : 'cpu';
+    const ent = entities.find(e => e.hp > 0 && e.team === selfTeam && (e.id === 'p1' || e.id === 'p2'));
+    if (!ent) return;
+    const boardEl = document.getElementById('board');
+    if (!boardEl) return;
+    const rect = boardEl.getBoundingClientRect();
+    const tsSz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 32;
+    const bx = rect.left + ent.c * tsSz + tsSz / 2;
+    const by = rect.top + ent.r * tsSz;
+    const bubble = document.createElement('div');
+    bubble.className = 'emote-bubble' + (side === 'opponent' ? ' opponent' : '');
+    bubble.textContent = text;
+    bubble.style.left = Math.max(4, bx - 75) + 'px';
+    bubble.style.top = Math.max(4, by - 52) + 'px';
+    document.body.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 3200);
+}
+// ===================================================
 
 function showOnlineLobby() {
     document.getElementById('home-screen').style.display = 'none';
@@ -3033,6 +3192,10 @@ function backToHome() {
     if (wsConn) { try { wsSend({ type: 'cancelRanked' }); } catch(e){} wsConn.close(); wsConn = null; }
     document.getElementById('online-lobby').style.display = 'none';
     document.getElementById('home-screen').style.display = 'block';
+    const _eb = document.getElementById('emote-btn-main');
+    if (_eb) { _eb.style.display = 'none'; }
+    const _em = document.getElementById('emote-menu');
+    if (_em) { _em.style.display = 'none'; }
     let s = document.getElementById('ranked-status');
     if (s) s.textContent = '';
 }
@@ -4066,6 +4229,7 @@ function updateOnlineInfo() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
     refreshAllJobSelects();
+    refreshAllStageSelects();
     loadPlayerFromServer();
     refreshProfileUI();
     document.getElementById('btn-start').addEventListener('click', startGame);
@@ -4262,6 +4426,93 @@ function getLoS(a, targetPos) {
 const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','orca_pirate','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko','barbarian','painter'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
+// ========== ステージロック/アンロックシステム ==========
+const STAGE_LABELS = {
+    plains:'🌾 草原 (オーソドックス)', forest:'🌲 森林 (森だらけの迷彩戦)',
+    desert:'🏜️ 砂漠 (サンドワームとラクダ)', demon:'👿 魔界 (魔法陣だらけ)',
+    castle:'🏯 城跡 (跳ね橋と城壁の攻防)', bigriver:'🚣 大河 (渡河と船上戦)',
+    mountain:'⛰️ 山岳 (雪山越えの過酷な旅)', graveyard:'🪦 墓場 (ゾンビと悪霊・魂集め)',
+    nighttown:'🌃 夜の街 (毎ターン襲い来る魔物)', skyfort:'☁️ 天空要塞 (崩れる足場と空中戦)',
+    chaos:'🌀 混沌 (全ギミック入り乱れ)', dungeon:'🗝️ 地下迷宮 (霧・スイッチ・宝箱)',
+    underwater:'🌊 海底神殿 (酸素管理・潮流・サンゴ礁)', lavaland:'🔥 溶岩地帯 (溶岩拡大・橋崩落・即死)',
+    misty_lake:'🌫️ 霧の湖 (霧・蓮の葉・湖上戦)', colosseum:'⚔️ コロシアム (闘技場・得点制・剣闘士)',
+    factory:'🏭 工場 (コンベアベルト・溶鉱炉・プレス機)', volcano_summit:'🌋 活火山山頂 (噴火・溶岩流・竜/サラマンダー)',
+};
+// 0=チュートリアルクリアで解放, N=CPUレベルNクリアで解放
+const STAGE_UNLOCK_REQUIREMENTS = {
+    plains:0, forest:1, desert:2, demon:3, castle:4, bigriver:5,
+    mountain:6, graveyard:7, nighttown:8, skyfort:9, chaos:10,
+    dungeon:11, underwater:12, lavaland:13, misty_lake:14,
+    colosseum:15, factory:15, volcano_summit:15,
+};
+
+function isTutorialDone() { return localStorage.getItem('ek_tutorial_done') === '1'; }
+function setTutorialDone() { localStorage.setItem('ek_tutorial_done', '1'); }
+function getMaxCpuLvBeaten() { return parseInt(localStorage.getItem('ek_max_cpu_lv') || '0', 10); }
+function setMaxCpuLvBeaten(lv) { if (lv > getMaxCpuLvBeaten()) localStorage.setItem('ek_max_cpu_lv', String(lv)); }
+
+function isStageUnlocked(stage) {
+    if (!stage || stage === 'random') return true;
+    const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
+    if (req === 0) return isTutorialDone();
+    return isTutorialDone() && getMaxCpuLvBeaten() >= req;
+}
+
+function buildStageOptions(forFav) {
+    const tutDone = isTutorialDone();
+    const maxLv = getMaxCpuLvBeaten();
+    let html = forFav ? '<option value="">— なし —</option>' : '<option value="random">🎲 ランダム (解放済みからおまかせ)</option>';
+    for (const stage of ALL_STAGES) {
+        const label = STAGE_LABELS[stage] || stage;
+        const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
+        const unlocked = tutDone && (req === 0 || maxLv >= req);
+        if (unlocked) {
+            const dispLabel = forFav ? label.split('(')[0].trim() : label;
+            html += `<option value="${stage}">${dispLabel}</option>`;
+        } else if (!forFav) {
+            if (!tutDone) {
+                html += `<option value="${stage}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── チュートリアル完了で解放</option>`;
+            } else {
+                const rem = req - maxLv;
+                html += `<option value="${stage}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── CPUレベル${req}クリアで解放（あと${rem}レベル）</option>`;
+            }
+        }
+    }
+    return html;
+}
+
+function refreshAllStageSelects() {
+    const opts = buildStageOptions(false);
+    for (const id of ['stage-select','ol-stage-select']) {
+        const sel = document.getElementById(id);
+        if (!sel) continue;
+        const cur = sel.value;
+        sel.innerHTML = opts;
+        if (cur && sel.querySelector(`option[value="${cur}"]:not([disabled])`)) sel.value = cur;
+        else sel.value = 'random';
+    }
+    const favSel = document.getElementById('fav-stage-select');
+    if (favSel) {
+        const cur = favSel.value;
+        favSel.innerHTML = buildStageOptions(true);
+        if (cur && favSel.querySelector(`option[value="${cur}"]`)) favSel.value = cur;
+    }
+}
+
+function checkStageUnlocked(stage, errElId) {
+    if (!stage || stage === 'random' || isStageUnlocked(stage)) return true;
+    const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
+    const label = (STAGE_LABELS[stage] || stage).split('(')[0].trim();
+    const errMsg = req === 0
+        ? `🔒 ${label}はチュートリアル完了で解放されます`
+        : `🔒 ${label}はCPUレベル${req}クリアで解放されます（現在${getMaxCpuLvBeaten()}レベル）`;
+    const el = errElId ? document.getElementById(errElId) : null;
+    if (el) el.textContent = errMsg;
+    else alert(errMsg);
+    return false;
+}
+// ===================================================
+
 // ========== ジョブロック/アンロックシステム ==========
 const JOB_LABELS = {
     king:'👑 王 (号令・召喚・カウンター)', knight:'🛡️ 騎士 (突破力・直線突進)',
@@ -4345,7 +4596,11 @@ function resolveJob(job) {
     return job;
 }
 function resolveStage(stage) {
-    return stage === 'random' ? ALL_STAGES[Math.floor(Math.random()*ALL_STAGES.length)] : stage;
+    if (stage === 'random') {
+        const avail = ALL_STAGES.filter(s => isStageUnlocked(s));
+        return avail.length > 0 ? avail[Math.floor(Math.random()*avail.length)] : ALL_STAGES[0];
+    }
+    return stage;
 }
 
 function startGame() {
@@ -4353,8 +4608,10 @@ function startGame() {
         document.getElementById('error-log').innerText = '';
         const rawJobOffline = document.getElementById('job-select').value;
         if (!checkJobUnlocked(rawJobOffline, 'error-log')) return;
+        const rawStageOffline = document.getElementById('stage-select').value;
+        if (!checkStageUnlocked(rawStageOffline, 'error-log')) return;
         const job = resolveJob(rawJobOffline);
-        activeStage = resolveStage(document.getElementById('stage-select').value);
+        activeStage = resolveStage(rawStageOffline);
         const difficulty = document.getElementById('difficulty-select').value;
         
         initBoard(activeStage);
@@ -6178,6 +6435,7 @@ function startTurn(team, skipEffects = false) {
     currentActingTeam = team;
     stopTurnTimer();
     craftReadyActive = {}; // stop all craft pulse animations at turn start
+    if (isOnlineMode && team === 'player') { emoteUsedThisTurn = 0; const _ec = document.getElementById('emote-count'); if (_ec) _ec.textContent = '3'; }
     // アンデットパーティ: 召喚ターンより古いユニットを自動破壊
     {
         let upExpired = entities.filter(e => e.hp > 0 && e.undeadPartyDestroyTurn !== undefined && e.undeadPartyDestroyTurn < turn);
@@ -16017,6 +16275,20 @@ function checkWin() {
                 if (wasNew && LEVEL_BADGES[diff]) {
                     title += '\n🎖️ 新称号獲得: ' + LEVEL_BADGES[diff] + '！';
                 }
+                // ステージ解放チェック
+                const prevMaxLv = getMaxCpuLvBeaten();
+                if (diff > prevMaxLv) {
+                    setMaxCpuLvBeaten(diff);
+                    const newStages = ALL_STAGES.filter(s => {
+                        const req = STAGE_UNLOCK_REQUIREMENTS[s] ?? 0;
+                        return req > 0 && req > prevMaxLv && req <= diff;
+                    });
+                    if (newStages.length > 0) {
+                        const stageNames = newStages.map(s => (STAGE_LABELS[s] || s).split('(')[0].trim()).join('、');
+                        title += `\n🗺️ 新ステージ解放: ${stageNames}`;
+                        refreshAllStageSelects();
+                    }
+                }
             }
         }
         document.getElementById('result-title').innerText = title;
@@ -17363,6 +17635,8 @@ function showTutorialResult() {
     document.getElementById('game-screen').style.display = 'none';
     // ビギナー称号を付与（初回のみ）
     earnBadge(1);
+    setTutorialDone();
+    refreshAllStageSelects();
     // リザルト画面をチュートリアル用に設定
     document.getElementById('result-title').innerText =
         '🎉 チュートリアル完了！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\n🔓 キャラをアンロックしよう！\nランクマッチで勝つとロックキャラが解放されます。\nCPUとのランクマッチ対戦でも解放できます！\n\nさあ、本番の試合に挑もう！';
