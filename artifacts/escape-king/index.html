@@ -15114,10 +15114,42 @@ const TUTORIAL_STEPS = [
         highlightAbility: 'drop_rock',
     },
     {   // Step 5: 敵を撃破（インタラクティブ）
-        msg: '💥 <b>練習用の敵を倒そう！</b><br><br>近くに<b>練習ダミー（HP3）</b>を置きました。<br>アビリティで攻撃してHPを0にしてください！<br><br>撃破すると<b>HP回復・アビリティ強化</b>などの報酬が得られます。<br><br>▶ ダミーを撃破しよう！',
+        msg: '💥 <b>練習用の敵を倒そう！</b><br><br>目の前に<b>練習ダミー（HP3）</b>がいる！<br>アビリティで攻撃してHPを0にしてください！<br><br>撃破すると<b>HP回復・アビリティ強化</b>などの報酬が得られます。<br><br>▶ ダミーを撃破しよう！',
         highlight: 'btn-attack',
         advanceOn: 'enemy_defeated',
         highlightAbility: '*attack',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (!_pe) return;
+            // プレイヤー周辺の岩を除去（半径2）
+            for (let _dr = -2; _dr <= 2; _dr++) {
+                for (let _dc = -2; _dc <= 2; _dc++) {
+                    const _rr = _pe.r + _dr, _rc = _pe.c + _dc;
+                    if (_rr >= 0 && _rr < SIZE && _rc >= 0 && _rc < SIZE && board[_rr][_rc] === 'rock') {
+                        board[_rr][_rc] = 'plains';
+                    }
+                }
+            }
+            // ダミーをプレイヤーの1マス前（隣接）に移動
+            const _dummy = entities.find(e => e.tutorialDummy && e.team === 'cpu' && e.hp > 0);
+            const _dstR = Math.max(0, _pe.r - 1), _dstC = _pe.c;
+            if (board[_dstR]?.[_dstC] !== undefined) board[_dstR][_dstC] = 'plains';
+            if (_dummy) {
+                _dummy.r = _dstR; _dummy.c = _dstC;
+            } else {
+                entities.push({
+                    id: 'tutorial_dummy_' + Date.now(), type: 'tutorial_dummy',
+                    tutorialDummy: true, name: '練習ダミー', team: 'cpu',
+                    r: _dstR, c: _dstC,
+                    hp: 3, maxHp: 3, ap: 0, maxAp: 0,
+                    abilities: {}, initialAbilities: {}, skillUsed: true,
+                    stealth: false, stealthTimer: 0, invin: false, invinTimer: 0,
+                    poisonTimer: 0, element: 'none',
+                });
+            }
+            _pe.ap = Math.max(_pe.ap, 2);
+            render();
+        },
     },
     {   // Step 6: ターン終了（インタラクティブ）
         msg: '🔚 <b>ターンを終了しよう！</b><br><br>行動が終わったら<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。<br><br>💡 APが残っていてもターン終了できます。温存するか使い切るかが戦略の鍵！<br><br>▶ ターン終了ボタンを押してみよう！',
