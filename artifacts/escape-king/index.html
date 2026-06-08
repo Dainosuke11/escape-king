@@ -1024,6 +1024,7 @@ let currentTurnMsgs = []; // 現ターンのメッセージ蓄積
 let skyfortLiftPos = 9; // top row of 2x2 floating lift (cols 13-14)
 let magicCircleTimer = 5; 
 let usedAbilities = {};
+let usedCannonTiles = new Set();
 let tutorialMode = false;
 let tutorialStep = 0;
 let tutorialAwaitingAction = false;
@@ -2165,6 +2166,7 @@ function applyGameState(state) {
     if (state.guruPlagueTiles) guruPlagueTiles = state.guruPlagueTiles;
     selectedEntity = null;
     usedAbilities = {};
+    usedCannonTiles = new Set();
 }
 
 // ---- Delta sync system ----
@@ -5461,6 +5463,7 @@ function startTurn(team, skipEffects = false) {
         if (e.hp > 0) e._usedAbilityLastTurn = e._usedAbilityThisTurn || false;
     });
     usedAbilities = {};
+    usedCannonTiles = new Set();
     actionMode = 'move';
 
     // Execute pending roll_rock from previous turn
@@ -7146,9 +7149,15 @@ function setMode(mode) {
     if (mode === 'summon_magic' && turn < 5) { msg("召喚獣魔法は開始後5ターン経過しないと使えません"); return; }
     if ((mode === 'summon_archer' || mode === 'summon_lancer') && turn < 5) { msg("召喚は5ターン経過後に使用可能です"); return; }
     if (['miner_call','wolf_summon','falcon_summon','tame'].includes(mode) && turn < 5) { msg("召喚・テイムは開始5ターン経過後に使用可能です"); return; }
-    if (mode !== 'move' && !mode.startsWith('skill_') && usedAbilities[selectedEntity.id]?.has(mode)) { 
-        msg("このアビリティは既に今ターン使用済です"); 
-        return; 
+    if (mode !== 'move' && !mode.startsWith('skill_')) {
+        if (mode === 'cannon') {
+            // 大砲マスはタイル座標ごとに使用済み管理（別の大砲マスは1ターンに複数回使用可）
+            if (usedCannonTiles.has(`${selectedEntity.r},${selectedEntity.c}`)) {
+                msg("この大砲マスは既に今ターン使用済です"); return;
+            }
+        } else if (usedAbilities[selectedEntity.id]?.has(mode)) {
+            msg("このアビリティは既に今ターン使用済です"); return;
+        }
     }
     
     actionMode = mode;
@@ -8200,6 +8209,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("テレポート完了！" + (eventMsg ? eventMsg : ""));
         checkEnemyTerritory(se);
     } else if (actionMode === 'cannon') {
+        usedCannonTiles.add(`${se.r},${se.c}`);
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
         used = true;
         msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : `大砲発射！敵に${1+(se.atkBonus||0)}ダメージと吹き飛ばし！(休2T)`);
@@ -11029,7 +11039,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         reapNecroSouls();
         checkColosseumKillScore();
-        if (actionMode !== 'skill' && !actionMode.startsWith('skill_')) {
+        if (actionMode !== 'skill' && !actionMode.startsWith('skill_') && actionMode !== 'cannon') {
             if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
             usedAbilities[se.id].add(actionMode);
         }
@@ -14742,6 +14752,7 @@ function updateUI() {
         cb.className = 'ability-btn';
         cb.innerText = '大砲発射 (半径8マス)'; 
         if (actionMode === 'cannon') cb.classList.add('active');
+        if (usedCannonTiles.has(`${selectedEntity.r},${selectedEntity.c}`)) cb.disabled = true;
         cb.onclick = () => { setMode('cannon'); msg("大砲のターゲット(半径8マス以内の敵)を選択してください"); };
         list.appendChild(cb);
     }
