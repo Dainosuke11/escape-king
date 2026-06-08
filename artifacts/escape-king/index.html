@@ -360,6 +360,31 @@
             background:#34495e; color:#fff; border-radius:6px; cursor:pointer; font-size:15px;
         }
         .lb-close-btn:hover { background:#415b76; }
+        .lb-tabs { display:flex; gap:6px; margin-bottom:14px; }
+        .lb-tab { flex:1; padding:8px; border:1px solid #444; background:#1a1a28; color:#aaa;
+            border-radius:6px; cursor:pointer; font-size:14px; }
+        .lb-tab.active { background:#8e44ad; color:#fff; border-color:#8e44ad; }
+        .lb-tier-header { padding:8px 6px 4px; font-size:13px; font-weight:bold;
+            color:#f39c12; border-bottom:1px solid #3a3a50; margin-top:8px; }
+        .lb-fav-btn { background:none; border:none; cursor:pointer; font-size:16px;
+            flex-shrink:0; padding:0 4px; opacity:0.5; transition:opacity .15s; }
+        .lb-fav-btn:hover { opacity:1; }
+        .lb-fav-btn.active { opacity:1; }
+        .lb-fav-section { margin-top:8px; padding:8px; background:#1a1a28;
+            border-radius:6px; border:1px solid #333; }
+        .lb-fav-empty { color:#888; font-size:13px; text-align:center; padding:12px 0; }
+        .ranked-ranker-section { margin:10px 0; padding:10px 12px; background:#1a1a28;
+            border:1px solid #333; border-radius:8px; }
+        .ranked-ranker-section h4 { margin:0 0 8px; font-size:14px; color:#f39c12; }
+        .ranked-ranker-row { display:flex; align-items:center; gap:6px; padding:4px 0;
+            border-bottom:1px solid #2a2a35; font-size:13px; }
+        .ranked-ranker-row:last-child { border-bottom:none; }
+        .ranked-ranker-pos { width:22px; color:#888; font-size:12px; text-align:right; flex-shrink:0; }
+        .ranked-ranker-name { flex:1; color:#eee; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ranked-ranker-rp { color:#3498db; font-size:12px; flex-shrink:0; }
+        .ranked-fav-btn { background:none; border:none; cursor:pointer; font-size:14px;
+            flex-shrink:0; padding:0 2px; opacity:0.45; transition:opacity .15s; }
+        .ranked-fav-btn:hover,.ranked-fav-btn.active { opacity:1; }
         
         .entity { 
             position: absolute; width: 85%; height: 85%; border-radius: 6px; 
@@ -789,6 +814,10 @@
             近いランクの相手と自動マッチングします。勝敗でRPが変動し、100RPでランクアップします。<br>
             ※ステージは草原・先攻は自動決定されます。
         </p>
+        <div class="ranked-ranker-section" id="ranked-ranker-section" style="display:none;">
+            <h4>🏆 同ランク上位プレイヤー <span style="font-size:12px;color:#888;font-weight:normal;">（お気に入り登録でマッチしやすくなります）</span></h4>
+            <div id="ranked-ranker-list"></div>
+        </div>
         <div id="ranked-status" style="color:#f1c40f; margin:10px 0; min-height:20px; font-weight:bold;"></div>
         <button class="btn" id="btn-find-ranked" style="background:#8e44ad; padding:15px; font-size:18px;" onclick="startRankedSearch()">対戦相手を探す</button>
         <button class="btn" id="btn-cancel-ranked" style="background:#c0392b; padding:15px; font-size:18px; display:none;" onclick="cancelRankedSearch()">検索をキャンセル</button>
@@ -935,7 +964,11 @@
 
 <div id="leaderboard-modal">
     <div class="lb-inner">
-        <h3>🏆 ランキング TOP 20</h3>
+        <h3>🏆 ランキング</h3>
+        <div class="lb-tabs">
+            <button class="lb-tab active" id="lb-tab-tiers" onclick="lbSwitchTab('tiers')">ランク別 TOP10</button>
+            <button class="lb-tab" id="lb-tab-fav" onclick="lbSwitchTab('fav')">⭐ お気に入り</button>
+        </div>
         <div id="leaderboard-body"></div>
         <button class="lb-close-btn" onclick="document.getElementById('leaderboard-modal').style.display='none'">閉じる</button>
     </div>
@@ -1165,6 +1198,25 @@ function unlockRanked() {
         setRank(1); setRP(0);
     }
 }
+// ---- Favorites management ----
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('ek_favorites') || '[]'); } catch { return []; }
+}
+function saveFavorites(list) { localStorage.setItem('ek_favorites', JSON.stringify(list)); }
+function isFavorite(userId) { return getFavorites().some(f => f.userId === userId); }
+function addFavorite(userId, playerName) {
+    const list = getFavorites().filter(f => f.userId !== userId);
+    list.unshift({ userId, playerName });
+    saveFavorites(list.slice(0, 50));
+}
+function removeFavorite(userId) {
+    saveFavorites(getFavorites().filter(f => f.userId !== userId));
+}
+function toggleFavorite(userId, playerName) {
+    if (isFavorite(userId)) { removeFavorite(userId); return false; }
+    else { addFavorite(userId, playerName); return true; }
+}
+
 function applyRpDelta(delta) {
     let rank = getRank();
     let rp = getRP() + delta;
@@ -2452,7 +2504,7 @@ function switchLobbyTab(tab) {
     document.getElementById('tab-ranked').classList.toggle('active', tab === 'ranked');
     document.getElementById('tab-create').classList.toggle('active', tab === 'create');
     document.getElementById('tab-join').classList.toggle('active', tab === 'join');
-    if (tab === 'ranked') refreshRankDisplay();
+    if (tab === 'ranked') { refreshRankDisplay(); _refreshRankerSection(); }
 }
 
 function showOnlineLobby() {
@@ -3112,32 +3164,117 @@ function startCpuRankedMatch() {
     msg(`⚔️ ランク戦CPU対戦開始！（難易度${diff}）勝利でRP最大+${maxRp}！`);
 }
 
+const RANK_NAMES = {1:'ブロンズ',2:'シルバー',3:'ゴールド',4:'プラチナ',5:'ダイヤ',6:'マスター',7:'ランクA',8:'ランクS',9:'ランクSS',10:'ランクSSS'};
+let _lbCurrentTab = 'tiers';
+let _lbTiersCache = null;
+
+function lbSwitchTab(tab) {
+    _lbCurrentTab = tab;
+    document.getElementById('lb-tab-tiers')?.classList.toggle('active', tab === 'tiers');
+    document.getElementById('lb-tab-fav')?.classList.toggle('active', tab === 'fav');
+    if (tab === 'tiers') { _renderLbTiers(_lbTiersCache); }
+    else { _renderLbFavorites(); }
+}
+
+function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _favBtnHtml(userId, playerName, cls) {
+    const active = isFavorite(userId) ? ' active' : '';
+    const icon = isFavorite(userId) ? '⭐' : '☆';
+    return `<button class="${cls}${active}" onclick="onToggleFav(this,'${_esc(userId)}','${_esc(playerName)}')" title="お気に入り">${icon}</button>`;
+}
+function onToggleFav(btn, userId, playerName) {
+    const added = toggleFavorite(userId, playerName);
+    btn.textContent = added ? '⭐' : '☆';
+    btn.classList.toggle('active', added);
+    if (_lbCurrentTab === 'fav') _renderLbFavorites();
+    _refreshRankerSection();
+}
+
+function _renderLbTiers(tiers) {
+    const body = document.getElementById('leaderboard-body');
+    if (!body) return;
+    const myId = getUserId();
+    if (!tiers || Object.keys(tiers).length === 0) {
+        body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">データがありません</div>';
+        return;
+    }
+    let html = '';
+    const sortedRanks = Object.keys(tiers).map(Number).sort((a,b) => b - a);
+    for (const rank of sortedRanks) {
+        const rnkLabel = RANK_NAMES[rank] || `ランク${rank}`;
+        html += `<div class="lb-tier-header">🏅 ${rnkLabel}</div>`;
+        tiers[rank].forEach((p, i) => {
+            const isMine = p.userId === myId;
+            const name = _esc(p.playerName);
+            const favBtn = p.userId !== myId ? _favBtnHtml(p.userId, p.playerName, 'lb-fav-btn') : '';
+            html += `<div class="lb-row${isMine?' lb-mine':''}">
+                <span class="lb-pos">${i+1}</span>
+                <span class="lb-name">${name}${isMine?' 👈':''}</span>
+                <span class="lb-rp">${p.rp} RP</span>
+                ${favBtn}
+            </div>`;
+        });
+    }
+    body.innerHTML = html;
+}
+
+function _renderLbFavorites() {
+    const body = document.getElementById('leaderboard-body');
+    if (!body) return;
+    const favs = getFavorites();
+    if (favs.length === 0) {
+        body.innerHTML = '<div class="lb-fav-empty">お気に入り登録なし<br>ランク別TOP10タブで⭐を押して登録できます</div>';
+        return;
+    }
+    let html = '<div style="color:#aaa;font-size:12px;margin-bottom:8px;">お気に入りに登録したプレイヤーとは優先的にマッチングされます。</div>';
+    favs.forEach(f => {
+        const name = _esc(f.playerName);
+        html += `<div class="lb-row">
+            <span class="lb-name">⭐ ${name}</span>
+            <button class="lb-fav-btn active" onclick="onToggleFav(this,'${_esc(f.userId)}','${_esc(f.playerName)}')">⭐</button>
+        </div>`;
+    });
+    body.innerHTML = html;
+}
+
 async function showLeaderboard() {
     const modal = document.getElementById('leaderboard-modal');
     const body = document.getElementById('leaderboard-body');
     if (!modal || !body) return;
+    _lbCurrentTab = 'tiers';
+    document.getElementById('lb-tab-tiers')?.classList.add('active');
+    document.getElementById('lb-tab-fav')?.classList.remove('active');
     modal.style.display = 'flex';
     body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">読み込み中...</div>';
     try {
-        const res = await fetch(getApiBase() + '/leaderboard');
-        const data = await res.json();
-        const myId = getUserId();
-        const rankNames = {1:'ブロンズ',2:'シルバー',3:'ゴールド',4:'プラチナ',5:'ダイヤ',6:'マスター',7:'ランクA',8:'ランクS',9:'ランクSS',10:'ランクSSS'};
-        if (!Array.isArray(data) || data.length === 0) {
-            body.innerHTML = '<div style="color:#aaa;padding:20px;text-align:center;">データがありません</div>';
-            return;
-        }
-        let html = '';
-        data.forEach((p, i) => {
-            const isMine = p.userId === myId;
-            const rnk = rankNames[p.rank] || `ランク${p.rank}`;
-            const name = String(p.playerName).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            html += `<div class="lb-row${isMine ? ' lb-mine' : ''}"><span class="lb-pos">${i+1}</span><span class="lb-name">${name}${isMine?' 👈':''}</span><span class="lb-rank">${rnk}</span><span class="lb-rp">${p.rp} RP</span></div>`;
-        });
-        body.innerHTML = html;
+        const res = await fetch(getApiBase() + '/leaderboard/tiers');
+        _lbTiersCache = await res.json();
+        _renderLbTiers(_lbTiersCache);
     } catch(e) {
         body.innerHTML = '<div style="color:#e74c3c;padding:20px;text-align:center;">読み込みに失敗しました</div>';
     }
+}
+
+async function _refreshRankerSection() {
+    const sec = document.getElementById('ranked-ranker-section');
+    const list = document.getElementById('ranked-ranker-list');
+    if (!sec || !list) return;
+    const myRank = getRank();
+    const myId = getUserId();
+    try {
+        const res = await fetch(getApiBase() + '/leaderboard/tiers');
+        const tiers = await res.json();
+        _lbTiersCache = tiers;
+        const players = (tiers[myRank] || []).filter(p => p.userId !== myId);
+        if (players.length === 0) { sec.style.display = 'none'; return; }
+        sec.style.display = 'block';
+        list.innerHTML = players.slice(0, 10).map((p, i) => {
+            const name = _esc(p.playerName);
+            const favBtn = `<button class="ranked-fav-btn${isFavorite(p.userId)?' active':''}" onclick="onToggleFav(this,'${_esc(p.userId)}','${_esc(p.playerName)}')" title="お気に入り">${isFavorite(p.userId)?'⭐':'☆'}</button>`;
+            return `<div class="ranked-ranker-row"><span class="ranked-ranker-pos">${i+1}</span><span class="ranked-ranker-name">${name}</span><span class="ranked-ranker-rp">${p.rp}RP</span>${favBtn}</div>`;
+        }).join('');
+    } catch(e) { sec.style.display = 'none'; }
 }
 
 function showVictoryCondition(job) {
@@ -3175,8 +3312,9 @@ function startRankedSearch() {
         }
     }, 1000);
     const pName = localStorage.getItem('etk_player_name') || 'プレイヤー';
+    const favIds = getFavorites().map(f => f.userId);
     connectWS(() => {
-        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job, playerName: pName });
+        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job, playerName: pName, favorites: favIds });
     });
 }
 

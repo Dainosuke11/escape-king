@@ -43,6 +43,7 @@ interface QueueEntry {
   rank: number;
   job: string;
   playerName: string;
+  favorites: string[];
   ts: number;
   searchTimer: NodeJS.Timeout | null;
 }
@@ -93,6 +94,8 @@ function rankWindow(waitedMs: number): number {
 
 function tryMatch() {
   const now = Date.now();
+  // Pass 1: favorite-priority — if either player has the other in their favorites,
+  // allow up to rankWindow+2 rank difference for faster pairing.
   for (let i = 0; i < queue.length; i++) {
     const a = queue[i];
     if (!a || a.ws.readyState !== WebSocket.OPEN) continue;
@@ -101,8 +104,27 @@ function tryMatch() {
       const b = queue[j];
       if (!b || b.ws.readyState !== WebSocket.OPEN) continue;
       const bWin = rankWindow(now - b.ts);
-      const window = Math.min(aWin, bWin);
-      if (Math.abs(a.rank - b.rank) <= window) {
+      const win = Math.min(aWin, bWin);
+      const isFavPair = (a.favorites || []).includes(b.userId) || (b.favorites || []).includes(a.userId);
+      if (isFavPair && Math.abs(a.rank - b.rank) <= win + 2) {
+        startRankedMatch(a, b);
+        queue.splice(j, 1);
+        queue.splice(i, 1);
+        return tryMatch();
+      }
+    }
+  }
+  // Pass 2: normal rank-window matching
+  for (let i = 0; i < queue.length; i++) {
+    const a = queue[i];
+    if (!a || a.ws.readyState !== WebSocket.OPEN) continue;
+    const aWin = rankWindow(now - a.ts);
+    for (let j = i + 1; j < queue.length; j++) {
+      const b = queue[j];
+      if (!b || b.ws.readyState !== WebSocket.OPEN) continue;
+      const bWin = rankWindow(now - b.ts);
+      const win = Math.min(aWin, bWin);
+      if (Math.abs(a.rank - b.rank) <= win) {
         startRankedMatch(a, b);
         queue.splice(j, 1);
         queue.splice(i, 1);
@@ -343,6 +365,7 @@ wss.on("connection", (ws: WebSocket) => {
           rank: Number(msg.rank || 1),
           job: String(msg.job || "king"),
           playerName: String(msg.playerName || "プレイヤー"),
+          favorites: Array.isArray(msg.favorites) ? (msg.favorites as unknown[]).map(String).slice(0, 100) : [],
           ts: Date.now(),
           searchTimer: null,
         };

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { ekPlayersTable } from "@workspace/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 
 const router = Router();
 
@@ -67,6 +67,26 @@ router.get("/leaderboard", async (_req, res) => {
         rp: p.rp,
       })),
     );
+  } catch (e) {
+    res.status(500).json({ error: "db error" });
+  }
+});
+
+// GET /api/leaderboard/tiers — top 10 per rank tier, grouped by rank
+router.get("/leaderboard/tiers", async (_req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(ekPlayersTable)
+      .orderBy(asc(ekPlayersTable.rank), desc(ekPlayersTable.rp));
+    const tiers: Record<number, { userId: string; playerName: string; rank: number; rp: number }[]> = {};
+    for (const p of rows) {
+      if (!tiers[p.rank]) tiers[p.rank] = [];
+      if (tiers[p.rank].length < 10) {
+        tiers[p.rank].push({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp });
+      }
+    }
+    res.json(tiers);
   } catch (e) {
     res.status(500).json({ error: "db error" });
   }
