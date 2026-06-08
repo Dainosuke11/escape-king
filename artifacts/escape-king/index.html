@@ -2626,10 +2626,31 @@ function hideSuspendOverlay() {
     if (el) el.style.display = 'none';
 }
 
+let _wsQueue = [];
+
 function wsSend(obj) {
     if (wsConn && wsConn.readyState === WebSocket.OPEN) {
         wsConn.send(JSON.stringify(obj));
+    } else {
+        _wsQueue.push(obj);
     }
+}
+
+function _flushWsQueue() {
+    if (!_wsQueue.length) return;
+    // For turnEnd and stateSync, deduplicate to last occurrence (stale states are useless).
+    const deduped = [];
+    const seenDedup = new Set();
+    for (let i = _wsQueue.length - 1; i >= 0; i--) {
+        const m = _wsQueue[i];
+        if (m.type === 'turnEnd' || m.type === 'stateSync') {
+            if (!seenDedup.has(m.type)) { seenDedup.add(m.type); deduped.unshift(m); }
+        } else {
+            deduped.unshift(m);
+        }
+    }
+    _wsQueue = [];
+    deduped.forEach(m => wsSend(m));
 }
 
 function getGameState() {
@@ -2893,6 +2914,7 @@ function handleWsMessage(event) {
         }, 3000);
         const timerInfo = savedTurnTimeLeft != null ? `（残り${savedTurnTimeLeft}秒から再開）` : '';
         msg(`✅ 再接続しました。盤面を同期しています...${timerInfo}`);
+        _flushWsQueue();
         return;
     }
 
@@ -2915,6 +2937,12 @@ function handleWsMessage(event) {
         // The other player came back; resend full state immediately (reset delta baseline too).
         hideSuspendOverlay();
         msg("✅ 相手が再接続しました！試合を再開します。");
+        // Resume whichever timer was running before the suspension.
+        if (canIAct()) {
+            startTurnTimer(turnTimeLeft > 0 ? turnTimeLeft : undefined);
+        } else {
+            startOpponentTimer();
+        }
         _syncDeltaBase = null; // force full board on next sync
         syncState('stateSync'); // sends full board since _syncDeltaBase was just reset
         return;
@@ -2924,6 +2952,9 @@ function handleWsMessage(event) {
         const graceMs = data.graceMs || 60000;
         msg(`⚠️ 相手の接続が切れました。${Math.ceil(graceMs/1000)}秒以内に復帰しなければ不戦勝です！`);
         showSuspendOverlay(Date.now() + graceMs);
+        // Pause both timers while opponent is away.
+        stopTurnTimer();
+        stopOpponentTimer();
         return;
     }
 
@@ -4235,7 +4266,7 @@ function updateOnlineInfo() {
         connLabel = ` | <span id="ping-indicator" style="color:#2ecc71;font-weight:bold;">再接続完了 ✓</span>`;
     } else if (lastPingMs !== null) {
         const dot = lastPingMs < 150 ? '🟢' : lastPingMs < 300 ? '🟡' : '🔴';
-        connLabel = ` | <span id="ping-indicator">${dot}</span>`;
+        connLabel = ` | <span id="ping-indicator">${dot} ${lastPingMs}ms</span>`;
     } else {
         connLabel = ` | <span id="ping-indicator" style="color:#aaa;">⚪</span>`;
     }
