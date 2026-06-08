@@ -2033,7 +2033,7 @@ const ABILITY_TIPS = {
     barrier_magic: 'AP-1消費。半径5マス以内の味方コマ全員に無敵バリアを1ターン付与する。回数1。',
     flying_kick: '直線2マス移動。目的地に敵がいれば2ダメ・AP-1。AP消費なし。回数5。',
     wave_shot: '直線3マス以内の敵1体に3ダメ。回数3。',
-    aqua_dash: '2マス移動(ダッシュと同じ移動)。水マスに着地するとさらに前方2マス追加移動＋AP+2。回数5。',
+    aqua_dash: '2マス移動(ダッシュと同じ移動)。足元が水マスなら発動時にAP+2。水マスに着地するとさらに前方2マス追加移動＋AP+2。回数5。',
     rapid_strikes: '周囲半径1マスの全敵に2ダメ・吹き飛ばし。回数3。',
     throw_enemy: '半径1マスの敵1体に3ダメ＋後方3マス吹き飛ばし。着地先に別の敵がいれば連鎖3ダメ。回数2。',
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
@@ -9378,6 +9378,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['aqua_dash'] !== 999) se.abilities['aqua_dash']--;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         let adOldR = se.r, adOldC = se.c;
+        // 足元が水マスなら発動時にAP+2
+        let adStartWater = isWaterTile(board[adOldR]?.[adOldC]) || activeStage === 'bigriver' || activeStage === 'underwater';
+        if (adStartWater) se.ap = Math.min(se.ap + 2, se.maxAp + 2);
         se.r = r; se.c = c; used = true;
         let adWaterBonus = isWaterTile(board[r]?.[c]) || activeStage === 'bigriver' || activeStage === 'underwater';
         let adExtraMoved = 0;
@@ -9391,11 +9394,12 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (entities.some(o => o.hp > 0 && o.r === nr && o.c === nc && o !== se)) break;
                 se.r = nr; se.c = nc; adExtraMoved++;
             }
-            se.ap = Math.min(se.ap + 2, se.maxAp);
+            se.ap = Math.min(se.ap + 2, se.maxAp + 2);
         }
         let adEventMsg = checkTileEffects(se);
         let adExtraMsg = adExtraMoved > 0 ? `さらに${adExtraMoved}マス前進！` : '';
-        msg(`🌊 アクアダッシュ！${adWaterBonus ? `水マス着地！${adExtraMsg}AP+2！` : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
+        let adStartMsg = adStartWater ? '足元水マス→AP+2！' : '';
+        msg(`🌊 アクアダッシュ！${adStartMsg}${adWaterBonus ? `着地水マス！${adExtraMsg}AP+2！` : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
         checkEnemyTerritory(se);
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
