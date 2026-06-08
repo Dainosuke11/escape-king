@@ -864,6 +864,7 @@
         <div style="background:#333;border-radius:4px;height:8px;overflow:hidden;">
             <div id="job-unlock-bar" style="height:100%;background:linear-gradient(90deg,#f39c12,#f1c40f);border-radius:4px;transition:width 0.4s;width:3%;"></div>
         </div>
+        <div id="job-unlock-hint" style="font-size:11px;color:#888;margin-top:3px;text-align:right;">次の解放: ランクマッチで1勝！</div>
     </div>
     <div class="select-group">
         <label>ステージ選択:</label>
@@ -4719,6 +4720,8 @@ function refreshAllJobsBadge() {
     if (countEl) countEl.textContent = `${count} / ${total}`;
     if (barEl) barEl.style.width = `${Math.max(2, Math.round(count / total * 100))}%`;
     if (progressEl) progressEl.style.display = allDone ? 'none' : 'block';
+    const hintEl = document.getElementById('job-unlock-hint');
+    if (hintEl) hintEl.textContent = allDone ? '' : '次の解放: ランクマッチで1勝！';
 }
 
 function buildJobOptions() {
