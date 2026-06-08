@@ -261,8 +261,11 @@
         .cooled_lava::after { content: "🪨"; font-size: calc(var(--tile-size)*0.35); }
         /* Volcano Summit stage */
         .volcano_summit_ground { background: #2a1005; }
-        .ash-mist { box-shadow: inset 0 0 14px rgba(180,140,60,0.5) !important; background: rgba(100,70,20,0.22) !important; }
-        .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); opacity: 0.65; position: absolute; pointer-events: none; }
+        .ash-mist { box-shadow: inset 0 0 8px rgba(180,140,60,0.3) !important; }
+        .ash-mist::before { content: ""; position: absolute; inset: 0; background: rgba(150,110,30,0.38); pointer-events: none; z-index: 1; }
+        .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); opacity: 0.55; position: absolute; pointer-events: none; z-index: 2; }
+        .fairy-village-range { box-shadow: inset 0 0 6px rgba(100,220,60,0.7) !important; }
+        .fairy-village-range::before { content: ""; position: absolute; inset: 0; background: rgba(80,210,40,0.28); pointer-events: none; z-index: 1; }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
         .thorn-field { background-image: repeating-linear-gradient(45deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%), repeating-linear-gradient(135deg, rgba(0,120,0,0.45) 0, rgba(0,120,0,0.45) 2px, transparent 0, transparent 50%) !important; background-size: 8px 8px !important; box-shadow: inset 0 0 8px rgba(34,139,34,0.7) !important; border: 1px solid #2d8a27 !important; }
         .thorn-field::after { content: "🌿"; font-size: calc(var(--tile-size)*0.28); opacity: 0.65; pointer-events: none; }
@@ -911,11 +914,7 @@
                     <option value="none">— なし —</option>
                     <option value="fire">🔥 炎</option>
                     <option value="water">💧 水</option>
-                    <option value="wood">🌿 木</option>
-                    <option value="earth">🪨 土</option>
-                    <option value="wind">🌀 風</option>
-                    <option value="lightning">⚡ 雷</option>
-                    <option value="ice">❄️ 氷</option>
+                    <option value="grass">🌿 草</option>
                     <option value="light">✨ 光</option>
                     <option value="dark">🌑 闇</option>
                 </select>
@@ -1329,6 +1328,7 @@ let volcanoCraterRadius = 0;    // 0=just center tile, expands every 4 turns
 let volcanoSplatterTiles = [];  // [{r,c,placedTurn}] temp magma-splatter lava tiles
 let mafiaTerritory = null; // {ownerTeam, cells:[{r,c}], ownerTurn, origTiles:{}} — 1T縄張りエリア
 let volcanoAshMistSet = new Set(); // "r,c" keys of cells under ash mist this player-turn
+let _fairyVillageTiles = null; // { tiles: Set<"r,c">, expiresAfterTurn: number } for overlay
 let thornTileMap = {}; // "r,c" → {timer, ownerTeam} — 根っこバインドのトゲエリア
 
 // ============================================================
@@ -1394,8 +1394,8 @@ const PROFILE_ICONS = [
     '🗝️','🐲','🦁','🐺','🦅','🐢','🌙','🌈','🎆','🎭','🎵','💫','🍀','🎋','🗻','🌊',
 ];
 const FAV_ELEMENT_LABELS = {
-    'none':'—', 'fire':'🔥 炎', 'water':'💧 水', 'wood':'🌿 木', 'earth':'🪨 土',
-    'wind':'🌀 風', 'lightning':'⚡ 雷', 'ice':'❄️ 氷', 'light':'✨ 光', 'dark':'🌑 闇',
+    'none':'— なし', 'fire':'🔥 炎', 'water':'💧 水', 'grass':'🌿 草',
+    'light':'✨ 光', 'dark':'🌑 闇',
 };
 
 function getProfileIcon() { return localStorage.getItem('ek_profile_icon') || '🎮'; }
@@ -1418,6 +1418,13 @@ function updateCharUsage(job) {
 }
 function getTopChars(n) {
     return Object.entries(getCharUsage()).sort((a,b) => b[1]-a[1]).slice(0, n);
+}
+function getCharWins() { try { return JSON.parse(localStorage.getItem('ek_char_wins') || '{}'); } catch(e) { return {}; } }
+function updateCharWins(job) {
+    if (!job) return;
+    const w = getCharWins();
+    w[job] = (w[job] || 0) + 1;
+    localStorage.setItem('ek_char_wins', JSON.stringify(w));
 }
 
 function openIconPicker() {
@@ -1462,7 +1469,8 @@ function refreshProfileUI() {
         const total = w + l + d;
         const wr = total > 0 ? Math.round(w / total * 100) : 0;
         const tops = getTopChars(3);
-        const topStr = tops.length ? tops.map(([j,c]) => `${j}:${c}戦`).join(' · ') : 'なし';
+        const charWinsLocal = getCharWins();
+        const topStr = tops.length ? tops.map(([j,u]) => { const w = charWinsLocal[j]||0; return `${j}:${u}戦${w>0?` ${w}勝`:''}`; }).join(' · ') : 'なし';
         const drawStr = d > 0 ? ` <span style="color:#aaa;">引分${d}</span>` : '';
         let rankLine = '';
         if (isRankedUnlocked()) {
@@ -1495,6 +1503,7 @@ async function showOpponentProfile(userId) {
         const w = d.wins || 0, l = d.losses || 0, dr = d.draws || 0, total = w + l + dr;
         const wr = total > 0 ? Math.round(w / total * 100) + '%' : '—';
         const tops = Object.entries(d.charUsage || {}).sort((a,b) => b[1]-a[1]).slice(0,3);
+        const oppCharWins = d.charWins || {};
         document.getElementById('pc-icon').textContent = d.profileIcon || '🎮';
         document.getElementById('pc-name').textContent = d.playerName || 'プレイヤー';
         document.getElementById('pc-rank').textContent = `ランク ${d.rank} / ${d.rp} RP`;
@@ -1502,7 +1511,7 @@ async function showOpponentProfile(userId) {
         document.getElementById('pc-losses').textContent = l + (dr > 0 ? ` / 引分${dr}` : '');
         document.getElementById('pc-wr').textContent = wr;
         document.getElementById('pc-element').textContent = FAV_ELEMENT_LABELS[d.favoriteElement || 'none'] || '—';
-        document.getElementById('pc-chars').textContent = tops.length ? 'よく使うキャラ: ' + tops.map(([j,c]) => `${j}×${c}`).join(' · ') : '';
+        document.getElementById('pc-chars').textContent = tops.length ? 'よく使うキャラ: ' + tops.map(([j,c]) => { const cw = oppCharWins[j]||0; return `${j}×${c}戦${cw>0?` ${cw}勝`:''}`; }).join(' · ') : '';
     } catch(e) {
         document.getElementById('pc-name').textContent = '読み込みに失敗しました';
     }
@@ -1608,6 +1617,7 @@ function syncPlayerToServer() {
             favoriteElement: getFavElement(),
             favoriteStage: getFavStage(),
             charUsage: getCharUsage(),
+            charWins: getCharWins(),
         };
         fetch(getApiBase() + '/player', {
             method: 'POST',
@@ -1647,6 +1657,14 @@ async function loadPlayerFromServer() {
                 if ((v || 0) > (local[k] || 0)) local[k] = v;
             }
             localStorage.setItem('ek_char_usage', JSON.stringify(local));
+        }
+        // charWins: merge (max per key)
+        if (data.charWins && typeof data.charWins === 'object') {
+            const localW = getCharWins();
+            for (const [k, v] of Object.entries(data.charWins)) {
+                if ((v || 0) > (localW[k] || 0)) localW[k] = v;
+            }
+            localStorage.setItem('ek_char_wins', JSON.stringify(localW));
         }
         refreshRankDisplay();
         refreshAllJobSelects();
@@ -2214,7 +2232,7 @@ const ELEMENT_DATA = {
 };
 
 const JOB_ELEMENT = {
-    king: 'light', knight: 'none', assassin: 'dark', infantry: 'none',
+    king: 'light', knight: 'light', assassin: 'dark', infantry: 'none',
     mage: 'none', thief: 'none', beastmaster: 'grass', macho: 'none',
     cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
@@ -2920,6 +2938,7 @@ function handleWsMessage(event) {
     if (data.type === 'stateSync') {
         applyGameState(data.state);
         render();
+        checkWin();
         updateOnlineInfo();
         if (canIAct()) {
             const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
@@ -2941,6 +2960,7 @@ function handleWsMessage(event) {
     if (data.type === 'turnEnd') {
         applyGameState(data.state);
         render();
+        checkWin();
         updateOnlineInfo();
 
         if (myPlayerIndex === 0) {
@@ -4436,10 +4456,10 @@ const STAGE_LABELS = {
 };
 // 0=チュートリアルクリアで解放, N=CPUレベルNクリアで解放
 const STAGE_UNLOCK_REQUIREMENTS = {
-    plains:0, forest:1, desert:2, demon:3, castle:4, bigriver:5,
-    mountain:6, graveyard:7, nighttown:8, skyfort:9, chaos:10,
-    dungeon:11, underwater:12, lavaland:13, misty_lake:14,
-    colosseum:15, factory:15, volcano_summit:15,
+    plains:-1, forest:0, desert:1, demon:2, castle:3, bigriver:4,
+    mountain:5, graveyard:6, nighttown:7, skyfort:8, chaos:9,
+    dungeon:10, underwater:11, lavaland:12, misty_lake:13,
+    colosseum:14, factory:15, volcano_summit:16,
 };
 
 function isTutorialDone() { return localStorage.getItem('ek_tutorial_done') === '1'; }
@@ -4449,7 +4469,8 @@ function setMaxCpuLvBeaten(lv) { if (lv > getMaxCpuLvBeaten()) localStorage.setI
 
 function isStageUnlocked(stage) {
     if (!stage || stage === 'random') return true;
-    const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
+    const req = STAGE_UNLOCK_REQUIREMENTS[stage];
+    if (req === undefined || req === -1) return true; // plains: always unlocked
     if (req === 0) return isTutorialDone();
     return isTutorialDone() && getMaxCpuLvBeaten() >= req;
 }
@@ -4510,7 +4531,7 @@ function checkStageUnlocked(stage, errElId) {
     if (!stage || stage === 'random' || isStageUnlocked(stage)) return true;
     const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
     const label = (STAGE_LABELS[stage] || stage).split('(')[0].trim();
-    const errMsg = req === 0
+    const errMsg = req <= 0
         ? `🔒 ${label}はチュートリアル完了で解放されます`
         : `🔒 ${label}はCPUレベル${req}クリアで解放されます（現在${getMaxCpuLvBeaten()}レベル）`;
     const el = errElId ? document.getElementById(errElId) : null;
@@ -8054,7 +8075,20 @@ function isValidTarget(se, r, c, mode) {
         return maxDist >= 1 && maxDist <= 1 && isWalkable(r, c) && !entities.some(x => x.hp > 0 && x.r === r && x.c === c);
     }
     // 絵描き (Painter)
-    if (mode === 'sanpo') return dist > 0 && dist <= 2 && isWalkable(r, c);
+    if (mode === 'sanpo') {
+        if (dist === 0 || dist > 2 || !isWalkable(r, c)) return false;
+        if (entities.some(e => e.hp > 0 && e.r === r && e.c === c)) return false;
+        const _spDr = r - se.r, _spDc = c - se.c;
+        if (_spDr !== 0 && _spDc === 0 && Math.abs(_spDr) === 2) {
+            const _mid = se.r + Math.sign(_spDr);
+            if (!isWalkable(_mid, se.c) || entities.some(e => e.hp > 0 && e.r === _mid && e.c === se.c)) return false;
+        }
+        if (_spDr === 0 && _spDc !== 0 && Math.abs(_spDc) === 2) {
+            const _mid = se.c + Math.sign(_spDc);
+            if (!isWalkable(se.r, _mid) || entities.some(e => e.hp > 0 && e.r === se.r && e.c === _mid)) return false;
+        }
+        return true;
+    }
     if (mode === 'dessin') return maxDist === 0 || (maxDist > 0 && maxDist <= 2 && target && target.team !== se.team);
     if (mode === 'trick_art') return true;
     if (mode === 'frame_throw') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
@@ -8155,6 +8189,14 @@ function render() {
             // Volcano summit: ash mist overlay
             if (activeStage === 'volcano_summit' && volcanoAshMistSet.has(`${ar},${c}`)) {
                 d.classList.add('ash-mist');
+            }
+            // Fairy village range overlay (expire check)
+            if (_fairyVillageTiles) {
+                if (turn > _fairyVillageTiles.expiresAfterTurn) {
+                    _fairyVillageTiles = null;
+                } else if (_fairyVillageTiles.tiles.has(`${ar},${c}`)) {
+                    d.classList.add('fairy-village-range');
+                }
             }
             // マフィア縄張りオーバーレイ
             if (mafiaTerritory && mafiaTerritory.cells.some(cl => cl.r===ar && cl.c===c)) {
@@ -12645,13 +12687,22 @@ function handleAbilityTarget(r, c, targetEntity) {
         !['feather_dash','bind_arrow','light_bind','scales','light_barrier','sin_mark','death_scythe','balance_break','light_whip','grudge_strike'].includes(actionMode)) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
     }
+    // バリアブレイク: 攻撃でバリアを1ヒット破壊（ダメージ吸収→消滅）
+    if (targetEntity && targetEntity.team !== se.team && targetEntity.invin && attackModes.includes(actionMode)) {
+        targetEntity.invin = false;
+        targetEntity.invinTimer = 0;
+        msg(`🛡️ ${targetEntity.name}のバリアが攻撃を受けて消滅！`, true);
+    }
     // 居合カウンター: iai状態の人斬り武者が攻撃を受けた時に反撃
     if (targetEntity && targetEntity._iaiActive && targetEntity.team !== se.team && attackModes.includes(actionMode)) {
         let _iaiDmg = targetEntity.hp <= 10 ? 6 : targetEntity.hp <= 20 ? 4 : 2;
         let _iaiHits = 0;
         entities.filter(e => e.hp > 0 && e.team !== targetEntity.team &&
             Math.max(Math.abs(e.r-targetEntity.r), Math.abs(e.c-targetEntity.c)) <= 3)
-            .forEach(e => { if (!e.invin) { e.hp -= _iaiDmg; _iaiHits++; } });
+            .forEach(e => {
+                if (!e.invin) { e.hp -= _iaiDmg; _iaiHits++; }
+                else { e.invin = false; e.invinTimer = 0; _iaiHits++; msg(`🛡️ ${e.name}のバリアを居合で粉砕！`, true); }
+            });
         if (_iaiHits > 0) msg(`⚔️ ${targetEntity.name}の居合カウンター！半径3の敵${_iaiHits}体に${_iaiDmg}ダメ！`, true);
         checkWin();
     }
@@ -13154,6 +13205,17 @@ function executeSkill(se) {
             });
             fvSpawned++;
         });
+        // 妖精の里タイル：黄緑ハイライト用にタイルセットを記録
+        _fairyVillageTiles = { tiles: new Set(), expiresAfterTurn: turn + 1 };
+        for (let _fdr = -fvRange; _fdr <= fvRange; _fdr++) {
+            for (let _fdc = -fvRange; _fdc <= fvRange; _fdc++) {
+                if (Math.max(Math.abs(_fdr), Math.abs(_fdc)) <= fvRange) {
+                    let _fnr = fvR + _fdr, _fnc = fvC + _fdc;
+                    if (_fnr >= 0 && _fnr < SIZE && _fnc >= 0 && _fnc < SIZE)
+                        _fairyVillageTiles.tiles.add(`${_fnr},${_fnc}`);
+                }
+            }
+        }
         msg(`🧚 妖精の里！半径${fvRange}の味方${fvAllied}体に1T無敵バリア！敵${fvEnemyHit}体にAP-1+4封印！妖精${fvSpawned}体召喚！`);
         checkWin(); render(); updateUI();
         syncStateDebounced();
@@ -13616,6 +13678,18 @@ function executeRushSkill(se, targetR, targetC, mode) {
         }
         se.r = targetR; se.c = targetC;
         useAbility(se, mode);
+        // 着地後：半径1マスの敵コマに鱗粉で1ターン目潰し（AP-1＋4アビリティ封印）
+        let _flutterBlinded = [];
+        entities.forEach(e => {
+            if (e.hp <= 0 || e.team === se.team) return;
+            if (Math.max(Math.abs(e.r - targetR), Math.abs(e.c - targetC)) !== 1) return;
+            if (e.invin) return;
+            e.ap = Math.max(0, (e.ap || 0) - 1);
+            const _fbKeys = Object.keys(e.abilities || {}).filter(k => k !== 'drop_rock' && ((e.abilities[k] > 0) || e.abilities[k] === 999));
+            if (_fbKeys.length > 0) sealAbilities(e, _fbKeys.sort(() => Math.random() - 0.5).slice(0, 4), 1);
+            _flutterBlinded.push(e.name);
+        });
+        if (_flutterBlinded.length > 0) msg(`✨ 鱗粉で目潰し！${_flutterBlinded.join('・')}がAP-1＋4封印(1T)！`);
         msg(`🧚 羽ばたき！${fForest}マスを森に変えながら飛んだ！`);
         checkWin(); render(); updateUI();
         syncStateDebounced();
@@ -16235,6 +16309,15 @@ function checkWin() {
         else if (cWin) { title = "💀 Defeat... 敵に突破されました。"; isEnd = true; }
     }
 
+    // チュートリアルモード：敵陣突破で勝利
+    if (isEnd && tutorialMode && pWin && !window._tutorialResultShown) {
+        window._tutorialResultShown = true;
+        setTutorialDone();
+        stopTurnTimer();
+        document.getElementById('result-title').innerText = "🎉 チュートリアルクリア！敵陣を突破しました！";
+        document.getElementById('result-screen').style.display = 'flex';
+        return;
+    }
     if (isEnd && !tutorialMode && !window._tutorialResultShown) {
         stopTurnTimer();
         const iWon = title.includes('Victory');
@@ -16246,6 +16329,10 @@ function checkWin() {
                 setRankWinStreak(newStreak);
                 const sendMatchStats = { ...matchStats, turnCount: turn, winStreak: newStreak };
                 wsSend({ type: 'gameEnd', won: iWon, matchStats: sendMatchStats });
+                if (iWon) {
+                    const _myMainE = entities.find(e => e.id === (myTeam() === 'player' ? 'p1' : 'c1'));
+                    if (_myMainE) updateCharWins(_myMainE.type);
+                }
             }
         } else if (isCpuRankedMatch) {
             // CPU ranked match: compute RP with bonuses (one-time guard)
@@ -16262,7 +16349,10 @@ function checkWin() {
                 const before = { rank: getRank(), rp: getRP() };
                 const after = applyRpDelta(rpDelta);
                 // Update charUsage and sync rank/RP to server
-                if (window._lastCpuRankedJob) updateCharUsage(window._lastCpuRankedJob);
+                if (window._lastCpuRankedJob) {
+                    updateCharUsage(window._lastCpuRankedJob);
+                    if (iWon) updateCharWins(window._lastCpuRankedJob);
+                }
                 syncPlayerToServer();
                 const sign = rpDelta >= 0 ? '+' : '';
                 if (bonuses.length > 0) {
@@ -16279,6 +16369,8 @@ function checkWin() {
         } else {
             // Single-player: count victories; unlock ranked at 8 wins.
             if (iWon) {
+                const _spMainE = entities.find(e => e.id === 'p1');
+                if (_spMainE) updateCharWins(_spMainE.type);
                 if (!isRankedUnlocked()) {
                     let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10) + 1;
                     localStorage.setItem('ek_spwins', String(wins));

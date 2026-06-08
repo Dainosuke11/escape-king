@@ -15,7 +15,7 @@ router.get("/player/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {} });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {} });
       return;
     }
     const p = rows[0]!;
@@ -32,6 +32,7 @@ router.get("/player/:userId", async (req, res) => {
       losses: p.losses ?? 0,
       draws: p.draws ?? 0,
       charUsage: (p.charUsage as Record<string, number>) ?? {},
+      charWins: (p.charWins as Record<string, number>) ?? {},
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });
@@ -41,7 +42,7 @@ router.get("/player/:userId", async (req, res) => {
 // POST /api/player — upsert player data
 router.post("/player", async (req, res) => {
   try {
-    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage } = req.body as Record<string, unknown>;
+    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins } = req.body as Record<string, unknown>;
     if (!userId || typeof userId !== "string" || userId.length > 64) {
       res.status(400).json({ error: "invalid userId" });
       return;
@@ -55,6 +56,9 @@ router.post("/player", async (req, res) => {
     const safeStage = typeof favoriteStage === "string" ? favoriteStage.slice(0, 32) : "";
     const safeCharUsage = (charUsage && typeof charUsage === "object" && !Array.isArray(charUsage))
       ? Object.fromEntries(Object.entries(charUsage as Record<string, unknown>).slice(0, 50).map(([k, v]) => [k.slice(0, 32), Math.max(0, Math.floor(Number(v) || 0))]))
+      : {};
+    const safeCharWins = (charWins && typeof charWins === "object" && !Array.isArray(charWins))
+      ? Object.fromEntries(Object.entries(charWins as Record<string, unknown>).slice(0, 50).map(([k, v]) => [k.slice(0, 32), Math.max(0, Math.floor(Number(v) || 0))]))
       : {};
 
     // Note: wins/losses/draws are NOT client-settable — only the server increments them via finishRanked().
@@ -70,6 +74,7 @@ router.post("/player", async (req, res) => {
         favoriteElement: safeElement,
         favoriteStage: safeStage,
         charUsage: safeCharUsage,
+        charWins: safeCharWins,
       })
       .onConflictDoUpdate({
         target: ekPlayersTable.userId,
@@ -82,6 +87,7 @@ router.post("/player", async (req, res) => {
           favoriteElement: safeElement,
           favoriteStage: safeStage,
           charUsage: safeCharUsage,
+          charWins: safeCharWins,
           updatedAt: new Date(),
         },
       });
@@ -159,6 +165,7 @@ router.get("/profile/:userId", async (req, res) => {
       losses: p.losses ?? 0,
       draws: p.draws ?? 0,
       charUsage: (p.charUsage as Record<string, number>) ?? {},
+      charWins: (p.charWins as Record<string, number>) ?? {},
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });

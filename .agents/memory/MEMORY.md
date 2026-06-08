@@ -3,8 +3,9 @@
 - [Escape the King sennin job](escape-king-sennin.md) — gauge system, element alternation, ability/skill handlers, sentai item restriction.
 - [Escape the King new character checklist](escape-king-new-char-checklist.md) — all 4 job-select dropdowns + JOB_DATA/ALL_JOBS/etc. must be updated together every time.
 - [Escape the King job unlock system](escape-king-job-unlock.md) — JOB_UNLOCK_REQUIREMENTS (ranked wins) gates all 4 job selects; refreshAllJobSelects() rebuilds them dynamically.
-- [Escape the King profile system](escape-king-profile.md) — profileIcon/wins/losses/charUsage in DB+API+localStorage; post-merge Fly.io failure made non-fatal.
+- [Escape the King profile system](escape-king-profile.md) — profileIcon/wins/losses/charUsage/charWins in DB+API+localStorage; post-merge Fly.io failure made non-fatal.
 - [Escape the King painter job](escape-king-painter.md) — IG gauge, 5-color combo, rainbow tiles, paint_combo interceptor in setMode, processTurnStartEffects pattern.
-- [Escape the King stage unlock system](escape-king-stage-unlock.md) — STAGE_UNLOCK_REQUIREMENTS + refreshAllStageSelects(); tutorial unlocks plains, CPU lv1-15 unlock others.
+- [Escape the King stage unlock system](escape-king-stage-unlock.md) — plains=-1 always unlocked, forest=0 tutorial, desert=1…volcano_summit=16 sequential CPU lv; isStageUnlocked checks -1 first.
 - [Escape the King emote system](escape-king-emote.md) — online emote: 4 presets, 3/turn cap, wsSend({type:'emote'}), relay added to api-server; showEmoteBubble uses entities array.
 - [Escape the King friend system](escape-king-friend.md) — ek_friends table via raw SQL in friends.ts route; GET/POST/DELETE /api/friends; max 10 per user.
+- [Escape the King barrier system](escape-king-barrier.md) — invin absorbs 1 hit then breaks (post-attack hook in handleAbilityTarget); if not hit, expires at turn start via invinTimer. Iai counter also breaks barriers on hit.
