@@ -7834,6 +7834,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
             if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
             if (se.dwarfUnit || se.isDwarfRobot) { se.junkPoint = (se.junkPoint||0) + 1; msg(`⚙️ 岩砕き！JP+1(計${se.junkPoint||1})！`, true); }
+            if (tutorialMode && tutorialStep === 12) advanceTutorial();
             used = true;
         }
     } else if (actionMode === 'drop_rock') {
@@ -14996,9 +14997,9 @@ const TUTORIAL_STEPS = [
         advanceOn: null,
     },
     {   // Step 12: 岩砕き
-        msg: '⛏️ <b>邪魔な岩は「岩砕き」で除去しよう！</b><br><br>自分の進路に岩が置かれてしまったら<b>「岩砕き」アビリティ</b>で破壊できます！<br><br>使い方：<br>① コマを選択<br>② アビリティボタン → <b>「岩砕き」</b>を選ぶ<br>③ <b>隣接する岩</b>をクリックすると破壊！<br><br>⚠️ 注意点：<br>・岩砕きには<b>使用回数制限</b>があります（ジョブによって異なる）<br>・使い切ると岩を破壊できなくなる → 四方を囲まれると<b>敗北！</b><br>・残数を常に確認しておこう<br><br>💡 岩砕きを節約したいなら、岩で囲まれにくいルートを選んで移動しよう。<br><br>▶「次へ」で続きを見よう',
+        msg: '⛏️ <b>邪魔な岩は「岩砕き」で除去しよう！</b><br><br>自分の進路に岩が置かれてしまったら<b>「岩砕き」アビリティ</b>で破壊できます！<br><br>使い方：<br>① コマを選択<br>② アビリティボタン → <b>「岩砕き」</b>を選ぶ<br>③ <b>隣接する岩</b>をクリックすると破壊！<br><br>⚠️ 注意点：<br>・岩砕きには<b>使用回数制限</b>があります（ジョブによって異なる）<br>・使い切ると岩を破壊できなくなる → 四方を囲まれると<b>敗北！</b><br>・残数を常に確認しておこう<br><br>💡 岩砕きを節約したいなら、岩で囲まれにくいルートを選んで移動しよう。<br><br>▶ まず岩を1つ置いて(アビリティ→岩落とし)、それから岩砕きをやってみよう！',
         highlight: 'btn-attack',
-        advanceOn: null,
+        advanceOn: 'shatter_used',
     },
     {   // Step 13: 紫コマNPC
         msg: '👾 <b>紫コマ（NPCモンスター）を倒して強くなろう！</b><br><br>ボード上に出現する<b>紫色のコマ</b>はNPCモンスターです。<br>プレイヤーでもCPUでもなく、どちらも倒すことができます。<br><br>倒したときの報酬（ランダム）：<br>❤️ <b>HP回復</b>・アビリティの<b>使用回数+1</b><br>💰 <b>お宝アイテム</b>・<b>特殊強化</b>など<br><br>💡 強いNPCほど報酬も豪華！<br>相手（CPU）がNPCを倒す前に先取りしよう。<br>難易度を上げるほど強力なNPCが増えます。<br><br>▶「次へ」で続きを見よう',
