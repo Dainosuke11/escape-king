@@ -3124,8 +3124,8 @@ function startRankedSearch() {
     document.getElementById('btn-cpu-fallback').style.display = 'none';
     let s = document.getElementById('ranked-status');
     if (s) s.textContent = 'サーバーに接続中...';
-    // 30s countdown → show CPU fallback button
-    let countdown = 30;
+    // 10s countdown → show CPU fallback button
+    let countdown = 10;
     if (rankedCountdownInterval) clearInterval(rankedCountdownInterval);
     rankedCountdownInterval = setInterval(() => {
         countdown--;
