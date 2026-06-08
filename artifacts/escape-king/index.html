@@ -6451,6 +6451,14 @@ function sealAbilities(target, keys, duration) {
     if (harmoniousAvailable) triggerHarmoniousCounter(target);
 }
 
+// 目潰し効果: AP-1 + ランダム4アビリティ1T封印
+function applyBlind(t) {
+    if (!t || t.hp <= 0 || t.invin) return;
+    t.ap = Math.max(0, (t.ap||0) - 1);
+    const _bKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&((t.abilities[k]>0)||t.abilities[k]===999));
+    if (_bKs.length > 0) sealAbilities(t, _bKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+}
+
 function triggerHarmoniousCounter(manager) {
     _harmoniousCounterFiring = true;
     delete cursedAbilities[manager.id];
@@ -9533,11 +9541,16 @@ function handleAbilityTarget(r, c, targetEntity) {
         let hit = 0;
         entities.forEach(t => {
             if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) <= 2) {
-                if (!t.invin) { t.ap = Math.max(0, t.ap - 1); knockback(t, 1, se); hit++; }
+                if (!t.invin) {
+                    t.ap = Math.max(0, t.ap - 1); knockback(t, 1, se);
+                    const _smKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]>0||t.abilities[k]===999));
+                    if (_smKs.length>0) sealAbilities(t, _smKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+                    hit++;
+                }
             }
         });
         se.stealth = true; se.stealthTimer = Math.max(se.stealthTimer, 1);
-        msg(`煙幕展開！周囲の敵${hit}体のAPを奪い吹き飛ばし、泥棒は潜伏した！`); used = true;
+        msg(`💨 煙幕展開！周囲の敵${hit}体AP-1・吹き飛ばし・4封印(目潰し)！泥棒潜伏！`); used = true;
     } else if (actionMode === 'steal') {
         se.abilities['steal']--;
         let stealMsgs = [];
@@ -9907,19 +9920,23 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'laser_snipe') {
         se.abilities['laser_snipe']--;
         if (!se.invin) se.hp -= 2;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1); }
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 4 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-1);
+            const _lsKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (_lsKs.length>0) sealAbilities(targetEntity, _lsKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+        }
         applyCounterReflect(se, targetEntity, 4 + (targetEntity?.defDebuff||0), 1);
-        msg(targetEntity?.invin ? 'レーザースナイプ！しかし無敵で防がれた！' : 'レーザースナイプ！反動2ダメ・直線5マス4ダメ・AP-1！'); used = true;
+        msg(targetEntity?.invin ? 'レーザースナイプ！しかし無敵で防がれた！' : '🔫 レーザースナイプ！反動2ダメ・4ダメ・AP-1・4封印(目潰し)！'); used = true;
     } else if (actionMode === 'laser_bazooka') {
         se.abilities['laser_bazooka']--;
         if (!se.invin) se.hp -= 2;
         let pbHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
-                if (!t.invin) { t.hp -= 3; knockback(t,1,se); pbHit++; }
+                if (!t.invin) { t.hp -= 3; knockback(t,1,se); applyBlind(t); pbHit++; }
             }
         });
-        msg(`💥 レーザーバズーカ！反動2ダメ・ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし！`); used = true;
+        msg(`💥 レーザーバズーカ！反動2ダメ・ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし・目潰し！`); used = true;
     } else if (actionMode === 'emp_field') {
         se.abilities['emp_field']--;
         if (!se.invin) se.hp -= 2;
@@ -9968,9 +9985,13 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'incinerate') {
         se.abilities['incinerate']--;
         if (!se.invin) se.hp -= 2;
-        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2; }
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 5 + (targetEntity.defDebuff||0); targetEntity.ap = Math.max(0,targetEntity.ap-2); targetEntity.burnTimer = 2;
+            const _icKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (_icKs.length>0) sealAbilities(targetEntity, _icKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+        }
         applyCounterReflect(se, targetEntity, 5 + (targetEntity?.defDebuff||0), 2, 2);
-        msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！反動2ダメ・5ダメ・敵AP-2・2ターン燃焼ダメージ！'); used = true;
+        msg(targetEntity?.invin ? '焼却砲！しかし無敵で防がれた！' : '🔥 焼却砲！反動2ダメ・5ダメ・AP-2・燃焼・4封印(目潰し)！'); used = true;
     } else if (actionMode === 'recon_drone') {
         if (!isWalkable(r, c, true)) { msg("🛸 その場所には召喚できません！"); return false; }
         se.abilities['recon_drone']--;
@@ -9982,7 +10003,14 @@ function handleAbilityTarget(r, c, targetEntity) {
             skillUsed: true, stealth: false, stealthTimer: 0,
             invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, flying: true
         });
-        msg(`🛸 偵察ドローン出撃！HP1/AP2/飛行！体当たり∞・電力補給∞。撃墜されると爆発＋罠設置！`); used = true;
+        // ドローン展開フラッシュ: 周囲r2の敵に目潰し
+        let _droneBlind = [];
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=2&&!t.invin) {
+                applyBlind(t); _droneBlind.push(t.name);
+            }
+        });
+        msg(`🛸 偵察ドローン出撃！HP1/AP2/飛行！体当たり∞・電力補給∞${_droneBlind.length>0?`・フラッシュ目潰し(${_droneBlind.join('・')})`:''}`); used = true;
     } else if (actionMode === 'drone_ram') {
         if (!targetEntity || targetEntity.team === se.team) { msg("体当たり：有効な敵ターゲットが必要です"); return false; }
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
@@ -10032,11 +10060,14 @@ function handleAbilityTarget(r, c, targetEntity) {
                     if (!t.stolenLock) t.stolenLock={};
                     let sealed=abilityKeys.sort(()=>Math.random()-0.5).slice(0,2);
                     sealed.forEach(k=>{ t.stolenLock[k]=turn+2; });
+                    // 目潰し: 4アビリティ封印追加
+                    const _sfKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]>0||t.abilities[k]===999));
+                    if (_sfKs.length>0) sealAbilities(t, _sfKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
                     hitCount++;
                 }
             }
         });
-        msg(`😱 恐怖の笑顔！半径2マスの敵${hitCount}体AP-1・吹き飛ばし・2技を2T封印！`); used = true;
+        msg(`😱 恐怖の笑顔！半径2マスの敵${hitCount}体AP-1・吹き飛ばし・2T2封印・目潰し4封印！`); used = true;
     } else if (actionMode === 'ball_ride') {
         se.abilities['ball_ride']--;
         let dr=r===se.r?0:Math.sign(r-se.r), dc=c===se.c?0:Math.sign(c-se.c);
@@ -10095,12 +10126,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         let hitCount=0;
         entities.forEach(t=>{
             if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
-                if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r,c}); hitCount++; }
+                if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r,c}); applyBlind(t); hitCount++; }
                 applyCounterReflect(se, t, 2 + (t.defDebuff||0) + (se.atkBonus||0), 0);
             }
         });
         se.stealth=true; se.stealthTimer=1;
-        msg(`💥 爆弾クラッカー！半径1マスの敵${hitCount}体に2ダメ・吹き飛ばし！ピエロ1T潜伏！`); used = true;
+        msg(`💥 爆弾クラッカー！半径1マスの敵${hitCount}体に2ダメ・吹き飛ばし・目潰し！ピエロ1T潜伏！`); used = true;
     } else if (actionMode === 'monkey_toy') {
         if (!isWalkable(r,c)) { msg("🐒 その場所には召喚できません！"); return false; }
         se.abilities['monkey_toy']--;
@@ -11247,7 +11278,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             knockback(targetEntity, 5, se);
             targetEntity.ap = Math.max(0, targetEntity.ap - 1);
             let srKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
-            if (srKs.length>0) sealAbilities(targetEntity, [srKs[Math.floor(Math.random()*srKs.length)]], 1);
+            if (srKs.length>0) sealAbilities(targetEntity, srKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
             // 悪霊召喚
             let gsC = [];
             for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
@@ -11378,7 +11409,7 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'bat_infiltration') {
         if (se.abilities['bat_infiltration'] !== 999) se.abilities['bat_infiltration']--;
         let biDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) targetEntity.hp -= biDmg;
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= biDmg; applyBlind(targetEntity); }
         let biCells=[];
         for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
             if(dr===0&&dc===0) continue;
@@ -11391,7 +11422,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             bat.id='dv_bat_'+Date.now(); bat.team=targetEntity.team;
             bat.batConvertTimer=1; bat.batConvertToTeam=se.team; entities.push(bat);
         }
-        msg(targetEntity.invin ? `🦇 コウモリ潜入！しかし無敵で防がれた！` : `🦇 コウモリ潜入！${targetEntity.name}に${biDmg}ダメ！周囲コウモリ召喚→1T後ヴァンパイア味方化！`);
+        msg(targetEntity.invin ? `🦇 コウモリ潜入！しかし無敵で防がれた！` : `🦇 コウモリ潜入！${targetEntity.name}に${biDmg}ダメ・目潰し！周囲コウモリ召喚→1T後ヴァンパイア味方化！`);
         se.ap = 0; used = true;
     } else if (actionMode === 'fate_choice') {
         if (se.abilities['fate_choice'] !== 999) se.abilities['fate_choice']--;
@@ -11455,8 +11486,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             let spDmg=3+(se.atkBonus||0)+(targetEntity.defDebuff||0);
             targetEntity.hp-=spDmg; targetEntity.ap=Math.max(0,targetEntity.ap-1);
             let spKs=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
-            if(spKs.length>0) sealAbilities(targetEntity,[spKs[Math.floor(Math.random()*spKs.length)]],1);
-            msg(`👻 引魂術！${targetEntity.name}を目の前に引き寄せ${spDmg}ダメ＋AP-1＋1T封印！`);
+            if(spKs.length>0) sealAbilities(targetEntity, spKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+            msg(`👻 引魂術！${targetEntity.name}を目の前に引き寄せ${spDmg}ダメ＋AP-1＋4T封印(目潰し)！`);
         } else { msg(`👻 引魂術！しかし防がれた！`); }
         se.ap = 0;
         { let omSealKs=Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&k!=='oni_arm'&&(se.abilities[k]>0||se.abilities[k]===999)); if(omSealKs.length>0) sealAbilities(se,omSealKs,1); }
@@ -11753,7 +11784,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         }
         se.hp = Math.min(se.maxHp||30, se.hp + 1);
         se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1);
-        msg(`⚪ ホーリーライト！${hlHealCount}人の隊員にHP+1＆1T無敵バリア！`); used = true;
+        // 神聖な閃光で周囲r2の敵を目潰し
+        let _hlBlind = [];
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2&&!t.invin) {
+                applyBlind(t); _hlBlind.push(t.name);
+            }
+        });
+        msg(`⚪ ホーリーライト！${hlHealCount}人HP+1＆1T無敵！${_hlBlind.length>0?`閃光目潰し：${_hlBlind.join('・')}がAP-1+4封印！`:''}`); used = true;
     } else if (actionMode === 'dark_revenge') {
         sentaiSwitchMember(se, 'black');
         if (se.abilities['dark_revenge'] !== 999) se.abilities['dark_revenge']--;
@@ -12003,6 +12041,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let _gsDmg = _gsBaseDmg + (se.atkBonus||0) + (_gsHit.defDebuff||0);
             _gsHit.hp -= _gsDmg;
             _gsHit.goukaCurseTimer = Math.max(_gsHit.goukaCurseTimer||0, 3);
+            applyBlind(_gsHit);
             // 接近移動
             for (let _ci=0; _ci<_gsClose; _ci++) {
                 let _nr = _gsHit.r - _gsDr, _nc = _gsHit.c - _gsDc;
@@ -12133,13 +12172,17 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'sabaki_kaminari') {
         // 裁きの雷(予知): 即時AP-1、次Tに半径1四方4ダメ+AP-1
-        if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
+        if (targetEntity && !targetEntity.invin) {
+            targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1);
+            const _skKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
+            if (_skKs.length>0) sealAbilities(targetEntity, _skKs.sort(()=>Math.random()-0.5).slice(0,4), 1);
+        }
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
         { let _wt=[]; for(let _dr=-1;_dr<=1;_dr++) for(let _dc=-1;_dc<=1;_dc++){let _wr=r+_dr,_wc=c+_dc;if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE)_wt.push({r:_wr,c:_wc});}
           se._pendingGuruAbils.push({type:'sabaki_kaminari', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['sabaki_kaminari'] !== 999) se.abilities['sabaki_kaminari']--;
-        msg(`⚡ 裁きの雷(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
+        msg(`⚡ 裁きの雷(予知)！次ターン発動！対象に即時AP-1・4封印(目潰し)！`); used = true;
     } else if (actionMode === 'fujo_yukai') {
         // 不浄の融解(予知): 即時AP-1、次Tに半径1四方4ダメ+炎+燃焼
         if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
@@ -12285,7 +12328,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             let _jkTgt = entities.find(x=>x.hp>0&&x.team!==se.team&&x.r===_jkR&&x.c===_jkC);
             if (_jkTgt && !_jkTgt.invin) {
                 _jkTgt.hp -= _jkDmg; _jkTgt.burnTimer = (_jkTgt.burnTimer||0) + 2;
-                msg(`🏹 浄化の火矢！${_jkTgt.name}に${_jkDmg}ダメ+燃焼！`, true);
+                applyBlind(_jkTgt);
+                msg(`🏹 浄化の火矢！${_jkTgt.name}に${_jkDmg}ダメ+燃焼+目潰し！`, true);
             }
         }
         se._nextTurnApCost = (se._nextTurnApCost||0) + 1;
@@ -12519,7 +12563,14 @@ function handleAbilityTarget(r, c, targetEntity) {
             _taCount++;
         });
         if (se.abilities['trick_art'] !== 999) se.abilities['trick_art']--;
-        msg(`🎭 ${se.name}のトリックアート！${_taCount}マスに虹マスを設置！(IG-1)`); used = true;
+        // 視覚トリック：ターゲット周辺r1の敵を目潰し
+        let _taBlind = [];
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1&&!t.invin) {
+                applyBlind(t); _taBlind.push(t.name);
+            }
+        });
+        msg(`🎭 ${se.name}のトリックアート！${_taCount}マスに虹マス設置！${_taBlind.length>0?`視覚トリック目潰し：${_taBlind.join('・')}がAP-1+4封印！`:''}(IG-1)`); used = true;
     } else if (actionMode === 'frame_throw') {
         // 額縁投げ: 直線3 2ダメ+次T開始時に解放+2ダメ(額縁変換)
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
@@ -12563,7 +12614,14 @@ function handleAbilityTarget(r, c, targetEntity) {
             _mpMasterId: se.id, element: 'none', initialAbilities:{drop_rock:999}
         });
         if (se.abilities['moving_painting'] !== 999) se.abilities['moving_painting']--;
-        msg(`👻 ${se.name}の動く絵！お化けを召喚！(IG-1)`); used = true;
+        // 出現したお化けが隣接敵の視界を塞ぐ(目潰し)
+        let _mpBlind = [];
+        entities.forEach(t => {
+            if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-_mpSpawn.r),Math.abs(t.c-_mpSpawn.c))<=1&&!t.invin) {
+                applyBlind(t); _mpBlind.push(t.name);
+            }
+        });
+        msg(`👻 ${se.name}の動く絵！お化けを召喚！${_mpBlind.length>0?`出現目潰し：${_mpBlind.join('・')}がAP-1+4封印！`:''}(IG-1)`); used = true;
     } else if (actionMode === 'paint_combo') {
         // 色混合攻撃: X色 → X*2ダメ + 各色効果 + IG-X消費
         const _PAINT_ELEM_MAP_PC = { red_paint:'fire', blue_paint:'water', green_paint:'grass', white_paint:'light', black_paint:'dark' };
@@ -12584,8 +12642,8 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (pc === 'red_paint') { targetEntity.burnTimer = (targetEntity.burnTimer||0) + 2; _pcEffects.push('炎上2T'); }
                 if (pc === 'blue_paint') { const _bpKeys=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&targetEntity.abilities[k]!==999); sealAbilities(targetEntity, _bpKeys, 1); _pcEffects.push('全アビ1T封印'); }
                 if (pc === 'green_paint') { knockback(targetEntity, 2, se); _pcEffects.push('2後退'); }
-                if (pc === 'white_paint') { targetEntity.defDebuff = (targetEntity.defDebuff||0) + 1; targetEntity.defDebuffTimer = 2; _pcEffects.push('防御-1(2T)'); }
-                if (pc === 'black_paint') { targetEntity.poisonTimer = (targetEntity.poisonTimer||0) + 3; _pcEffects.push('毒3T'); }
+                if (pc === 'white_paint') { targetEntity.defDebuff = (targetEntity.defDebuff||0) + 1; targetEntity.defDebuffTimer = 2; applyBlind(targetEntity); _pcEffects.push('防御-1(2T)+目潰し'); }
+                if (pc === 'black_paint') { targetEntity.poisonTimer = (targetEntity.poisonTimer||0) + 3; applyBlind(targetEntity); _pcEffects.push('毒3T+目潰し'); }
             });
             msg(`🎨 ${se.name}の色混合(${_pcX}色)！${_pcFinalDmg}ダメ！${_pcEffects.join('・')}！(IG-${_pcX})`);
             checkWin();
