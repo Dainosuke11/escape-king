@@ -1817,6 +1817,7 @@ const SKILL_MODE_ELEMENT = {
     skill_coffin: 'dark', skill_necro_release: 'dark',
     skill_sennin_tota: 'water',
     skill_meifu: 'dark',
+    skill_miko_ryujin: 'light',
 };
 
 const JOB_SKILL_NAMES = {
@@ -6866,6 +6867,10 @@ function isValidTarget(se, r, c, mode) {
         _mfR += (se.rangeBonus||0);
         return maxDist >= 1 && maxDist <= _mfR && target && target.team !== se.team;
     }
+    if (mode === 'skill_miko_ryujin') {
+        // 龍神降臨: 半径1マス以内の空きマスを指定して召喚
+        return maxDist >= 1 && maxDist <= 1 && isWalkable(r, c) && !entities.some(x => x.hp > 0 && x.r === r && x.c === c);
+    }
     return false;
 }
 
@@ -11533,36 +11538,26 @@ function executeSkill(se) {
     // ====== 巫女 スキル: 龍神降臨 ======
     if (se.type === 'miko') {
         if ((se.mikoGauge||0) < 5) { msg('⛩️ 龍神降臨: 巫女ゲージが足りない！(5以上必要)'); return false; }
-        se.mikoGauge -= 5;
         // 既に龍神がいる場合: G消費で継続・龍神HP回復
         let _existRyujin = entities.find(x => x.type === 'ryujin_npc' && x.team === se.team && x.hp > 0);
         if (_existRyujin) {
+            se.mikoGauge -= 5;
             _existRyujin.hp = Math.min(_existRyujin.maxHp, _existRyujin.hp + 5);
             se.skillUsed = true;
             msg(`🐉 ${se.name}の龍神降臨継続！G-5消費・龍神HP+5！(残HP:${_existRyujin.hp})`);
             checkWin(); render(); updateUI(); syncStateDebounced();
             return true;
         }
-        // 龍神を前方に召喚
-        let _rjDr = se.team === 'player' ? -1 : 1;
-        let _rjR = se.r + _rjDr, _rjC = se.c;
-        let _placed = false;
-        for (let [dr,dc] of [[_rjDr,0],[0,1],[0,-1],[_rjDr,1],[_rjDr,-1],[-_rjDr,0]]) {
-            let _tr=se.r+dr, _tc=se.c+dc;
-            if (_tr>=0&&_tr<SIZE&&_tc>=0&&_tc<SIZE&&isWalkable(_tr,_tc)&&!entities.some(x=>x.hp>0&&x.r===_tr&&x.c===_tc)) {
-                _rjR=_tr; _rjC=_tc; _placed=true; break;
-            }
+        // 新規召喚: 半径1マス以内の空きマスを選択させる
+        let _hasSpace = false;
+        for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++) {
+            if (dr===0&&dc===0) continue;
+            let tr=se.r+dr, tc=se.c+dc;
+            if (tr>=0&&tr<SIZE&&tc>=0&&tc<SIZE&&isWalkable(tr,tc)&&!entities.some(x=>x.hp>0&&x.r===tr&&x.c===tc)) { _hasSpace=true; break; }
         }
-        if (!_placed) { msg('⛩️ 龍神の降臨場所がない！'); se.mikoGauge += 5; return false; }
-        entities.push({ id:'ryujin'+Date.now(), type:'ryujin_npc', name:'龍神', team:se.team,
-            r:_rjR, c:_rjC, hp:30, maxHp:30, ap:3, maxAp:3,
-            abilities:{ ryuen:5, shinkou:5 },
-            skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0,
-            flying:true, element:'light', _mikoSummon:se.id });
-        se.skillUsed = true;
-        msg(`🐉 ${se.name}の龍神降臨！龍神(HP30/AP3/飛行)が降り立った！`);
-        checkWin(); render(); updateUI(); syncStateDebounced();
-        return true;
+        if (!_hasSpace) { msg('⛩️ 龍神の降臨場所がない！（周囲1マスに空きが必要）'); return false; }
+        msg('🐉 龍神降臨！召喚先マス(半径1マス以内)を選択してください！');
+        actionMode = 'skill_miko_ryujin'; render(); return false;
     }
     // ====== 人斬り武者 スキル: 冥府送り ======
     if (se.type === 'hitokiri_musha') {
@@ -11615,6 +11610,19 @@ function executeSkill(se) {
 }
 
 function executeRushSkill(se, targetR, targetC, mode) {
+    if (mode === 'skill_miko_ryujin') {
+        // 龍神降臨: 選択したタイルに龍神を召喚
+        se.mikoGauge -= 5;
+        entities.push({ id:'ryujin'+Date.now(), type:'ryujin_npc', name:'龍神', team:se.team,
+            r:targetR, c:targetC, hp:30, maxHp:30, ap:3, maxAp:3,
+            abilities:{ ryuen:5, shinkou:5 },
+            skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0,
+            flying:true, element:'light', _mikoSummon:se.id });
+        se.skillUsed = true;
+        msg(`🐉 ${se.name}の龍神降臨！龍神(HP30/AP3/飛行)が降り立った！`);
+        checkWin(); render(); updateUI(); syncStateDebounced();
+        return;
+    }
     if (mode === 'skill_infantry_squad') {
         let cl = {...se, id: 'cl'+Date.now(), name: '分隊', r: targetR, c: targetC, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: {...(se.initialAbilities||se.abilities)}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
         delete cl.skillRecoverTurn;
