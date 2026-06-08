@@ -12877,6 +12877,17 @@ function executeSkill(se) {
     return false;
 }
 
+function useAbility(se, mode) {
+    se.actedThisTurn = true;
+    if (se.abilities && se.abilities[mode] !== undefined && se.abilities[mode] !== 999) {
+        se.abilities[mode] = Math.max(0, se.abilities[mode] - 1);
+    }
+    if (!usedAbilities[se.id]) usedAbilities[se.id] = new Set();
+    usedAbilities[se.id].add(mode);
+    const apCost = ABILITY_AP_COSTS[mode] || 1;
+    se.ap = Math.max(0, se.ap - apCost);
+}
+
 function executeRushSkill(se, targetR, targetC, mode) {
     if (mode === 'skill_miko_ryujin') {
         // 龍神降臨: 選択したタイルに龍神を召喚
