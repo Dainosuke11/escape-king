@@ -3716,9 +3716,8 @@ function switchGuideTab(tab) {
 
 function createRoom() {
     const rawJobCreate = document.getElementById('ol-job-select').value;
-    if (!checkJobUnlocked(rawJobCreate)) return;
-    const job = resolveJob(rawJobCreate);
-    const stage = resolveStage(document.getElementById('ol-stage-select').value);
+    const job = resolveJob(rawJobCreate, true);
+    const stage = resolveStage(document.getElementById('ol-stage-select').value, true);
     const difficulty = document.getElementById('ol-difficulty-select').value;
     const seed = Math.floor(Math.random() * 0x7fffffff);
 
@@ -3745,8 +3744,7 @@ function createRoom() {
 function joinRoom() {
     const code = document.getElementById('ol-join-code').value.trim();
     const rawJobJoin = document.getElementById('ol-join-job-select').value;
-    if (!checkJobUnlocked(rawJobJoin)) return;
-    const job = resolveJob(rawJobJoin);
+    const job = resolveJob(rawJobJoin, true);
     if (code.length < 5) {
         document.getElementById('join-error').textContent = '5桁の数字コードを入力してください';
         return;
@@ -3801,8 +3799,7 @@ function startCpuRankedMatch() {
     if (s) s.textContent = '';
 
     const rawJobCpuRanked = document.getElementById('ranked-job-select').value;
-    if (!checkJobUnlocked(rawJobCpuRanked, 'ranked-status')) return;
-    const job = resolveJob(rawJobCpuRanked);
+    const job = resolveJob(rawJobCpuRanked, true);
     window._lastCpuRankedJob = job;
     const rank = getRank();
     const { diff, cpuCount, hpMult, apBonus } = getCpuFallbackConfig(rank);
@@ -3980,8 +3977,7 @@ function showVictoryCondition(job) {
 // ---- Ranked matchmaking ----
 function startRankedSearch() {
     const rawJobRanked = document.getElementById('ranked-job-select').value;
-    if (!checkJobUnlocked(rawJobRanked, 'ranked-status')) return;
-    const job = resolveJob(rawJobRanked);
+    const job = resolveJob(rawJobRanked, true);
     intentionalClose = false;
     document.getElementById('btn-find-ranked').style.display = 'none';
     document.getElementById('btn-cancel-ranked').style.display = 'inline-block';
@@ -4481,13 +4477,24 @@ function buildStageOptions(forFav) {
     return html;
 }
 
+function buildOnlineStageOptions() {
+    let html = '<option value="random">🎲 ランダム (全ステージからおまかせ)</option>';
+    for (const stage of ALL_STAGES) {
+        const label = STAGE_LABELS[stage] || stage;
+        html += `<option value="${stage}">${label}</option>`;
+    }
+    return html;
+}
+
 function refreshAllStageSelects() {
-    const opts = buildStageOptions(false);
+    const offlineOpts = buildStageOptions(false);
+    const onlineOpts = buildOnlineStageOptions();
     for (const id of ['stage-select','ol-stage-select']) {
         const sel = document.getElementById(id);
         if (!sel) continue;
         const cur = sel.value;
-        sel.innerHTML = opts;
+        const isOnlineSel = (id !== 'stage-select');
+        sel.innerHTML = isOnlineSel ? onlineOpts : offlineOpts;
         if (cur && sel.querySelector(`option[value="${cur}"]:not([disabled])`)) sel.value = cur;
         else sel.value = 'random';
     }
@@ -4565,13 +4572,24 @@ function buildJobOptions() {
     return html;
 }
 
+function buildOnlineJobOptions() {
+    let html = '<option value="random">🎲 ランダム (全ジョブからおまかせ)</option>';
+    for (const job of ALL_JOBS) {
+        const label = JOB_LABELS[job] || job;
+        html += `<option value="${job}">${label}</option>`;
+    }
+    return html;
+}
+
 function refreshAllJobSelects() {
-    const opts = buildJobOptions();
+    const offlineOpts = buildJobOptions();
+    const onlineOpts = buildOnlineJobOptions();
     for (const id of ['job-select','ranked-job-select','ol-job-select','ol-join-job-select']) {
         const sel = document.getElementById(id);
         if (!sel) continue;
         const cur = sel.value;
-        sel.innerHTML = opts;
+        const isOnlineSel = (id !== 'job-select');
+        sel.innerHTML = isOnlineSel ? onlineOpts : offlineOpts;
         if (cur && sel.querySelector(`option[value="${cur}"]:not([disabled])`)) sel.value = cur;
     }
 }
@@ -4588,17 +4606,19 @@ function checkJobUnlocked(job, errElId) {
 }
 // ===================================================
 
-function resolveJob(job) {
+function resolveJob(job, online) {
     if (job === 'random') {
-        const avail = ALL_JOBS.filter(j => isJobUnlocked(j));
-        return avail.length > 0 ? avail[Math.floor(Math.random()*avail.length)] : ALL_JOBS[0];
+        const pool = online ? ALL_JOBS : ALL_JOBS.filter(j => isJobUnlocked(j));
+        const avail = pool.length > 0 ? pool : ALL_JOBS;
+        return avail[Math.floor(Math.random()*avail.length)];
     }
     return job;
 }
-function resolveStage(stage) {
+function resolveStage(stage, online) {
     if (stage === 'random') {
-        const avail = ALL_STAGES.filter(s => isStageUnlocked(s));
-        return avail.length > 0 ? avail[Math.floor(Math.random()*avail.length)] : ALL_STAGES[0];
+        const pool = online ? ALL_STAGES : ALL_STAGES.filter(s => isStageUnlocked(s));
+        const avail = pool.length > 0 ? pool : ALL_STAGES;
+        return avail[Math.floor(Math.random()*avail.length)];
     }
     return stage;
 }
