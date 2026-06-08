@@ -3576,6 +3576,9 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'none';
         document.getElementById('home-screen').style.display = 'block';
+        // チュートリアル完了時に隠したボタンを復元
+        document.getElementById('btn-rematch').style.display = '';
+        document.getElementById('btn-change').style.display = '';
         if (isOnlineMode && wsConn) { try { wsConn.close(); } catch(e){} wsConn = null; }
         isOnlineMode = false;
         isCpuRankedMatch = false;
@@ -15657,8 +15660,9 @@ const TUTORIAL_STEPS = [
             _pe.type = 'angel';
             _pe.name = '天使';
             _pe.element = 'light';
-            _pe.abilities['light_whip'] = Math.max(_pe.abilities['light_whip'] || 0, 3);
-            _pe.ap = Math.max(_pe.ap, 2);
+            _pe.flying = true;
+            _pe.fallenGauge = 0;
+            _pe.fallen = false;
             entities = entities.filter(e => e.team === 'player' || !e.tutorialDummy);
             entities.push({
                 id: 'tutorial_devil_' + Date.now(), type: 'devil', name: 'デビル', team: 'cpu',
@@ -15673,6 +15677,15 @@ const TUTORIAL_STEPS = [
                 tutorialDummy: true,
             });
             render();
+            // アビリティを天使の一式に丸ごと置換（ハンドラ再開後に上書きされないようsetTimeout）
+            setTimeout(() => {
+                _pe.abilities = { ...JOB_DATA['angel'].abilities };
+                _pe.ap = Math.max(_pe.ap, 2);
+                _pe.actedThisTurn = false;
+                _pe._usedAbilityThisTurn = false;
+                selectedEntity = _pe;
+                updateUI();
+            }, 0);
         },
     },
     {   // Step 19: ステージとキャラの属性を合わせよう
@@ -15819,6 +15832,23 @@ function hideTutorialAndWait() {
     if (_pe) { _pe.ap = Math.max(_pe.ap, 2); updateUI(); }
 }
 
+function showTutorialResult() {
+    // チュートリアル完了リザルト画面を表示してタイトルへ戻す
+    tutorialMode = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.getElementById('game-screen').style.display = 'none';
+    // ビギナー称号を付与（初回のみ）
+    earnBadge(1);
+    // リザルト画面をチュートリアル用に設定
+    document.getElementById('result-title').innerText =
+        '🎉 チュートリアル完了！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\nさあ、本番の試合に挑もう！';
+    document.getElementById('btn-rematch').style.display = 'none';
+    document.getElementById('btn-change').style.display = 'none';
+    document.getElementById('btn-title').style.display = 'inline-block';
+    document.getElementById('result-screen').style.display = 'flex';
+}
+
 function advanceTutorial() {
     tutorialAwaitingAction = false;
     hideTutorialArrow();
@@ -15828,9 +15858,7 @@ function advanceTutorial() {
     if (actionMode !== 'move') { actionMode = 'move'; render(); }
     tutorialStep++;
     if (tutorialStep >= TUTORIAL_STEPS.length) {
-        const overlay = document.getElementById('tutorial-overlay');
-        if (overlay) overlay.style.display = 'none';
-        tutorialMode = false;
+        showTutorialResult();
     } else {
         showTutorialStep();
     }
