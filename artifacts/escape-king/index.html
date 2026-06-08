@@ -15335,6 +15335,8 @@ const TUTORIAL_STEPS = [
                 const _tileEl = document.getElementById('tile-' + _pe.r + '-' + _pe.c);
                 if (_tileEl) {
                     _tileEl.classList.add('tut-tile-highlight');
+                    // instant scroll first so getBoundingClientRect() is stable before positioning arrow
+                    _tileEl.scrollIntoView({ behavior: 'instant', block: 'center' });
                     showTutorialArrow(_tileEl);
                 }
             }, 150);
