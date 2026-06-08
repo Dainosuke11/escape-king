@@ -1355,6 +1355,7 @@ let rankResultApplied = false;
 let turnTimerId = null;
 let turnTimeLeft = 80;
 let savedTurnTimeLeft = null; // preserved across reconnect
+let isOpponentSuspended = false; // true while opponent is disconnected
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
@@ -2935,6 +2936,7 @@ function handleWsMessage(event) {
 
     if (data.type === 'peerReconnected') {
         // The other player came back; resend full state immediately (reset delta baseline too).
+        isOpponentSuspended = false;
         hideSuspendOverlay();
         msg("✅ 相手が再接続しました！試合を再開します。");
         // Resume whichever timer was running before the suspension.
@@ -2949,6 +2951,7 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'opponentSuspended') {
+        isOpponentSuspended = true;
         const graceMs = data.graceMs || 60000;
         msg(`⚠️ 相手の接続が切れました。${Math.ceil(graceMs/1000)}秒以内に復帰しなければ不戦勝です！`);
         showSuspendOverlay(Date.now() + graceMs);
@@ -2979,15 +2982,20 @@ function handleWsMessage(event) {
             const teamName = myPlayerIndex === 0 ? 'Player' : 'あなた';
             document.getElementById('turn-indicator').textContent = `${teamName}のターン (Turn: ${turn})`;
             msg("あなたのターンです！");
-            // On reconnect resume from saved time; on normal sync start fresh
-            const resumeFrom = savedTurnTimeLeft;
-            savedTurnTimeLeft = null;
-            startTurnTimer(resumeFrom);
+            // Don't start the timer if the opponent is still suspended; peerReconnected will resume it.
+            if (!isOpponentSuspended) {
+                const resumeFrom = savedTurnTimeLeft;
+                savedTurnTimeLeft = null;
+                startTurnTimer(resumeFrom);
+            } else {
+                savedTurnTimeLeft = null;
+            }
         } else {
             savedTurnTimeLeft = null;
             stopTurnTimer();
             document.getElementById('turn-indicator').textContent = "相手のターン中...";
-            startOpponentTimer();
+            // Don't start opponent timer while they are suspended (they can't act anyway).
+            if (!isOpponentSuspended) startOpponentTimer();
         }
         return;
     }
@@ -3007,6 +3015,7 @@ function handleWsMessage(event) {
     }
 
     if (data.type === 'opponentLeft') {
+        isOpponentSuspended = false;
         hideSuspendOverlay();
         if (data.forfeit) {
             msg("🏆 相手が1分以内に再接続できませんでした。あなたの不戦勝です！");
