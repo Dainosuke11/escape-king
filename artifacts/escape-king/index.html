@@ -1433,7 +1433,16 @@ function refreshProfileUI() {
         const tops = getTopChars(3);
         const topStr = tops.length ? tops.map(([j,c]) => `${j}:${c}戦`).join(' · ') : 'なし';
         const drawStr = d > 0 ? ` <span style="color:#aaa;">引分${d}</span>` : '';
-        statsDiv.innerHTML = `<span style="color:#3498db;font-weight:bold;">${w}勝</span> <span style="color:#e74c3c;font-weight:bold;">${l}敗</span>${drawStr}（勝率${wr}%）<br>よく使うキャラ: ${topStr}`;
+        let rankLine = '';
+        if (isRankedUnlocked()) {
+            const rank = getRank();
+            const rp = getRP();
+            const rankNamesMap = typeof RANK_NAMES !== 'undefined' ? RANK_NAMES : {1:'ブロンズ',2:'シルバー',3:'ゴールド',4:'プラチナ',5:'ダイヤ',6:'マスター',7:'ランクA',8:'ランクS',9:'ランクSS',10:'ランクSSS'};
+            const rankName = rankNamesMap[rank] || `ランク${rank}`;
+            const rankEmoji = rank >= 10 ? '👑' : rank >= 8 ? '💎' : rank >= 6 ? '🏆' : rank >= 4 ? '🥇' : rank >= 3 ? '🥈' : '🥉';
+            rankLine = `<div style="margin-bottom:4px;">${rankEmoji} <span style="color:#f39c12;font-weight:bold;">${rankName}</span> <span style="color:#aaa;">Rank ${rank} · ${rp} RP</span></div>`;
+        }
+        statsDiv.innerHTML = `${rankLine}<span style="color:#3498db;font-weight:bold;">${w}勝</span> <span style="color:#e74c3c;font-weight:bold;">${l}敗</span>${drawStr}（勝率${wr}%）<br>よく使うキャラ: ${topStr}`;
     }
 }
 
@@ -4009,7 +4018,11 @@ function refreshRankDisplay() {
     let inp = document.getElementById('player-name-input');
     if (inp && !inp.value) inp.value = name;
     if (isRankedUnlocked()) {
-        el.textContent = `${name} — ${getRank()}　(${getRP()} RP)`;
+        const rank = getRank();
+        const rp = getRP();
+        const rankName = RANK_NAMES[rank] || `ランク${rank}`;
+        const rankEmoji = rank >= 10 ? '👑' : rank >= 8 ? '💎' : rank >= 6 ? '🏆' : rank >= 4 ? '🥇' : rank >= 3 ? '🥈' : '🥉';
+        el.innerHTML = `${name} &nbsp;<span style="color:#f39c12;">${rankEmoji} ${rankName}</span>&nbsp; <span style="font-size:14px;color:#aaa;">(${rp} RP)</span>`;
     } else {
         let wins = parseInt(localStorage.getItem('ek_spwins') || '0', 10);
         el.textContent = `${name} — 初心者（シングルプレイ勝利 ${Math.min(wins,8)}/8 でランクマッチ解放）`;
