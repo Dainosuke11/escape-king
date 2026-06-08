@@ -15,11 +15,23 @@ router.get("/player/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0 });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, charUsage: {} });
       return;
     }
     const p = rows[0]!;
-    res.json({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp, spWins: p.spWins });
+    res.json({
+      userId: p.userId,
+      playerName: p.playerName,
+      rank: p.rank,
+      rp: p.rp,
+      spWins: p.spWins,
+      profileIcon: p.profileIcon ?? "🎮",
+      favoriteElement: p.favoriteElement ?? "none",
+      favoriteStage: p.favoriteStage ?? "",
+      wins: p.wins ?? 0,
+      losses: p.losses ?? 0,
+      charUsage: (p.charUsage as Record<string, number>) ?? {},
+    });
   } catch (e) {
     res.status(500).json({ error: "db error" });
   }
@@ -28,7 +40,7 @@ router.get("/player/:userId", async (req, res) => {
 // POST /api/player — upsert player data
 router.post("/player", async (req, res) => {
   try {
-    const { userId, playerName, rank, rp, spWins } = req.body as Record<string, unknown>;
+    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, wins, losses, charUsage } = req.body as Record<string, unknown>;
     if (!userId || typeof userId !== "string" || userId.length > 64) {
       res.status(400).json({ error: "invalid userId" });
       return;
@@ -37,13 +49,45 @@ router.post("/player", async (req, res) => {
     const safeRp = typeof rp === "number" ? Math.max(0, Math.floor(rp)) : 0;
     const safeWins = typeof spWins === "number" ? Math.max(0, Math.floor(spWins)) : 0;
     const safeName = typeof playerName === "string" ? playerName.slice(0, 64) : "プレイヤー";
+    const safeIcon = typeof profileIcon === "string" ? profileIcon.slice(0, 8) : "🎮";
+    const safeElement = typeof favoriteElement === "string" ? favoriteElement.slice(0, 16) : "none";
+    const safeStage = typeof favoriteStage === "string" ? favoriteStage.slice(0, 32) : "";
+    const safeWinsRank = typeof wins === "number" ? Math.max(0, Math.floor(wins)) : 0;
+    const safeLosses = typeof losses === "number" ? Math.max(0, Math.floor(losses)) : 0;
+    const safeCharUsage = (charUsage && typeof charUsage === "object" && !Array.isArray(charUsage))
+      ? Object.fromEntries(Object.entries(charUsage as Record<string, unknown>).slice(0, 50).map(([k, v]) => [k.slice(0, 32), Math.max(0, Math.floor(Number(v) || 0))]))
+      : {};
 
     await db
       .insert(ekPlayersTable)
-      .values({ userId, playerName: safeName, rank: safeRank, rp: safeRp, spWins: safeWins })
+      .values({
+        userId,
+        playerName: safeName,
+        rank: safeRank,
+        rp: safeRp,
+        spWins: safeWins,
+        profileIcon: safeIcon,
+        favoriteElement: safeElement,
+        favoriteStage: safeStage,
+        wins: safeWinsRank,
+        losses: safeLosses,
+        charUsage: safeCharUsage,
+      })
       .onConflictDoUpdate({
         target: ekPlayersTable.userId,
-        set: { playerName: safeName, rank: safeRank, rp: safeRp, spWins: safeWins, updatedAt: new Date() },
+        set: {
+          playerName: safeName,
+          rank: safeRank,
+          rp: safeRp,
+          spWins: safeWins,
+          profileIcon: safeIcon,
+          favoriteElement: safeElement,
+          favoriteStage: safeStage,
+          wins: safeWinsRank,
+          losses: safeLosses,
+          charUsage: safeCharUsage,
+          updatedAt: new Date(),
+        },
       });
     res.json({ ok: true });
   } catch (e) {
@@ -65,6 +109,7 @@ router.get("/leaderboard", async (_req, res) => {
         playerName: p.playerName,
         rank: p.rank,
         rp: p.rp,
+        profileIcon: p.profileIcon ?? "🎮",
       })),
     );
   } catch (e) {
@@ -79,14 +124,45 @@ router.get("/leaderboard/tiers", async (_req, res) => {
       .select()
       .from(ekPlayersTable)
       .orderBy(asc(ekPlayersTable.rank), desc(ekPlayersTable.rp));
-    const tiers: Record<number, { userId: string; playerName: string; rank: number; rp: number }[]> = {};
+    const tiers: Record<number, { userId: string; playerName: string; rank: number; rp: number; profileIcon: string }[]> = {};
     for (const p of rows) {
       if (!tiers[p.rank]) tiers[p.rank] = [];
       if (tiers[p.rank].length < 10) {
-        tiers[p.rank].push({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp });
+        tiers[p.rank].push({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp, profileIcon: p.profileIcon ?? "🎮" });
       }
     }
     res.json(tiers);
+  } catch (e) {
+    res.status(500).json({ error: "db error" });
+  }
+});
+
+// GET /api/profile/:userId — fetch full profile including stats (for opponent display)
+router.get("/profile/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId || userId.length > 64) {
+      res.status(400).json({ error: "invalid userId" });
+      return;
+    }
+    const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
+    if (rows.length === 0) {
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, charUsage: {} });
+      return;
+    }
+    const p = rows[0]!;
+    res.json({
+      userId: p.userId,
+      playerName: p.playerName,
+      rank: p.rank,
+      rp: p.rp,
+      profileIcon: p.profileIcon ?? "🎮",
+      favoriteElement: p.favoriteElement ?? "none",
+      favoriteStage: p.favoriteStage ?? "",
+      wins: p.wins ?? 0,
+      losses: p.losses ?? 0,
+      charUsage: (p.charUsage as Record<string, number>) ?? {},
+    });
   } catch (e) {
     res.status(500).json({ error: "db error" });
   }

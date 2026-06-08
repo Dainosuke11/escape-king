@@ -385,6 +385,42 @@
         .ranked-fav-btn { background:none; border:none; cursor:pointer; font-size:14px;
             flex-shrink:0; padding:0 2px; opacity:0.45; transition:opacity .15s; }
         .ranked-fav-btn:hover,.ranked-fav-btn.active { opacity:1; }
+        /* Profile icon & stats */
+        #profile-icon-display {
+            cursor:pointer; font-size:40px; text-align:center; padding:6px;
+            background:#1a1a20; border:2px solid #555; border-radius:8px;
+            transition:border-color .15s; user-select:none; line-height:1.2;
+        }
+        #profile-icon-display:hover { border-color:#8e44ad; }
+        #profile-stats-display { color:#aaa; font-size:12px; margin:6px 0; padding:8px 10px;
+            background:#12121a; border-radius:6px; border:1px solid #333; line-height:1.7; }
+        #icon-picker-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82);
+            z-index:9500; align-items:center; justify-content:center; }
+        .icon-picker-inner { background:#1a1a28; border:1px solid #555; border-radius:14px;
+            padding:20px; max-width:420px; width:92%; }
+        .icon-picker-inner h3 { margin:0 0 14px; color:#f39c12; font-size:18px; text-align:center; }
+        #icon-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:5px;
+            max-height:260px; overflow-y:auto; }
+        .icon-btn { font-size:26px; padding:4px 2px; background:transparent; border:2px solid transparent;
+            border-radius:6px; cursor:pointer; transition:background .1s,border-color .1s; }
+        .icon-btn:hover { background:#2a2a38; }
+        .icon-btn.selected { background:#4a2a6a; border-color:#8e44ad; }
+        /* Opponent profile card in match toast */
+        #match-toast .opp-icon { font-size:36px; display:block; margin-bottom:4px; }
+        /* Leaderboard icon */
+        .lb-icon { font-size:18px; width:24px; flex-shrink:0; text-align:center; }
+        /* Profile card modal */
+        #profile-card-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75);
+            z-index:9200; align-items:center; justify-content:center; }
+        .profile-card { background:#1a1a28; border:1px solid #555; border-radius:14px;
+            padding:24px; max-width:360px; width:88%; text-align:center; }
+        .profile-card-icon { font-size:56px; margin-bottom:6px; }
+        .profile-card-name { font-size:20px; font-weight:bold; color:#fff; margin-bottom:4px; }
+        .profile-card-rank { font-size:14px; color:#f39c12; margin-bottom:12px; }
+        .profile-card-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+        .pcs { background:#12121a; border-radius:6px; padding:8px; font-size:13px; color:#ccc; }
+        .pcs-label { font-size:11px; color:#888; margin-bottom:2px; }
+        .pcs-val { font-size:16px; font-weight:bold; color:#fff; }
         
         .entity { 
             position: absolute; width: 85%; height: 85%; border-radius: 6px; 
@@ -777,6 +813,28 @@
                 style="width:100%; padding:10px; font-size:16px; background:#1a1a20; color:#fff; border:1px solid #444; border-radius:4px; box-sizing:border-box;"
                 oninput="savePlayerName()">
         </div>
+        <div style="display:flex; gap:10px; margin-bottom:10px; align-items:flex-start;">
+            <div style="flex-shrink:0;">
+                <div style="font-size:11px;color:#aaa;margin-bottom:4px;">アイコン</div>
+                <div id="profile-icon-display" onclick="openIconPicker()" title="クリックして変更">🎮</div>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-size:11px;color:#aaa;margin-bottom:4px;">お気に入り属性</div>
+                <select id="fav-element-select" onchange="saveFavElement()" style="width:100%;padding:6px;background:#1a1a20;color:#fff;border:1px solid #444;border-radius:4px;font-size:13px;">
+                    <option value="none">— なし —</option>
+                    <option value="fire">🔥 炎</option>
+                    <option value="water">💧 水</option>
+                    <option value="wood">🌿 木</option>
+                    <option value="earth">🪨 土</option>
+                    <option value="wind">🌀 風</option>
+                    <option value="lightning">⚡ 雷</option>
+                    <option value="ice">❄️ 氷</option>
+                    <option value="light">✨ 光</option>
+                    <option value="dark">🌑 闇</option>
+                </select>
+                <div id="profile-stats-display" style="margin-top:4px;"></div>
+            </div>
+        </div>
         <div class="select-group">
             <label>ジョブ選択:</label>
             <select id="ranked-job-select">
@@ -956,6 +1014,32 @@
     <div class="guide-content" id="guide-npcs-content" style="display:none;">
     </div>
     <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
+</div>
+
+<!-- Icon Picker Modal -->
+<div id="icon-picker-modal">
+    <div class="icon-picker-inner">
+        <h3>🎨 アイコン選択</h3>
+        <div id="icon-grid"></div>
+        <button onclick="closeIconPicker()" style="margin-top:14px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
+    </div>
+</div>
+
+<!-- Opponent Profile Card Modal -->
+<div id="profile-card-modal">
+    <div class="profile-card">
+        <div class="profile-card-icon" id="pc-icon">🎮</div>
+        <div class="profile-card-name" id="pc-name">プレイヤー</div>
+        <div class="profile-card-rank" id="pc-rank">ランク 1</div>
+        <div class="profile-card-stats">
+            <div class="pcs"><div class="pcs-label">勝利</div><div class="pcs-val" id="pc-wins">—</div></div>
+            <div class="pcs"><div class="pcs-label">敗北</div><div class="pcs-val" id="pc-losses">—</div></div>
+            <div class="pcs"><div class="pcs-label">勝率</div><div class="pcs-val" id="pc-wr">—</div></div>
+            <div class="pcs"><div class="pcs-label">お気に入り属性</div><div class="pcs-val" id="pc-element">—</div></div>
+        </div>
+        <div id="pc-chars" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
+        <button onclick="document.getElementById('profile-card-modal').style.display='none'" style="margin-top:16px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
+    </div>
 </div>
 
 <div id="match-toast">🎮 マッチング成功！<br>対戦を開始します！</div>
@@ -1168,6 +1252,9 @@ let clientPingIntervalId = null;
 let connStatus = 'connecting';
 let disconnectTime = null;
 let reconnectSuccessTimer = null;
+// Opponent profile (set on gameStart)
+let opponentIcon = '🎮';
+let opponentUserId = '';
 
 // Anonymous identity + rank persistence (localStorage + server DB sync)
 function getApiBase() {
@@ -1180,6 +1267,110 @@ function getUserId() {
     return id;
 }
 function isRankedUnlocked() { return true; }
+
+// ============================================================
+//  PROFILE HELPERS
+// ============================================================
+const PROFILE_ICONS = [
+    '🎮','👑','🛡️','🗡️','🪖','🔮','🦊','🐾','💪','🤖','👽','🌿','🐉','🦈','🎪','💀',
+    '👼','⚖️','☯️','😈','🤵','⚙️','🦸','🧘','✨','⚔️','⛪','⛩️','🏆','🎯','🌟','🔥',
+    '💧','❄️','⚡','🌀','🌑','🪨','🌾','🌲','🏜️','👿','🏯','🚣','⛰️','🪦','🌃','☁️',
+    '🗝️','🐲','🦁','🐺','🦅','🐢','🌙','🌈','🎆','🎭','🎵','💫','🍀','🎋','🗻','🌊',
+];
+const FAV_ELEMENT_LABELS = {
+    'none':'—', 'fire':'🔥 炎', 'water':'💧 水', 'wood':'🌿 木', 'earth':'🪨 土',
+    'wind':'🌀 風', 'lightning':'⚡ 雷', 'ice':'❄️ 氷', 'light':'✨ 光', 'dark':'🌑 闇',
+};
+
+function getProfileIcon() { return localStorage.getItem('ek_profile_icon') || '🎮'; }
+function setProfileIcon(icon) { localStorage.setItem('ek_profile_icon', icon); }
+function getFavElement() { return localStorage.getItem('ek_fav_element') || 'none'; }
+function setFavElement(el) { localStorage.setItem('ek_fav_element', el); }
+function getWins() { return parseInt(localStorage.getItem('ek_ranked_wins') || '0', 10); }
+function getLosses() { return parseInt(localStorage.getItem('ek_ranked_losses') || '0', 10); }
+function incrementWins() { localStorage.setItem('ek_ranked_wins', String(getWins() + 1)); }
+function incrementLosses() { localStorage.setItem('ek_ranked_losses', String(getLosses() + 1)); }
+function getCharUsage() { try { return JSON.parse(localStorage.getItem('ek_char_usage') || '{}'); } catch(e) { return {}; } }
+function updateCharUsage(job) {
+    if (!job) return;
+    const u = getCharUsage();
+    u[job] = (u[job] || 0) + 1;
+    localStorage.setItem('ek_char_usage', JSON.stringify(u));
+}
+function getTopChars(n) {
+    return Object.entries(getCharUsage()).sort((a,b) => b[1]-a[1]).slice(0, n);
+}
+
+function openIconPicker() {
+    const grid = document.getElementById('icon-grid');
+    if (!grid) return;
+    const cur = getProfileIcon();
+    grid.innerHTML = PROFILE_ICONS.map(ic => {
+        const sel = ic === cur ? ' selected' : '';
+        return `<button class="icon-btn${sel}" onclick="selectIcon('${ic}')" title="${ic}">${ic}</button>`;
+    }).join('');
+    document.getElementById('icon-picker-modal').style.display = 'flex';
+}
+function closeIconPicker() {
+    document.getElementById('icon-picker-modal').style.display = 'none';
+}
+function selectIcon(icon) {
+    setProfileIcon(icon);
+    closeIconPicker();
+    refreshProfileUI();
+    syncPlayerToServer();
+}
+function saveFavElement() {
+    const sel = document.getElementById('fav-element-select');
+    if (sel) setFavElement(sel.value);
+    syncPlayerToServer();
+}
+function refreshProfileUI() {
+    const disp = document.getElementById('profile-icon-display');
+    if (disp) disp.textContent = getProfileIcon();
+    const sel = document.getElementById('fav-element-select');
+    if (sel) sel.value = getFavElement();
+    const statsDiv = document.getElementById('profile-stats-display');
+    if (statsDiv) {
+        const w = getWins(), l = getLosses();
+        const total = w + l;
+        const wr = total > 0 ? Math.round(w / total * 100) : 0;
+        const tops = getTopChars(3);
+        const topStr = tops.length ? tops.map(([j,c]) => `${j}:${c}戦`).join(' · ') : 'なし';
+        statsDiv.innerHTML = `<span style="color:#3498db;font-weight:bold;">${w}勝</span> <span style="color:#e74c3c;font-weight:bold;">${l}敗</span>（勝率${wr}%）<br>よく使うキャラ: ${topStr}`;
+    }
+}
+
+async function showOpponentProfile(userId) {
+    if (!userId) return;
+    document.getElementById('profile-card-modal').style.display = 'flex';
+    document.getElementById('pc-icon').textContent = '…';
+    document.getElementById('pc-name').textContent = '読み込み中...';
+    document.getElementById('pc-rank').textContent = '';
+    document.getElementById('pc-wins').textContent = '—';
+    document.getElementById('pc-losses').textContent = '—';
+    document.getElementById('pc-wr').textContent = '—';
+    document.getElementById('pc-element').textContent = '—';
+    document.getElementById('pc-chars').textContent = '';
+    try {
+        const res = await fetch(getApiBase() + '/profile/' + encodeURIComponent(userId));
+        if (!res.ok) throw new Error();
+        const d = await res.json();
+        const w = d.wins || 0, l = d.losses || 0, total = w + l;
+        const wr = total > 0 ? Math.round(w / total * 100) + '%' : '—';
+        const tops = Object.entries(d.charUsage || {}).sort((a,b) => b[1]-a[1]).slice(0,3);
+        document.getElementById('pc-icon').textContent = d.profileIcon || '🎮';
+        document.getElementById('pc-name').textContent = d.playerName || 'プレイヤー';
+        document.getElementById('pc-rank').textContent = `ランク ${d.rank} / ${d.rp} RP`;
+        document.getElementById('pc-wins').textContent = w;
+        document.getElementById('pc-losses').textContent = l;
+        document.getElementById('pc-wr').textContent = wr;
+        document.getElementById('pc-element').textContent = FAV_ELEMENT_LABELS[d.favoriteElement || 'none'] || '—';
+        document.getElementById('pc-chars').textContent = tops.length ? 'よく使うキャラ: ' + tops.map(([j,c]) => `${j}×${c}`).join(' · ') : '';
+    } catch(e) {
+        document.getElementById('pc-name').textContent = '読み込みに失敗しました';
+    }
+}
 
 const LEVEL_BADGES = {
     1:'🌱 新米冒険者', 2:'⚔️ 見習い戦士', 3:'🛡️ 一人前の戦士',
@@ -1275,7 +1466,12 @@ function syncPlayerToServer() {
             playerName: localStorage.getItem('etk_player_name') || 'プレイヤー',
             rank: getRank(),
             rp: getRP(),
-            spWins: parseInt(localStorage.getItem('ek_spwins') || '0', 10)
+            spWins: parseInt(localStorage.getItem('ek_spwins') || '0', 10),
+            profileIcon: getProfileIcon(),
+            favoriteElement: getFavElement(),
+            wins: getWins(),
+            losses: getLosses(),
+            charUsage: getCharUsage(),
         };
         fetch(getApiBase() + '/player', {
             method: 'POST',
@@ -1300,6 +1496,24 @@ async function loadPlayerFromServer() {
         if (data.spWins > localWins) localStorage.setItem('ek_spwins', String(data.spWins));
         if (data.playerName && data.playerName !== 'プレイヤー' && !localStorage.getItem('etk_player_name')) {
             localStorage.setItem('etk_player_name', data.playerName);
+        }
+        // Merge profile icon and fav element (server wins if local is default)
+        if (data.profileIcon && data.profileIcon !== '🎮' && getProfileIcon() === '🎮') {
+            setProfileIcon(data.profileIcon);
+        }
+        if (data.favoriteElement && data.favoriteElement !== 'none' && getFavElement() === 'none') {
+            setFavElement(data.favoriteElement);
+        }
+        // Merge wins/losses (server wins if higher)
+        if ((data.wins || 0) > getWins()) localStorage.setItem('ek_ranked_wins', String(data.wins || 0));
+        if ((data.losses || 0) > getLosses()) localStorage.setItem('ek_ranked_losses', String(data.losses || 0));
+        // Merge charUsage (max per key)
+        if (data.charUsage && typeof data.charUsage === 'object') {
+            const local = getCharUsage();
+            for (const [k, v] of Object.entries(data.charUsage)) {
+                if ((v || 0) > (local[k] || 0)) local[k] = v;
+            }
+            localStorage.setItem('ek_char_usage', JSON.stringify(local));
         }
         refreshRankDisplay();
         // Push back the merged winner to server
@@ -2350,6 +2564,8 @@ function handleWsMessage(event) {
         onlineSessionId = data.sessionId || onlineSessionId;
         isRankedMatch = data.ranked === true;
         opponentRank = data.opponentRank || 1;
+        opponentIcon = data.opponentIcon || '🎮';
+        opponentUserId = data.opponentUserId || '';
         onlineRoomCode = data.roomCode || onlineRoomCode;
         rankResultApplied = false;
         savedTurnTimeLeft = null;
@@ -2360,6 +2576,7 @@ function handleWsMessage(event) {
         const seed = settings.seed;
         const job = myPlayerIndex === 0 ? settings.p1job : settings.p2job;
         const cpuJob = myPlayerIndex === 0 ? settings.p2job : settings.p1job;
+        window._lastOnlineJob = job;
 
         activeStage = settings.stage;
         withSeededRandom(seed, () => {
@@ -2376,14 +2593,16 @@ function handleWsMessage(event) {
         render();
         startClientPing();
 
-        // マッチング成功通知（相手名・ランク表示）
+        // マッチング成功通知（相手アイコン・名・ランク表示）
         const toast = document.getElementById('match-toast');
         if (toast) {
             const oppName = String(data.opponentName || 'プレイヤー').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             const oppRankDisp = data.opponentRank || 1;
-            toast.innerHTML = `⚔️ マッチング成功！<br>vs <b>${oppName}</b>（ランク${oppRankDisp}）`;
+            const oppIco = data.opponentIcon || '🎮';
+            const profBtn = data.opponentUserId ? `<br><button onclick="showOpponentProfile('${_esc(data.opponentUserId)}')" style="margin-top:8px;padding:4px 14px;background:#2980b9;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">📋 プロフィール確認</button>` : '';
+            toast.innerHTML = `<span style="font-size:40px;">${oppIco}</span><br>⚔️ マッチング成功！<br>vs <b>${oppName}</b>（ランク${oppRankDisp}）${profBtn}`;
             toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; toast.innerHTML = '⚔️ マッチング成功！対戦開始！'; }, 3000);
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
         if (isPlayerTurn) {
@@ -2526,6 +2745,11 @@ function handleRankResult(data) {
 
     const before = { rank: getRank(), rp: getRP() };
     const after = applyRpDelta(data.rpDelta);
+
+    // Track wins/losses and charUsage
+    if (data.won) { incrementWins(); } else { incrementLosses(); }
+    const myJob = (myPlayerIndex === 0) ? (window._lastOnlineJob || '') : (window._lastOnlineJob || '');
+    if (myJob) updateCharUsage(myJob);
     syncPlayerToServer();
 
     const sign = data.rpDelta >= 0 ? '+' : '';
@@ -3184,6 +3408,7 @@ function startCpuRankedMatch() {
     if (s) s.textContent = '';
 
     const job = resolveJob(document.getElementById('ranked-job-select').value);
+    window._lastCpuRankedJob = job;
     const rank = getRank();
     const { diff, cpuCount, hpMult, apBonus } = getCpuFallbackConfig(rank);
     isCpuRankedMatch = true;
@@ -3264,12 +3489,15 @@ function _renderLbTiers(tiers) {
         tiers[rank].forEach((p, i) => {
             const isMine = p.userId === myId;
             const name = _esc(p.playerName);
+            const icon = p.profileIcon || '🎮';
             const favBtn = p.userId !== myId ? _favBtnHtml(p.userId, p.playerName, 'lb-fav-btn') : '';
+            const profBtn = p.userId !== myId ? `<button onclick="showOpponentProfile('${_esc(p.userId)}')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;opacity:0.6;" title="プロフィール">📋</button>` : '';
             html += `<div class="lb-row${isMine?' lb-mine':''}">
                 <span class="lb-pos">${i+1}</span>
+                <span class="lb-icon">${icon}</span>
                 <span class="lb-name">${name}${isMine?' 👈':''}</span>
                 <span class="lb-rp">${p.rp} RP</span>
-                ${favBtn}
+                ${profBtn}${favBtn}
             </div>`;
         });
     }
@@ -3371,7 +3599,7 @@ function startRankedSearch() {
     const pName = localStorage.getItem('etk_player_name') || 'プレイヤー';
     const favIds = getFavorites().map(f => f.userId);
     connectWS(() => {
-        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job, playerName: pName, favorites: favIds });
+        wsSend({ type: 'findRanked', userId: getUserId(), rank: getRank(), job, playerName: pName, profileIcon: getProfileIcon(), favorites: favIds });
     });
 }
 
@@ -3564,6 +3792,7 @@ function refreshRankDisplay() {
     }
     let bdEl = document.getElementById('badge-display');
     if (bdEl) bdEl.textContent = getBadgeDisplayText();
+    refreshProfileUI();
 }
 
 function updateOnlineInfo() {
@@ -3590,6 +3819,7 @@ function updateOnlineInfo() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
     loadPlayerFromServer();
+    refreshProfileUI();
     document.getElementById('btn-start').addEventListener('click', startGame);
     document.getElementById('btn-online').addEventListener('click', showOnlineLobby);
     document.getElementById('btn-move').addEventListener('click', () => setMode('move'));
@@ -14598,6 +14828,9 @@ function checkWin() {
                 const rpDelta = baseRpDelta + bonusTotal;
                 const before = { rank: getRank(), rp: getRP() };
                 const after = applyRpDelta(rpDelta);
+                // Track wins/losses and charUsage for CPU ranked
+                if (iWon) { incrementWins(); } else { incrementLosses(); }
+                if (window._lastCpuRankedJob) updateCharUsage(window._lastCpuRankedJob);
                 syncPlayerToServer();
                 const sign = rpDelta >= 0 ? '+' : '';
                 if (bonuses.length > 0) {

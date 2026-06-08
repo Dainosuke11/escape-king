@@ -1,4 +1,4 @@
-import { pgTable, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,6 +8,12 @@ export const ekPlayersTable = pgTable("ek_players", {
   rank: integer("rank").notNull().default(1),
   rp: integer("rp").notNull().default(0),
   spWins: integer("sp_wins").notNull().default(0),
+  profileIcon: varchar("profile_icon", { length: 8 }).default("🎮"),
+  favoriteElement: varchar("favorite_element", { length: 16 }).default("none"),
+  favoriteStage: varchar("favorite_stage", { length: 32 }).default(""),
+  wins: integer("wins").notNull().default(0),
+  losses: integer("losses").notNull().default(0),
+  charUsage: jsonb("char_usage").default({}),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

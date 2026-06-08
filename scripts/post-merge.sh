@@ -25,9 +25,12 @@ if command -v flyctl &>/dev/null; then
 fi
 
 echo "🚀 Deploying to Fly.io..."
-$FLY_CMD deploy \
+if $FLY_CMD deploy \
     --config artifacts/api-server/fly.toml \
     --remote-only \
-    --auto-confirm
-
-echo "✅ Fly.io deployment complete."
+    --auto-confirm; then
+    echo "✅ Fly.io deployment complete."
+else
+    echo "⚠️  Fly.io deployment failed (trial ended or billing issue). Skipping."
+    echo "   Visit https://fly.io/trial to add a credit card."
+fi

@@ -40,6 +40,7 @@ interface PlayerSlot {
   userId: string;
   rank: number;
   playerName?: string;
+  profileIcon?: string;
 }
 
 interface Room {
@@ -62,6 +63,7 @@ interface QueueEntry {
   rank: number;
   job: string;
   playerName: string;
+  profileIcon: string;
   favorites: string[];
   ts: number;
   searchTimer: NodeJS.Timeout | null;
@@ -190,8 +192,8 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
   };
   rooms.set(code, makeRoom(code, {
     players: [
-      { ws: a.ws, sessionId: a.sessionId, userId: a.userId, rank: a.rank },
-      { ws: b.ws, sessionId: b.sessionId, userId: b.userId, rank: b.rank },
+      { ws: a.ws, sessionId: a.sessionId, userId: a.userId, rank: a.rank, playerName: a.playerName, profileIcon: a.profileIcon },
+      { ws: b.ws, sessionId: b.sessionId, userId: b.userId, rank: b.rank, playerName: b.playerName, profileIcon: b.profileIcon },
     ],
     settings,
     isRanked,
@@ -208,6 +210,8 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     ranked: isRanked,
     opponentRank: b.rank,
     opponentName: b.playerName || "プレイヤー",
+    opponentIcon: b.profileIcon || "🎮",
+    opponentUserId: b.userId,
   });
   safeSend(b.ws, {
     type: "gameStart",
@@ -218,6 +222,8 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     ranked: isRanked,
     opponentRank: a.rank,
     opponentName: a.playerName || "プレイヤー",
+    opponentIcon: a.profileIcon || "🎮",
+    opponentUserId: a.userId,
   });
   logger.info({ code, isRanked }, "Ranked match started");
 }
@@ -495,6 +501,7 @@ wss.on("connection", (ws: WebSocket) => {
           rank: Number(msg.rank || 1),
           job: String(msg.job || "king"),
           playerName: String(msg.playerName || "プレイヤー"),
+          profileIcon: typeof msg.profileIcon === "string" ? String(msg.profileIcon).slice(0, 8) : "🎮",
           favorites: Array.isArray(msg.favorites) ? (msg.favorites as unknown[]).map(String).slice(0, 100) : [],
           ts: Date.now(),
           searchTimer: null,
