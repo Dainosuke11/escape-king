@@ -14467,7 +14467,8 @@ function updateUI() {
         + (selectedEntity.mafiaGauge !== undefined ? ` 🏴G${selectedEntity.mafiaGauge}` : '')
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
         + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '')
-        + (selectedEntity.senninGauge !== undefined ? ` 🧘G${selectedEntity.senninGauge}` : '');
+        + (selectedEntity.senninGauge !== undefined ? ` 🧘G${selectedEntity.senninGauge}` : '')
+        + (selectedEntity.shinGauge !== undefined ? ` ⛪G${selectedEntity.shinGauge}` : '');
     const _uiSoulRow = document.getElementById('ui-soul-row');
     if (selectedEntity.type === 'necromancer') {
         document.getElementById('ui-soul').textContent = selectedEntity.soulCount || 0;
