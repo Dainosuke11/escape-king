@@ -16364,6 +16364,18 @@ const TUTORIAL_STEPS = [
         highlight: 'btn-attack',
         highlightAbility: 'shatter',
         advanceOn: 'shatter_used',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                _pe.abilities['drop_rock'] = 999;
+                _pe.ap = Math.max(_pe.ap, 3);
+                _pe.actedThisTurn = false;
+                _pe._usedAbilityThisTurn = false;
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
     },
     {   // Step 14: 紫コマNPC（インタラクティブ）
         msg: '👾 <b>紫コマ（NPCモンスター）に注意！</b><br><br>ボード上に出現する<b>紫色のコマ</b>はNPCモンスターです。<br>プレイヤーでもCPUでもなく、<b>どちらも攻撃できる</b>中立の敵！<br><br>💡 <b>邪魔なら倒す・逃げる・敵に押し付ける</b>、状況に合わせて判断しよう！<br><br>▶「やってみよう！」を押して目の前の小鬼を倒そう！',
