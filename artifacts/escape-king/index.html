@@ -3512,10 +3512,11 @@ function isNoRockZone(r, c) {
 
 function isRockSurrounded(r, c) {
     const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+    const blockTiles = new Set(['rock','mine','volcano','gravestone','car_tile','coral_reef','golden_coral']);
     return dirs.every(([dr,dc]) => {
         let nr = r+dr, nc = c+dc;
         if (nr<0 || nr>=SIZE || nc<0 || nc>=SIZE) return true;
-        return board[nr] && board[nr][nc] === 'rock';
+        return board[nr] && blockTiles.has(board[nr][nc]);
     });
 }
 
@@ -15256,16 +15257,24 @@ const TUTORIAL_STEPS = [
         highlightAbility: 'drop_rock',
         advanceOn: 'avalanche_used',
         onShow() {
-            const _enemy = entities.find(e => e.team === 'cpu' && e.hp > 0);
-            if (_enemy) {
-                const _er = 7, _ec = 10;
-                if (board[_er]?.[_ec] !== undefined) board[_er][_ec] = 'plains';
-                _enemy.r = _er; _enemy.c = _ec;
-                board[_er-1][_ec] = 'rock';
-                board[_er+1][_ec] = 'rock';
-                board[_er][_ec-1] = 'rock';
-                board[_er][_ec+1] = 'rock';
-            }
+            const _er = 7, _ec = 10;
+            // Step5でダミーが倒されていても必ず新規デモエネミーをスポーン
+            entities = entities.filter(e => !e.tutorialAvalancheDemo);
+            if (board[_er]?.[_ec] !== undefined) board[_er][_ec] = 'plains';
+            entities.push({
+                id: 'tutorial_avalanche_' + Date.now(),
+                type: 'tutorial_dummy', tutorialAvalancheDemo: true,
+                name: '岩囲み兵', team: 'cpu',
+                r: _er, c: _ec,
+                hp: 80, maxHp: 80, ap: 0, maxAp: 0,
+                abilities: {}, initialAbilities: {}, skillUsed: true,
+                stealth: false, stealthTimer: 0, invin: false, invinTimer: 0,
+                poisonTimer: 0, element: 'none',
+            });
+            board[_er-1][_ec] = 'rock';
+            board[_er+1][_ec] = 'rock';
+            board[_er][_ec-1] = 'rock';
+            board[_er][_ec+1] = 'rock';
             const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
             if (_pe) {
                 _pe.ap = Math.max(_pe.ap, 3);
