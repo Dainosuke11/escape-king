@@ -173,6 +173,8 @@
         .deep_water::after { content: "🌊"; font-size: calc(var(--tile-size)*0.35); }
         .vortex_tile { background: #0d3349; }
         .vortex_tile::after { content: "🌀"; font-size: calc(var(--tile-size)*0.4); }
+        .rainbow_tile { background: linear-gradient(135deg,#ffb3ba 0%,#ffd9a0 25%,#ffffb3 50%,#b3ffb3 75%,#b3d9ff 100%); }
+        .rainbow_tile::after { content: "🌈"; font-size: calc(var(--tile-size)*0.45); }
         /* Mountain stage */
         .mountain_tile { background: #795548; }
         .snow { background: #e8f4f8; }
@@ -744,6 +746,7 @@
             <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             <option value="miko">⛩️ 巫女 (光火複合・巫女ゲージ・龍神降臨)</option>
             <option value="barbarian">🪓 バーバリアン (ランダム三属性・野生の解放)</option>
+            <option value="painter">🎨 絵描き (色混合・イマジネーション・虹の大傑作)</option>
         </select>
     </div>
     <div class="select-group">
@@ -890,6 +893,7 @@
             <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             <option value="miko">⛩️ 巫女 (光火複合・巫女ゲージ・龍神降臨)</option>
             <option value="barbarian">🪓 バーバリアン (ランダム三属性・野生の解放)</option>
+            <option value="painter">🎨 絵描き (色混合・イマジネーション・虹の大傑作)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -940,6 +944,7 @@
             <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             <option value="miko">⛩️ 巫女 (光火複合・巫女ゲージ・龍神降臨)</option>
             <option value="barbarian">🪓 バーバリアン (ランダム三属性・野生の解放)</option>
+            <option value="painter">🎨 絵描き (色混合・イマジネーション・虹の大傑作)</option>
             </select>
         </div>
         <div class="select-group">
@@ -1016,6 +1021,7 @@
             <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             <option value="miko">⛩️ 巫女 (光火複合・巫女ゲージ・龍神降臨)</option>
             <option value="barbarian">🪓 バーバリアン (ランダム三属性・野生の解放)</option>
+            <option value="painter">🎨 絵描き (色混合・イマジネーション・虹の大傑作)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -1150,6 +1156,7 @@ let turn = 1;
 let tempRocks = [];
 let waterHitsMap = {};      // "r,c" → extra hits to convert shallow_water → deep_water
 let vortexTiles = [];       // [{r,c,expireOnTurn}] temporary vortex tiles from 渦潮
+let rainbowTileMap = {};    // "r,c" -> {origTile, ownerTeam} rainbow tiles placed by painter
 let isPlayerTurn = true;
 let treasures = ['platinum', 'gold', 'silver', 'copper'];
 let activeStage = '';
@@ -1815,7 +1822,17 @@ const ABILITY_NAMES = {
     kyukaku_tsuiseki: '👃嗅覚追跡(1T潜伏+AP+1+r3敵2アビ1T封印)',
     ono_nage: '🪓斧投げ(直線4/威4/草/次T攻撃-1)',
     mure_de_karu: '👥群れで刈る(前方クローン召喚/HP1/次T消滅/被ダメ+1(1T))',
-    toki_no_sakebi: '📣雄叫び(r2全敵AP-1+2アビ封印/r2味方1Tバリア)'
+    toki_no_sakebi: '📣雄叫び(r2全敵AP-1+2アビ封印/r2味方1Tバリア)',
+    sanpo: '🚶散歩(2マス移動/IG+2/色+1/属性+1)',
+    dessin: '🎨デッサン(IG+5/色+1/属性+1/近敵封印+借用)',
+    trick_art: '🎭トリックアート(r3/IG1消費/虹マス半径1化)',
+    frame_throw: '🖼️額縁投げ(直線3/2ダメ/1T絵変換→次T解放+2ダメ)',
+    moving_painting: '👻動く絵(隣接/IG1消費/絵お化け召喚)',
+    red_paint: '🔴赤(火/IG消費/r2敵1ダメ+燃焼・混色でX倍)',
+    blue_paint: '🔵青(水/IG消費/直1貫通1ダメ+封印・混色でX倍)',
+    green_paint: '🟢緑(草/IG消費/r1敵2ダメ+吹飛・混色でX倍)',
+    white_paint: '⚪白(光/IG消費/rX味方HP+X・敵AP-1・混色でX倍)',
+    black_paint: '⚫黒(闇/IG消費/rX全敵Xダメ+毒・混色でX倍)'
 };
 
 const ABILITY_TIPS = {
@@ -2052,7 +2069,17 @@ const ABILITY_TIPS = {
     kyukaku_tsuiseki: '嗅覚追跡：1Tステルス+AP+1。半径3の敵1体のランダム2アビを1T封印。',
     ono_nage: '斧投げ：直線4マスに4ダメ(草属性)。デメリット：次Tの自分の攻撃力-1。',
     mure_de_karu: '群れで刈る：前方に分身クローン(HP1/ATK-1)を召喚。次T開始時消滅。デメリット：自分の被ダメ+1(1T)。',
-    toki_no_sakebi: '雄叫び：半径2の全敵AP-1+ランダム2アビ1T封印。半径2の味方に1Tバリア付与。'
+    toki_no_sakebi: '雄叫び：半径2の全敵AP-1+ランダム2アビ1T封印。半径2の味方に1Tバリア付与。',
+    sanpo: '創造的散歩。2マス以内の空きマスへ移動後、イマジネーション+2・色アビリティ全回数+1・このターンの使用可能属性をランダム1種追加。回数5。',
+    dessin: 'デッサン練習。使用後イマジネーション+5・色アビリティ全回数+1・属性1種追加。半径2以内に敵がいれば：そのランダム1アビリティを1T封印＋このターン絵描きが同アビを1回使用可能にする。回数5。',
+    trick_art: 'トリックアート。半径3以内の1マスを指定しイマジネーション1消費。そのマス中心の半径1全マスを虹マスに変える。味方が踏むとHP+1＋ランダム5アビリティ+1。敵が踏むと全属性2ダメ。踏後元のマスに戻る。回数5。',
+    frame_throw: '癇癪投げ。正面直線3マスの敵1体に2ダメ＋「絵」状態(HP99/AP0/行動不能)に変換。次のターン開始時に解放されるが2ダメを追加受ける。回数5。',
+    moving_painting: '絵のお化け召喚。隣接空きマスにイマジネーション1消費して召喚(HP1/AP2)。死亡時：絵描きの色アビリティ全+1＋IG+1＋次Tの属性に1種追加。回数5。',
+    red_paint: '🔴炎の絵の具。単体時：半径2以内の敵に火属性1ダメ+燃焼2T。混色時(X色)：X+1範囲にX火ダメ+燃焼。その日の属性に「火」が必要。',
+    blue_paint: '🔵水の絵の具。単体時：正面直線1の敵に水属性1ダメ+ランダム1アビ1T封印。混色時(X色)：直線Xマス貫通Xダメ＋Xアビ封印。属性に「水」が必要。',
+    green_paint: '🟢木の絵の具。単体時：隣接敵に草属性2ダメ+後方吹き飛ばし。混色時(X色)：X+1ダメ＋Xマス吹き飛ばし。属性に「草」が必要。',
+    white_paint: '⚪光の絵の具。単体時：半径1の味方HP+1・範囲内の敵AP-1。混色時(X色)：半径X味方HP+X・敵AP-1。属性に「光」が必要。',
+    black_paint: '⚫闇の絵の具。単体時：半径1全敵に闇属性1ダメ+毒1T。混色時(X色)：半径X全敵Xダメ+毒。属性に「闇」が必要。'
 };
 
 const JOB_DATA = {
@@ -2084,7 +2111,8 @@ const JOB_DATA = {
     hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true },
     guru: { name: '教祖', abilities: { drop_rock: 999, shatter: 5, kourin: 10, sabaki_kaminari: 5, shintaku_daiko: 5, gyokuza_jishin: 5, fukuin_bofuu: 5, fujo_yukai: 5, tenkei_hoshiotoshi: 3, fushinkoh_fushoku: 5, tamashii_kiga: 5 }, hp: 30, ap: 2, guruUnit: true },
     miko: { name: '巫女', abilities: { drop_rock: 999, shatter: 3, ruru_mai: 5, kiriki_mai: 5, kagura: 5, kagami_no_ma: 5, joka_hiya: 5, reibu_kekkai: 5, oharae: 5, kamioroshi: 5 }, hp: 30, ap: 2, mikoUnit: true },
-    barbarian: { name: 'バーバリアン', abilities: { drop_rock: 999, shatter: 5, hashitte_neru: 5, chimatsuri_giri: 5, ono_renbu: 5, kaiten_giri: 5, kyukaku_tsuiseki: 5, ono_nage: 5, mure_de_karu: 5, toki_no_sakebi: 5 }, hp: 30, ap: 2, barbarianUnit: true }
+    barbarian: { name: 'バーバリアン', abilities: { drop_rock: 999, shatter: 5, hashitte_neru: 5, chimatsuri_giri: 5, ono_renbu: 5, kaiten_giri: 5, kyukaku_tsuiseki: 5, ono_nage: 5, mure_de_karu: 5, toki_no_sakebi: 5 }, hp: 30, ap: 2, barbarianUnit: true },
+    painter: { name: '絵描き', abilities: { drop_rock: 999, shatter: 3, sanpo: 5, dessin: 5, trick_art: 5, frame_throw: 5, moving_painting: 5, red_paint: 5, blue_paint: 5, green_paint: 5, white_paint: 5, black_paint: 5 }, hp: 30, ap: 2, painterUnit: true }
 };
 
 const ELEMENT_DATA = {
@@ -2106,6 +2134,7 @@ const JOB_ELEMENT = {
     guru: 'light', miko: 'light',
     orca_pirate: 'water',
     barbarian: 'fire',
+    painter: 'none',
 };
 
 const JOB_SECONDARY_ELEMENT = {
@@ -2168,6 +2197,7 @@ const ABILITY_ELEMENT = {
     skill_ryujin_korin: 'light',
     orca_bite: 'dark', anchor_throw: 'dark', skill_jack: 'water', mugging: 'dark', hide_steal: 'dark', pirate_flag: 'dark', orca_cannon: 'dark',
     chimatsuri_giri: 'dark', ono_renbu: 'fire', kaiten_giri: 'fire', ono_nage: 'grass',
+    red_paint: 'fire', blue_paint: 'water', green_paint: 'grass', white_paint: 'light', black_paint: 'dark',
 };
 
 const STAGE_ELEMENT = {
@@ -2189,6 +2219,7 @@ const JOB_SKILL_ELEMENT = {
     miko: 'light',
     orca_pirate: 'water',
     barbarian: 'fire',
+    painter: 'none',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -2232,6 +2263,7 @@ const JOB_SKILL_NAMES = {
     miko:           '龍神降臨',
     orca_pirate:    '海の支配者',
     barbarian:      '野生の解放',
+    painter:        '虹の大傑作',
 };
 
 const JOB_GUIDE_META = {
@@ -2264,6 +2296,7 @@ const JOB_GUIDE_META = {
     miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
     orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
     barbarian: { emoji: '🪓', fullName: 'バーバリアン', note: '【火闇草ランダム三属性・野生の戦士】毎ターン開始時に属性が火/闇/草からランダム変化。\n「走って寝る」：2マスダッシュ→HP+1+ランダム2アビ+1/被ダメ+1(1T)。\n「血祭り斬り(闇)」：r1 3ダメ+AP-1/被ダメ+1(1T)。「斧連舞(火)」：r1 3ダメ×2+AP-1/次T攻撃-1。\n「回転斬り(火)」：r1全敵3ダメ+後退/被ダメ+1(1T)。「嗅覚追跡」：1T潜伏+AP+1+r3敵2アビ封印。\n「斧投げ(草)」：直線4 4ダメ/次T攻撃-1。「群れで刈る」：前方クローン(HP1/1T)/被ダメ+1(1T)。\n「雄叫び」：r2全敵AP-1+2abi封印/r2味方1Tバリア。\n★スキル「野生の解放」：3T狂戦士(毎T HP-2/AP+1/ATK+1/被ダメ+1)。狂戦士中は三属性同時弱点判定！' },
+    painter: { emoji: '🎨', fullName: '絵描き', note: '【イマジネーションゲージ・5色混合システム】毎ターン開始時IG+1＋属性がランダム2種に決定。\n各ターン選ばれた属性に対応する絵の具(赤=火/青=水/緑=草/白=光/黒=闇)のみ使用可能。\n「散歩」移動+IG+2+色回数+1+属性追加。「デッサン」IG+5+色回数+1+属性追加。\n「トリックアート」虹マス設置(IG1消費)。「額縁投げ」1T絵変換。「動く絵」お化け召喚(IG1消費)。\n単体色アビリティ選択後、別の色アビを選ぶと混色！X色混色でIG-X・効果X倍・ターゲット選択。\n★スキル「虹の大傑作」：IG5以上+5属性全部保有+全色アビ残量1以上が条件。半径7を虹マス化+全敵7ダメ！' },
 };
 
 const ENTITY_ICONS = {
@@ -2300,6 +2333,8 @@ const ENTITY_ICONS = {
     octopus:          '🐙',
     monkey_toy:       '🐒',
     present_box:      '🎁',
+    moving_painting:  '👻',
+    painted_entity:   '🖼️',
     kraken:           '🦑',
     yeti:             '⛄',
     shark:            '🦈',
@@ -4114,7 +4149,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','orca_pirate','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko','barbarian'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','orca_pirate','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko','barbarian','painter'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -4766,8 +4801,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[pJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[pJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[cJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[cJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[pJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[pJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), ...(JOB_DATA[pJob].painterUnit ? {painterUnit:true, imaginationGauge:0, _painterElements:[], _activePaintColors:[]} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[cJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[cJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), ...(JOB_DATA[cJob].painterUnit ? {painterUnit:true, imaginationGauge:0, _painterElements:[], _activePaintColors:[]} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -4919,8 +4954,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[pJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[pJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[cJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[cJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[pJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[pJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), ...(JOB_DATA[pJob].painterUnit ? {painterUnit:true, imaginationGauge:0, _painterElements:[], _activePaintColors:[]} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), ...(JOB_DATA[cJob].mikoUnit ? {mikoGauge:0, _nextTurnApCost:0, mikoUnit:true} : {}), ...(JOB_DATA[cJob].barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}), ...(JOB_DATA[cJob].painterUnit ? {painterUnit:true, imaginationGauge:0, _painterElements:[], _activePaintColors:[]} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -5074,6 +5109,7 @@ function addExtraEnemies(difficulty) {
             ...(jd.senninUnit ? {senninGauge:0} : {}),
             ...(jd.guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}),
             ...(jd.barbarianUnit ? {barbarianUnit:true, _berserkerTimer:0} : {}),
+            ...(jd.painterUnit ? {painterUnit:true, imaginationGauge:0, _painterElements:[], _activePaintColors:[]} : {}),
             element: JOB_ELEMENT[t] ?? 'none',
         });
     }
@@ -5828,6 +5864,38 @@ function processTurnStartEffects(e) {
             msg(`🪓🔥 ${e.name}の狂戦士状態！HP-2・AP+1・ATK+1・被ダメ+1(残${e._berserkerTimer}T)！`, true);
         }
     }
+    // 絵描き: ターン開始時イマジネーション+1・ランダム2属性決定・額縁投げ解放
+    if (e.painterUnit && e.hp > 0) {
+        e.imaginationGauge = (e.imaginationGauge||0) + 1;
+        const _allPaintElems = ['fire','water','grass','light','dark'];
+        const _shuffled = [..._allPaintElems].sort(() => Math.random()-0.5);
+        const _baseElems = [_shuffled[0], _shuffled[1]];
+        const _extra = e._pendingPainterElement ? [e._pendingPainterElement] : [];
+        e._pendingPainterElement = null;
+        e._painterElements = [...new Set([..._baseElems, ..._extra])];
+        e.element = e._painterElements[0] || 'none';
+        e._activePaintColors = [];
+        const _elemLabels = e._painterElements.map(el=>ELEMENT_DATA[el]?.label??el).join('・');
+        msg(`🎨 ${e.name}の今ターンの色：${_elemLabels}　IG:${e.imaginationGauge}`, true);
+    }
+    // 額縁投げ: 絵コマの解放処理
+    entities.filter(pe => pe._paintReleaseOnTurn && pe._paintReleaseOnTurn <= turn && pe.hp > 0).forEach(pe => {
+        const _origData = pe._paintOrigData;
+        if (_origData) {
+            pe.type = _origData.type;
+            pe.name = _origData.name;
+            pe.hp = Math.max(1, _origData.hp - 2);
+            pe.maxHp = _origData.maxHp;
+            pe.ap = _origData.ap;
+            pe.maxAp = _origData.maxAp;
+            pe.abilities = {..._origData.abilities};
+            pe.element = _origData.element;
+            delete pe._paintReleaseOnTurn;
+            delete pe._paintOrigData;
+            msg(`🖼️ ${pe.name}が絵から解放された！(HP${pe.hp})`, true);
+            checkWin();
+        }
+    });
     // バーバリアンクローン: 次ターン開始時に消滅
     if (e.type === 'barbarian_clone' && e.hp > 0 && (e._cloneExpiry||0) <= turn) {
         e.hp = -1;
@@ -6003,9 +6071,23 @@ function startTurn(team, skipEffects = false) {
         });
         // 死亡エフェクト処理（ドローン爆発・サルのプレゼントドロップ）
         let deadSpecials = entities.filter(e => e.hp <= 0 && !e.deathProcessed &&
-            (e.type==='recon_drone_unit' || e.type==='monkey_toy' || e.type==='baby_mandrake'));
+            (e.type==='recon_drone_unit' || e.type==='monkey_toy' || e.type==='baby_mandrake' || e.type==='moving_painting'));
         deadSpecials.forEach(e => {
             e.deathProcessed = true;
+            if (e.type === 'moving_painting' && e._mpMasterId) {
+                const _mpMaster = entities.find(m => m.id === e._mpMasterId && m.hp > 0 && m.painterUnit);
+                if (_mpMaster) {
+                    const _PAINT_COLORS_MP = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
+                    _PAINT_COLORS_MP.forEach(pc => { if ((_mpMaster.abilities[pc]||0)>0 && _mpMaster.abilities[pc]!==999) _mpMaster.abilities[pc]++; });
+                    _mpMaster.imaginationGauge = (_mpMaster.imaginationGauge||0) + 1;
+                    const _mpAllElems = ['fire','water','grass','light','dark'];
+                    const _mpBonus = _mpAllElems.filter(el=>!(_mpMaster._painterElements||[]).includes(el));
+                    if (_mpBonus.length > 0) {
+                        _mpMaster._pendingPainterElement = _mpBonus[Math.floor(Math.random()*_mpBonus.length)];
+                    }
+                    msg(`👻 ${e.name}が倒れた！${_mpMaster.name}の全色+1・IG+1・次T属性追加！`, true);
+                }
+            }
             if (e.type === 'recon_drone_unit') {
                 let droneExpHits = 0;
                 entities.forEach(t => {
@@ -7791,8 +7873,9 @@ function showEntityInfo(e) {
     let senninGaugeStr = (e.senninGauge !== undefined) ? ` &nbsp; 🧘G${e.senninGauge}` : '';
     let shinGaugeStr = (e.shinGauge !== undefined) ? ` &nbsp; ⛪G${e.shinGauge}` : '';
     let mikoGaugeStr = (e.mikoGauge !== undefined) ? ` &nbsp; ⛩️G${e.mikoGauge}` : '';
+    let imaginationStr = (e.painterUnit) ? ` &nbsp; 🎨IG${e.imaginationGauge||0}${(e._painterElements||[]).length>0?' ['+e._painterElements.map(el=>ELEMENT_DATA[el]?.label??el).join('・')+']':''}` : '';
     const entityIcon = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] + ' ' : '';
-    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}${shinGaugeStr}${mikoGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}${shinGaugeStr}${mikoGaugeStr}${imaginationStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -7823,6 +7906,38 @@ function setMode(mode) {
         }
     }
     
+    // 絵描き: 色混合インターセプト
+    const _PAINT_COLORS = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
+    const _PAINT_ELEM_MAP = { red_paint:'fire', blue_paint:'water', green_paint:'grass', white_paint:'light', black_paint:'dark' };
+    if (selectedEntity.painterUnit && _PAINT_COLORS.includes(mode)) {
+        const _se = selectedEntity;
+        const _paintElem = _PAINT_ELEM_MAP[mode];
+        if (!(_se._painterElements||[]).includes(_paintElem)) {
+            const _elabels = (_se._painterElements||[]).map(el=>ELEMENT_DATA[el]?.label??el).join('・')||'なし';
+            msg(`🎨 ${ABILITY_NAMES[mode]||mode}は今のターン使用不可！(今の属性：${_elabels})`);
+            return;
+        }
+        const _prevColors = _PAINT_COLORS.includes(actionMode) ? [actionMode] :
+                           (actionMode === 'paint_combo' ? (_se._activePaintColors||[]) : []);
+        if (_prevColors.includes(mode)) {
+            msg(`🎨 ${ABILITY_NAMES[mode]||mode}は既に選択済みです！ターゲットを選ぶか、別の色を追加してください`);
+            return;
+        }
+        const _newColors = [..._prevColors, mode];
+        const _X = _newColors.length;
+        if ((_se.imaginationGauge||0) < _X) {
+            msg(`🎨 イマジネーション不足！(必要:${_X} 現在:${_se.imaginationGauge||0})`);
+            return;
+        }
+        _se._activePaintColors = _newColors;
+        actionMode = 'paint_combo';
+        const _colorLabels = _newColors.map(c=>ABILITY_NAMES[c]||c).join('＋');
+        msg(`🎨【${_colorLabels}】X=${_X}、IG-${_X}消費。さらに色を追加するか、ターゲットを選んでください！`);
+        showAbilityPreview('paint_combo');
+        updateUI(); render();
+        return;
+    }
+
     actionMode = mode;
     if (mode !== 'move') showAbilityPreview(mode);
     else hideAbilityPreview();
@@ -7876,7 +7991,21 @@ function checkTileEffects(entity) {
         if (!entity.invin) { entity.ap = Math.max(0, entity.ap - 1); entity.poisonTimer = (entity.poisonTimer||0) + 3; }
         if (!eventMsg) eventMsg = `🌿 トゲを踏んだ！AP-1・毒3T！`;
     }
-    if (board[r] && board[r][c] === 'magic_circle') {
+    if (board[r] && board[r][c] === 'rainbow_tile') {
+        const _rbKey = `${r},${c}`;
+        const _rbInfo = rainbowTileMap[_rbKey] || {origTile:'plains', ownerTeam:'npc'};
+        board[r][c] = _rbInfo.origTile;
+        delete rainbowTileMap[_rbKey];
+        if (entity.team === _rbInfo.ownerTeam) {
+            if (!entity.invin) entity.hp = Math.min(entity.hp + 1, entity.maxHp);
+            const _rbAbilKeys = Object.keys(entity.abilities||{}).filter(k=>k!=='drop_rock'&&(entity.abilities[k]||0)>0&&entity.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,5);
+            _rbAbilKeys.forEach(k=>{ entity.abilities[k]++; });
+            eventMsg = `🌈 虹マス！HP+1＋${_rbAbilKeys.length}種アビリティ+1！`;
+        } else {
+            if (!entity.invin && !necroShieldBlock(entity)) { entity.hp -= 2; checkWin(); }
+            eventMsg = `🌈 敵の虹マス！全属性2ダメ！`;
+        }
+    } else if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
         if (tutorialMode && tutorialStep === 14 && entity.team === 'player') advanceTutorial();
@@ -11841,6 +11970,156 @@ function handleAbilityTarget(r, c, targetEntity) {
         });
         if (se.abilities['toki_no_sakebi'] !== 999) se.abilities['toki_no_sakebi']--;
         msg(`📣 ${se.name}の雄叫び！${_tsEnemies}体の敵にAP-1+2アビ1T封印！味方に1Tバリア！`); used = true;
+    } else if (actionMode === 'sanpo') {
+        // お散歩: 2マス先の通行可能マスへ瞬間移動 + IG+2 + 色アビリティ全種+1 + ランダム属性追加
+        const _PAINT_COLORS_SP = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
+        const _spOldR = se.r, _spOldC = se.c;
+        se.r = r; se.c = c;
+        se.imaginationGauge = (se.imaginationGauge||0) + 2;
+        _PAINT_COLORS_SP.forEach(pc => { if ((se.abilities[pc]||0) > 0 && se.abilities[pc] !== 999) se.abilities[pc]++; });
+        const _spAllElems = ['fire','water','grass','light','dark'];
+        const _spBonusElem = _spAllElems.filter(el=>!(se._painterElements||[]).includes(el));
+        if (_spBonusElem.length > 0) {
+            const _spPick = _spBonusElem[Math.floor(Math.random()*_spBonusElem.length)];
+            se._painterElements = [...(se._painterElements||[]), _spPick];
+            msg(`🚶 ${se.name}のお散歩！IG+2・全色+1・属性[${ELEMENT_DATA[_spPick]?.label??_spPick}]追加！`);
+        } else {
+            msg(`🚶 ${se.name}のお散歩！IG+2・全色+1！`);
+        }
+        if (se.abilities['sanpo'] !== 999) se.abilities['sanpo']--;
+        used = true;
+    } else if (actionMode === 'dessin') {
+        // デッサン: IG+5 + 全色+1 + ランダム属性追加 / 隣接敵なら2アビ封印+1アビ借用
+        se.imaginationGauge = (se.imaginationGauge||0) + 5;
+        const _PAINT_COLORS_DS = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
+        _PAINT_COLORS_DS.forEach(pc => { if ((se.abilities[pc]||0) > 0 && se.abilities[pc] !== 999) se.abilities[pc]++; });
+        const _dsAllElems = ['fire','water','grass','light','dark'];
+        const _dsBonusElem = _dsAllElems.filter(el=>!(se._painterElements||[]).includes(el));
+        if (_dsBonusElem.length > 0) {
+            const _dsPick = _dsBonusElem[Math.floor(Math.random()*_dsBonusElem.length)];
+            se._painterElements = [...(se._painterElements||[]), _dsPick];
+        }
+        let _dsMsg = `🖋️ ${se.name}のデッサン！IG+5・全色+1！`;
+        if (targetEntity) {
+            const _dsKeys = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]||0)>0&&targetEntity.abilities[k]!==999);
+            _dsKeys.sort(()=>Math.random()-0.5);
+            const _dsSealed = [];
+            for (let i=0; i<2&&i<_dsKeys.length; i++) { sealAbilities(targetEntity, [_dsKeys[i]], 2); _dsSealed.push(ABILITY_NAMES[_dsKeys[i]]||_dsKeys[i]); }
+            if (_dsKeys.length > 2) {
+                const _dsBorrow = _dsKeys[2];
+                if ((se.abilities[_dsBorrow]||0) === 0) se.abilities[_dsBorrow] = 2;
+                else se.abilities[_dsBorrow]++;
+                _dsMsg += ` ${targetEntity.name}から[${_dsSealed.join('・')}]2T封印＋[${ABILITY_NAMES[_dsBorrow]||_dsBorrow}]借用！`;
+            } else if (_dsSealed.length > 0) {
+                _dsMsg += ` ${targetEntity.name}から[${_dsSealed.join('・')}]2T封印！`;
+            }
+        }
+        if (se.abilities['dessin'] !== 999) se.abilities['dessin']--;
+        msg(_dsMsg); used = true;
+    } else if (actionMode === 'trick_art') {
+        // トリックアート: 選択マス中心r1に虹マスを配置(IG-1)
+        if ((se.imaginationGauge||0) < 1) { msg(`🎭 イマジネーション不足！`); return; }
+        se.imaginationGauge--;
+        const _taDirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,0],[0,1],[1,-1],[1,0],[1,1]];
+        let _taCount = 0;
+        _taDirs.forEach(([dr,dc]) => {
+            const _tr = r+dr, _tc = c+dc;
+            if (_tr<0||_tr>=SIZE||_tc<0||_tc>=SIZE) return;
+            if (board[_tr][_tc] === 'rainbow_tile') return;
+            const _tOrig = board[_tr][_tc];
+            if (['rock','deep_water','sealed_rock','unbreakable_rock'].includes(_tOrig)) return;
+            rainbowTileMap[`${_tr},${_tc}`] = {origTile:_tOrig, ownerTeam:se.team};
+            board[_tr][_tc] = 'rainbow_tile';
+            _taCount++;
+        });
+        if (se.abilities['trick_art'] !== 999) se.abilities['trick_art']--;
+        msg(`🎭 ${se.name}のトリックアート！${_taCount}マスに虹マスを設置！(IG-1)`); used = true;
+    } else if (actionMode === 'frame_throw') {
+        // 額縁投げ: 直線3 2ダメ+次T開始時に解放+2ダメ(額縁変換)
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            const _ftDmg = 2 + (se.atkBonus||0);
+            targetEntity.hp -= _ftDmg;
+            if (targetEntity.hp > 0) {
+                targetEntity._paintOrigData = {
+                    type: targetEntity.type, name: targetEntity.name,
+                    hp: targetEntity.hp, maxHp: targetEntity.maxHp,
+                    ap: targetEntity.ap, maxAp: targetEntity.maxAp,
+                    abilities: {...targetEntity.abilities}, element: targetEntity.element
+                };
+                targetEntity.type = 'painted_entity';
+                targetEntity.name = '絵コマ(' + targetEntity._paintOrigData.name + ')';
+                targetEntity.hp = 99; targetEntity.maxHp = 99;
+                targetEntity.ap = 0; targetEntity.maxAp = 0;
+                targetEntity._paintReleaseOnTurn = turn + 1;
+                msg(`🖼️ ${se.name}の額縁投げ！${targetEntity._paintOrigData.name}を絵コマ化！2ダメ→次T解放時に追加2ダメ！`);
+            }
+        }
+        if (se.abilities['frame_throw'] !== 999) se.abilities['frame_throw']--;
+        used = true;
+    } else if (actionMode === 'moving_painting') {
+        // 動く絵: 隣接マスにお化け召喚(HP1/AP2)・IG-1。死亡時絵描きに全色+1+IG+1+属性追加
+        if ((se.imaginationGauge||0) < 1) { msg(`👻 イマジネーション不足！`); return; }
+        const _mpDirs = [[se.r-1,se.c],[se.r+1,se.c],[se.r,se.c-1],[se.r,se.c+1]];
+        let _mpSpawn = null;
+        for (const [_mr,_mc] of _mpDirs) {
+            if (_mr>=0&&_mr<SIZE&&_mc>=0&&_mc<SIZE&&isWalkable(_mr,_mc)&&!entities.some(ev=>ev.hp>0&&ev.r===_mr&&ev.c===_mc)) {
+                _mpSpawn = {r:_mr,c:_mc}; break;
+            }
+        }
+        if (!_mpSpawn) { msg(`👻 ${se.name}の動く絵：召喚できる場所がない！`); return; }
+        se.imaginationGauge--;
+        const _mpGhostId = 'moving_painting_' + Date.now();
+        entities.push({
+            id: _mpGhostId, type: 'moving_painting', name: 'お化け', team: se.team,
+            r: _mpSpawn.r, c: _mpSpawn.c, hp: 1, maxHp: 1, ap: 2, maxAp: 2,
+            abilities: {drop_rock:999}, skillUsed: false, stealth: false, stealthTimer: 0,
+            invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0,
+            _mpMasterId: se.id, element: 'none', initialAbilities:{drop_rock:999}
+        });
+        if (se.abilities['moving_painting'] !== 999) se.abilities['moving_painting']--;
+        msg(`👻 ${se.name}の動く絵！お化けを召喚！(IG-1)`); used = true;
+    } else if (actionMode === 'paint_combo') {
+        // 色混合攻撃: X色 → X*2ダメ + 各色効果 + IG-X消費
+        const _PAINT_ELEM_MAP_PC = { red_paint:'fire', blue_paint:'water', green_paint:'grass', white_paint:'light', black_paint:'dark' };
+        const _pcColors = se._activePaintColors || [];
+        const _pcX = _pcColors.length;
+        if (_pcX === 0) { msg(`🎨 色が選択されていません！`); return; }
+        if ((se.imaginationGauge||0) < _pcX) { msg(`🎨 イマジネーション不足！(必要:${_pcX})`); return; }
+        se.imaginationGauge -= _pcX;
+        _pcColors.forEach(pc => { if (se.abilities[pc] !== undefined && se.abilities[pc] !== 999) se.abilities[pc]--; });
+        let _pcDmg = _pcX * 2 + (se.atkBonus||0);
+        let _pcEffects = [];
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            // ダメージ計算(属性相性)
+            const _pcElem = se._painterElements[0] || 'none';
+            const _pcFinalDmg = Math.max(1, _pcDmg + elemBonus(_pcElem, targetEntity.element) + (targetEntity.defDebuff||0));
+            targetEntity.hp -= _pcFinalDmg;
+            _pcColors.forEach(pc => {
+                if (pc === 'red_paint') { targetEntity.burnTimer = (targetEntity.burnTimer||0) + 2; _pcEffects.push('炎上2T'); }
+                if (pc === 'blue_paint') { const _bpKeys=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&targetEntity.abilities[k]!==999); sealAbilities(targetEntity, _bpKeys, 1); _pcEffects.push('全アビ1T封印'); }
+                if (pc === 'green_paint') { knockback(targetEntity, 2, se); _pcEffects.push('2後退'); }
+                if (pc === 'white_paint') { targetEntity.defDebuff = (targetEntity.defDebuff||0) + 1; targetEntity.defDebuffTimer = 2; _pcEffects.push('防御-1(2T)'); }
+                if (pc === 'black_paint') { targetEntity.poisonTimer = (targetEntity.poisonTimer||0) + 3; _pcEffects.push('毒3T'); }
+            });
+            msg(`🎨 ${se.name}の色混合(${_pcX}色)！${_pcFinalDmg}ダメ！${_pcEffects.join('・')}！(IG-${_pcX})`);
+            checkWin();
+        } else if (!targetEntity) {
+            // マス対象：虹マスを配置
+            const _pcOrig = board[r][c];
+            if (!['rock','deep_water','sealed_rock','unbreakable_rock','rainbow_tile'].includes(_pcOrig)) {
+                rainbowTileMap[`${r},${c}`] = {origTile:_pcOrig, ownerTeam:se.team};
+                board[r][c] = 'rainbow_tile';
+                msg(`🎨 ${se.name}の色混合(${_pcX}色)！虹マスを設置！(IG-${_pcX})`);
+            } else {
+                msg(`🎨 ${se.name}の色混合(${_pcX}色)：効果なし(IG-${_pcX})`);
+            }
+        }
+        se._activePaintColors = [];
+        actionMode = 'paint_combo';
+        used = true;
+    } else if (['red_paint','blue_paint','green_paint','white_paint','black_paint'].includes(actionMode)) {
+        // 単色アビリティ(色混合なし直接使用は発動しないが念のため)
+        msg(`🎨 色アビリティは色選択ボタンからコンボで使用してください`); return;
     } else if (actionMode.startsWith('skill_') ||
                ['flutter','gremlin_trick','gnome_hammer','greenman_arrow','redcap_scythe','siren_song','pixie_illusion','swap_position'].includes(actionMode)) {
         executeRushSkill(se, r, c, actionMode);
@@ -12552,6 +12831,46 @@ function executeSkill(se) {
         se._berserkerTimer = 3;
         se.defDebuff = (se.defDebuff||0) + 1; se.defDebuffTimer = 1;
         msg(`🪓🔥 ${se.name}の野生の解放！3T間狂戦士状態！毎T HP-2・AP+1・ATK+1・被ダメ+1！三属性弱点判定有効！`);
+        return true;
+    }
+    if (se.type === 'painter') {
+        const _PAINT_COLORS_SK = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
+        const _PAINT_ELEM_MAP_SK = { red_paint:'fire', blue_paint:'water', green_paint:'grass', white_paint:'light', black_paint:'dark' };
+        const _allFiveElems = ['fire','water','grass','light','dark'];
+        const _painterElems = se._painterElements || [];
+        if ((se.imaginationGauge||0) < 5) {
+            msg(`🌈 虹の大傑作の条件未達！IG5以上必要(現在:${se.imaginationGauge||0})`); return false;
+        }
+        const _missingElems = _allFiveElems.filter(el=>!_painterElems.includes(el));
+        if (_missingElems.length > 0) {
+            msg(`🌈 虹の大傑作の条件未達！5属性全保有が必要(不足:${_missingElems.map(el=>ELEMENT_DATA[el]?.label??el).join('・')})`); return false;
+        }
+        const _noColorAbil = _PAINT_COLORS_SK.find(pc=>(se.abilities[pc]||0)<1);
+        if (_noColorAbil) {
+            msg(`🌈 虹の大傑作の条件未達！全色アビリティ残量1以上必要(不足:${ABILITY_NAMES[_noColorAbil]||_noColorAbil})`); return false;
+        }
+        // 発動！IG-5 + 全色アビ-1 + 半径7虹マス化 + 全敵7ダメ
+        se.imaginationGauge -= 5;
+        _PAINT_COLORS_SK.forEach(pc => { if (se.abilities[pc] !== 999) se.abilities[pc]--; });
+        let _skRainbowCount = 0;
+        for (let _dr=-7; _dr<=7; _dr++) for (let _dc=-7; _dc<=7; _dc++) {
+            if (Math.max(Math.abs(_dr),Math.abs(_dc))>7) continue;
+            const _nr=se.r+_dr, _nc=se.c+_dc;
+            if (_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE) continue;
+            const _tOrig=board[_nr][_nc];
+            if (['rock','deep_water','sealed_rock','unbreakable_rock','rainbow_tile'].includes(_tOrig)) continue;
+            rainbowTileMap[`${_nr},${_nc}`]={origTile:_tOrig,ownerTeam:se.team};
+            board[_nr][_nc]='rainbow_tile';
+            _skRainbowCount++;
+        }
+        let _skHits=0;
+        entities.forEach(t => {
+            if (t.hp>0 && t.team!==se.team && !t.invin && !necroShieldBlock(t)) {
+                t.hp-=7; _skHits++;
+            }
+        });
+        checkWin();
+        msg(`🌈✨ ${se.name}の【虹の大傑作】！半径7に${_skRainbowCount}マスの虹を描いた！全敵に7ダメ(${_skHits}体)！`);
         return true;
     }
     return false;
