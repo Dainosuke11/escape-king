@@ -8117,11 +8117,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "槍攻撃！しかし無敵で防がれた！" : "槍攻撃命中！ダメージ(2)！"); used = true;
     } else if (actionMode === 'summon_archer') {
         se.abilities['summon_archer']--;
-        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        entities.push({ id: 'archer'+Date.now(), type: 'archer', name: '弓兵', team: se.team, r, c, hp: 2, maxHp: 2, ap: 2, maxAp: 2, abilities: { bow: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
         msg("弓兵を召喚！(HP3/AP2/直線弓∞)"); used = true;
     } else if (actionMode === 'summon_lancer') {
         se.abilities['summon_lancer']--;
-        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 5, maxHp: 5, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
+        entities.push({ id: 'lancer'+Date.now(), type: 'lancer', name: '槍兵', team: se.team, r, c, hp: 2, maxHp: 2, ap: 2, maxAp: 2, abilities: { spear: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn });
         msg("槍兵を召喚！(HP5/AP2/直線槍∞)"); used = true;
     } else if (actionMode === 'decoy') {
         se.abilities['decoy']--;
@@ -10960,8 +10960,8 @@ function executeSkill(se) {
         // 正面3マス（北方向）に弓兵・槍兵・分隊を召喚
         const despawn = turn + 2;
         const summons = [
-            { type:'archer',   name:'弓兵', hp:3, maxHp:3, ap:2, maxAp:2, abilities:{ bow:999 }, r:se.r-1, c:se.c-1 },
-            { type:'lancer',   name:'槍兵', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{ spear:999 }, r:se.r-1, c:se.c },
+            { type:'archer',   name:'弓兵', hp:2, maxHp:2, ap:2, maxAp:2, abilities:{ bow:999 }, r:se.r-1, c:se.c-1 },
+            { type:'lancer',   name:'槍兵', hp:2, maxHp:2, ap:2, maxAp:2, abilities:{ spear:999 }, r:se.r-1, c:se.c },
             { type:'infantry', name:'分隊', hp:5, maxHp:5, ap:2, maxAp:2, abilities:{ sword:10, punch:5, bow:3 }, r:se.r-1, c:se.c+1 }
         ];
         let spawned = 0;
@@ -13253,7 +13253,7 @@ function cpuLogic() {
                 for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
                     let nr=cpu.r+dr,nc=cpu.c+dc;
                     if (isWalkable(nr,nc)){
-                        entities.push({id:'archer'+Date.now(),type:'archer',name:'弓兵',team:cpu.team,r:nr,c:nc,hp:3,maxHp:3,ap:0,maxAp:2,abilities:{bow:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
+                        entities.push({id:'archer'+Date.now(),type:'archer',name:'弓兵',team:cpu.team,r:nr,c:nc,hp:2,maxHp:2,ap:0,maxAp:2,abilities:{bow:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
                         cpu.abilities.summon_archer--;msg("敵が弓兵を召喚した！");attacked=true;cpu.ap--;break;
                     }
                 }
@@ -13262,7 +13262,7 @@ function cpuLogic() {
                 for (let [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
                     let nr=cpu.r+dr,nc=cpu.c+dc;
                     if (isWalkable(nr,nc)){
-                        entities.push({id:'lancer'+Date.now(),type:'lancer',name:'槍兵',team:cpu.team,r:nr,c:nc,hp:5,maxHp:5,ap:0,maxAp:2,abilities:{spear:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
+                        entities.push({id:'lancer'+Date.now(),type:'lancer',name:'槍兵',team:cpu.team,r:nr,c:nc,hp:2,maxHp:2,ap:0,maxAp:2,abilities:{spear:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,turnBorn:turn});
                         cpu.abilities.summon_lancer--;msg("敵が槍兵を召喚した！");attacked=true;cpu.ap--;break;
                     }
                 }
