@@ -7709,7 +7709,7 @@ function startTurn(team, skipEffects = false) {
                 document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 syncState('stateSync');
                 msg("あなたのターンです！");
-                startTurnTimer();
+                if (!isOpponentSuspended) startTurnTimer();
             } else {
                 document.getElementById('turn-indicator').textContent = "相手のターン中...";
             }
@@ -7752,7 +7752,7 @@ function startTurn(team, skipEffects = false) {
                 document.getElementById('turn-indicator').textContent = `あなたのターン (Turn: ${turn})`;
                 msg("あなたのターンです！");
                 updateOnlineInfo();
-                startTurnTimer();
+                if (!isOpponentSuspended) startTurnTimer();
             }
         } else {
             setTimeout(cpuLogic, 1000);
