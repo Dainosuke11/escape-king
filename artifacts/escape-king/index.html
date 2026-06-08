@@ -727,6 +727,7 @@
             <option value="mandrake">🌿 マンドレイク (種育成・融合・根っこバインド)</option>
             <option value="ryujin">🐉 竜人族 (格闘・変身・ドラゴンインパクト)</option>
 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
+            <option value="orca_pirate">🐋 シャチ海賊 (略奪・ゲージ・海の支配者)</option>
             <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
             <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
             <option value="angel">👼 天使 (結界・バインド・堕天)</option>
@@ -871,6 +872,7 @@
                 <option value="mandrake">🌿 マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">🐉 竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
+                <option value="orca_pirate">🐋 シャチ海賊 (略奪・ゲージ・海の支配者)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
@@ -919,6 +921,7 @@
                 <option value="mandrake">🌿 マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">🐉 竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
+                <option value="orca_pirate">🐋 シャチ海賊 (略奪・ゲージ・海の支配者)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
@@ -993,6 +996,7 @@
                 <option value="mandrake">🌿 マンドレイク (種育成・融合・根っこバインド)</option>
                 <option value="ryujin">🐉 竜人族 (格闘・変身・ドラゴンインパクト)</option>
                 <option value="shark_warrior">🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)</option>
+                <option value="orca_pirate">🐋 シャチ海賊 (略奪・ゲージ・海の支配者)</option>
                 <option value="clown">🎪 ピエロ (ジャグリング・玉乗り・サル召喚)</option>
                 <option value="necromancer">💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)</option>
                 <option value="angel">👼 天使 (結界・バインド・堕天)</option>
@@ -1791,7 +1795,14 @@ const ABILITY_NAMES = {
     oharae: '🔥大祓え(r2全敵3ダメ+吹飛+燃焼+4封印/次TターンAP-2)',
     kamioroshi: '🐉神降し(1T龍神技使用可+流々舞+1/次TターンAP-2)',
     ryuen: '🔥龍炎(直線5全敵4ダメ+燃焼/炎属性)',
-    shinkou: '✨神光(r3全敵2ダメ+AP-1/光属性)'
+    shinkou: '✨神光(r3全敵2ダメ+AP-1/光属性)',
+    orca_bite: '🦷噛みつき奪い(r1/威2/闇/HP吸収/G+5)',
+    anchor_throw: '⚓碇投げ(直線3/威2/闇/吹飛+岩/AP-1/G+5)',
+    skill_jack: '🃏スキルジャック(r3/敵2abi-1+1T封印/自2abi+1/G+5)',
+    mugging: '🔪追い剥ぎ(r1/威2/闇/被ダメバフ/G+5)',
+    hide_steal: '🎭隠れて奪う(1T潜伏/接近/ゲージ奪取/G+5)',
+    pirate_flag: '🏴‍☠️海賊旗(r2内設置/5T~/敵-1/味方+1)',
+    orca_cannon: '💣シャチ大砲(直線8/威4/吹飛/G+5)'
 };
 
 const ABILITY_TIPS = {
@@ -2013,7 +2024,14 @@ const ABILITY_TIPS = {
     onnen_kaeshi: '⚫ 怨念返しの構えをとる。次のターン開始時、前ターンに受けたダメージの2倍を最寄りの敵に返す。回数5。',
     oni_giri: '👹 半径3マスの敵1体に闇属性4ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
     iai: '⚔️ 居合の構えをとる。次のターン開始時、隣接する全敵に5ダメの迎撃を行う。回数5。',
-    abikyokan: '🔥 前方エリア(幅5×奥行5)に業火地獄マス展開。地獄マスにいる敵は毎ターン1ダメ。3ターン持続。回数5。'
+    abikyokan: '🔥 前方エリア(幅5×奥行5)に業火地獄マス展開。地獄マスにいる敵は毎ターン1ダメ。3ターン持続。回数5。',
+    orca_bite: '半径1マスの敵に闇属性2ダメ＋与えたダメージ分だけ自身のHPを回復。使用後ウォーターゲージ+5。回数5。',
+    anchor_throw: '正面直線3マスの敵1体に闇属性2ダメ＋後方吹き飛ばし＋元の位置に岩設置＋敵AP-1。使用後自分のAP+1・ウォーターゲージ+5。回数5。',
+    skill_jack: '半径3マス内の全敵のランダム2アビリティ使用回数-1＋1ターン封印。自分のランダム2アビリティ使用回数+1。使用後ウォーターゲージ+5。回数5。',
+    mugging: '半径1マスの敵に闇属性2ダメ。命中した敵に被ダメバフ+1(1ターン持続)。使用後ウォーターゲージ+5。回数5。',
+    hide_steal: '自身が1ターン潜伏状態になる。正面直線3マス内に敵がいれば1マス接近し、その敵のウォーターゲージ・各種バフ・ゲージ類を奪い自分に付与。使用後ウォーターゲージ+5。回数5。',
+    pirate_flag: '半径2マス以内の空きマスに海賊旗(HP1/AP0)を設置。旗の半径2マス内：敵はターン開始時にランダム1アビリティ-1＋HP-1、味方は同量+1。5ターン経過後に使用可能。回数5。',
+    orca_cannon: '正面直線8マスの敵1体に4ダメ＋後方吹き飛ばし。長距離狙撃。使用後ウォーターゲージ+5。回数5。'
 };
 
 const JOB_DATA = {
@@ -2030,6 +2048,7 @@ const JOB_DATA = {
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, plant_wall: 3, fusion: 1, seed_bazooka: 3, root_spread: 1, roar: 3 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, punch: 10, flying_kick: 5, wave_shot: 3, rapid_strikes: 3, throw_enemy: 2, tail_swing: 3, counter: 3, ryujin_transform: 2, afterimage: 3 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 3, bite: 5, throw_net: 3, whirlpool_atk: 3, octopus_summon: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
+    orca_pirate: { name: 'シャチ海賊', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, orca_bite: 5, anchor_throw: 5, skill_jack: 5, mugging: 5, hide_steal: 5, pirate_flag: 5, orca_cannon: 5 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 3, monkey_toy: 3 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 3, soul_absorb: 1, bone_armor: 3, skull_head: 1, necro_bind: 3, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
@@ -2063,10 +2082,12 @@ const JOB_ELEMENT = {
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light', hitokiri_musha: 'fire',
     guru: 'light', miko: 'light',
+    orca_pirate: 'water',
 };
 
 const JOB_SECONDARY_ELEMENT = {
     guru: 'water', miko: 'fire', hitokiri_musha: 'dark',
+    orca_pirate: 'dark',
 };
 
 const NPC_ELEMENT = {
@@ -2082,6 +2103,7 @@ const NPC_ELEMENT = {
     pixie_fairy: 'light', gnome_npc: 'grass', greenman_npc: 'grass', redcap_npc: 'fire', siren_npc: 'water',
     small_oni: 'dark',
     ryujin_npc: 'light', kagami_mirror: 'light',
+    gang_orca: 'dark', pirate_flag_entity: 'dark',
 };
 
 const ABILITY_ELEMENT = {
@@ -2120,6 +2142,7 @@ const ABILITY_ELEMENT = {
     joka_hiya: 'fire', reibu_kekkai: 'light', oharae: 'fire', kamioroshi: 'light',
     ryuen: 'fire', shinkou: 'light',
     skill_ryujin_korin: 'light',
+    orca_bite: 'dark', anchor_throw: 'dark', skill_jack: 'water', mugging: 'dark', hide_steal: 'dark', pirate_flag: 'dark', orca_cannon: 'dark',
 };
 
 const STAGE_ELEMENT = {
@@ -2139,6 +2162,7 @@ const JOB_SKILL_ELEMENT = {
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light', hitokiri_musha: 'dark',
     guru: 'light',
     miko: 'light',
+    orca_pirate: 'water',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -2149,6 +2173,7 @@ const SKILL_MODE_ELEMENT = {
     skill_sennin_tota: 'water',
     skill_meifu: 'dark',
     skill_miko_ryujin: 'light',
+    skill_orca_dominator: 'water',
 };
 
 const JOB_SKILL_NAMES = {
@@ -2179,6 +2204,7 @@ const JOB_SKILL_NAMES = {
     hitokiri_musha: '冥府送り',
     guru:           '終末論',
     miko:           '龍神降臨',
+    orca_pirate:    '海の支配者',
 };
 
 const JOB_GUIDE_META = {
@@ -2209,6 +2235,7 @@ const JOB_GUIDE_META = {
     hitokiri_musha: { emoji: '⚔️', fullName: '人斬り武者', note: '【火炎×冥府の呪われ二刀剣士】毎ターン自傷1ダメ(10T後は2ダメ)・属性が炎/闇で交替。\nHP≤20で【修羅】化(1Tバリア+AP+1)、HP≤10で【阿修羅】化(1Tバリア+AP+2+ATK+1+全アビ+1)。\n敵を討ち取るとHP+2+4アビ+1。陣地突破勝利なし(撃破のみで勝利)。\n業火の呪い：技で付与、毎T1ダメ(3T持続)。\n「阿鼻叫喚」：前方に業火地獄マス展開・敵は毎T1ダメ。\n★スキル「冥府送り」：半径5の敵全員を相手陣地奥へ強制転送！' },
     guru: { emoji: '⛪', fullName: '教祖', note: '【神ゲージ制・予知警告システム】毎ターン開始時に神ゲージ+1・属性が光/水で交替(奇数=光/偶数=水)。\n予知警告アビリティは発動ターンに警告マスを表示し、翌ターン開始時に効果発動。\n「降臨」ダッシュで信者(HP1/AP2/自爆特攻)を元の場所に召喚。ゲージ+1。ゲージ≥5なら1Tバリア。\n信者撃破時：教祖HP+1・ゲージ+1。\n★スキル「終末論」：ゲージ最大8消費→1Tバリア→消費数分の天罰技を同時即時発動！' },
     miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
+    orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
 };
 
 const ENTITY_ICONS = {
@@ -2274,6 +2301,8 @@ const ENTITY_ICONS = {
     redcap_npc:       '🪓',
     siren_npc:        '🎵',
     small_oni:        '👿',
+    gang_orca:        '🐳',
+    pirate_flag_entity: '🏴‍☠️',
 };
 
 // ============================================================
@@ -4057,7 +4086,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','orca_pirate','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -5431,6 +5460,12 @@ function processTurnStartEffects(e) {
         e.defDebuffTimer--;
         if (e.defDebuffTimer <= 0) e.defDebuff = 0;
     }
+    // 碇投げスタン: AP-1
+    if (e._anchorStun) {
+        e.ap = Math.max(0, (e.ap||0) - 1);
+        e._anchorStun = false;
+        msg(`⚓ ${e.name}はスタンでAP-1！`, true);
+    }
     // 王の号令バフ (AP+1) の期限処理
     if ((e.kingBuff||0) > 0) {
         e.kingBuff--;
@@ -5700,6 +5735,35 @@ function processTurnStartEffects(e) {
         hellGroundTiles = hellGroundTiles.filter(t => t.expireAt >= turn);
         // 疫病マスのクリーンアップ
         guruPlagueTiles = guruPlagueTiles.filter(t => t.expireAt >= turn);
+    }
+    // シャチ海賊: ターン開始時 水↔闇属性交替 + 海賊旗エフェクト
+    if (e.type === 'orca_pirate' && e.hp > 0) {
+        e.element = turn % 2 === 1 ? 'water' : 'dark';
+    }
+    // ギャングオルカ: 属性交替
+    if (e.type === 'gang_orca' && e.hp > 0) {
+        e.element = turn % 2 === 1 ? 'water' : 'dark';
+    }
+    // 海賊旗エフェクト: 旗の半径2内の敵にアビ-1+HP-1、味方に+1
+    if (e.type === 'pirate_flag_entity' && e.hp > 0) {
+        entities.forEach(tgt => {
+            if (tgt.hp <= 0) return;
+            let dist = Math.max(Math.abs(tgt.r - e.r), Math.abs(tgt.c - e.c));
+            if (dist > 2) return;
+            if (tgt.team !== e.team) {
+                // 敵: ランダムアビ-1 + HP-1
+                if (!tgt.invin && !necroShieldBlock(tgt)) {
+                    tgt.hp -= 1;
+                    let _pfKeys = Object.keys(tgt.abilities||{}).filter(k=>k!=='drop_rock'&&(tgt.abilities[k]||0)>0&&tgt.abilities[k]!==999);
+                    if (_pfKeys.length > 0) { let _pfK = _pfKeys[Math.floor(Math.random()*_pfKeys.length)]; tgt.abilities[_pfK]--; }
+                    msg(`🏴‍☠️ 海賊旗の呪い！${tgt.name}HP-1＋アビ-1！`, true);
+                }
+            } else if (tgt !== e) {
+                // 味方: ランダムアビ+1
+                let _pfKeys2 = Object.keys(tgt.abilities||{}).filter(k=>k!=='drop_rock'&&(tgt.abilities[k]||0)>=0&&tgt.abilities[k]!==999);
+                if (_pfKeys2.length > 0) { let _pfK2 = _pfKeys2[Math.floor(Math.random()*_pfKeys2.length)]; tgt.abilities[_pfK2]++; }
+            }
+        });
     }
     // 巫女: ターン開始ゲージ+1・属性交替・予約AP消費・鏡効果
     if (e.mikoUnit && e.hp > 0) {
@@ -7200,6 +7264,14 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'whirlpool_atk') return maxDist<=3;
     if (mode === 'octopus_summon') return maxDist===1 && isWalkable(r,c);
     if (mode === 'skill_hydro') return (se.r===r||se.c===c) && maxDist>0;
+    // シャチ海賊
+    if (mode === 'orca_bite') return maxDist===1 && target && target.team!==se.team;
+    if (mode === 'anchor_throw') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
+    if (mode === 'skill_jack') return true;
+    if (mode === 'mugging') return maxDist===1 && target && target.team!==se.team;
+    if (mode === 'hide_steal') return r===se.r && c===se.c;
+    if (mode === 'pirate_flag') { if (turn < 5) return false; return maxDist<=2 && isWalkable(r,c) && !entities.some(en=>en.hp>0&&en.r===r&&en.c===c); }
+    if (mode === 'orca_cannon') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
     // ピエロ
     if (mode === 'knife_juggling') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
     if (mode === 'scary_face') return true; // self-centered AoE
@@ -9798,6 +9870,96 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['octopus_summon']--;
         entities.push({ id:'octopus'+Date.now(), type:'octopus', name:'タコ', team:se.team, r, c, hp:3, maxHp:3, ap:2, maxAp:2, abilities:{tentacle_whip:999, water_spit:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true, waterGauge:10, maxWaterGauge:30 });
         msg("🐙 タコ召喚！(HP3/AP2/触手∞・水吐き3/海洋コマ)"); used = true;
+    // ====== シャチ海賊アビリティ ======
+    } else if (actionMode === 'orca_bite') {
+        se.abilities['orca_bite']--;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let _obDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _obDmg;
+            se.hp = Math.min(se.maxHp||30, (se.hp||0) + _obDmg);
+            msg(`🐋 噛みつき奪い！${targetEntity.name}に${_obDmg}ダメ→${se.name}HP+${_obDmg}！`);
+        }
+        used = true;
+    } else if (actionMode === 'anchor_throw') {
+        se.abilities['anchor_throw']--;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let _atDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _atDmg;
+            // スタン: 次ターンAP-1
+            targetEntity._anchorStun = true;
+            se.ap = Math.min(se.maxAp||2, (se.ap||0) + 1);
+            msg(`⚓ 碇投げ！${targetEntity.name}に${_atDmg}ダメ＋スタン！${se.name}AP+1！`);
+        }
+        used = true;
+    } else if (actionMode === 'skill_jack') {
+        se.abilities['skill_jack']--;
+        // 半径3内の敵のランダムアビリティを1封印し自分に付与
+        let _sjEnemies = entities.filter(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=3);
+        if (_sjEnemies.length > 0) {
+            let _sjTgt = _sjEnemies[Math.floor(Math.random()*_sjEnemies.length)];
+            let _sjKeys = Object.keys(_sjTgt.abilities||{}).filter(k=>k!=='drop_rock'&&(_sjTgt.abilities[k]||0)>0&&_sjTgt.abilities[k]!==999);
+            if (_sjKeys.length > 0) {
+                let _sjK = _sjKeys[Math.floor(Math.random()*_sjKeys.length)];
+                if (!cursedAbilities[_sjTgt.id]) cursedAbilities[_sjTgt.id] = {};
+                cursedAbilities[_sjTgt.id][_sjK] = (cursedAbilities[_sjTgt.id][_sjK]||0) + 3;
+                if (!se.abilities[_sjK]) se.abilities[_sjK] = 0;
+                se.abilities[_sjK] = (se.abilities[_sjK]||0) + 2;
+                msg(`🃏 スキルジャック！${_sjTgt.name}の「${ABILITY_NAMES[_sjK]||_sjK}」を3T封印→${se.name}に+2！`);
+            } else { msg(`🃏 スキルジャック失敗：封印できるアビリティなし`); }
+        } else { msg(`🃏 スキルジャック：範囲内に敵がいない`); }
+        used = true;
+    } else if (actionMode === 'mugging') {
+        se.abilities['mugging']--;
+        if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            let _mgDmg = 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _mgDmg;
+            // 被ダメバフ付与
+            targetEntity.defDebuff = (targetEntity.defDebuff||0) + 2;
+            targetEntity.defDebuffTimer = Math.max(targetEntity.defDebuffTimer||0, 3);
+            // ウォーターゲージ奪取
+            let _mgGauge = Math.min(targetEntity.waterGauge||0, 3);
+            if (_mgGauge > 0) { targetEntity.waterGauge -= _mgGauge; se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + _mgGauge); }
+            msg(`🦹 追い剥ぎ！${targetEntity.name}に${_mgDmg}ダメ＋被ダメ+2(3T)！ゲージ${_mgGauge}奪取！`);
+        }
+        used = true;
+    } else if (actionMode === 'hide_steal') {
+        se.abilities['hide_steal']--;
+        se.stealth = true; se.stealthTimer = 2;
+        // 半径3内の隣接エンティティのウォーターゲージを少量奪取
+        let _hsTgts = entities.filter(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=3&&(e.waterGauge||0)>0);
+        let _hsTotal = 0;
+        _hsTgts.forEach(e=>{ let _g=Math.min(e.waterGauge,2); e.waterGauge-=_g; _hsTotal+=_g; });
+        se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + _hsTotal);
+        msg(`🫥 隠れて奪う！${se.name}が潜伏(2T)＋ゲージ${_hsTotal}奪取！`);
+        used = true;
+    } else if (actionMode === 'pirate_flag') {
+        se.abilities['pirate_flag']--;
+        // 海賊旗エンティティを配置
+        let _pfOld = entities.findIndex(e=>e.type==='pirate_flag_entity'&&e.team===se.team);
+        if (_pfOld >= 0) entities.splice(_pfOld, 1);
+        entities.push({ id:'pirate_flag_'+Date.now(), type:'pirate_flag_entity', name:'海賊旗', team:se.team, r, c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
+        msg(`🏴‍☠️ 海賊旗を設置！半径2内の敵に毎ターンHP-1＋アビ-1！味方にアビ+1！`);
+        used = true;
+    } else if (actionMode === 'orca_cannon') {
+        se.abilities['orca_cannon']--;
+        // 直線8マス方向に5ダメ+貫通
+        let _ocDr = r - se.r, _ocDc = c - se.c;
+        let _ocLen = Math.max(Math.abs(_ocDr), Math.abs(_ocDc));
+        let _ocDrN = _ocLen > 0 ? _ocDr/_ocLen : 0, _ocDcN = _ocLen > 0 ? _ocDc/_ocLen : 0;
+        let _ocHits = 0;
+        for (let _ocS = 1; _ocS <= 8; _ocS++) {
+            let _ocR = se.r + Math.round(_ocDrN*_ocS), _ocC = se.c + Math.round(_ocDcN*_ocS);
+            if (_ocR<0||_ocR>=ROWS||_ocC<0||_ocC>=COLS) break;
+            if (board[_ocR][_ocC]==='rock'||board[_ocR][_ocC]==='wall') break;
+            let _ocTgt = entities.find(e=>e.hp>0&&e.r===_ocR&&e.c===_ocC&&e.team!==se.team);
+            if (_ocTgt && !_ocTgt.invin && !necroShieldBlock(_ocTgt)) {
+                let _ocD = 5 + (se.atkBonus||0) + (_ocTgt.defDebuff||0);
+                _ocTgt.hp -= _ocD; _ocHits++;
+                se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + 2);
+            }
+        }
+        msg(`💥 オルカキャノン！直線8マス貫通砲撃！命中${_ocHits}体・ゲージ+${_ocHits*2}！`);
+        used = true;
     // ====== 死霊術師アビリティ ======
     } else if (actionMode === 'dark_magic') {
         se.abilities['dark_magic']--;
@@ -11741,6 +11903,45 @@ function executeSkill(se) {
         let rd = gauge <= 5 ? "直線3・威力3" : gauge <= 15 ? "直線5・威力4" : gauge <= 25 ? "直線8・幅3・威力5" : "端まで・幅3・威力6";
         msg(`💦 ハイドロポンプ！ゲージ${gauge}消費(${rd})！方向を選んでください！`);
         actionMode = 'skill_hydro'; render(); return false;
+    }
+    // ====== シャチ海賊 スキル: 海の支配者 ======
+    if (se.type === 'orca_pirate') {
+        let _ocWG = se.waterGauge || 0;
+        if (_ocWG < 5) { msg("💧 ウォーターゲージが5以上必要！"); return false; }
+        se.waterGauge -= 5;
+        // 半径3内を渦潮化 + 3ダメ + AP-1
+        let _ocDomHits = 0;
+        for (let _dr = -3; _dr <= 3; _dr++) {
+            for (let _dc = -3; _dc <= 3; _dc++) {
+                if (Math.max(Math.abs(_dr),Math.abs(_dc)) > 3) continue;
+                let _nr = se.r + _dr, _nc = se.c + _dc;
+                if (_nr<0||_nr>=ROWS||_nc<0||_nc>=COLS) continue;
+                if (board[_nr][_nc]!=='rock'&&board[_nr][_nc]!=='wall') {
+                    vortexTiles.push({ r:_nr, c:_nc, expireOnTurn: turn + 2 });
+                    board[_nr][_nc] = 'vortex_tile';
+                }
+                let _oDTgt = entities.find(e=>e.hp>0&&e.r===_nr&&e.c===_nc&&e.team!==se.team);
+                if (_oDTgt && !_oDTgt.invin && !necroShieldBlock(_oDTgt)) {
+                    let _oDDmg = 3 + (se.atkBonus||0) + (_oDTgt.defDebuff||0);
+                    _oDTgt.hp -= _oDDmg;
+                    _oDTgt.ap = Math.max(0, (_oDTgt.ap||0) - 1);
+                    _ocDomHits++;
+                }
+            }
+        }
+        // ギャングオルカ召喚（自分の隣接空マス）
+        let _gcSpawn = null;
+        for (let [dr,dc] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]) {
+            let _gr = se.r+dr, _gc = se.c+dc;
+            if (_gr>=0&&_gr<ROWS&&_gc>=0&&_gc<COLS&&isWalkable(_gr,_gc)&&!entities.some(e=>e.hp>0&&e.r===_gr&&e.c===_gc)) {
+                _gcSpawn = { r:_gr, c:_gc }; break;
+            }
+        }
+        if (_gcSpawn) {
+            entities.push({ id:'gang_orca'+Date.now(), type:'gang_orca', name:'ギャングオルカ', team:se.team, r:_gcSpawn.r, c:_gcSpawn.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{mugging:999, orca_bite:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn, oceanUnit:true, waterGauge:10, maxWaterGauge:30 });
+        }
+        msg(`🌊 海の支配者！半径3渦潮化・${_ocDomHits}体に3ダメ+AP-1＋ギャングオルカ召喚！`);
+        render(); return true;
     }
     // ====== ピエロ スキル: 棺桶ナイフ ======
     if (se.type === 'clown') {
@@ -15001,6 +15202,8 @@ function isSkillConditionMet(se) {
     }
     // サメ戦士: ウォーターゲージ蓄積済み
     if (t === 'shark_warrior') return (se.waterGauge||0) > 0;
+    // シャチ海賊: ウォーターゲージ5以上
+    if (t === 'orca_pirate') return (se.waterGauge||0) >= 5;
     // 天使: 堕天ゲージ15以上
     if (t === 'angel') return (se.fallenGauge||0) >= 15;
     // 陰陽師: 封印/回数0アビリティ5以上
