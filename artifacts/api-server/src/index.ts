@@ -18,6 +18,22 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+interface MatchStats {
+  totalDamageDealt?: number;
+  abilityUseCount?: number;
+  skillUsed?: boolean;
+  tookDamage?: boolean;
+  wasNearDeath?: boolean;
+  reachedEnemyTerritory?: boolean;
+  turnCount?: number;
+  winStreak?: number;
+}
+
+interface BonusEntry {
+  label: string;
+  rp: number;
+}
+
 interface PlayerSlot {
   ws: WebSocket | null;
   sessionId: string;
@@ -34,6 +50,9 @@ interface Room {
   status: "waiting" | "playing" | "suspended" | "finished";
   lastState: unknown;
   suspendTimer: NodeJS.Timeout | null;
+  pendingGameEnd: Map<number, { won: boolean; matchStats: MatchStats }>;
+  pendingGameEndTimer: NodeJS.Timeout | null;
+  resolvedWinnerIndex: number;
 }
 
 interface QueueEntry {
@@ -134,6 +153,22 @@ function tryMatch() {
   }
 }
 
+function makeRoom(code: string, partial: Partial<Room>): Room {
+  return {
+    code,
+    players: [null, null],
+    settings: null,
+    isRanked: false,
+    status: "waiting",
+    lastState: null,
+    suspendTimer: null,
+    pendingGameEnd: new Map(),
+    pendingGameEndTimer: null,
+    resolvedWinnerIndex: -1,
+    ...partial,
+  };
+}
+
 function startRankedMatch(a: QueueEntry, b: QueueEntry) {
   if (a.searchTimer) clearInterval(a.searchTimer);
   if (b.searchTimer) clearInterval(b.searchTimer);
@@ -153,8 +188,7 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     p1First: hostFirst,
     ranked: isRanked,
   };
-  rooms.set(code, {
-    code,
+  rooms.set(code, makeRoom(code, {
     players: [
       { ws: a.ws, sessionId: a.sessionId, userId: a.userId, rank: a.rank },
       { ws: b.ws, sessionId: b.sessionId, userId: b.userId, rank: b.rank },
@@ -162,9 +196,7 @@ function startRankedMatch(a: QueueEntry, b: QueueEntry) {
     settings,
     isRanked,
     status: "playing",
-    lastState: null,
-    suspendTimer: null,
-  });
+  }));
   attachRoom(a.ws, code, 0);
   attachRoom(b.ws, code, 1);
   safeSend(a.ws, {
@@ -210,20 +242,122 @@ function computeRp(myRank: number, oppRank: number, won: boolean): number {
   return -10;
 }
 
-function finishRanked(room: Room, winnerIndex: number) {
+// Bonuses awarded to the winner based on match performance.
+function computeWinnerBonuses(stats: MatchStats): BonusEntry[] {
+  const bonuses: BonusEntry[] = [];
+  const s = stats || {};
+
+  // No-damage and near-death comeback are mutually exclusive.
+  if (!s.tookDamage) {
+    bonuses.push({ label: "🛡️ ノーダメージ勝利", rp: 3 });
+  } else if (s.wasNearDeath) {
+    bonuses.push({ label: "💥 逆転勝ち", rp: 2 });
+  }
+  if ((s.totalDamageDealt ?? 0) >= 20) {
+    bonuses.push({ label: "⚔️ 大ダメージ", rp: 2 });
+  }
+  if ((s.turnCount ?? 999) <= 8) {
+    bonuses.push({ label: "⚡ 早期決着", rp: 2 });
+  }
+  if ((s.abilityUseCount ?? 999) <= 1) {
+    bonuses.push({ label: "🎯 アビリティ節約", rp: 1 });
+  }
+  if (!s.skillUsed) {
+    bonuses.push({ label: "🔒 スキル温存", rp: 1 });
+  }
+  const streak = s.winStreak ?? 0;
+  if (streak >= 5) {
+    bonuses.push({ label: `🔥 ${streak}連勝`, rp: 3 });
+  } else if (streak >= 3) {
+    bonuses.push({ label: `🔥 ${streak}連勝`, rp: 2 });
+  } else if (streak >= 2) {
+    bonuses.push({ label: `🔥 ${streak}連勝`, rp: 1 });
+  }
+
+  // Cap total bonus at +8.
+  let total = bonuses.reduce((a, b) => a + b.rp, 0);
+  if (total > 8) {
+    let excess = total - 8;
+    for (let i = bonuses.length - 1; i >= 0 && excess > 0; i--) {
+      const cut = Math.min(bonuses[i]!.rp, excess);
+      bonuses[i]!.rp -= cut;
+      excess -= cut;
+    }
+  }
+  return bonuses.filter((b) => b.rp > 0);
+}
+
+// RP adjustments awarded to the loser (reduce the RP loss).
+function computeLossAdjustments(
+  stats: MatchStats,
+  opponentTurnCount?: number
+): BonusEntry[] {
+  const bonuses: BonusEntry[] = [];
+  const s = stats || {};
+  // 接戦ボーナス: close match — game lasted 15+ turns.
+  const tc = s.turnCount ?? opponentTurnCount ?? 0;
+  if (tc >= 15) {
+    bonuses.push({ label: "🤝 接戦ボーナス", rp: 2 });
+  }
+  // 敵陣突破ボーナス: loser reached enemy territory at some point.
+  if (s.reachedEnemyTerritory) {
+    bonuses.push({ label: "🏃 敵陣突破", rp: 2 });
+  }
+  return bonuses;
+}
+
+function finishRanked(
+  room: Room,
+  winnerIndex: number,
+  winnerStats?: MatchStats,
+  loserStats?: MatchStats
+) {
   if (room.status === "finished") return;
   room.status = "finished";
   const w = room.players[winnerIndex];
   const l = room.players[winnerIndex === 0 ? 1 : 0];
   if (!w || !l) return;
+
+  if (room.pendingGameEndTimer) {
+    clearTimeout(room.pendingGameEndTimer);
+    room.pendingGameEndTimer = null;
+  }
+
   if (room.isRanked) {
-    const wDelta = computeRp(w.rank, l.rank, true);
-    const lDelta = computeRp(l.rank, w.rank, false);
-    safeSend(w.ws, { type: "rankResult", won: true, rpDelta: wDelta, ranked: true });
-    safeSend(l.ws, { type: "rankResult", won: false, rpDelta: lDelta, ranked: true });
+    const baseWDelta = computeRp(w.rank, l.rank, true);
+    const baseLDelta = computeRp(l.rank, w.rank, false);
+
+    const wBonuses = computeWinnerBonuses(winnerStats || {});
+    const lAdjustments = computeLossAdjustments(
+      loserStats || {},
+      winnerStats?.turnCount
+    );
+
+    const wBonusTotal = wBonuses.reduce((a, b) => a + b.rp, 0);
+    const lAdjTotal = lAdjustments.reduce((a, b) => a + b.rp, 0);
+
+    const wDelta = baseWDelta + wBonusTotal;
+    const lDelta = baseLDelta + lAdjTotal;
+
+    safeSend(w.ws, {
+      type: "rankResult",
+      won: true,
+      rpDelta: wDelta,
+      baseRpDelta: baseWDelta,
+      bonuses: wBonuses,
+      ranked: true,
+    });
+    safeSend(l.ws, {
+      type: "rankResult",
+      won: false,
+      rpDelta: lDelta,
+      baseRpDelta: baseLDelta,
+      bonuses: lAdjustments,
+      ranked: true,
+    });
   } else {
-    safeSend(w.ws, { type: "rankResult", won: true, rpDelta: 0, ranked: false });
-    safeSend(l.ws, { type: "rankResult", won: false, rpDelta: 0, ranked: false });
+    safeSend(w.ws, { type: "rankResult", won: true, rpDelta: 0, bonuses: [], ranked: false });
+    safeSend(l.ws, { type: "rankResult", won: false, rpDelta: 0, bonuses: [], ranked: false });
   }
   // Terminal cleanup: clear any pending grace timer and drop the room shortly
   // after results are delivered, so finished rooms are not retained forever.
@@ -287,8 +421,7 @@ wss.on("connection", (ws: WebSocket) => {
       if (msg.type === "create") {
         const code = generateRoomCode();
         const sessionId = randomUUID();
-        rooms.set(code, {
-          code,
+        rooms.set(code, makeRoom(code, {
           players: [
             {
               ws,
@@ -300,11 +433,8 @@ wss.on("connection", (ws: WebSocket) => {
             null,
           ],
           settings: msg.settings as Record<string, unknown>,
-          isRanked: false,
           status: "waiting",
-          lastState: null,
-          suspendTimer: null,
-        });
+        }));
         playerIndex = 0;
         myRoomCode = code;
         attachRoom(ws, code, 0);
@@ -435,12 +565,43 @@ wss.on("connection", (ws: WebSocket) => {
         const otherIdx = playerIndex === 0 ? 1 : 0;
         safeSend(room.players[otherIdx]?.ws ?? null, msg);
       } else if (msg.type === "gameEnd") {
-        // Sender reports they won (won:true) or lost.
         const room = rooms.get(myRoomCode);
-        if (!room) return;
+        if (!room || room.status === "finished") return;
+
         const won = msg.won === true;
-        const winnerIndex = won ? playerIndex : playerIndex === 0 ? 1 : 0;
-        finishRanked(room, winnerIndex);
+        const matchStats = (msg.matchStats as MatchStats) || {};
+
+        // Store this player's report.
+        room.pendingGameEnd.set(playerIndex, { won, matchStats });
+
+        // First report determines the winner index.
+        if (room.resolvedWinnerIndex === -1) {
+          room.resolvedWinnerIndex = won
+            ? playerIndex
+            : playerIndex === 0
+            ? 1
+            : 0;
+        }
+        const winnerIndex = room.resolvedWinnerIndex;
+
+        if (room.pendingGameEnd.size >= 2) {
+          // Both players reported — finalize immediately.
+          if (room.pendingGameEndTimer) {
+            clearTimeout(room.pendingGameEndTimer);
+            room.pendingGameEndTimer = null;
+          }
+          const wStats = room.pendingGameEnd.get(winnerIndex)?.matchStats;
+          const lStats = room.pendingGameEnd.get(winnerIndex === 0 ? 1 : 0)?.matchStats;
+          finishRanked(room, winnerIndex, wStats, lStats);
+        } else if (!room.pendingGameEndTimer) {
+          // Wait up to 3s for the second player's report.
+          room.pendingGameEndTimer = setTimeout(() => {
+            if (room.status === "finished") return;
+            const wStats = room.pendingGameEnd.get(winnerIndex)?.matchStats;
+            const lStats = room.pendingGameEnd.get(winnerIndex === 0 ? 1 : 0)?.matchStats;
+            finishRanked(room, winnerIndex, wStats, lStats);
+          }, 3000);
+        }
       } else if (msg.type === "leave") {
         const room = rooms.get(myRoomCode);
         if (room) {

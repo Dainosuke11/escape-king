@@ -1157,6 +1157,10 @@ let intentionalClose = false;
 let isCpuRankedMatch = false;
 let cpuRankResultApplied = false;
 let rankedCountdownInterval = null;
+// Match stats for bonus RP tracking
+let matchStats = { totalDamageDealt: 0, abilityUseCount: 0, skillUsed: false, tookDamage: false, wasNearDeath: false, reachedEnemyTerritory: false };
+let _rankEnemyHpSnapshot = 0; // enemy HP sum at start of my player turn
+let _rankMyJobHpPrev = null;  // my job entity HP at start of previous player turn
 // Latency tracking
 let lastPingMs = null;
 let clientPingIntervalId = null;
@@ -1227,6 +1231,41 @@ function applyRpDelta(delta) {
     }
     setRank(rank); setRP(rp);
     return { rank, rp };
+}
+function getRankWinStreak() { return parseInt(localStorage.getItem('rankWinStreak') || '0', 10); }
+function setRankWinStreak(n) { localStorage.setItem('rankWinStreak', String(Math.max(0, n))); }
+function resetMatchStats() {
+    matchStats = { totalDamageDealt: 0, abilityUseCount: 0, skillUsed: false, tookDamage: false, wasNearDeath: false, reachedEnemyTerritory: false };
+    _rankEnemyHpSnapshot = 0;
+    _rankMyJobHpPrev = null;
+}
+function computeLocalBonuses(won, stats) {
+    const bonuses = [];
+    if (won) {
+        if (!stats.tookDamage) bonuses.push({ label: '🛡️ ノーダメージ勝利', rp: 3 });
+        else if (stats.wasNearDeath) bonuses.push({ label: '💥 逆転勝ち', rp: 2 });
+        if ((stats.totalDamageDealt || 0) >= 20) bonuses.push({ label: '⚔️ 大ダメージ', rp: 2 });
+        if ((stats.turnCount || 999) <= 8) bonuses.push({ label: '⚡ 早期決着', rp: 2 });
+        if ((stats.abilityUseCount || 999) <= 1) bonuses.push({ label: '🎯 アビリティ節約', rp: 1 });
+        if (!stats.skillUsed) bonuses.push({ label: '🔒 スキル温存', rp: 1 });
+        const streak = stats.winStreak || 0;
+        if (streak >= 5) bonuses.push({ label: `🔥 ${streak}連勝`, rp: 3 });
+        else if (streak >= 3) bonuses.push({ label: `🔥 ${streak}連勝`, rp: 2 });
+        else if (streak >= 2) bonuses.push({ label: `🔥 ${streak}連勝`, rp: 1 });
+        let total = bonuses.reduce((a, b) => a + b.rp, 0);
+        if (total > 8) {
+            let excess = total - 8;
+            for (let i = bonuses.length - 1; i >= 0 && excess > 0; i--) {
+                const cut = Math.min(bonuses[i].rp, excess);
+                bonuses[i].rp -= cut;
+                excess -= cut;
+            }
+        }
+    } else {
+        if ((stats.turnCount || 0) >= 15) bonuses.push({ label: '🤝 接戦ボーナス', rp: 2 });
+        if (stats.reachedEnemyTerritory) bonuses.push({ label: '🏃 敵陣突破', rp: 2 });
+    }
+    return bonuses.filter(b => b.rp > 0);
 }
 // Sync player data to server (fire-and-forget)
 function syncPlayerToServer() {
@@ -2314,6 +2353,7 @@ function handleWsMessage(event) {
         onlineRoomCode = data.roomCode || onlineRoomCode;
         rankResultApplied = false;
         savedTurnTimeLeft = null;
+        resetMatchStats();
         document.getElementById('online-lobby').style.display = 'none';
 
         const settings = data.settings;
@@ -2477,20 +2517,36 @@ function handleRankResult(data) {
     rankResultApplied = true;
     stopTurnTimer();
     intentionalClose = true;
-    let line = '';
-    if (data.ranked && isRankedMatch) {
-        const before = { rank: getRank(), rp: getRP() };
-        const after = applyRpDelta(data.rpDelta);
-        const sign = data.rpDelta >= 0 ? '+' : '';
-        line = `RP ${sign}${data.rpDelta}　(ランク${after.rank} / ${after.rp}RP)`;
-        if (after.rank > before.rank) line += '　⬆️ ランクアップ！';
-        else if (after.rank < before.rank) line += '　⬇️ ランクダウン';
-    } else {
-        line = 'フレンドマッチのためRP変動なし';
+
+    if (!data.ranked || !isRankedMatch) {
+        syncPlayerToServer();
+        setTimeout(() => { alert('フレンドマッチのためRP変動なし'); }, 300);
+        return;
     }
+
+    const before = { rank: getRank(), rp: getRP() };
+    const after = applyRpDelta(data.rpDelta);
     syncPlayerToServer();
+
+    const sign = data.rpDelta >= 0 ? '+' : '';
+    const header = data.won ? '🏆 勝利！' : '敗北...';
+
+    let bonusSection = '';
+    if (data.bonuses && data.bonuses.length > 0) {
+        const baseSign = (data.baseRpDelta ?? data.rpDelta) >= 0 ? '+' : '';
+        bonusSection += `\n基本RP: ${baseSign}${data.baseRpDelta ?? data.rpDelta}`;
+        for (const b of data.bonuses) {
+            bonusSection += `\n${b.label}: +${b.rp} RP`;
+        }
+        bonusSection += `\n─────────────`;
+    }
+
+    let rpLine = `RP ${sign}${data.rpDelta}　(ランク${after.rank} / ${after.rp}RP)`;
+    if (after.rank > before.rank) rpLine += '　⬆️ ランクアップ！';
+    else if (after.rank < before.rank) rpLine += '　⬇️ ランクダウン';
+
     setTimeout(() => {
-        alert((data.won ? '🏆 勝利！\n\n' : '敗北...\n\n') + line);
+        alert(`${header}\n${bonusSection}\n${rpLine}`);
     }, 300);
 }
 
@@ -3133,6 +3189,7 @@ function startCpuRankedMatch() {
     isCpuRankedMatch = true;
     cpuRankResultApplied = false;
     isOnlineMode = false;
+    resetMatchStats();
     const _rankedStages = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
     activeStage = _rankedStages[Math.floor(Math.random() * _rankedStages.length)];
 
@@ -5614,6 +5671,21 @@ function startTurn(team, skipEffects = false) {
     usedCannonTiles = new Set();
     actionMode = 'move';
 
+    // Track match stats: snapshot enemy HP and check own job entity HP at player turn start
+    if (isRankedMatch || isCpuRankedMatch) {
+        const _myT = myTeam();
+        _rankEnemyHpSnapshot = entities
+            .filter(e => e.team !== _myT && e.team !== 'npc' && e.hp > 0)
+            .reduce((s, e) => s + e.hp, 0);
+        const _myJobId = _myT === 'player' ? 'p1' : 'c1';
+        const _myJob = entities.find(e => e.id === _myJobId);
+        if (_myJob) {
+            if (_rankMyJobHpPrev !== null && _myJob.hp < _rankMyJobHpPrev) matchStats.tookDamage = true;
+            if (_myJob.hp <= 2) matchStats.wasNearDeath = true;
+            _rankMyJobHpPrev = _myJob.hp;
+        }
+    }
+
     // Execute pending roll_rock from previous turn
     if (rollRockPending) {
         let { r: rrR, c: rrC, dir: rrDir, cols: rrCols } = rollRockPending;
@@ -6578,6 +6650,20 @@ function startTurn(team, skipEffects = false) {
     } else if (team === 'cpu') {
         // playerターン終了→cpuターン開始：playerチームの残AP温存回復
         applyApRestRecovery('player');
+        // Accumulate match stats at end of player's turn
+        if (isRankedMatch || isCpuRankedMatch) {
+            const _myT = myTeam();
+            const _postHp = entities
+                .filter(e => e.team !== _myT && e.team !== 'npc' && e.hp > 0)
+                .reduce((s, e) => s + e.hp, 0);
+            matchStats.totalDamageDealt += Math.max(0, _rankEnemyHpSnapshot - _postHp);
+            // Count ability uses this turn (usedAbilities was reset at player turn start)
+            matchStats.abilityUseCount += Object.values(usedAbilities).reduce((s, st) => s + st.size, 0);
+            // Detect skill usage (skillUsed flag may be reset on recover, so capture now)
+            if (!matchStats.skillUsed) {
+                matchStats.skillUsed = entities.some(e => e.team === _myT && e.skillUsed === true);
+            }
+        }
         if (!skipEffects) {
             entities.forEach(e => {
                 if (e.team === 'cpu') processTurnStartEffects(e);
@@ -14436,6 +14522,16 @@ function checkWin() {
     let cpuJobDead = cpu && cpu.hp <= 0;
     let playerJobDead = player && player.hp <= 0;
 
+    // Track breakthrough: did my team reach the enemy goal row at any point?
+    if ((isRankedMatch || isCpuRankedMatch) && !matchStats.reachedEnemyTerritory) {
+        const _myT = myTeam();
+        if (_myT === 'player') {
+            matchStats.reachedEnemyTerritory = entities.some(e => e.team === 'player' && e.hp > 0 && e.r === 0);
+        } else {
+            matchStats.reachedEnemyTerritory = entities.some(e => e.team === 'cpu' && e.hp > 0 && e.r === SIZE - 1);
+        }
+    }
+
     // 撃破時の一度だけ破裂エフェクト
     if (cpuJobDead && !_burstPlayed.has('c1') && cpu) {
         _burstPlayed.add('c1');
@@ -14481,18 +14577,35 @@ function checkWin() {
         const iWon = title.includes('Victory');
         if (isOnlineMode) {
             if (!rankResultApplied) {
-                // Report the result to the server, which computes RP for both sides.
-                wsSend({ type: 'gameEnd', won: iWon });
+                // Finalize skill check (may have been used without startTurn('cpu') capturing it)
+                matchStats.skillUsed = matchStats.skillUsed || entities.some(e => e.team === myTeam() && e.skillUsed === true);
+                const newStreak = iWon ? getRankWinStreak() + 1 : 0;
+                setRankWinStreak(newStreak);
+                const sendMatchStats = { ...matchStats, turnCount: turn, winStreak: newStreak };
+                wsSend({ type: 'gameEnd', won: iWon, matchStats: sendMatchStats });
             }
         } else if (isCpuRankedMatch) {
-            // CPU ranked match: compute limited RP and save (one-time guard)
+            // CPU ranked match: compute RP with bonuses (one-time guard)
             if (!cpuRankResultApplied) {
                 cpuRankResultApplied = true;
-                const rpDelta = computeCpuRankedRp(iWon, getRank());
+                matchStats.skillUsed = matchStats.skillUsed || entities.some(e => e.team === myTeam() && e.skillUsed === true);
+                const newStreak = iWon ? getRankWinStreak() + 1 : 0;
+                setRankWinStreak(newStreak);
+                const finalStats = { ...matchStats, turnCount: turn, winStreak: newStreak };
+                const baseRpDelta = computeCpuRankedRp(iWon, getRank());
+                const bonuses = computeLocalBonuses(iWon, finalStats);
+                const bonusTotal = bonuses.reduce((a, b) => a + b.rp, 0);
+                const rpDelta = baseRpDelta + bonusTotal;
                 const before = { rank: getRank(), rp: getRP() };
                 const after = applyRpDelta(rpDelta);
                 syncPlayerToServer();
                 const sign = rpDelta >= 0 ? '+' : '';
+                if (bonuses.length > 0) {
+                    const baseSign = baseRpDelta >= 0 ? '+' : '';
+                    title += `\n基本RP: ${baseSign}${baseRpDelta}`;
+                    for (const b of bonuses) { title += `\n${b.label}: +${b.rp} RP`; }
+                    title += `\n─────────────`;
+                }
                 let rpLine = `\n🤖 CPU対戦ランク戦  RP ${sign}${rpDelta}  (ランク${after.rank} / ${after.rp}RP)`;
                 if (after.rank > before.rank) rpLine += '  ⬆️ ランクアップ！';
                 else if (after.rank < before.rank) rpLine += '  ⬇️ ランクダウン';
