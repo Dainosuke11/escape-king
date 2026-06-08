@@ -10729,7 +10729,11 @@ function handleAbilityTarget(r, c, targetEntity) {
         let _pfOld = entities.findIndex(e=>e.type==='pirate_flag_entity'&&e.team===se.team);
         if (_pfOld >= 0) entities.splice(_pfOld, 1);
         entities.push({ id:'pirate_flag_'+Date.now(), type:'pirate_flag_entity', name:'海賊旗', team:se.team, r, c, hp:1, maxHp:1, ap:0, maxAp:0, abilities:{}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, turnBorn:turn });
-        msg(`🏴‍☠️ 海賊旗を設置！半径2内の敵に毎ターンHP-1＋アビ-1！味方にアビ+1！`);
+        // 海賊の足元に大砲マスを一時設置（次のターン開始時に消滅）
+        let _pfOrigTile = board[se.r][se.c];
+        board[se.r][se.c] = 'cannon';
+        tempRocks.push({ r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: _pfOrigTile || 'plains' });
+        msg(`🏴‍☠️ 海賊旗を設置！半径2内の敵に毎ターンHP-1＋アビ-1！味方にアビ+1！足元に大砲出現(1T)！`);
         used = true;
     // ====== 死霊術師アビリティ ======
     } else if (actionMode === 'dark_magic') {
