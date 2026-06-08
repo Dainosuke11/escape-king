@@ -1800,7 +1800,7 @@ const ABILITY_NAMES = {
     anchor_throw: '⚓碇投げ(直線3/威2/闇/吹飛+岩/AP-1/G+5)',
     skill_jack: '🃏スキルジャック(r3/敵2abi-1+1T封印/自2abi+1/G+5)',
     mugging: '🔪追い剥ぎ(r1/威2/闇/被ダメバフ/G+5)',
-    hide_steal: '🎭隠れて奪う(1T潜伏/接近/ゲージ奪取/G+5)',
+    hide_steal: '💣隠れて奪う(1T潜伏/直線3爆弾/2ダメ/吹飛/半径1スプラッシュ/全ゲージ譲渡/G+5)',
     pirate_flag: '🏴‍☠️海賊旗(r2内設置/5T~/敵-1/味方+1)',
     orca_cannon: '💣シャチ大砲(直線8/威4/吹飛/G+5)'
 };
@@ -2029,7 +2029,7 @@ const ABILITY_TIPS = {
     anchor_throw: '正面直線3マスの敵1体に闇属性2ダメ＋後方吹き飛ばし＋元の位置に岩設置＋敵AP-1。使用後自分のAP+1・ウォーターゲージ+5。回数5。',
     skill_jack: '半径3マス内の全敵のランダム2アビリティ使用回数-1＋1ターン封印。自分のランダム2アビリティ使用回数+1。使用後ウォーターゲージ+5。回数5。',
     mugging: '半径1マスの敵に闇属性2ダメ。命中した敵に被ダメバフ+1(1ターン持続)。使用後ウォーターゲージ+5。回数5。',
-    hide_steal: '自身が1ターン潜伏状態になる。正面直線3マス内に敵がいれば1マス接近し、その敵のウォーターゲージ・各種バフ・ゲージ類を奪い自分に付与。使用後ウォーターゲージ+5。回数5。',
+    hide_steal: '死角から爆弾を投げつける。シャチは1ターン潜伏状態になる。直線3マス以内の敵に闇属性2ダメ＋後方吹き飛ばし。爆発の半径1マス内にいる別の敵にも1ダメージ。選ばれた敵の全ゲージ・攻撃ボーナス・レベル・所持アイテムをシャチに譲渡する。使用後ウォーターゲージ+5。回数5。',
     pirate_flag: '半径2マス以内の空きマスに海賊旗(HP1/AP0)を設置。旗の半径2マス内：敵はターン開始時にランダム1アビリティ-1＋HP-1、味方は同量+1。5ターン経過後に使用可能。回数5。',
     orca_cannon: '正面直線8マスの敵1体に4ダメ＋後方吹き飛ばし。長距離狙撃。使用後ウォーターゲージ+5。回数5。'
 };
@@ -7269,7 +7269,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'anchor_throw') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
     if (mode === 'skill_jack') return true;
     if (mode === 'mugging') return maxDist===1 && target && target.team!==se.team;
-    if (mode === 'hide_steal') return r===se.r && c===se.c;
+    if (mode === 'hide_steal') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3 && target && target.team!==se.team;
     if (mode === 'pirate_flag') { if (turn < 5) return false; return maxDist<=2 && isWalkable(r,c) && !entities.some(en=>en.hp>0&&en.r===r&&en.c===c); }
     if (mode === 'orca_cannon') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
     // ピエロ
@@ -9924,13 +9924,54 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'hide_steal') {
         se.abilities['hide_steal']--;
-        se.stealth = true; se.stealthTimer = 2;
-        // 半径3内の隣接エンティティのウォーターゲージを少量奪取
-        let _hsTgts = entities.filter(e=>e.hp>0&&e.team!==se.team&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=3&&(e.waterGauge||0)>0);
-        let _hsTotal = 0;
-        _hsTgts.forEach(e=>{ let _g=Math.min(e.waterGauge,2); e.waterGauge-=_g; _hsTotal+=_g; });
-        se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + _hsTotal);
-        msg(`🫥 隠れて奪う！${se.name}が潜伏(2T)＋ゲージ${_hsTotal}奪取！`);
+        // 1T潜伏
+        se.stealth = true; se.stealthTimer = 1;
+        if (!targetEntity) { msg(`💣 隠れて奪う：対象なし`); used = true; }
+        else {
+            // 2ダメ + 後方吹き飛ばし
+            if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+                let _hsDmg = 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+                targetEntity.hp -= _hsDmg;
+                knockback(targetEntity, 2, se);
+                // 半径1スプラッシュ (1ダメ)
+                entities.forEach(sp => {
+                    if (sp===targetEntity||sp.hp<=0||sp.team===se.team) return;
+                    if (Math.max(Math.abs(sp.r-targetEntity.r),Math.abs(sp.c-targetEntity.c)) <= 1 && !sp.invin && !necroShieldBlock(sp)) {
+                        sp.hp -= 1;
+                    }
+                });
+                // 全ゲージ・ステータス・レベル・アイテム譲渡
+                const _gaugeKeys = ['waterGauge','mafiaGauge','guruGauge','mikoGauge','senninGauge','soulCount','fallenGauge','plantLv','alienLv','jp','machodLv'];
+                _gaugeKeys.forEach(k => {
+                    if ((targetEntity[k]||0) > 0) {
+                        se[k] = (se[k]||0) + (targetEntity[k]||0);
+                        targetEntity[k] = 0;
+                    }
+                });
+                // waterGaugeはmaxWaterGaugeでキャップ
+                if (se.waterGauge !== undefined) se.waterGauge = Math.min(se.maxWaterGauge||30, se.waterGauge);
+                // atkBonus譲渡
+                if ((targetEntity.atkBonus||0) > 0) {
+                    se.atkBonus = (se.atkBonus||0) + (targetEntity.atkBonus||0);
+                    targetEntity.atkBonus = 0;
+                }
+                // アビリティ回数 (999・drop_rock除く): 各+1
+                Object.keys(targetEntity.abilities||{}).forEach(k => {
+                    if (k==='drop_rock'||targetEntity.abilities[k]===999) return;
+                    if ((targetEntity.abilities[k]||0) > 0) {
+                        if (se.abilities[k] !== undefined && se.abilities[k] !== 999) se.abilities[k]++;
+                    }
+                });
+                // アイテムフラグ
+                const _itemFlags = ['chainsaw_equipped','_shuraFirst','_asuraFirst','highWaterBuff','fullWaterBuff'];
+                _itemFlags.forEach(k => { if (targetEntity[k]) { se[k] = true; targetEntity[k] = false; } });
+                msg(`💣 隠れて奪う！${targetEntity.name}に${_hsDmg}ダメ＋吹飛！全ゲージ・ステータス・アイテムを奪取！`);
+            } else {
+                msg(`💣 隠れて奪う：${targetEntity.name}はバリアで防いだ！`);
+            }
+        }
+        // 使用後ウォーターゲージ+5
+        se.waterGauge = Math.min(se.maxWaterGauge||30, (se.waterGauge||0) + 5);
         used = true;
     } else if (actionMode === 'pirate_flag') {
         se.abilities['pirate_flag']--;
