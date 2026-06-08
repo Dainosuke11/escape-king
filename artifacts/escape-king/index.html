@@ -1441,7 +1441,7 @@ const ABILITY_NAMES = {
     iai: '⚔️居合(次T/隣接敵5ダメ迎撃)',
     abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)',
     kourin: '⛪降臨(ダッシュ+信者召喚+G+1)',
-    sabaki_kaminari: '⚡裁きの雷(予知/r3敵選択/次T:r1四方4ダメ+AP-1/G1消費)',
+    sabaki_kaminari: '⚡裁きの雷(予知/r3敵選択/次T:半径1・9マス4ダメ+AP-1/G1消費)',
     shintaku_daiko: '🌊信託の大洪水(予知/次T:r2四方4ダメ+吹飛+AP-1+4封印/G1消費)',
     gyokuza_jishin: '🌍玉座の地鳴り(予知/次T:r4四方2ダメ+AP-1/G1消費)',
     fukuin_bofuu: '🌪️福音の暴風(予知/次T:前方5×5に2ダメ+吹飛/G1消費)',
@@ -10683,7 +10683,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
         if (se.shinGauge > 0) se.shinGauge--;
         se._pendingGuruAbils = se._pendingGuruAbils || [];
-        { let _wt=[[0,0],[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>({r:r+dr,c:c+dc})).filter(w=>w.r>=0&&w.r<SIZE&&w.c>=0&&w.c<SIZE);
+        { let _wt=[]; for(let _dr=-1;_dr<=1;_dr++) for(let _dc=-1;_dc<=1;_dc++){let _wr=r+_dr,_wc=c+_dc;if(_wr>=0&&_wr<SIZE&&_wc>=0&&_wc<SIZE)_wt.push({r:_wr,c:_wc});}
           se._pendingGuruAbils.push({type:'sabaki_kaminari', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c, warnTiles:_wt}); }
         if (se.abilities['sabaki_kaminari'] !== 999) se.abilities['sabaki_kaminari']--;
         msg(`⚡ 裁きの雷(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
@@ -12384,13 +12384,13 @@ function executeGuruPendingAbil(guru, pa) {
     const tr = pa.targetR, tc = pa.targetC;
     const t = pa.type;
     if (t === 'sabaki_kaminari') {
-        // 裁きの雷: 対象中心半径1の4方向 4ダメ+AP-1
+        // 裁きの雷: 対象中心半径1の9マス 4ダメ+AP-1
         let hits = 0;
-        [[0,0],[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc]) => {
-            let ent = entities.find(e => e.hp>0 && e.team!==_et && e.r===tr+dr && e.c===tc+dc);
+        for (let _dr=-1;_dr<=1;_dr++) for (let _dc=-1;_dc<=1;_dc++) {
+            let ent = entities.find(e => e.hp>0 && e.team!==_et && e.r===tr+_dr && e.c===tc+_dc);
             if (ent && !ent.invin) { ent.hp -= 4; ent.ap = Math.max(0,(ent.ap||0)-1); hits++; }
-        });
-        msg(`⚡ 裁きの雷(発動)！中心半径1・4ダメ＋AP-1(命中${hits}体)！`, true);
+        }
+        msg(`⚡ 裁きの雷(発動)！半径1・9マス4ダメ＋AP-1(命中${hits}体)！`, true);
     } else if (t === 'fujo_yukai') {
         // 不浄の融解: 対象中心半径1 4ダメ+炎+燃焼
         let hits = 0;
