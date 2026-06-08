@@ -4307,7 +4307,8 @@ function buildJobOptions() {
         if (wins >= req) {
             html += `<option value="${job}">${label}</option>`;
         } else {
-            html += `<option value="${job}" disabled style="color:#555;">🔒 ${label}（ランクマッチ${req}勝で解放）</option>`;
+            const remaining = req - wins;
+            html += `<option value="${job}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── ランクマッチ あと${remaining}勝で解放</option>`;
         }
     }
     return html;
@@ -17364,7 +17365,7 @@ function showTutorialResult() {
     earnBadge(1);
     // リザルト画面をチュートリアル用に設定
     document.getElementById('result-title').innerText =
-        '🎉 チュートリアル完了！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\nさあ、本番の試合に挑もう！';
+        '🎉 チュートリアル完了！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\n🔓 キャラをアンロックしよう！\nランクマッチで勝つとロックキャラが解放されます。\nCPUとのランクマッチ対戦でも解放できます！\n\nさあ、本番の試合に挑もう！';
     document.getElementById('btn-rematch').style.display = 'none';
     document.getElementById('btn-change').style.display = 'none';
     document.getElementById('btn-title').style.display = 'inline-block';
