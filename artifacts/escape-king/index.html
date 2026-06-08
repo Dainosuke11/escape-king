@@ -993,6 +993,7 @@ let magicCircleTimer = 5;
 let usedAbilities = {};
 let tutorialMode = false;
 let tutorialStep = 0;
+let tutorialAwaitingAction = false;
 // craft-pulse animation state: edge-trigger when JP crosses 2
 let craftJpWasReady = {};     // entityId → boolean (was JP >= 2 at last pre-loop check)
 let craftReadyActive = {};    // 'entityId|key' → boolean (should animate; cleared each turn)
@@ -14513,8 +14514,22 @@ function updateUI() {
             btn.disabled = true;
             btn.title = '⚔️ 戦闘形態中 — 触手のムチ/変身/岩落とし/岩砕きのみ使用可';
         }
+        btn.id = 'ability-btn-' + key;
         btn.onclick = () => setMode(key);
         list.appendChild(btn);
+    }
+    // チュートリアル：やってみよう中に対象アビリティボタンを光らせる
+    if (tutorialMode && tutorialAwaitingAction) {
+        const _ths = TUTORIAL_STEPS[tutorialStep];
+        if (_ths?.highlightAbility) {
+            const _hl = _ths.highlightAbility;
+            list.querySelectorAll('.ability-btn').forEach(b => {
+                const _k = b.id.replace('ability-btn-', '');
+                if (_hl === '*attack' ? _k !== 'drop_rock' : _k === _hl) {
+                    b.classList.add('tutorial-highlight');
+                }
+            });
+        }
     }
 
     // Church purification: consume all team souls to heal HP and restore ability uses
@@ -14958,16 +14973,19 @@ const TUTORIAL_STEPS = [
         msg: '⚔️ <b>アビリティを使ってみよう！</b><br><br>① コマを選択<br>② <b>アビリティボタン</b>を押して技を選ぶ<br>③ 対象マスをクリック<br><br>💡 ジョブごとに斬撃・魔法・召喚など全く違う技が使えます。<br><br>▶ 何でもいいので1つ使ってみよう！',
         highlight: 'btn-attack',
         advanceOn: 'ability_used',
+        highlightAbility: '*attack',
     },
     {   // Step 4: 岩落とし（インタラクティブ）
         msg: '🪨 <b>岩を置いてみよう！</b><br><br>「岩落とし」は<b>999回使える</b>妨害の基本アビリティ。<br>好きなマスに岩を設置して敵の進路を塞ごう！<br><br>① アビリティボタン → <b>「岩落とし」</b>を選ぶ<br>② 任意のマスをクリック！<br><br>▶ 岩を1個置いてみよう！',
         highlight: 'btn-attack',
         advanceOn: 'drop_rock_used',
+        highlightAbility: 'drop_rock',
     },
     {   // Step 5: 敵を撃破（インタラクティブ）
         msg: '💥 <b>練習用の敵を倒そう！</b><br><br>近くに<b>練習ダミー（HP3）</b>を置きました。<br>アビリティで攻撃してHPを0にしてください！<br><br>撃破すると<b>HP回復・アビリティ強化</b>などの報酬が得られます。<br><br>▶ ダミーを撃破しよう！',
         highlight: 'btn-attack',
         advanceOn: 'enemy_defeated',
+        highlightAbility: '*attack',
     },
     {   // Step 6: ターン終了（インタラクティブ）
         msg: '🔚 <b>ターンを終了しよう！</b><br><br>行動が終わったら<b>「ターン終了」ボタン</b>を押して相手にターンを渡しましょう。<br><br>💡 APが残っていてもターン終了できます。温存するか使い切るかが戦略の鍵！<br><br>▶ ターン終了ボタンを押してみよう！',
@@ -15171,12 +15189,14 @@ function hideTutorialAndWait() {
     const overlay = document.getElementById('tutorial-overlay');
     if (overlay) overlay.style.display = 'none';
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    tutorialAwaitingAction = true;
     // 行動力を2補充してターンが終わらないようにする
     const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
     if (_pe) { _pe.ap = Math.max(_pe.ap, 2); updateUI(); }
 }
 
 function advanceTutorial() {
+    tutorialAwaitingAction = false;
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     tutorialStep++;
     if (tutorialStep >= TUTORIAL_STEPS.length) {
@@ -15190,6 +15210,7 @@ function advanceTutorial() {
 
 function goBackTutorial() {
     if (tutorialStep <= 0) return;
+    tutorialAwaitingAction = false;
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     tutorialStep--;
     showTutorialStep();
