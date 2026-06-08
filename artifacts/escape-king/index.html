@@ -10860,6 +10860,12 @@ function handleAbilityTarget(r, c, targetEntity) {
                ['flutter','gremlin_trick','gnome_hammer','greenman_arrow','redcap_scythe','siren_song','pixie_illusion','swap_position'].includes(actionMode)) {
         executeRushSkill(se, r, c, actionMode);
         // ピクシー/swap系ハンドラは内部でreturnするため used は立てない
+        if (tutorialMode && tutorialStep === 8 && se.team === 'player' && actionMode.startsWith('skill_')) {
+            setTimeout(() => {
+                msg('👑 王のスキル「王の威厳」なら仲間を召喚・展開できる！コマごとに独自の必殺技がある！', true);
+                setTimeout(() => advanceTutorial(), 2000);
+            }, 700);
+        }
     }
 
     // 属性弱点ダメージ+1
@@ -15034,10 +15040,26 @@ const TUTORIAL_STEPS = [
         highlight: null,
         advanceOn: 'player_turn_again',
     },
-    {   // Step 8: スキルを使おう
-        msg: '✨ <b>スキル（必殺技）を覚えよう！</b><br><br>スキルは<b>1試合に1回しか使えない</b>強力な必殺技です。<br><br>使い方：<br>① コマを選択<br>② <b>アビリティボタン</b>を押すと技リストが表示される<br>③ リストの中に<b>「スキル」と書かれた技</b>があればそれがスキル！<br>④ タップして対象を選ぶか、自動発動<br><br>💡 スキルはジョブごとに完全に異なります。<br>大逆転のチャンスや、ピンチ時の切り札として温存しよう！<br><br>▶「次へ」で続きを見よう',
+    {   // Step 8: スキルを使ってみよう（インタラクティブ）
+        msg: '✨ <b>スキル（必殺技）を使ってみよう！</b><br><br>スキルは<b>ゲーム中1回のみ使える強力な必殺技</b>です！<br>コマごとに完全に異なり、<b>戦況を一発で覆す</b>力を持ちます。<br><br>🗡️ 騎士のスキル「<b>突進</b>」→ 直線5マス内の敵を攻撃・吹き飛ばし！<br>👑 王のスキル「<b>王の威厳</b>」→ 仲間を召喚・展開！<br><br>コマはそれぞれ独自のスキルを持っている——<b>ゲーム中1回のみの必殺技で戦況を覆せ！</b><br><br>▶「やってみよう！」を押して騎士のスキルを発動しよう！',
         highlight: 'btn-attack',
-        advanceOn: null,
+        highlightAbility: 'skill',
+        advanceOn: 'tutorial_skill_used',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            const _enemy = entities.find(e => e.team === 'cpu' && e.hp > 0);
+            if (_pe && _enemy) {
+                const _er = Math.max(0, _pe.r - 3), _ec = _pe.c;
+                for (let _r = _er; _r < _pe.r; _r++) {
+                    if (board[_r]?.[_ec] === 'rock') board[_r][_ec] = 'plains';
+                }
+                if (board[_er]?.[_ec] !== undefined) board[_er][_ec] = 'plains';
+                _enemy.r = _er; _enemy.c = _ec;
+                _pe.skillUsed = false;
+            }
+            if (_pe) { _pe.ap = Math.max(_pe.ap, 3); selectedEntity = _pe; updateUI(); }
+            render();
+        },
     },
     {   // Step 9: AP余らせてHP回復（インタラクティブ）
         msg: '💚 <b>APを余らせてHP回復を体験しよう！</b><br><br>敵からダメージを受けた！<br>APを<b>使わずにターン終了</b>すると…<br>➡ <b>HP+1回復</b>のボーナスが入ります！<br><br>守りに徹するときはAPをあえて使わず回復を狙う——それが上級者の戦略！<br><br>▶「やってみよう！」を押して、何もせずターン終了してみよう！',
@@ -15107,6 +15129,7 @@ const TUTORIAL_STEPS = [
     {   // Step 13: 岩砕き
         msg: '⛏️ <b>邪魔な岩は「岩砕き」で除去しよう！</b><br><br>自分の進路に岩が置かれてしまったら<b>「岩砕き」アビリティ</b>で破壊できます！<br><br>使い方：<br>① コマを選択<br>② アビリティボタン → <b>「岩砕き」</b>を選ぶ<br>③ <b>隣接する岩</b>をクリックすると破壊！<br><br>⚠️ 注意点：<br>・岩砕きには<b>使用回数制限</b>があります（ジョブによって異なる）<br>・使い切ると岩を破壊できなくなる → 四方を囲まれると<b>敗北！</b><br>・残数を常に確認しておこう<br><br>💡 岩砕きを節約したいなら、岩で囲まれにくいルートを選んで移動しよう。<br><br>▶ まず岩を1つ置いて(アビリティ→岩落とし)、それから岩砕きをやってみよう！',
         highlight: 'btn-attack',
+        highlightAbility: 'shatter',
         advanceOn: 'shatter_used',
     },
     {   // Step 14: 紫コマNPC
@@ -15302,8 +15325,8 @@ function hideTutorialAndWait() {
         const _endBtn = document.getElementById('btn-end-turn');
         if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
     }
-    // 岩落とし進路妨害/頭上岩落としステップ: アビリティボタンを光らせ矢印で誘導
-    if (_curStep?.advanceOn === 'drop_rock_placed' || _curStep?.advanceOn === 'avalanche_used') {
+    // 岩落とし進路妨害/頭上岩落とし/スキルステップ: アビリティボタンを光らせ矢印で誘導
+    if (_curStep?.advanceOn === 'drop_rock_placed' || _curStep?.advanceOn === 'avalanche_used' || _curStep?.advanceOn === 'tutorial_skill_used') {
         const _atkBtn = document.getElementById('btn-attack');
         if (_atkBtn) { _atkBtn.classList.add('tutorial-highlight'); showTutorialArrow(_atkBtn); }
     }
