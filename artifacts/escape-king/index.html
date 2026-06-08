@@ -15618,11 +15618,15 @@ const TUTORIAL_STEPS = [
             if (_pe) {
                 const _vr = Math.max(0, _pe.r - 1), _vc = _pe.c;
                 if (board[_vr]?.[_vc] !== undefined) board[_vr][_vc] = 'volcano';
-                if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = Math.max(_pe.abilities.shatter || 0, 1);
-                _pe.ap = Math.max(_pe.ap, 2);
-                selectedEntity = _pe;
-                updateUI();
                 render();
+                setTimeout(() => {
+                    if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = 3;
+                    _pe.ap = Math.max(_pe.ap, 2);
+                    _pe.actedThisTurn = false;
+                    _pe._usedAbilityThisTurn = false;
+                    selectedEntity = _pe;
+                    updateUI();
+                }, 0);
             }
         },
     },
