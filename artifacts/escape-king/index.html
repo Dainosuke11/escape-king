@@ -14647,6 +14647,7 @@ function updateUI() {
     if (!selectedEntity.skillUsed && ALL_JOBS.includes(selectedEntity.type)) {
         let skillName = JOB_SKILL_NAMES[selectedEntity.type] || '';
         let sb = document.createElement('button');
+        sb.id = 'ability-btn-skill';
         sb.className = 'ability-btn';
         sb.style.background = '#d35400'; sb.style.color = '#fff';
         sb.innerText = skillName ? `固有スキル発動【${skillName}】` : '固有スキル発動';
@@ -15055,8 +15056,9 @@ const TUTORIAL_STEPS = [
         advanceOn: 'move',
     },
     {   // Step 2: ダッシュ（インタラクティブ）
-        msg: '💨 <b>ダッシュで一気に駆け抜けよう！</b><br><br>「移動/決定」を押してから<b>2マス以上離れたマス</b>をクリックするとダッシュできます！<br>AP（行動力）を1消費して一気に距離を詰められます。<br><br>▶ やってみよう！',
-        highlight: 'btn-move',
+        msg: '💨 <b>ダッシュで一気に駆け抜けよう！</b><br><br>アビリティボタン → <b>「ダッシュ」</b>を選んで移動先をクリック！<br>AP（行動力）を1消費して一気に距離を詰められます。<br><br>▶ やってみよう！',
+        highlight: 'btn-attack',
+        highlightAbility: 'dash',
         advanceOn: 'dash',
     },
     {   // Step 3: アビリティ（インタラクティブ）
