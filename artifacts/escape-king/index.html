@@ -15497,15 +15497,18 @@ const TUTORIAL_STEPS = [
             board[_er+1][_ec] = 'rock';
             board[_er][_ec-1] = 'rock';
             board[_er][_ec+1] = 'rock';
-            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
-            if (_pe) {
-                _pe.ap = Math.max(_pe.ap, 3);
-                _pe.abilities['drop_rock'] = Math.max(_pe.abilities['drop_rock'] || 0, 3);
-                _pe.actedThisTurn = false;
-                _pe._usedAbilityThisTurn = false;
-                selectedEntity = _pe; updateUI();
-            }
             render();
+            // アビリティハンドラが actedThisTurn 等を上書きした後に復元するため setTimeout で遅延
+            setTimeout(() => {
+                const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+                if (_pe) {
+                    _pe.ap = Math.max(_pe.ap, 3);
+                    _pe.abilities['drop_rock'] = 5;
+                    _pe.actedThisTurn = false;
+                    _pe._usedAbilityThisTurn = false;
+                    selectedEntity = _pe; updateUI();
+                }
+            }, 0);
         },
     },
     {   // Step 13: 岩砕き
@@ -15812,6 +15815,8 @@ function advanceTutorial() {
     hideTutorialArrow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     document.querySelectorAll('.tut-tile-highlight').forEach(el => el.classList.remove('tut-tile-highlight'));
+    // スキルモード時の直線ラインなどを消す
+    if (actionMode !== 'move') { actionMode = 'move'; render(); }
     tutorialStep++;
     if (tutorialStep >= TUTORIAL_STEPS.length) {
         const overlay = document.getElementById('tutorial-overlay');
