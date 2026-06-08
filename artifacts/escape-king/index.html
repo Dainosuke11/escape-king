@@ -11929,7 +11929,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         for (let i=0; i<2 && i<_hnKeys.length; i++) { se.abilities[_hnKeys[i]]++; _hnBoosted.push(ABILITY_NAMES[_hnKeys[i]]||_hnKeys[i]); }
         se.defDebuff = (se.defDebuff||0) + 1; se.defDebuffTimer = 1;
         if (se.abilities['hashitte_neru'] !== 999) se.abilities['hashitte_neru']--;
-        msg(`🏃 ${se.name}の走って寝る！2マス移動→HP+1→[${_hnBoosted.join('・')}]+1！被ダメ+1(1T)！`); used = true;
+        msg(`🏃 ${se.name}の走って寝る！2マス移動→HP+1→[${_hnBoosted.join('・')}]+1！被ダメ+1(1T)！（zzz 眠りにつく…ターン終了）`); used = true; se._forceEndTurn = true;
     } else if (actionMode === 'chimatsuri_giri') {
         // 血祭り斬り: r1 3ダメ+AP-1(闇属性) / デメリット: defDebuff+1(1T)
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
@@ -12316,6 +12316,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         render();
         updateUI();
         syncStateDebounced();
+        if (se._forceEndTurn) { se._forceEndTurn = false; setTimeout(() => { if (canIAct()) endTurn(); }, 80); }
     }
 }
 
