@@ -13257,7 +13257,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
                 if (!isWalkable(sr,sc)) continue;
                 if (entities.some(e=>e.hp>0&&e.r===sr&&e.c===sc)) continue;
                 entities.push({
-                    id: `fg_${Date.now()}`, type: 'forest_guardian', name: '森の守護者', team: se.team,
+                    id: `fg_${Date.now()}`, type: 'forest_guardian', name: '森の守護者', team: 'npc',
                     r: sr, c: sc, hp: 6, maxHp: 6, ap: 2, maxAp: 2,
                     abilities: { tackle: 3 }, initialAbilities: { tackle: 3 },
                     skillUsed: false, stealth: false, stealthTimer: 0,
