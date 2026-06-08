@@ -7180,7 +7180,7 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
-        if (tutorialMode && tutorialStep === 15 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 14 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'cable_board' && activeStage === 'mountain' && !entity.onCableCar) {
         entity.onCableCar = true;
         entity.ap = entity.maxAp + 2;
@@ -7255,7 +7255,7 @@ function checkTileEffects(entity) {
         board[r][c] = defaultGround();
         delete itemTileMap[`${r},${c}`];
         eventMsg = applyItem(entity, item);
-        if (tutorialMode && tutorialStep === 16 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 15 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'dungeon_chest') {
         board[r][c] = 'dungeon_ground';
         // All abilities +1
@@ -7664,7 +7664,7 @@ function checkEnemyTerritory(entity) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
-        if (tutorialMode && tutorialStep === 19 && entity.team === 'player') {
+        if (tutorialMode && tutorialStep === 18 && entity.team === 'player') {
             // ボーナス内容を一覧表示するオーバーレイを出して確認後に進む
             setTimeout(() => {
                 const _abilityRows = Object.entries(entity.abilities)
@@ -7895,9 +7895,9 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
             if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
             if (se.dwarfUnit || se.isDwarfRobot) { se.junkPoint = (se.junkPoint||0) + 1; msg(`⚙️ 岩砕き！JP+1(計${se.junkPoint||1})！`, true); }
-            if (tutorialMode && tutorialStep === 13) advanceTutorial();
-            else if (tutorialMode && tutorialStep === 17 && wasMine) advanceTutorial();
-            else if (tutorialMode && tutorialStep === 18 && wasVolcano) advanceTutorial();
+            if (tutorialMode && tutorialStep === 12) advanceTutorial();
+            else if (tutorialMode && tutorialStep === 16 && wasMine) advanceTutorial();
+            else if (tutorialMode && tutorialStep === 17 && wasVolcano) advanceTutorial();
             used = true;
         }
     } else if (actionMode === 'drop_rock') {
@@ -7905,12 +7905,12 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (!targetEntity.invin && !necroShieldBlock(targetEntity)) targetEntity.hp -= 30 + (targetEntity.defDebuff||0);
             used = true; se.ap -= 1;
             msg(targetEntity.invin ? "真上から岩を落下！しかし無敵で防がれた！" : "真上から岩を落下！四方を岩に囲まれた敵に30ダメージ！(AP-1)");
-            if (tutorialMode && tutorialStep === 12 && !targetEntity.invin) setTimeout(() => advanceTutorial(), 1200);
+            if (tutorialMode && tutorialStep === 11 && !targetEntity.invin) setTimeout(() => advanceTutorial(), 1200);
         } else if (activeStage === 'lavaland' && board[r]?.[c] === 'lava') {
             board[r][c] = 'cooled_lava'; used = true; se.ap -= 1; msg("❄️ 岩を溶岩に落として冷却！岩に変化！(AP-1)");
         } else {
             board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
-            if (tutorialMode && tutorialStep === 11) setTimeout(() => advanceTutorial(), 700);
+            if (tutorialMode && tutorialStep === 10) setTimeout(() => advanceTutorial(), 700);
         }
     } else if (actionMode === 'aqua_dash') {
         if (se.abilities['aqua_dash'] !== 999) se.abilities['aqua_dash']--;
@@ -10933,7 +10933,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
-            if (tutorialMode && tutorialStep === 20 && se.team === 'player') {
+            if (tutorialMode && tutorialStep === 19 && se.team === 'player') {
                 setTimeout(() => {
                     const _ov2 = document.createElement('div');
                     _ov2.id = 'tut-weakness-overlay';
@@ -10982,7 +10982,7 @@ function handleAbilityTarget(r, c, targetEntity) {
           else if (tutorialMode && _ts === 4 && actionMode === 'drop_rock') advanceTutorial();
           else if (tutorialMode && _ts === 2 && actionMode === 'dash') advanceTutorial();
           if (tutorialMode && _ts === 5 && targetEntity && targetEntity.hp <= 0 && targetEntity.team !== se.team) advanceTutorial();
-          else if (tutorialMode && _ts === 14 && targetEntity && targetEntity.hp <= 0 && targetEntity.team === 'npc') advanceTutorial(); }
+          else if (tutorialMode && _ts === 13 && targetEntity && targetEntity.hp <= 0 && targetEntity.team === 'npc') advanceTutorial(); }
         se.actedThisTurn = true;
         se._usedAbilityThisTurn = true;
         // 魔法使い: 使ったアビリティ/スキルの属性に変化
@@ -15240,12 +15240,7 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 10: 岩落とし大技
-        msg: '🪨 <b>岩落とし大技：頭上に岩を落として30ダメ！</b><br><br>岩落としには通常配置以外に<b>超強力な使い方</b>があります！<br><br>手順：<br>① 岩落としで敵コマの<b>上・下・左・右の4マス全てに岩を配置</b><br>② その状態で<b>敵コマに向かってもう1回「岩落とし」</b>を使う<br>③ 頭上から岩崩れが発生して<b>30ダメージ！</b><br><br>💡 コツ：<br>・敵が動けない状況（囲まれている・AP不足）に仕掛けよう<br>・水マス・赤エリア・壁には岩が置けないので注意<br>・橋の上で囲むと渡れなくなり敵がパニックに！<br><br>▶「次へ」で続きを見よう',
-        highlight: 'btn-attack',
-        advanceOn: null,
-    },
-    {   // Step 11: 岩で進路妨害（インタラクティブ）
+    {   // Step 10: 岩で進路妨害（インタラクティブ）
         msg: '🏔️ <b>岩で敵の進路を邪魔しよう！</b><br><br>岩落としは攻撃だけでなく<b>地形妨害</b>として大活躍！<br><br>🌉 橋の手前に岩を積む → 敵が渡れなくなる<br>🏰 通路に岩を置く → 敵の進軍ルートを封鎖<br><br>💡 岩落としは<b>999回使い放題</b>！<br>敵の動きを予測して先回りしよう。<br><br>▶「やってみよう！」を押して、どこかに岩を置いてみよう！',
         highlight: 'btn-attack',
         highlightAbility: 'drop_rock',
@@ -15255,8 +15250,8 @@ const TUTORIAL_STEPS = [
             if (_pe) { _pe.ap = Math.max(_pe.ap, 2); selectedEntity = _pe; updateUI(); render(); }
         },
     },
-    {   // Step 12: 敵の頭上に岩落とし大技（インタラクティブ）
-        msg: '🪨 <b>敵の頭上に岩を落とそう！</b><br><br>敵コマの<b>上・下・左・右の4マス全てに岩がある</b>状態で<br>敵コマに向かって<b>「岩落とし」</b>を使うと…<br><br>💥 <b>頭上から岩崩れ！30ダメージ！</b><br><br>敵はすでに四方を岩で囲まれた状態！<br>▶ アビリティ → 岩落とし → <b>敵コマをタップ</b>して大技を決めよう！',
+    {   // Step 11: 敵の頭上に岩落とし大技（インタラクティブ）
+        msg: '🪨 <b>岩落とし大技：頭上に岩を落として30ダメ！</b><br><br>岩落としには通常配置以外に<b>超強力な使い方</b>があります！<br><br>手順：<br>① 岩落としで敵コマの<b>上・下・左・右の4マス全てに岩を配置</b><br>② その状態で<b>敵コマに向かってもう1回「岩落とし」</b>を使う<br>③ 頭上から岩崩れが発生して<b>30ダメージ！</b><br><br>💡 コツ：<br>・敵が動けない状況（囲まれている・AP不足）に仕掛けよう<br>・水マス・赤エリア・壁には岩が置けないので注意<br><br>敵はすでに四方を岩で囲まれた状態！<br>▶ アビリティ → 岩落とし → <b>敵コマをタップ</b>して大技を決めよう！',
         highlight: 'btn-attack',
         highlightAbility: 'drop_rock',
         advanceOn: 'avalanche_used',
