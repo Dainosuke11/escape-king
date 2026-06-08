@@ -7146,6 +7146,7 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
+        if (tutorialMode && tutorialStep === 14 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'cable_board' && activeStage === 'mountain' && !entity.onCableCar) {
         entity.onCableCar = true;
         entity.ap = entity.maxAp + 2;
@@ -15006,7 +15007,12 @@ const TUTORIAL_STEPS = [
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 14: 鉱山
+    {   // Step 14: 魔法陣（インタラクティブ）
+        msg: '🔮 <b>魔法陣を踏んで消そう！</b><br><br>ボード上に現れる<b>紫のマス（魔法陣）</b>はコマで踏むと消えます。<br>放置すると相手に有利な効果が発動することも！<br><br>▶ コマを目の前の魔法陣のマスに移動して踏み消そう！',
+        highlight: 'board',
+        advanceOn: 'magic_circle_stepped',
+    },
+    {   // Step 15: 鉱山
         msg: '⛏️ <b>鉱山（⛏️マス）を踏んで宝を集めよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br>コマを移動してその上に乗るだけで宝が自動取得されます！<br><br>グレードアップシステム：<br>1回目：🥉 <b>銅</b> → 2回目：🥈 <b>銀</b> → 3回目：🥇 <b>金</b> → 4回目：💎 <b>白金</b><br>同じ鉱山を踏むたびに価値がアップします！<br><br>💡 戦略のコツ：<br>・序盤に鉱山を確保して先行リードを狙おう<br>・相手に踏まれると相手が強化されてしまう<br>・鉱山争奪戦が試合の流れを左右することも！<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
@@ -15072,6 +15078,11 @@ function startTutorial() {
             poisonTimer: 0,
             element: 'none',
         });
+        // チュートリアル用：プレイヤーの1マス前に魔法陣を配置
+        const _mcR = Math.max(0, _playerEnt.r - 1);
+        if (board[_mcR] && board[_mcR][_playerEnt.c] === 'plains') {
+            board[_mcR][_playerEnt.c] = 'magic_circle';
+        }
     }
     render();
     startTurn('player');
@@ -15136,6 +15147,13 @@ function advanceTutorial() {
     }
 }
 
+function goBackTutorial() {
+    if (tutorialStep <= 0) return;
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    tutorialStep--;
+    showTutorialStep();
+}
+
 function closeTutorial() {
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     const overlay = document.getElementById('tutorial-overlay');
@@ -15150,6 +15168,7 @@ function closeTutorial() {
         <div id="tutorial-msg"></div>
         <div class="tutorial-btn-row">
             <button class="tutorial-btn" id="tutorial-close-btn" onclick="closeTutorial()">終了</button>
+            <button class="tutorial-btn" id="tutorial-back-btn" onclick="goBackTutorial()" style="background:#334;color:#aaa;">◀ 前へ</button>
             <button class="tutorial-btn" id="tutorial-skip-btn" onclick="advanceTutorial()" style="background:#445;color:#aaa;">スキップ ▶</button>
             <button class="tutorial-btn" id="tutorial-try-btn" onclick="hideTutorialAndWait()" style="background:#1abc9c;color:#fff;display:none;">✅ やってみよう！</button>
             <button class="tutorial-btn" id="tutorial-next-btn" onclick="advanceTutorial()">次へ ▶</button>
