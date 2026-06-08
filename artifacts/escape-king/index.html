@@ -14082,6 +14082,7 @@ function cpuLogic() {
 
     if (cpuEntities.length > 0) {
         let cpu = cpuEntities[0];
+        cpu.actedThisTurn = true;
 
         // ====================================================
         // 協調コンテキスト — 全CPUコマの役割を毎ターン明示的に計画する
@@ -15355,6 +15356,7 @@ function npcLogic() {
     let npcs = entities.filter(e => (e.team === 'npc' || e.team === 'vehicle') && e.hp > 0 && e.ap > 0);
     if (npcs.length > 0) {
         let n = npcs[0];
+        n.actedThisTurn = true;
 
         // === KRAKEN: attacks all non-npc entities within radius 2 in river ===
         if (n.type === 'kraken') {
