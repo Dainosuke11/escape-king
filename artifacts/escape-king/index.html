@@ -6793,7 +6793,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'abikyokan') return r === se.r && c === se.c;
     // 教祖
     if (mode === 'jibaku_tokkoh') return maxDist <= 1 && target && target.team !== se.team;
-    if (mode === 'kourin') return dist >= 1 && dist <= 5+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (mode === 'kourin') return dist >= 1 && dist <= 2 && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
     if (mode === 'sabaki_kaminari') return maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
     if (mode === 'fujo_yukai') return maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
     if (mode === 'shintaku_daiko') return r === se.r && c === se.c;
@@ -13190,8 +13190,9 @@ function cpuLogic() {
                 // kourin: 移動しながらG+1+信者召喚。プレイヤーに近づく方向へダッシュ
                 if (!attacked && (cpu.abilities.kourin||0) > 0 && !(cursedAbilities[cpu.id]?.['kourin']>0) && cpu.ap >= 1) {
                     let _kBest = null, _kBestDist = _gDist;
-                    for (let _dr=-3;_dr<=3;_dr++) for (let _dc=-3;_dc<=3;_dc++) {
+                    for (let _dr=-2;_dr<=2;_dr++) for (let _dc=-2;_dc<=2;_dc++) {
                         if (_dr===0&&_dc===0) continue;
+                        if (Math.abs(_dr)+Math.abs(_dc) > 2) continue;
                         let _nr=cpu.r+_dr,_nc=cpu.c+_dc;
                         if (_nr<0||_nr>=SIZE||_nc<0||_nc>=SIZE) continue;
                         if (!isWalkable(_nr,_nc)) continue;
