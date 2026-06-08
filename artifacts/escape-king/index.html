@@ -4243,6 +4243,13 @@ function initEntities(pJob, difficulty = "1") {
         ['p1','c1'].forEach(eid => {
             const e = entities.find(x => x.id === eid);
             if (!e) return;
+            // 複数属性: 主属性がステージ弱点なら副属性に切り替えてペナルティ回避
+            const _weakTo = ELEMENT_DATA[_stageElem]?.weakTo;
+            const _secElem = JOB_SECONDARY_ELEMENT[e.type] ?? 'none';
+            if (_weakTo && (e.element ?? 'none') === _weakTo && _secElem !== 'none' && _secElem !== _weakTo) {
+                e.element = _secElem;
+                msg(`✨ ${e.name}は副属性[${ELEMENT_DATA[_secElem]?.label ?? _secElem}]で開始！弱点回避！`, true);
+            }
             const eElem = e.element ?? 'none';
             if (eElem === _stageElem) {
                 e.hp += 5; e.maxHp += 5;
@@ -4259,9 +4266,8 @@ function initEntities(pJob, difficulty = "1") {
             if (eElem !== 'none' && ELEMENT_DATA[_stageElem]?.weakTo === eElem) {
                 e._stageWeakPenalty = true;
             }
-            // セカンダリ属性ステージボーナス
-            const _secElem = JOB_SECONDARY_ELEMENT[e.type] ?? 'none';
-            if (_secElem !== 'none' && _secElem === _stageElem) {
+            // セカンダリ属性ステージボーナス（副属性に既に切り替え済みでない場合のみ）
+            if (_secElem !== 'none' && _secElem === _stageElem && eElem !== _stageElem) {
                 e.hp += 3; e.maxHp += 3;
                 msg(`✨ ${e.name}はセカンダリ属性ボーナス！HP+3！`, true);
             }
@@ -4390,6 +4396,13 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
         ['p1','c1'].forEach(eid => {
             const e = entities.find(x => x.id === eid);
             if (!e) return;
+            // 複数属性: 主属性がステージ弱点なら副属性に切り替えてペナルティ回避
+            const _weakToOL = ELEMENT_DATA[_stageElemOL]?.weakTo;
+            const _secElemOL = JOB_SECONDARY_ELEMENT[e.type] ?? 'none';
+            if (_weakToOL && (e.element ?? 'none') === _weakToOL && _secElemOL !== 'none' && _secElemOL !== _weakToOL) {
+                e.element = _secElemOL;
+                msg(`✨ ${e.name}は副属性[${ELEMENT_DATA[_secElemOL]?.label ?? _secElemOL}]で開始！弱点回避！`, true);
+            }
             const eElem = e.element ?? 'none';
             if (eElem === _stageElemOL) {
                 e.hp += 5; e.maxHp += 5;
@@ -4406,9 +4419,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
             if (eElem !== 'none' && ELEMENT_DATA[_stageElemOL]?.weakTo === eElem) {
                 e._stageWeakPenalty = true;
             }
-            // セカンダリ属性ステージボーナス
-            const _secElemOL = JOB_SECONDARY_ELEMENT[e.type] ?? 'none';
-            if (_secElemOL !== 'none' && _secElemOL === _stageElemOL) {
+            // セカンダリ属性ステージボーナス（副属性に既に切り替え済みでない場合のみ）
+            if (_secElemOL !== 'none' && _secElemOL === _stageElemOL && eElem !== _stageElemOL) {
                 e.hp += 3; e.maxHp += 3;
                 msg(`✨ ${e.name}はセカンダリ属性ボーナス！HP+3！`, true);
             }
@@ -4714,8 +4726,21 @@ function processTurnStartEffects(e) {
     e.ap = e.maxAp;
     // Factory press AP-1 penalty: consumed here so it survives the AP reset above
     if (e._pressedThisTurn) { e.ap = Math.max(0, e.ap - 1); e._pressedThisTurn = false; }
-    // ステージ属性弱点ペナルティ: 初ターンのみAP-1
-    if (e._stageWeakPenalty) { e.ap = Math.max(0, e.ap - 1); e._stageWeakPenalty = false; }
+    // ステージ属性弱点ペナルティ: 初ターンのみAP-1＋ランダム2アビリティを3ターン封印
+    if (e._stageWeakPenalty) {
+        e.ap = Math.max(0, e.ap - 1);
+        if (!cursedAbilities[e.id]) cursedAbilities[e.id] = {};
+        const _sealPool = Object.keys(e.abilities || {}).filter(k => (e.abilities[k]||0) > 0 && e.abilities[k] !== 999);
+        const _sealPicked = [];
+        for (let _si = 0; _si < _sealPool.length && _sealPicked.length < 2; _si++) {
+            const _sk = _sealPool.splice(Math.floor(Math.random() * _sealPool.length), 1)[0];
+            _sealPicked.push(_sk);
+        }
+        _sealPicked.forEach(k => { cursedAbilities[e.id][k] = Math.max(cursedAbilities[e.id][k]||0, 3); });
+        const _sealMsg = _sealPicked.map(k => ABILITY_NAMES[k]||k).join('・');
+        msg(`⚠️ ${e.name}は属性弱点ペナルティ！AP-1＋[${_sealMsg}]を3ターン封印！`, true);
+        e._stageWeakPenalty = false;
+    }
     // 調和の祈り：保留中のAPボーナスを適用
     if ((e.pendingApBonus || 0) > 0) { e.ap += e.pendingApBonus; e.pendingApBonus = 0; }
     // Ocean unit on water tile: AP+1 bonus
