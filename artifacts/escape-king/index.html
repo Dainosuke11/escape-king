@@ -1781,11 +1781,11 @@ const ABILITY_NAMES = {
     pixie_illusion: '✨ピクシーの幻惑(r2全体/ゲージ0+1ダメ+AP-1+4封印/自光属性)',
     swap_position: '🔄位置替え(r8/敵味方入れ替え/敵1ダメAP-1/味方HP+1)',
     gouka_shingun: '🔥業火進軍(r4ダッシュ/原位置スケルトン/HP≤敵max→AP+2)',
-    jigoku_giri: '⚔️地獄切り(r1/炎3ダメ+業火呪3T)',
-    shura_ranbu: '🔥修羅乱舞(r1全体/炎2ダメ+吹飛)',
-    gouka_sangeki: '🔥業火三撃(直線r4~6/炎3ダメ/修羅接近)',
-    oni_giri: '👹鬼切り(r3/闇4ダメ+業火呪3T)',
-    iai: '⚔️居合(次T/隣接敵5ダメ迎撃)',
+    jigoku_giri: '⚔️地獄斬り(r1一体/炎2ダメ+業火呪+AP-1/修羅4/阿修羅6)',
+    shura_ranbu: '🔥修羅乱舞(r1全体/炎2ダメ+業火呪+AP-1/修羅4/阿修羅6)',
+    gouka_sangeki: '🔥業火斬撃(直線r4~6/炎3~7ダメ+業火呪+AP-1/修羅r5接近1/阿修羅r6接近2)',
+    oni_giri: '👹鬼斬り(必殺/悪r1/4ダメ+敵AP-2/修羅r2/阿修羅6ダメ)',
+    iai: '⚔️居合(1Tバリア/被攻撃→r3全敵反撃/修羅4/阿修羅6)',
     abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)',
     kourin: '⛪降臨(ダッシュ+信者召喚+G+1)',
     sabaki_kaminari: '⚡裁きの雷(予知/r3敵選択/次T:半径1・9マス4ダメ+AP-1/G1消費)',
@@ -2047,11 +2047,11 @@ const ABILITY_TIPS = {
     tacit_agreement: '半径3マスの敵1体のAP-2。自分前方幅3マスに岩設置(次T消滅)。死亡済みの隊員1人をHP1で復活させ、封印アビリティを解除する。回数5。',
     combination_blast: '合体必殺技（スキル）。自分の向いている方向に幅3×深さ7のAoE。2+生存隊員数ダメ(全員生存で9ダメ、1人生存で3ダメ)。複合属性弱点判定あり。使用後次ターン自AP-2。',
     gouka_shingun: '🔥 前方4マスまでダッシュ。元いた場所にスケルトン(HP3)を召喚。移動後のHPが最大敵HP以下の場合、AP+2。回数5。',
-    jigoku_giri: '⚔️ 隣接した敵に炎属性3ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
-    shura_ranbu: '🔥 半径1マス内の全敵に炎属性2ダメ＋後方吹き飛ばし。討ち取るとHP+2+4種アビ+1。回数5。',
-    gouka_sangeki: '🔥 直線方向の敵1体に炎属性3ダメ。射程はHP>20で4/HP≤20で5/HP≤10で6。修羅・阿修羅状態では命中後に敵の隣接マスへ接近。討ち取るとHP+2+4種アビ+1。回数5。',
-    oni_giri: '👹 半径3マスの敵1体に闇属性4ダメ＋業火の呪い(3T/毎T1ダメ)を付与。討ち取るとHP+2+4種アビ+1。回数5。',
-    iai: '⚔️ 居合の構えをとる。次のターン開始時、隣接する全敵に5ダメの迎撃を行う。回数5。',
+    jigoku_giri: '⚔️ 半径1マス内の敵1体に炎属性2ダメ＋業火の呪い(3T/毎T1ダメ)付与＋自AP-1。修羅状態で4ダメ、阿修羅状態で6ダメ。討ち取るとHP+2+4種アビ+1。回数5。',
+    shura_ranbu: '🔥 半径1マス内の全敵に炎属性2ダメ＋業火の呪い付与＋自AP-1。修羅状態で4ダメ、阿修羅状態で6ダメ。討ち取るとHP+2+4種アビ+1。回数5。',
+    gouka_sangeki: '🔥 直線方向の敵1体に炎属性3ダメ＋業火の呪い付与＋自AP-1。射程：通常4/修羅5/阿修羅6。修羅で5ダメ・1マス接近、阿修羅で7ダメ・2マス接近。討ち取るとHP+2+4種アビ+1。回数5。',
+    oni_giri: '👹 必殺技。半径1マスの全敵に悪属性4ダメ＋敵AP-2。修羅状態で半径2に拡大。阿修羅状態で半径2＋6ダメ。討ち取るとHP+2+4種アビ+1。回数5。',
+    iai: '⚔️ 居合の構えをとる。1ターンバリアを張り、攻撃を受けるたびに半径3マスの全敵に2ダメ反撃（闇属性）。修羅状態で4ダメ、阿修羅状態で6ダメ。回数5。',
     abikyokan: '🔥 前方エリア(幅5×奥行5)に業火地獄マス展開。地獄マスにいる敵は毎ターン1ダメ。3ターン持続。回数5。',
     orca_bite: '半径1マスの敵に闇属性2ダメ＋与えたダメージ分だけ自身のHPを回復。使用後ウォーターゲージ+5。回数5。',
     anchor_throw: '正面直線3マスの敵1体に闇属性2ダメ＋後方吹き飛ばし＋元の位置に岩設置＋敵AP-1。使用後自分のAP+1・ウォーターゲージ+5。回数5。',
@@ -2184,7 +2184,7 @@ const ABILITY_ELEMENT = {
     fundo_gekkoh: 'fire', kako_tosen: 'grass', kyoshin_tankai: 'water',
     banzai_jiai: 'water', meikyo_shisui: 'light', seisei_ruten: 'grass',
     gouka_shingun: 'fire', jigoku_giri: 'fire', shura_ranbu: 'fire', gouka_sangeki: 'fire',
-    oni_giri: 'dark', iai: 'fire', abikyokan: 'fire',
+    oni_giri: 'dark', iai: 'dark', abikyokan: 'fire',
     sabaki_kaminari: 'light', shintaku_daiko: 'water', fukuin_bofuu: 'grass',
     fujo_yukai: 'fire', tenkei_hoshiotoshi: 'fire', fushinkoh_fushoku: 'dark',
     gyokuza_jishin: 'none', tamashii_kiga: 'dark', kourin: 'light', jibaku_tokkoh: 'light',
@@ -11423,12 +11423,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(`🔥 業火進軍！元の場所に紫スケルトン召喚${_ghApBonus ? '！HP≤敵最大HP→AP+2！' : '！'}`); used = true;
     } else if (actionMode === 'jigoku_giri') {
         // 地獄斬り: r1炎ダメ+業火の呪い+自AP-1。修羅→4、阿修羅→6
+        se.ap = Math.max(0, se.ap - 1);
         if (targetEntity && !targetEntity.invin) {
             let _jgBaseDmg = se.hp <= 10 ? 6 : se.hp <= 20 ? 4 : 2;
             let _jgDmg = _jgBaseDmg + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.hp -= _jgDmg;
             targetEntity.goukaCurseTimer = Math.max(targetEntity.goukaCurseTimer||0, 3);
-            se.ap = Math.max(0, se.ap - 1);
             if (targetEntity.hp <= 0) {
                 se.hp = Math.min(se.hp + 2, se.maxHp + 5);
                 let _ks = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
@@ -11477,6 +11477,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let _gt = entities.find(e=>e.hp>0&&e.r===_gr&&e.c===_gc&&e.team!==se.team);
             if (_gt) { _gsHit = _gt; break; }
         }
+        se.ap = Math.max(0, se.ap - 1);
         if (_gsHit && !_gsHit.invin) {
             let _gsDmg = _gsBaseDmg + (se.atkBonus||0) + (_gsHit.defDebuff||0);
             _gsHit.hp -= _gsDmg;
@@ -11488,7 +11489,6 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (entities.some(e=>e.hp>0&&e.r===_nr&&e.c===_nc&&e!==se)) break;
                 se.r = _nr; se.c = _nc;
             }
-            se.ap = Math.max(0, se.ap - 1);
             if (_gsHit.hp <= 0) {
                 se.hp = Math.min(se.hp + 2, se.maxHp + 5);
                 let _ks3 = Object.keys(se.abilities).filter(k=>k!=='drop_rock'&&se.abilities[k]!==999);
