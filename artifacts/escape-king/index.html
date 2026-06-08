@@ -14235,7 +14235,7 @@ function checkWin() {
         else if (cWin) { title = "💀 Defeat... 敵に突破されました。"; isEnd = true; }
     }
 
-    if (isEnd) {
+    if (isEnd && !tutorialMode) {
         stopTurnTimer();
         const iWon = title.includes('Victory');
         if (isOnlineMode) {
