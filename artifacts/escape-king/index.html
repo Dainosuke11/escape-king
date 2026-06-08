@@ -300,12 +300,23 @@
         .present-box-ent { border-color: #ff69b4 !important; background: #fce4ec !important; color: #880e4f !important; }
         /* Guide screen */
         #guide-screen {
-            display: none; background: var(--ui-bg); padding: 30px; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 750px; width: 100%;
-            border: 1px solid #444; box-sizing: border-box;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--ui-bg); flex-direction: column;
+            padding: 0; z-index: 900; box-sizing: border-box; overflow: hidden;
         }
-        #guide-screen h2 { margin-top: 0; color: var(--accent); }
-        .guide-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        #guide-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 20px 10px; border-bottom: 1px solid #333; flex-shrink: 0;
+        }
+        #guide-header h2 { margin: 0; color: var(--accent); font-size: 22px; flex: 1; }
+        #guide-close-btn {
+            background: #555; color: #fff; border: none; border-radius: 8px;
+            padding: 8px 18px; font-size: 14px; font-weight: bold; cursor: pointer;
+            flex-shrink: 0; transition: background 0.15s;
+        }
+        #guide-close-btn:hover { background: #e74c3c; }
+        #guide-body { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 14px 20px 16px; overflow: hidden; }
+        .guide-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; flex-shrink: 0; }
         .guide-tab { flex: 1; min-width: 100px; padding: 10px; border-radius: 6px; cursor: pointer; background: #34495e; color: #fff; border: 2px solid transparent; font-size: 14px; font-weight: bold; transition: 0.2s; }
         .guide-tab.active { border-color: var(--accent); background: #1a252f; }
         .guide-job-card { background: #1a1a20; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
@@ -317,8 +328,8 @@
         .guide-detail-panel.open { display: block; }
         .guide-detail-row { font-size: 11px; color: #aaa; line-height: 1.6; padding: 2px 0; }
         .guide-detail-row .tip-name { color: #d4c06a; font-weight: bold; margin-right: 4px; }
-        .guide-content { height: 440px; overflow-y: auto; padding-right: 4px; }
-        #guide-npc-filters { display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .guide-content { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+        #guide-npc-filters { display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
         .npc-filter-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #555; background: #2c3e50; color: #ccc; font-size: 12px; cursor: pointer; transition: 0.15s; white-space: nowrap; }
         .npc-filter-btn:hover { background: #34495e; }
         .npc-filter-btn.active { background: #1a252f; border-color: var(--accent); color: var(--accent); font-weight: bold; }
@@ -1037,17 +1048,21 @@
 </div>
 
 <div id="guide-screen">
-    <h2>📖 キャラクター図鑑</h2>
-    <div class="guide-tabs">
-        <button class="guide-tab active" data-tab="jobs" onclick="switchGuideTab('jobs')">ジョブ一覧</button>
-        <button class="guide-tab" data-tab="npcs" onclick="switchGuideTab('npcs')">NPCモンスター</button>
+    <div id="guide-header">
+        <h2>📖 キャラクター図鑑</h2>
+        <button id="guide-close-btn" onclick="closeGuide()">✕ 閉じる</button>
     </div>
-    <div class="guide-content" id="guide-jobs-content">
+    <div id="guide-body">
+        <div class="guide-tabs">
+            <button class="guide-tab active" data-tab="jobs" onclick="switchGuideTab('jobs')">ジョブ一覧</button>
+            <button class="guide-tab" data-tab="npcs" onclick="switchGuideTab('npcs')">NPCモンスター</button>
+        </div>
+        <div class="guide-content" id="guide-jobs-content">
+        </div>
+        <div id="guide-npc-filters"></div>
+        <div class="guide-content" id="guide-npcs-content" style="display:none;">
+        </div>
     </div>
-    <div id="guide-npc-filters"></div>
-    <div class="guide-content" id="guide-npcs-content" style="display:none;">
-    </div>
-    <button class="btn" onclick="closeGuide()" style="margin-top: 16px; background: #555; padding: 12px 30px;">閉じる</button>
 </div>
 
 <!-- Icon Picker Modal -->
