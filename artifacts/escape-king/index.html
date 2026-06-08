@@ -7629,6 +7629,7 @@ function checkEnemyTerritory(entity) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
+        if (tutorialMode && tutorialStep === 16 && entity.team === 'player') advanceTutorial();
     } else if (cInEnemy && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
@@ -15017,10 +15018,20 @@ const TUTORIAL_STEPS = [
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 15: 中央突破ボーナス
-        msg: '🌉 <b>中央の橋を渡って突破ボーナスをもらおう！</b><br><br>ボードの中央付近には<b>川と橋</b>があります。<br>この橋を渡り切ると<b>中央突破ボーナス</b>が発生！<br><br>ボーナス内容（ステージや状況によって変動）：<br>⚔️ アビリティの強化・使用回数アップ<br>❤️ HP回復<br>🛡️ 一時的な防御強化<br><br>💡 コツ：<br>・橋はボードの中央（縦方向の真ん中あたり）にあります<br>・相手より先に橋を渡ると有利な展開に！<br>・橋を渡ったあと敵陣に一気に攻め込もう<br><br>▶「次へ」で続きを見よう',
-        highlight: null,
-        advanceOn: null,
+    {   // Step 16: 中央突破ボーナス（インタラクティブ）
+        msg: '🌉 <b>橋を渡って敵陣に侵入しよう！</b><br><br>川の手前にいるよ！橋を渡って<b>敵陣（上半分）に侵入</b>すると<b>突破ボーナス発動！</b><br><br>ボーナス内容：<br>⚔️ <b>全アビリティ使用回数+1</b><br><br>▶ コマを選んで橋を渡り、敵陣に踏み込もう！',
+        highlight: 'board',
+        advanceOn: 'cross_bonus',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                board[_pe.r][_pe.c] = board[_pe.r][_pe.c] === 'rock' ? 'plains' : board[_pe.r][_pe.c];
+                _pe.r = 11; _pe.c = 10;
+                _pe.crossBonus = false;
+                _pe.ap = Math.max(_pe.ap, 2);
+                render();
+            }
+        },
     },
     {   // Step 16: 弱点属性攻撃
         msg: '🔥 <b>敵の弱点属性で攻撃してダメージアップ！</b><br><br>各コマには<b>属性（エレメント）</b>があります。<br>弱点属性で攻撃すると<b>ダメージ+1ボーナス</b>！<br><br>属性の弱点関係（三角関係）：<br>🔥 <b>火</b> → 🌿 <b>草</b>（火は草に強い）<br>🌿 <b>草</b> → 💧 <b>水</b>（草は水に強い）<br>💧 <b>水</b> → 🔥 <b>火</b>（水は火に強い）<br><br>二元対立：<br>☀️ <b>光</b> ↔ 😈 <b>闇</b>（互いに弱点）<br><br>💡 コツ：<br>・コマのアイコン横に属性マークが表示されています<br>・自分の属性と相手の属性を確認してから攻めよう<br>・ジョブ図鑑でジョブごとの属性を事前確認できます<br><br>▶「次へ」で続きを見よう',
@@ -15103,6 +15114,7 @@ function showTutorialStep() {
     document.getElementById('tutorial-msg').innerHTML =
         `<div style="font-size:11px;color:#aaa;margin-bottom:8px;">ステップ ${tutorialStep + 1} / ${total}</div>${step.msg}`;
     overlay.style.display = 'flex';
+    if (step.onShow) step.onShow();
     document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     if (step.highlight) {
         const el = document.getElementById(step.highlight);
