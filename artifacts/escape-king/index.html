@@ -7684,6 +7684,14 @@ function isValidTarget(se, r, c, mode) {
         // 龍神降臨: 半径1マス以内の空きマスを指定して召喚
         return maxDist >= 1 && maxDist <= 1 && isWalkable(r, c) && !entities.some(x => x.hp > 0 && x.r === r && x.c === c);
     }
+    // 絵描き (Painter)
+    if (mode === 'sanpo') return dist > 0 && dist <= 2 && isWalkable(r, c);
+    if (mode === 'dessin') return maxDist === 0 || (maxDist > 0 && maxDist <= 2 && target && target.team !== se.team);
+    if (mode === 'trick_art') return true;
+    if (mode === 'frame_throw') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'moving_painting') return maxDist === 0;
+    if (mode === 'paint_combo') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && (target ? target.team!==se.team : true);
+    if (mode === 'skill_painter') return maxDist === 0;
     return false;
 }
 
@@ -12067,7 +12075,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             se._painterElements = [...(se._painterElements||[]), _dsPick];
         }
         let _dsMsg = `🖋️ ${se.name}のデッサン！IG+5・全色+1！`;
-        if (targetEntity) {
+        if (targetEntity && targetEntity.team !== se.team) {
             const _dsKeys = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]||0)>0&&targetEntity.abilities[k]!==999);
             _dsKeys.sort(()=>Math.random()-0.5);
             const _dsSealed = [];
