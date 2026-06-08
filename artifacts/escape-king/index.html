@@ -4596,6 +4596,12 @@ function processTurnStartEffects(e) {
         e.talismanRocks.forEach(pos => { if (board[pos.r]?.[pos.c] === 'rock') board[pos.r][pos.c] = defaultGround(); });
         e.talismanRocks = [];
     }
+    // 神降し効果切れ→ryuen/shinkou を abilities から除去
+    if (e.mikoUnit && e._kamioroshiActive && e._kamioroshiActive < turn) {
+        delete e.abilities['ryuen'];
+        delete e.abilities['shinkou'];
+        e._kamioroshiActive = 0;
+    }
     // rock_hide無敵切れ→後退+岩設置
     if (e.rockHideActive && !e.invin) {
         e.rockHideActive = false;
@@ -10909,6 +10915,8 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'kamioroshi') {
         // 神降し: 1T龍神技使用可+流々舞+1。次TターンAP-2
         se._kamioroshiActive = (turn + 1);
+        se.abilities['ryuen'] = 1;
+        se.abilities['shinkou'] = 1;
         if (se.abilities['ruru_mai'] !== undefined && se.abilities['ruru_mai'] !== 999) se.abilities['ruru_mai']++;
         se._nextTurnApCost = (se._nextTurnApCost||0) + 2;
         if (se.abilities['kamioroshi'] !== 999) se.abilities['kamioroshi']--;
@@ -13360,6 +13368,8 @@ function cpuLogic() {
                 // kamioroshi: ゲージ>3のとき最優先
                 if (!attacked && (cpu.mikoGauge||0)>3 && (cpu.abilities.kamioroshi||0)>0 && !(cursedAbilities[cpu.id]?.['kamioroshi']>0)) {
                     cpu._kamioroshiActive = (turn+1);
+                    cpu.abilities['ryuen'] = 1;
+                    cpu.abilities['shinkou'] = 1;
                     if(cpu.abilities.ruru_mai!==undefined&&cpu.abilities.ruru_mai!==999) cpu.abilities.ruru_mai++;
                     cpu._nextTurnApCost=(cpu._nextTurnApCost||0)+2;
                     if(cpu.abilities.kamioroshi!==999) cpu.abilities.kamioroshi--;
