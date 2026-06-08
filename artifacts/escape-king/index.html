@@ -15874,8 +15874,14 @@ const TUTORIAL_STEPS = [
         advanceOn: 'avalanche_used',
         onShow() {
             const _er = 7, _ec = 10;
-            // Step5でダミーが倒されていても必ず新規デモエネミーをスポーン
-            entities = entities.filter(e => !e.tutorialAvalancheDemo);
+            // 前ステップで置かれた岩を全てクリア（盤面をリセット）
+            for (let _r = 0; _r < SIZE; _r++) {
+                for (let _c = 0; _c < SIZE; _c++) {
+                    if (board[_r]?.[_c] === 'rock') board[_r][_c] = 'plains';
+                }
+            }
+            // 赤コマ（四方囲み対象）以外のcpu/npエンティティを全削除
+            entities = entities.filter(e => e.team !== 'cpu' && e.team !== 'npc');
             if (board[_er]?.[_ec] !== undefined) board[_er][_ec] = 'plains';
             entities.push({
                 id: 'tutorial_avalanche_' + Date.now(),
@@ -15897,7 +15903,7 @@ const TUTORIAL_STEPS = [
                 const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
                 if (_pe) {
                     _pe.ap = Math.max(_pe.ap, 3);
-                    _pe.abilities['drop_rock'] = 5;
+                    _pe.abilities['drop_rock'] = 999;
                     _pe.actedThisTurn = false;
                     _pe._usedAbilityThisTurn = false;
                     selectedEntity = _pe; updateUI();
