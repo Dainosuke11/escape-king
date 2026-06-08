@@ -9083,13 +9083,14 @@ function handleTileClick(vr, c) {
                                 let trapHits = 0;
                                 entities.forEach(t => {
                                     if (t.hp>0 && t.team!==trapOwnerMap[tKey]&&t.team!==selectedEntity.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
-                                        if (!t.invin) { t.hp -= 1; t.ap = Math.max(0, t.ap - 2); trapHits++; }
+                                        if (!t.invin) { t.hp -= 1; t.ap = Math.max(0, t.ap - 2); applyBlind(t); trapHits++; }
                                     }
                                 });
                                 selectedEntity.hp -= 1;
                                 selectedEntity.ap = Math.max(0, selectedEntity.ap - 2);
                                 selectedEntity.trapHitPenalty = 1;
-                                msg(`罠を踏んだ！3×3範囲爆発！ダメージ(1)・AP-2！範囲内${trapHits}体も巻き込み！`);
+                                applyBlind(selectedEntity);
+                                msg(`罠を踏んだ！3×3範囲爆発！ダメージ(1)・AP-2・目潰し！範囲内${trapHits}体も巻き込み！`);
                             } else {
                                 msg("罠を踏んだが、無敵状態により無効化！");
                             }
@@ -10709,7 +10710,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             let shuffled = abilKeys.sort(()=>Math.random()-0.5).slice(0,3);
             if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
             shuffled.forEach(k=>{ targetEntity.stolenLock[k] = turn + 1; });
-            msg(`🕸️ 投げ網！${targetEntity.name}にAP-2＋${shuffled.length}アビリティ1T封印！`);
+            applyBlind(targetEntity);
+            msg(`🕸️ 投げ網！${targetEntity.name}にAP-2＋${shuffled.length}アビリティ1T封印＋目潰し！`);
         } else { msg('🕸️ 投げ網！しかし無敵で防がれた！'); }
         used = true;
     } else if (actionMode === 'whirlpool_atk') {
@@ -11546,7 +11548,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (!cursedAbilities[targetEntity.id]) cursedAbilities[targetEntity.id] = {};
         Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock').forEach(k=>{ cursedAbilities[targetEntity.id][k]=Math.max(cursedAbilities[targetEntity.id][k]||0,1); });
         targetEntity.skillUsed = true;
-        msg(`🎁 ご褒美の罠！前方3岩・後方アイテム設置！全アビリティ封印！`); used = true;
+        applyBlind(targetEntity);
+        msg(`🎁 ご褒美の罠！前方3岩・後方アイテム設置！全アビリティ封印＋目潰し！`); used = true;
     } else if (actionMode === 'bat_infiltration') {
         if (se.abilities['bat_infiltration'] !== 999) se.abilities['bat_infiltration']--;
         let biDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
@@ -13938,7 +13941,8 @@ function executeRushSkill(se, targetR, targetC, mode) {
             }
             // 元の場所に罠
             if (isWalkable(ghOrigR, ghOrigC)) { board[ghOrigR][ghOrigC] = 'trap'; trapOwnerMap[`${ghOrigR},${ghOrigC}`] = se.team; }
-            msg(`🔨 ノームの木槌！1ダメ+転送+4封印+罠設置！`);
+            applyBlind(ghTarget);
+            msg(`🔨 ノームの木槌！1ダメ+転送+4封印+罠設置+目潰し！`);
         }
         se.element = 'grass';
         useAbility(se, mode);
