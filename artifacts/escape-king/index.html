@@ -1762,7 +1762,7 @@ const ABILITY_NAMES = {
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
     barrier_magic: '障壁魔法(半径5/味方バリア1T)',
     flying_kick: '跳び蹴り(直線2/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威2/吹飛)',
-    wave_shot: '波動弾(直線3/威3)', aqua_dash: 'アクアダッシュ(2マス/水上AP+2)',
+    wave_shot: '波動弾(直線3/威3)', aqua_dash: 'アクアダッシュ(2マス/AP+1/両水マスAP+2)',
     throw_enemy: '投げ飛ばし(半径1/威3/3マス吹飛)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
     counter: 'カウンター(全ダメ無効+全効果反射)', ryujin_transform: '変身(竜形態/飛行)',
     afterimage: '残像(デコイ/潜伏/5T~)',
@@ -2034,7 +2034,7 @@ const ABILITY_TIPS = {
     barrier_magic: 'AP-1消費。半径5マス以内の味方コマ全員に無敵バリアを1ターン付与する。回数1。',
     flying_kick: '直線2マス移動。目的地に敵がいれば2ダメ・AP-1。AP消費なし。回数5。',
     wave_shot: '直線3マス以内の敵1体に3ダメ。回数3。',
-    aqua_dash: '2マス移動(ダッシュと同じ移動)。足元が水マスなら発動時にAP+2。水マスに着地するとさらに前方2マス追加移動＋AP+2。回数5。',
+    aqua_dash: '2マス移動(ダッシュと同じ移動)。発動時にAP+1。発動マスと着地マスの両方が水マスならAP+2。水マスに着地するとさらに前方2マス追加移動。回数5。',
     rapid_strikes: '周囲半径1マスの全敵に2ダメ・吹き飛ばし。回数3。',
     throw_enemy: '半径1マスの敵1体に3ダメ＋後方3マス吹き飛ばし。着地先に別の敵がいれば連鎖3ダメ。回数2。',
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
@@ -9390,13 +9390,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['aqua_dash'] !== 999) se.abilities['aqua_dash']--;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
         let adOldR = se.r, adOldC = se.c;
-        // 足元が水マスなら発動時にAP+2
         let adStartWater = isWaterTile(board[adOldR]?.[adOldC]) || activeStage === 'bigriver' || activeStage === 'underwater';
-        if (adStartWater) se.ap = Math.min(se.ap + 2, se.maxAp + 2);
+        let adDestWater = isWaterTile(board[r]?.[c]) || activeStage === 'bigriver' || activeStage === 'underwater';
+        // 両方水マスならAP+2、それ以外はAP+1
+        let adApBonus = (adStartWater && adDestWater) ? 2 : 1;
+        se.ap = Math.min(se.ap + adApBonus, se.maxAp + adApBonus);
         se.r = r; se.c = c; used = true;
-        let adWaterBonus = isWaterTile(board[r]?.[c]) || activeStage === 'bigriver' || activeStage === 'underwater';
         let adExtraMoved = 0;
-        if (adWaterBonus) {
+        if (adDestWater) {
             // 水マス着地でさらに前方2マス追加移動
             let adDr = Math.sign(r - adOldR), adDc = Math.sign(c - adOldC);
             for (let step = 1; step <= 2; step++) {
@@ -9406,12 +9407,11 @@ function handleAbilityTarget(r, c, targetEntity) {
                 if (entities.some(o => o.hp > 0 && o.r === nr && o.c === nc && o !== se)) break;
                 se.r = nr; se.c = nc; adExtraMoved++;
             }
-            se.ap = Math.min(se.ap + 2, se.maxAp + 2);
         }
         let adEventMsg = checkTileEffects(se);
         let adExtraMsg = adExtraMoved > 0 ? `さらに${adExtraMoved}マス前進！` : '';
-        let adStartMsg = adStartWater ? '足元水マス→AP+2！' : '';
-        msg(`🌊 アクアダッシュ！${adStartMsg}${adWaterBonus ? `着地水マス！${adExtraMsg}AP+2！` : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
+        let adBonusMsg = adApBonus === 2 ? '発動＆着地が水マス→AP+2！' : 'AP+1！';
+        msg(`🌊 アクアダッシュ！${adBonusMsg}${adDestWater ? `着地水マス！${adExtraMsg}` : ''}${adEventMsg ? ' ' + adEventMsg : ''}`);
         checkEnemyTerritory(se);
     } else if (actionMode === 'dash') {
         if (se.abilities['dash'] !== 999) se.abilities['dash']--;
