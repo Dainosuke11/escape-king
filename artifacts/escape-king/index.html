@@ -7243,6 +7243,7 @@ function checkTileEffects(entity) {
         board[r][c] = defaultGround();
         delete itemTileMap[`${r},${c}`];
         eventMsg = applyItem(entity, item);
+        if (tutorialMode && tutorialStep === 16 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'dungeon_chest') {
         board[r][c] = 'dungeon_ground';
         // All abilities +1
@@ -7651,7 +7652,7 @@ function checkEnemyTerritory(entity) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
-        if (tutorialMode && tutorialStep === 17 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 18 && entity.team === 'player') advanceTutorial();
     } else if (cInEnemy && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
@@ -10879,7 +10880,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
-            if (tutorialMode && tutorialStep === 18 && se.team === 'player') advanceTutorial();
+            if (tutorialMode && tutorialStep === 19 && se.team === 'player') advanceTutorial();
         }
         // 水属性攻撃で海洋コマのウォーターゲージ+5
         if (_atkElem === 'water' && targetEntity.oceanUnit && targetEntity.hp > 0) {
@@ -15181,12 +15182,32 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 16: 鉱山
+    {   // Step 16: アイテムマス（インタラクティブ）
+        msg: '❓ <b>アイテムマスを踏んでゲットしよう！</b><br><br>ボード上に現れる<b>❓の緑マス</b>はアイテムマスです。<br>踏むだけでランダムアイテムが自動取得できます！<br><br>アイテム例：<br>🌠 <b>星のかけら</b>：最大HP+10＆HP回復！<br>👟 <b>新作の靴</b>：3ターン行動力+1！<br>⚔️ <b>鋼の剣</b>：ゲーム終了まで攻撃力+1！<br><br>▶「やってみよう！」を押して目の前のアイテムマスを踏もう！',
+        highlight: 'board',
+        advanceOn: 'item_tile_stepped',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                const _ir = Math.max(0, _pe.r - 1), _ic = _pe.c;
+                if (board[_ir]?.[_ic] !== undefined) {
+                    board[_ir][_ic] = 'item_tile';
+                    const _items = ['star', 'shoes', 'sword'];
+                    itemTileMap[`${_ir},${_ic}`] = _items[Math.floor(Math.random() * _items.length)];
+                }
+                _pe.ap = Math.max(_pe.ap, 2);
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
+    },
+    {   // Step 17: 鉱山
         msg: '⛏️ <b>鉱山（⛏️マス）を踏んで宝を集めよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br>コマを移動してその上に乗るだけで宝が自動取得されます！<br><br>グレードアップシステム：<br>1回目：🥉 <b>銅</b> → 2回目：🥈 <b>銀</b> → 3回目：🥇 <b>金</b> → 4回目：💎 <b>白金</b><br>同じ鉱山を踏むたびに価値がアップします！<br><br>💡 戦略のコツ：<br>・序盤に鉱山を確保して先行リードを狙おう<br>・相手に踏まれると相手が強化されてしまう<br>・鉱山争奪戦が試合の流れを左右することも！<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 17: 中央突破ボーナス（インタラクティブ）
+    {   // Step 18: 中央突破ボーナス（インタラクティブ）
         msg: '🌉 <b>橋を渡って敵陣に侵入しよう！</b><br><br>川の手前にいるよ！橋を渡って<b>敵陣（上半分）に侵入</b>すると<b>突破ボーナス発動！</b><br><br>ボーナス内容：<br>⚔️ <b>全アビリティ使用回数+1</b><br><br>▶ コマを選んで橋を渡り、敵陣に踏み込もう！',
         highlight: 'board',
         advanceOn: 'cross_bonus',
