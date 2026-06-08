@@ -7023,7 +7023,13 @@ function render() {
         const isEnemy = (e.team === enemyTeam() && e.team !== 'npc');
         // Wyvern has no HP (maxHp===0 is the flag); skip HP bar for it
         let jpSuffix = (e.dwarfUnit || e.isDwarfRobot) && e.junkPoint !== undefined ? ` <span style="color:#e67e22;">⚙${e.junkPoint}</span>` : '';
-        const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}${jpSuffix}</div>`;
+        let gaugeSuffix = '';
+        if (e.mikoGauge !== undefined) gaugeSuffix += ` <span style="color:#e91e8c;">⛩G${e.mikoGauge}</span>`;
+        else if (e.senninGauge !== undefined) gaugeSuffix += ` <span style="color:#27ae60;">🧘${e.senninGauge}</span>`;
+        else if (e.shinGauge !== undefined) gaugeSuffix += ` <span style="color:#f39c12;">⛪${e.shinGauge}</span>`;
+        else if ((e.plantLevel||0) > 0) gaugeSuffix += ` <span style="color:#27ae60;">🌿${e.plantLevel}</span>`;
+        else if (e.waterGauge !== undefined && e.oceanUnit) gaugeSuffix += ` <span style="color:#3498db;">💧${e.waterGauge}</span>`;
+        const hpBar = (e.maxHp === 0) ? '' : `<div class="hp-bar" style="color:${hpColor}">♥${e.hp}${jpSuffix}${gaugeSuffix}</div>`;
         let entityLabel = e.name.substring(0,2);
         const _eElem = e.element && e.element !== 'none' ? e.element : null;
         const elemBadge = _eElem ? `<span class="elem-badge">${[...ELEMENT_DATA[_eElem].label][0]}</span>` : '';
@@ -7128,8 +7134,9 @@ function showEntityInfo(e) {
     let junkPointStr = (e.junkPoint !== undefined || e.dwarfUnit || e.isDwarfRobot) ? ` &nbsp; ⚙️JP${e.junkPoint||0}` : '';
     let senninGaugeStr = (e.senninGauge !== undefined) ? ` &nbsp; 🧘G${e.senninGauge}` : '';
     let shinGaugeStr = (e.shinGauge !== undefined) ? ` &nbsp; ⛪G${e.shinGauge}` : '';
+    let mikoGaugeStr = (e.mikoGauge !== undefined) ? ` &nbsp; ⛩️G${e.mikoGauge}` : '';
     const entityIcon = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] + ' ' : '';
-    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}${shinGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}${shinGaugeStr}${mikoGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -14521,7 +14528,8 @@ function updateUI() {
         + ((selectedEntity.dwarfUnit || selectedEntity.isDwarfRobot) ? ` ⚙️JP${selectedEntity.junkPoint||0}` : '')
         + ((selectedEntity.plantLevel||0) > 0 ? ` 🌿LV${selectedEntity.plantLevel}` : '')
         + (selectedEntity.senninGauge !== undefined ? ` 🧘G${selectedEntity.senninGauge}` : '')
-        + (selectedEntity.shinGauge !== undefined ? ` ⛪G${selectedEntity.shinGauge}` : '');
+        + (selectedEntity.shinGauge !== undefined ? ` ⛪G${selectedEntity.shinGauge}` : '')
+        + (selectedEntity.mikoGauge !== undefined ? ` ⛩️G${selectedEntity.mikoGauge}` : '');
     const _uiSoulRow = document.getElementById('ui-soul-row');
     if (selectedEntity.type === 'necromancer') {
         document.getElementById('ui-soul').textContent = selectedEntity.soulCount || 0;
