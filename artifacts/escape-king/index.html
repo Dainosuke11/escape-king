@@ -15595,11 +15595,16 @@ const TUTORIAL_STEPS = [
             if (_pe) {
                 const _mr = Math.max(0, _pe.r - 1), _mc = _pe.c;
                 if (board[_mr]?.[_mc] !== undefined) board[_mr][_mc] = 'mine';
-                if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = Math.max(_pe.abilities.shatter || 0, 1);
-                _pe.ap = Math.max(_pe.ap, 2);
-                selectedEntity = _pe;
-                updateUI();
                 render();
+                // アビリティハンドラ再開による上書き後に確実に復元する
+                setTimeout(() => {
+                    if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = 3;
+                    _pe.ap = Math.max(_pe.ap, 2);
+                    _pe.actedThisTurn = false;
+                    _pe._usedAbilityThisTurn = false;
+                    selectedEntity = _pe;
+                    updateUI();
+                }, 0);
             }
         },
     },
