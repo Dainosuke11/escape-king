@@ -1618,6 +1618,7 @@ async function loadPlayerFromServer() {
             localStorage.setItem('ek_char_usage', JSON.stringify(local));
         }
         refreshRankDisplay();
+        refreshAllJobSelects();
         syncPlayerToServer();
     } catch(e) {}
 }
@@ -3551,7 +3552,9 @@ function switchGuideTab(tab) {
 }
 
 function createRoom() {
-    const job = resolveJob(document.getElementById('ol-job-select').value);
+    const rawJobCreate = document.getElementById('ol-job-select').value;
+    if (!checkJobUnlocked(rawJobCreate)) return;
+    const job = resolveJob(rawJobCreate);
     const stage = resolveStage(document.getElementById('ol-stage-select').value);
     const difficulty = document.getElementById('ol-difficulty-select').value;
     const seed = Math.floor(Math.random() * 0x7fffffff);
@@ -3578,7 +3581,9 @@ function createRoom() {
 
 function joinRoom() {
     const code = document.getElementById('ol-join-code').value.trim();
-    const job = resolveJob(document.getElementById('ol-join-job-select').value);
+    const rawJobJoin = document.getElementById('ol-join-job-select').value;
+    if (!checkJobUnlocked(rawJobJoin)) return;
+    const job = resolveJob(rawJobJoin);
     if (code.length < 5) {
         document.getElementById('join-error').textContent = '5桁の数字コードを入力してください';
         return;
@@ -3632,7 +3637,9 @@ function startCpuRankedMatch() {
     let s = document.getElementById('ranked-status');
     if (s) s.textContent = '';
 
-    const job = resolveJob(document.getElementById('ranked-job-select').value);
+    const rawJobCpuRanked = document.getElementById('ranked-job-select').value;
+    if (!checkJobUnlocked(rawJobCpuRanked, 'ranked-status')) return;
+    const job = resolveJob(rawJobCpuRanked);
     window._lastCpuRankedJob = job;
     const rank = getRank();
     const { diff, cpuCount, hpMult, apBonus } = getCpuFallbackConfig(rank);
@@ -3809,7 +3816,9 @@ function showVictoryCondition(job) {
 
 // ---- Ranked matchmaking ----
 function startRankedSearch() {
-    const job = resolveJob(document.getElementById('ranked-job-select').value);
+    const rawJobRanked = document.getElementById('ranked-job-select').value;
+    if (!checkJobUnlocked(rawJobRanked, 'ranked-status')) return;
+    const job = resolveJob(rawJobRanked);
     intentionalClose = false;
     document.getElementById('btn-find-ranked').style.display = 'none';
     document.getElementById('btn-cancel-ranked').style.display = 'inline-block';
@@ -4056,6 +4065,7 @@ function updateOnlineInfo() {
 //  EVENT LISTENERS
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+    refreshAllJobSelects();
     loadPlayerFromServer();
     refreshProfileUI();
     document.getElementById('btn-start').addEventListener('click', startGame);
@@ -4252,8 +4262,86 @@ function getLoS(a, targetPos) {
 const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','orca_pirate','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru','miko','barbarian','painter'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
+// ========== ジョブロック/アンロックシステム ==========
+const JOB_LABELS = {
+    king:'👑 王 (号令・召喚・カウンター)', knight:'🛡️ 騎士 (突破力・直線突進)',
+    assassin:'🗡️ 暗殺者 (隠密・毒武器化)', infantry:'🪖 歩兵 (分隊召喚)',
+    mage:'🔮 魔法使い (召喚魔法・大火球)', thief:'🦊 泥棒 (逃走・強奪・コピー)',
+    beastmaster:'🐾 獣使い (召喚・テイム・騎乗)', macho:'💪 マッチョ (岩雪崩・ドーピング)',
+    cyborg:'🤖 機械兵 (プラズマ・ジェット・リミッター解除)', alien:'👽 エイリアン (触手・誘拐・マインドコントロール)',
+    mandrake:'🌿 マンドレイク (種育成・融合・根っこバインド)', ryujin:'🐉 竜人族 (格闘・変身・ドラゴンインパクト)',
+    shark_warrior:'🦈 サメ戦士 (ゲージ・水中変身・ハイドロポンプ)', orca_pirate:'🐋 シャチ海賊 (略奪・ゲージ・海の支配者)',
+    clown:'🎪 ピエロ (ジャグリング・玉乗り・サル召喚)', necromancer:'💀 死霊術師 (ネクロサモン・アンデットパーティ・霊魂放出)',
+    angel:'👼 天使 (結界・バインド・堕天)', world_manager:'⚖️ 世界の管理者 (天秤・調停・世界の作り直し)',
+    onmyoji:'☯️ 陰陽師 (鬼腕解放・五芒星の陣・陰陽冥鬼)', devil:'😈 デビル (爪・甘い蜜・寿命の前借り)',
+    mafia:'🤵 マフィア (拳銃・縄張り・子分盾)', dwarf:'⚙️ ドワーフエンジニア (素材集め・ロボット製造・合体)',
+    sentai_hero:'🦸 戦隊ヒーロー (5色合体・属性必殺技・合体必殺技)', sennin:'🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)',
+    pixie:'✨ ピクシー (妖精召喚・属性変化・ゴール封印)', hitokiri_musha:'⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)',
+    guru:'⛪ 教祖 (降臨・予知警告・終末論)', miko:'⛩️ 巫女 (光火複合・巫女ゲージ・龍神降臨)',
+    barbarian:'🪓 バーバリアン (ランダム三属性・野生の解放)', painter:'🎨 絵描き (色混合・イマジネーション・虹の大傑作)',
+};
+
+// ランクマッチ勝利数でアンロック
+const JOB_UNLOCK_REQUIREMENTS = {
+    king:0, knight:0, assassin:0, infantry:0, mage:0, thief:0, beastmaster:0, macho:0,
+    cyborg:1, alien:1, mandrake:1, ryujin:1,
+    shark_warrior:3, orca_pirate:3, clown:3, necromancer:3,
+    angel:5, world_manager:5, onmyoji:5, devil:5,
+    mafia:8, dwarf:8, sentai_hero:8, sennin:8,
+    pixie:12, hitokiri_musha:12, guru:12, miko:12,
+    barbarian:15, painter:15,
+};
+
+function isJobUnlocked(job) {
+    if (!job || job === 'random') return true;
+    const req = JOB_UNLOCK_REQUIREMENTS[job] ?? 0;
+    return req === 0 || getWins() >= req;
+}
+
+function buildJobOptions() {
+    const wins = getWins();
+    let html = '<option value="random">🎲 ランダム (解放済みからおまかせ)</option>';
+    for (const job of ALL_JOBS) {
+        const req = JOB_UNLOCK_REQUIREMENTS[job] ?? 0;
+        const label = JOB_LABELS[job] || job;
+        if (wins >= req) {
+            html += `<option value="${job}">${label}</option>`;
+        } else {
+            html += `<option value="${job}" disabled style="color:#555;">🔒 ${label}（ランクマッチ${req}勝で解放）</option>`;
+        }
+    }
+    return html;
+}
+
+function refreshAllJobSelects() {
+    const opts = buildJobOptions();
+    for (const id of ['job-select','ranked-job-select','ol-job-select','ol-join-job-select']) {
+        const sel = document.getElementById(id);
+        if (!sel) continue;
+        const cur = sel.value;
+        sel.innerHTML = opts;
+        if (cur && sel.querySelector(`option[value="${cur}"]:not([disabled])`)) sel.value = cur;
+    }
+}
+
+function checkJobUnlocked(job, errElId) {
+    if (!job || job === 'random' || isJobUnlocked(job)) return true;
+    const req = JOB_UNLOCK_REQUIREMENTS[job] || 0;
+    const label = (JOB_LABELS[job] || job).split('(')[0].trim();
+    const errMsg = `🔒 ${label}はランクマッチ${req}勝で解放されます（現在${getWins()}勝）`;
+    const el = errElId ? document.getElementById(errElId) : null;
+    if (el) el.textContent = errMsg;
+    else alert(errMsg);
+    return false;
+}
+// ===================================================
+
 function resolveJob(job) {
-    return job === 'random' ? ALL_JOBS[Math.floor(Math.random()*ALL_JOBS.length)] : job;
+    if (job === 'random') {
+        const avail = ALL_JOBS.filter(j => isJobUnlocked(j));
+        return avail.length > 0 ? avail[Math.floor(Math.random()*avail.length)] : ALL_JOBS[0];
+    }
+    return job;
 }
 function resolveStage(stage) {
     return stage === 'random' ? ALL_STAGES[Math.floor(Math.random()*ALL_STAGES.length)] : stage;
@@ -4262,7 +4350,9 @@ function resolveStage(stage) {
 function startGame() {
     try {
         document.getElementById('error-log').innerText = '';
-        const job = resolveJob(document.getElementById('job-select').value);
+        const rawJobOffline = document.getElementById('job-select').value;
+        if (!checkJobUnlocked(rawJobOffline, 'error-log')) return;
+        const job = resolveJob(rawJobOffline);
         activeStage = resolveStage(document.getElementById('stage-select').value);
         const difficulty = document.getElementById('difficulty-select').value;
         

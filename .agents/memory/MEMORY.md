@@ -2,5 +2,6 @@
 - [Escape the King online/ranked](escape-king-online.md) — WebSocket relay (not server-authoritative); client-side rank/RP; room/resume/queue-timer/state-sync contract.
 - [Escape the King sennin job](escape-king-sennin.md) — gauge system, element alternation, ability/skill handlers, sentai item restriction.
 - [Escape the King new character checklist](escape-king-new-char-checklist.md) — all 4 job-select dropdowns + JOB_DATA/ALL_JOBS/etc. must be updated together every time.
+- [Escape the King job unlock system](escape-king-job-unlock.md) — JOB_UNLOCK_REQUIREMENTS (ranked wins) gates all 4 job selects; refreshAllJobSelects() rebuilds them dynamically.
 - [Escape the King profile system](escape-king-profile.md) — profileIcon/wins/losses/charUsage in DB+API+localStorage; post-merge Fly.io failure made non-fatal.
 - [Escape the King painter job](escape-king-painter.md) — IG gauge, 5-color combo, rainbow tiles, paint_combo interceptor in setMode, processTurnStartEffects pattern.
