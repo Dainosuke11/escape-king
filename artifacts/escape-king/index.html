@@ -1819,10 +1819,10 @@ const ABILITY_NAMES = {
     undead_party: 'アンデットパーティ(魂3消費/半径2に全種召喚/5T後)',
     corpse_fusion: '死体融合(魂3消費/半径2味方全破壊/キメラ召喚)',
     corpse_throw: '死体投げ(半径3/威3/自1ダメ/足元ゾンビ)',
-    light_whip: '光のムチ(直線2/威1/AP-1/堕天+1)',
+    light_whip: '光のムチ(直線2/威1/AP-1/堕天+1/G30↑:+2dmg+射程+闇)',
     feather_dash: 'フェザーダッシュ(ダッシュ+隣接AP-1/堕天+1)',
-    bind_arrow: 'バインドアロー(直線5/威1/AP-2/5封印/堕天+1)',
-    light_bind: '光の呪縛(半径2の敵1体対象/AP-2+5封印/堕天+1)',
+    bind_arrow: 'バインドアロー(直線5/威1/AP0/5封印/堕天+1/G30↑:+2dmg+射程+闇)',
+    light_bind: '光の呪縛(半径2/AP0+5封印/堕天+1/G30↑:+2dmg+射程+闇)',
     scales: '天秤(HP≤15なら半径3/威1+被弾で+2ダメ+3回復/HP≤15でさらに+2ダメ+2回復/全アビ+1)',
     grudge_strike: '怨みの打撃(半径1/威1/被弾で+2ダメ+2回復/堕天≥30でさらに+2ダメ+2回復/堕天+1)',
     balance_adjust: '均衡の調整(魔法弾/半径2/威1/敵ゴール有利なら+3ダメ+AP-2+後吹飛+1T封印/全アビ+1)',
@@ -1831,7 +1831,7 @@ const ABILITY_NAMES = {
     inequality_anger: '不平等への怒り(炎/半径5/威1/残り使用回数1以下のアビリティがあれば+3ダメ+AP-2+半径3全体2ダメ+全アビ+1)',
     equal_strike: '均等の一撃(超能力/半径3/威1/後吹飛+前岩/前T敵スキル使用なら+3ダメ+AP-2+封印+半径1岩2/全アビ+1)',
     harmonious_prayer: '調和の祈り(自分/HP+1・AP+1・全アビ+1/封印された瞬間自動カウンター：自封印全解除+全敵1T全封印+AP-2+全アビ+1+次T自AP+1)',
-    light_barrier: '光の結界(半径1/1T結界+バリア/敵AP-2+全封印/堕天+1)',
+    light_barrier: '光の結界(半径1/1T結界+バリア/敵AP-2+全封印/堕天+1/G30↑:半径2+2dmg+闇)',
     sin_mark: '罪の刻印(半径2か5/AP-2/5封印/呪い/堕天+1)',
     death_scythe: 'デスサイズ(半径1か3全体/威2か3/吹飛/AP-1/5封印/堕天+1)',
     balance_break: '均衡崩し(直線5か半径8+転送/自1ダメ/威2か4/吹飛/AP-2/5封印/堕天+1)',
@@ -2094,12 +2094,12 @@ const ABILITY_TIPS = {
     undead_party: '魂3消費。5T後から使用可。周囲半径2マスにゾンビ・悪霊・スケルトン・フランケン・大悪霊・スケルトンソルジャー・ドクロを1体ずつ召喚。次のターン開始時に全消滅。回数1。',
     corpse_fusion: '魂3消費。半径2マス内の全味方コマを破壊し、その合計HPのネクロキメラを半径1マスに召喚。キメラは死体投げが使える。回数1。',
     corpse_throw: '半径3マスの敵に3ダメ＋吹き飛ばし。ネクロキメラ自身も1ダメを受け、敵の足元にゾンビが出現する。回数∞。',
-    light_whip: '直線2マス内の敵に1ダメ・AP-1を与え、堕天ゲージ+1。回数5。',
+    light_whip: '直線2マス内の敵に1ダメ・AP-1を与え、堕天ゲージ+1。堕天ゲージ30以上なら1消費して射程+1・追加2ダメ・闇属性付与。回数5。',
     feather_dash: 'ダッシュ移動した後、移動先の隣接敵全員のAPを-1する。さらに堕天ゲージ+1。回数5。',
-    bind_arrow: '直線5マス内の敵に1ダメ・AP0(完全拘束)・ランダム5アビリティを1T封印する光の矢。堕天ゲージ+1。回数3。',
-    light_bind: '半径2マス内の敵1体を対象にAP0(完全拘束)・ランダム5アビリティを1T封印する光の拘束。堕天ゲージ+1。回数3。',
+    bind_arrow: '直線5マス内の敵に1ダメ・AP0(完全拘束)・ランダム5アビリティを1T封印する光の矢。堕天ゲージ+1。堕天ゲージ30以上なら1消費して射程+1・追加2ダメ・闇属性付与。回数3。',
+    light_bind: '半径2マス内の敵1体を対象にAP0(完全拘束)・ランダム5アビリティを1T封印する光の拘束。堕天ゲージ+1。堕天ゲージ30以上なら1消費して射程+1・追加2ダメ・闇属性付与。回数3。',
     scales: '射程半径1の敵に攻撃(天秤)。HP≤15なら射程が半径3に拡大。被弾中(HP最大値未満)：+2ダメ・自HP+3回復。さらにHP≤15なら：+2ダメ・自HP+2回復。全アビリティ使用回数+1。回数5。',
-    light_barrier: '足元半径1マスに1ターン光の結界を展開：自分に無敵バリア付与、内部の敵にAP-2+全アビリティ封印。堕天ゲージ+1。回数3。',
+    light_barrier: '足元半径1マスに1ターン光の結界を展開：自分に無敵バリア付与、内部の敵にAP-2+全アビリティ封印。堕天ゲージ+1。堕天ゲージ30以上なら1消費して半径2に拡大・内部の敵に追加2ダメ・闇属性付与。回数3。',
     sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数3。',
     death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
     balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数3。',
@@ -8089,7 +8089,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'corpse_throw') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'skill_necro_release') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     // 天使
-    if (mode === 'light_whip') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'light_whip') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2+(se.rangeBonus||0)+((se.fallenGauge||0)>=30?1:0) && target && target.team!==se.team;
     if (mode === 'feather_dash') {
         let canPhaseA = se.flying || se.invin;
         if (canPhaseA) return dist>0 && dist<=2 && isWalkable(r,c,true);
@@ -8101,8 +8101,8 @@ function isValidTarget(se, r, c, mode) {
         if(fdr===0&&fdc!==0&&Math.abs(fdc)===2){let mR=se.r,mC=se.c+Math.sign(fdc);if(!isWalkable(mR,mC)||entities.some(e=>e.hp>0&&e.r===mR&&e.c===mC))return false;}
         return true;
     }
-    if (mode === 'bind_arrow') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0) && target && target.team!==se.team;
-    if (mode === 'light_bind') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
+    if (mode === 'bind_arrow') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5+(se.rangeBonus||0)+((se.fallenGauge||0)>=30?1:0) && target && target.team!==se.team;
+    if (mode === 'light_bind') return maxDist>0 && maxDist<=2+(se.rangeBonus||0)+((se.fallenGauge||0)>=30?1:0) && target && target.team!==se.team;
     if (mode === 'scales') return maxDist>0 && maxDist<=(se.hp<=15?3:1)+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'grudge_strike') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'balance_adjust') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
@@ -11038,12 +11038,15 @@ function handleAbilityTarget(r, c, targetEntity) {
     // ====== 天使 / 堕天使アビリティ ======
     } else if (actionMode === 'light_whip') {
         se.abilities['light_whip']--;
+        const lwFallen = (se.fallenGauge||0) >= 30;
+        if (lwFallen) se.fallenGauge--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= 1 + (lwFallen?2:0) + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.ap = Math.max(0, targetEntity.ap - 1);
+            if (lwFallen) targetEntity.element = 'dark';
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`✨ 光のムチ！${targetEntity.name}に1ダメ・AP-1！堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`✨ 光のムチ！${targetEntity.name}に${1+(lwFallen?2:0)}ダメ・AP-1${lwFallen?'・堕天覚醒(+2dmg/射程+1/闇属性付与)':''}！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'feather_dash') {
         if (se.abilities['feather_dash'] !== 999) se.abilities['feather_dash']--;
         if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
@@ -11061,23 +11064,30 @@ function handleAbilityTarget(r, c, targetEntity) {
         checkEnemyTerritory(se); used = true;
     } else if (actionMode === 'bind_arrow') {
         se.abilities['bind_arrow']--;
+        const baFallen = (se.fallenGauge||0) >= 30;
+        if (baFallen) se.fallenGauge--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= 1 + (baFallen?2:0) + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.ap = 0;
             let baKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
             sealAbilities(targetEntity, baKs.sort(()=>Math.random()-0.5).slice(0,5), 1);
+            if (baFallen) targetEntity.element = 'dark';
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`🏹 バインドアロー！${targetEntity.name}に1ダメ・AP0・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`🏹 バインドアロー！${targetEntity.name}に${1+(baFallen?2:0)}ダメ・AP0・5封印${baFallen?'・堕天覚醒(+2dmg/射程+1/闇属性付与)':''}！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'light_bind') {
         se.abilities['light_bind']--;
+        const lbFallen = (se.fallenGauge||0) >= 30;
+        if (lbFallen) se.fallenGauge--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            if (lbFallen) targetEntity.hp -= 2 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
             targetEntity.ap = 0;
             let lbKs = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]>0||targetEntity.abilities[k]===999));
             sealAbilities(targetEntity, lbKs.sort(()=>Math.random()-0.5).slice(0,5), 1);
+            if (lbFallen) targetEntity.element = 'dark';
         }
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`✨ 光の呪縛！${targetEntity?.name}にAP0・5封印！堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`✨ 光の呪縛！${targetEntity?.name}に${lbFallen?'2ダメ・':''}AP0・5封印${lbFallen?'・堕天覚醒(+2dmg/射程+1/闇属性付与)':''}！堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'scales') {
         se.abilities['scales']--;
         let scHasDmg = (se.hp < se.maxHp);
@@ -11252,9 +11262,12 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'light_barrier') {
         se.abilities['light_barrier']--;
+        const lbrFallen = (se.fallenGauge||0) >= 30;
+        if (lbrFallen) se.fallenGauge--;
         se.invin = true; se.invinTimer = 1;
+        const lbrRadius = lbrFallen ? 2 : 1;
         let lbrCells = []; let lbrOrig = {}; let lbrEnemies = 0;
-        for (let ldr=-1; ldr<=1; ldr++) for (let ldc=-1; ldc<=1; ldc++) {
+        for (let ldr=-lbrRadius; ldr<=lbrRadius; ldr++) for (let ldc=-lbrRadius; ldc<=lbrRadius; ldc++) {
             let br=se.r+ldr, bc=se.c+ldc;
             if (br<0||br>=SIZE||bc<0||bc>=SIZE) continue;
             lbrOrig[`${br},${bc}`] = board[br][bc];
@@ -11262,14 +11275,16 @@ function handleAbilityTarget(r, c, targetEntity) {
             lbrCells.push({r:br, c:bc});
             let lbrEnemy = entities.find(ev=>ev.hp>0&&ev.r===br&&ev.c===bc&&ev.team!==se.team);
             if (lbrEnemy && !lbrEnemy.invin) {
+                if (lbrFallen) lbrEnemy.hp -= 2 + (se.atkBonus||0) + (lbrEnemy.defDebuff||0);
                 lbrEnemy.ap = Math.max(0, lbrEnemy.ap - 2);
                 sealAbilities(lbrEnemy, Object.keys(lbrEnemy.abilities||{}).filter(k=>k!=='drop_rock'), 1);
+                if (lbrFallen) lbrEnemy.element = 'dark';
                 lbrEnemy.skillUsed = true; lbrEnemies++;
             }
         }
         lightBarrierZones.push({ownerTeam:se.team, ownerId:se.id, cells:lbrCells, origTile:lbrOrig, turnExpires:turn+1});
         se.fallenGauge = (se.fallenGauge||0) + 1;
-        msg(`✨ 光の結界！半径1に結界展開・1T無敵バリア！${lbrEnemies>0?`敵${lbrEnemies}体AP-2+全封印！`:''}堕天ゲージ${se.fallenGauge}`); used = true;
+        msg(`✨ 光の結界！半径${lbrRadius}に結界展開・1T無敵バリア${lbrFallen?'・堕天覚醒(+2dmg/範囲+1/闇属性付与)':''}！${lbrEnemies>0?`敵${lbrEnemies}体${lbrFallen?'2ダメ+':''}AP-2+全封印${lbrFallen?'+闇属性':''}！`:''}堕天ゲージ${se.fallenGauge}`); used = true;
     } else if (actionMode === 'sin_mark') {
         se.abilities['sin_mark']--;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
