@@ -14642,7 +14642,7 @@ function updateUI() {
             const _hl = _ths.highlightAbility;
             list.querySelectorAll('.ability-btn').forEach(b => {
                 const _k = b.id.replace('ability-btn-', '');
-                if (_hl === '*attack' ? _k !== 'drop_rock' : _k === _hl) {
+                if (_hl === '*attack' ? !['drop_rock', 'shatter', 'summon_lancer'].includes(_k) : _k === _hl) {
                     b.classList.add('tutorial-highlight');
                 }
             });
