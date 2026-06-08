@@ -15097,7 +15097,30 @@ function showTutorialStep() {
         if (el) el.classList.add('tutorial-highlight');
     }
     const nextBtn = document.getElementById('tutorial-next-btn');
-    if (nextBtn) nextBtn.textContent = step.final ? '閉じる ✓' : '次へスキップ ▶';
+    const tryBtn = document.getElementById('tutorial-try-btn');
+    const skipBtn = document.getElementById('tutorial-skip-btn');
+    if (step.advanceOn) {
+        // 行動ステップ: 「やってみよう！」ボタンで非表示→行動達成で次ステップ表示
+        if (tryBtn) { tryBtn.style.display = 'inline-block'; }
+        if (nextBtn) { nextBtn.style.display = 'none'; }
+        if (skipBtn) { skipBtn.style.display = 'inline-block'; }
+    } else {
+        // 説明ステップ: 「次へ」ボタンのみ
+        if (tryBtn) { tryBtn.style.display = 'none'; }
+        if (nextBtn) {
+            nextBtn.style.display = 'inline-block';
+            nextBtn.textContent = step.final ? '閉じる ✓' : '次へ ▶';
+        }
+        if (skipBtn) { skipBtn.style.display = 'none'; }
+    }
+}
+
+function hideTutorialAndWait() {
+    // オーバーレイを非表示にしてプレイヤーが行動するのを待つ
+    // tutorialMode/tutorialStep はそのまま保持
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
 }
 
 function advanceTutorial() {
@@ -15126,7 +15149,9 @@ function closeTutorial() {
         <div id="tutorial-msg"></div>
         <div class="tutorial-btn-row">
             <button class="tutorial-btn" id="tutorial-close-btn" onclick="closeTutorial()">終了</button>
-            <button class="tutorial-btn" id="tutorial-next-btn" onclick="advanceTutorial()">次へスキップ ▶</button>
+            <button class="tutorial-btn" id="tutorial-skip-btn" onclick="advanceTutorial()" style="background:#445;color:#aaa;">スキップ ▶</button>
+            <button class="tutorial-btn" id="tutorial-try-btn" onclick="hideTutorialAndWait()" style="background:#1abc9c;color:#fff;display:none;">✅ やってみよう！</button>
+            <button class="tutorial-btn" id="tutorial-next-btn" onclick="advanceTutorial()">次へ ▶</button>
         </div>
     </div>
 </div>
