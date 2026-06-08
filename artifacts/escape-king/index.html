@@ -7652,7 +7652,7 @@ function checkEnemyTerritory(entity) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
-        if (tutorialMode && tutorialStep === 18 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 19 && entity.team === 'player') advanceTutorial();
     } else if (cInEnemy && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
@@ -7846,6 +7846,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         } else {
             let wasGoldenCoral = board[r][c] === 'golden_coral';
             let wasCoralReef = board[r][c] === 'coral_reef';
+            let wasMine = board[r][c] === 'mine';
+            let wasVolcano = board[r][c] === 'volcano';
             if (board[r][c] === 'mine') breakMine(r, c);
             if (board[r][c] === 'volcano') breakVolcano();
             if (wasGoldenCoral) breakMine();
@@ -7860,6 +7862,8 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
             if (se.dwarfUnit || se.isDwarfRobot) { se.junkPoint = (se.junkPoint||0) + 1; msg(`⚙️ 岩砕き！JP+1(計${se.junkPoint||1})！`, true); }
             if (tutorialMode && tutorialStep === 13) advanceTutorial();
+            else if (tutorialMode && tutorialStep === 17 && wasMine) advanceTutorial();
+            else if (tutorialMode && tutorialStep === 18 && wasVolcano) advanceTutorial();
             used = true;
         }
     } else if (actionMode === 'drop_rock') {
@@ -10880,7 +10884,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
-            if (tutorialMode && tutorialStep === 19 && se.team === 'player') advanceTutorial();
+            if (tutorialMode && tutorialStep === 20 && se.team === 'player') advanceTutorial();
         }
         // 水属性攻撃で海洋コマのウォーターゲージ+5
         if (_atkElem === 'water' && targetEntity.oceanUnit && targetEntity.hp > 0) {
@@ -15202,12 +15206,43 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 17: 鉱山
-        msg: '⛏️ <b>鉱山（⛏️マス）を踏んで宝を集めよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br>コマを移動してその上に乗るだけで宝が自動取得されます！<br><br>グレードアップシステム：<br>1回目：🥉 <b>銅</b> → 2回目：🥈 <b>銀</b> → 3回目：🥇 <b>金</b> → 4回目：💎 <b>白金</b><br>同じ鉱山を踏むたびに価値がアップします！<br><br>💡 戦略のコツ：<br>・序盤に鉱山を確保して先行リードを狙おう<br>・相手に踏まれると相手が強化されてしまう<br>・鉱山争奪戦が試合の流れを左右することも！<br><br>▶「次へ」で続きを見よう',
-        highlight: null,
-        advanceOn: null,
+    {   // Step 17: 鉱山（インタラクティブ）
+        msg: '⛏️ <b>鉱山マスを岩砕きで砕いてみよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br><b>「岩砕き」アビリティ</b>で砕くとランダムで報酬が出る！<br><br>報酬はランダム（均等確率）：<br>🥉 <b>銅</b>：岩砕きアビリティ+1回復<br>🥈 <b>銀</b>：ランダムなアビリティ3種回復<br>🥇 <b>金</b>：全アビリティ回復＋HP微回復<br>💎 <b>プラチナ</b>：全アビリティ回復＋AP+1＋HP大回復<br><br>▶「やってみよう！」を押して目の前の鉱山を砕こう！',
+        highlight: 'btn-attack',
+        highlightAbility: 'shatter',
+        advanceOn: 'mine_shattered',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                const _mr = Math.max(0, _pe.r - 1), _mc = _pe.c;
+                if (board[_mr]?.[_mc] !== undefined) board[_mr][_mc] = 'mine';
+                if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = Math.max(_pe.abilities.shatter || 0, 1);
+                _pe.ap = Math.max(_pe.ap, 2);
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
     },
-    {   // Step 18: 中央突破ボーナス（インタラクティブ）
+    {   // Step 18: 火山（インタラクティブ）
+        msg: '🌋 <b>火山岩を岩砕きで砕いてみよう！</b><br><br><b>🌋マスの火山岩</b>を「岩砕き」で砕くと……<br>💥 <b>敵の周囲に岩が5個降り注ぐ！</b>さらに<b>敵に4ダメージ！</b><br><br>敵の進路を一気に塞ぐ強力な地形破壊！<br>うまく使えば敵を四方の岩で囲んで敗北させることもできる！<br><br>▶「やってみよう！」を押して目の前の火山岩を砕こう！',
+        highlight: 'btn-attack',
+        highlightAbility: 'shatter',
+        advanceOn: 'volcano_shattered',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) {
+                const _vr = Math.max(0, _pe.r - 1), _vc = _pe.c;
+                if (board[_vr]?.[_vc] !== undefined) board[_vr][_vc] = 'volcano';
+                if (_pe.abilities.shatter !== 999) _pe.abilities.shatter = Math.max(_pe.abilities.shatter || 0, 1);
+                _pe.ap = Math.max(_pe.ap, 2);
+                selectedEntity = _pe;
+                updateUI();
+                render();
+            }
+        },
+    },
+    {   // Step 19: 中央突破ボーナス（インタラクティブ）
         msg: '🌉 <b>橋を渡って敵陣に侵入しよう！</b><br><br>川の手前にいるよ！橋を渡って<b>敵陣（上半分）に侵入</b>すると<b>突破ボーナス発動！</b><br><br>ボーナス内容：<br>⚔️ <b>全アビリティ使用回数+1</b><br><br>▶ コマを選んで橋を渡り、敵陣に踏み込もう！',
         highlight: 'board',
         advanceOn: 'cross_bonus',
@@ -15385,8 +15420,9 @@ function hideTutorialAndWait() {
         const _endBtn = document.getElementById('btn-end-turn');
         if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
     }
-    // 岩落とし進路妨害/頭上岩落とし/スキルステップ: アビリティボタンを光らせ矢印で誘導
-    if (_curStep?.advanceOn === 'drop_rock_placed' || _curStep?.advanceOn === 'avalanche_used' || _curStep?.advanceOn === 'tutorial_skill_used') {
+    // 岩落とし進路妨害/頭上岩落とし/スキル/鉱山/火山ステップ: アビリティボタンを光らせ矢印で誘導
+    if (_curStep?.advanceOn === 'drop_rock_placed' || _curStep?.advanceOn === 'avalanche_used' || _curStep?.advanceOn === 'tutorial_skill_used'
+        || _curStep?.advanceOn === 'mine_shattered' || _curStep?.advanceOn === 'volcano_shattered') {
         const _atkBtn = document.getElementById('btn-attack');
         if (_atkBtn) { _atkBtn.classList.add('tutorial-highlight'); showTutorialArrow(_atkBtn); }
     }
