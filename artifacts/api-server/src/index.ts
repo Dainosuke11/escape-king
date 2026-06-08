@@ -3,6 +3,9 @@ import { logger } from "./lib/logger";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { randomUUID } from "crypto";
+import { db } from "@workspace/db";
+import { ekPlayersTable } from "@workspace/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 const rawPort = process.env["PORT"];
 
@@ -344,6 +347,20 @@ function finishRanked(
 
     const wDelta = baseWDelta + wBonusTotal;
     const lDelta = baseLDelta + lAdjTotal;
+
+    // Authoritatively increment wins/losses in DB (fire-and-forget)
+    if (w.userId && w.userId !== "anon") {
+      db.update(ekPlayersTable)
+        .set({ wins: sql`${ekPlayersTable.wins} + 1` })
+        .where(eq(ekPlayersTable.userId, w.userId))
+        .catch((e) => logger.warn({ err: e }, "Failed to increment wins"));
+    }
+    if (l.userId && l.userId !== "anon") {
+      db.update(ekPlayersTable)
+        .set({ losses: sql`${ekPlayersTable.losses} + 1` })
+        .where(eq(ekPlayersTable.userId, l.userId))
+        .catch((e) => logger.warn({ err: e }, "Failed to increment losses"));
+    }
 
     safeSend(w.ws, {
       type: "rankResult",

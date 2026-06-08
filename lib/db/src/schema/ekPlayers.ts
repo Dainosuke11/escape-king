@@ -13,6 +13,7 @@ export const ekPlayersTable = pgTable("ek_players", {
   favoriteStage: varchar("favorite_stage", { length: 32 }).default(""),
   wins: integer("wins").notNull().default(0),
   losses: integer("losses").notNull().default(0),
+  draws: integer("draws").notNull().default(0),
   charUsage: jsonb("char_usage").default({}),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
