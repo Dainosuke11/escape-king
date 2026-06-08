@@ -264,6 +264,10 @@
         .ash-mist { box-shadow: inset 0 0 8px rgba(180,140,60,0.3) !important; }
         .ash-mist::before { content: ""; position: absolute; inset: 0; background: rgba(150,110,30,0.38); pointer-events: none; z-index: 1; }
         .ash-mist::after { content: "💨"; font-size: calc(var(--tile-size)*0.32); opacity: 0.55; position: absolute; pointer-events: none; z-index: 2; }
+        .ash-mist-warn { box-shadow: inset 0 0 6px rgba(255,200,0,0.5) !important; }
+        .ash-mist-warn::before { content: ""; position: absolute; inset: 0; background: rgba(255,180,0,0.18); border: 2px dashed rgba(255,160,0,0.7); pointer-events: none; z-index: 1; animation: ash-warn-pulse 0.9s ease-in-out infinite alternate; }
+        .ash-mist-warn::after { content: "⚠️"; font-size: calc(var(--tile-size)*0.28); opacity: 0.75; position: absolute; pointer-events: none; z-index: 2; }
+        @keyframes ash-warn-pulse { from { background: rgba(255,180,0,0.12); } to { background: rgba(255,100,0,0.28); } }
         .fairy-village-range { box-shadow: inset 0 0 6px rgba(100,220,60,0.7) !important; }
         .fairy-village-range::before { content: ""; position: absolute; inset: 0; background: rgba(80,210,40,0.28); pointer-events: none; z-index: 1; }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
@@ -8206,6 +8210,12 @@ function render() {
             // Volcano summit: ash mist overlay
             if (activeStage === 'volcano_summit' && volcanoAshMistSet.has(`${ar},${c}`)) {
                 d.classList.add('ash-mist');
+            }
+            // Volcano summit: ash mist WARNING (next turn is big eruption → turn+1 divisible by 3)
+            if (activeStage === 'volcano_summit' && !volcanoAshMistSet.has(`${ar},${c}`) && (turn + 1) % 3 === 0 && turn >= 0) {
+                if (Math.max(Math.abs(ar - 10), Math.abs(c - 10)) <= 3) {
+                    d.classList.add('ash-mist-warn');
+                }
             }
             // Fairy village range overlay (expire check)
             if (_fairyVillageTiles) {
