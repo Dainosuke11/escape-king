@@ -12007,7 +12007,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_mdSpawn) {
             entities.push({ id:'barb_clone'+Date.now(), type:'barbarian_clone', name:'バーバリアン分身', team:se.team,
                 r:_mdSpawn.r, c:_mdSpawn.c, hp:1, maxHp:1, ap:1, maxAp:1,
-                abilities:{chimatsuri_giri:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0,
+                abilities:{chimatsuri_giri:999, ono_renbu:999, kaiten_giri:999, ono_nage:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0,
                 poisonTimer:0, atkBonus:-1, _cloneExpiry: turn+1, element: se.element });
             msg(`👥 ${se.name}の群れで刈る！バーバリアン分身を召喚！次ターン消滅・被ダメ+1(1T)！`);
         } else {
@@ -14921,7 +14921,7 @@ function cpuLogic() {
                     const _mdDirs=[[_mdFrontR,cpu.c],[cpu.r-1,cpu.c],[cpu.r+1,cpu.c],[cpu.r,cpu.c-1],[cpu.r,cpu.c+1]];
                     for(let[_mr,_mc]of _mdDirs){if(_mr>=0&&_mr<SIZE&&_mc>=0&&_mc<SIZE&&isWalkable(_mr,_mc)&&!entities.some(ev=>ev.hp>0&&ev.r===_mr&&ev.c===_mc)){_mdSpawn={r:_mr,c:_mc};break;}}
                     if(_mdSpawn){
-                        entities.push({id:'barb_clone'+Date.now(),type:'barbarian_clone',name:'バーバリアン分身',team:cpu.team,r:_mdSpawn.r,c:_mdSpawn.c,hp:1,maxHp:1,ap:1,maxAp:1,abilities:{chimatsuri_giri:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:-1,_cloneExpiry:turn+1,element:cpu.element});
+                        entities.push({id:'barb_clone'+Date.now(),type:'barbarian_clone',name:'バーバリアン分身',team:cpu.team,r:_mdSpawn.r,c:_mdSpawn.c,hp:1,maxHp:1,ap:1,maxAp:1,abilities:{chimatsuri_giri:999,ono_renbu:999,kaiten_giri:999,ono_nage:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:-1,_cloneExpiry:turn+1,element:cpu.element});
                         cpu.defDebuff=(cpu.defDebuff||0)+1; cpu.defDebuffTimer=1;
                         if(cpu.abilities.mure_de_karu!==999) cpu.abilities.mure_de_karu--;
                         msg(`👥 敵バーバリアンの群れで刈る！前方に分身を召喚！`); attacked=true; cpu.ap--;
