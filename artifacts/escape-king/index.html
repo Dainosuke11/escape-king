@@ -4710,6 +4710,7 @@ function processTurnStartEffects(e) {
             e.sinMark.lastDist = curSinDist;
         }
     }
+    let _prevRemainAp = e.ap || 0;
     e.ap = e.maxAp;
     // Factory press AP-1 penalty: consumed here so it survives the AP reset above
     if (e._pressedThisTurn) { e.ap = Math.max(0, e.ap - 1); e._pressedThisTurn = false; }
@@ -5023,14 +5024,15 @@ function processTurnStartEffects(e) {
     }
     // 待機ボーナス: 前ターンに何も行動しなかったユニットへ（第1ターンは除外）
     if (turn > 1 && !e.actedThisTurn && !e._usedAbilityThisTurn && e.hp > 0) {
-        e.hp = Math.min(e.maxHp, e.hp + 1);
+        let _idleHpBonus = Math.max(1, _prevRemainAp);
+        e.hp = Math.min(e.maxHp, e.hp + _idleHpBonus);
         let idlePool = Object.keys(e.abilities||{}).filter(k => k !== 'drop_rock' && e.abilities[k] !== 999 && (e.abilities[k]||0) > 0);
         if (idlePool.length > 0) {
             let ik = idlePool[Math.floor(Math.random() * idlePool.length)];
             e.abilities[ik]++;
-            msg(`💤 ${e.name}は待機ボーナス！HP+1・[${ABILITY_NAMES[ik]||ik}]回数+1！`, true);
+            msg(`💤 ${e.name}は待機ボーナス！HP+${_idleHpBonus}・[${ABILITY_NAMES[ik]||ik}]回数+1！`, true);
         } else {
-            msg(`💤 ${e.name}は待機ボーナス！HP+1！`, true);
+            msg(`💤 ${e.name}は待機ボーナス！HP+${_idleHpBonus}！`, true);
         }
     }
     e.actedThisTurn = false;
