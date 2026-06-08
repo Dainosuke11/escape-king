@@ -126,6 +126,8 @@
         .highlight-atk { background-color: rgba(231, 76, 60, 0.6) !important; border: 1px solid #e74c3c; z-index: 5; }
         .sandworm-warn { background-color: rgba(230, 126, 34, 0.6) !important; border: 2px dashed #d35400 !important; z-index: 5;}
         .sandworm-attack { background-color: #d35400 !important; }
+        .guru-warn { background-color: rgba(155, 89, 182, 0.55) !important; border: 2px dashed #8e44ad !important; z-index: 5; }
+        .guru-plague { background-color: rgba(39, 174, 96, 0.45) !important; border: 2px dashed #1e8449 !important; z-index: 4; }
         .nighttown_goal { background: #8B4513; }
         .car_tile { background: #445; }
         .car_tile::after { content: "🚗"; font-size: calc(var(--tile-size) * 0.45); }
@@ -643,6 +645,7 @@
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
             <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
+            <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
         </select>
     </div>
     <div class="select-group">
@@ -744,6 +747,7 @@
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
             <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
+            <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:13px; margin:10px 0; line-height:1.6;">
@@ -786,6 +790,7 @@
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
             <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
+            <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             </select>
         </div>
         <div class="select-group">
@@ -858,6 +863,7 @@
             <option value="sennin">🧘 仙人 (木水複合・仙人ゲージ・自然淘汰)</option>
             <option value="pixie">✨ ピクシー (妖精召喚・属性変化・ゴール封印)</option>
             <option value="hitokiri_musha">⚔️ 人斬り武者 (居合・修羅乱舞・業火斬撃)</option>
+            <option value="guru">⛪ 教祖 (降臨・予知警告・終末論)</option>
             </select>
         </div>
         <p style="color:#aaa; font-size:14px; margin:10px 0;">ルームコードを入力してください:</p>
@@ -1002,6 +1008,7 @@ let lightBarrierZones = [];    // [{ownerTeam, ownerId, cells:[{r,c}], origTile:
 let pentagramZones = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 let darknessFields = [];       // [{ownerTeam, ownerId, cells:[{r,c}], origTile:{key:tile}, turnExpires}]
 let hellGroundTiles = [];      // [{r,c,expireAt,ownerTeam}] 人斬り武者の阿鼻叫喚
+let guruPlagueTiles = [];     // [{r,c,expireAt,ownerTeam}] 教祖の不信仰の腐食
 let copperForcedMines = new Set(); // positions "r,c" forced to yield copper
 // Castle stage
 let bridgeStates = { north: true, south: true, east: true, west: true };
@@ -1394,7 +1401,17 @@ const ABILITY_NAMES = {
     onnen_kaeshi: '⚫怨念返し(次T/受ダメ×2返撃)',
     oni_giri: '👹鬼切り(r3/闇4ダメ+業火呪3T)',
     iai: '⚔️居合(次T/隣接敵5ダメ迎撃)',
-    abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)'
+    abikyokan: '🔥阿鼻叫喚(前方/業火地獄マス3T)',
+    kourin: '⛪降臨(ダッシュ+信者召喚+G+1)',
+    sabaki_kaminari: '⚡裁きの雷(予知/r3敵選択/次T:r1四方4ダメ+AP-1/G1消費)',
+    shintaku_daiko: '🌊信託の大洪水(予知/次T:r2四方4ダメ+吹飛+AP-1+4封印/G1消費)',
+    gyokuza_jishin: '🌍玉座の地鳴り(予知/次T:r4四方2ダメ+AP-1/G1消費)',
+    fukuin_bofuu: '🌪️福音の暴風(予知/次T:前方5×5に2ダメ+吹飛/G1消費)',
+    fujo_yukai: '🌋不浄の融解(予知/r3敵選択/次T:r1四方4ダメ+炎+燃焼/G1消費)',
+    tenkei_hoshiotoshi: '🌠天啓の星堕とし(予知/次T:r5全敵4ダメ+吹飛+元位置岩/G2消費)',
+    fushinkoh_fushoku: '☠️不信仰の腐食(予知/次T:r3疫病マス2T/踏んだ敵2ダメ+AP-1+4封印/G1消費)',
+    tamashii_kiga: '🌵魂の飢餓(予知/次T:r4四方AP-2+1ダメ+4封印/G1消費)',
+    jibaku_tokkoh: '💥自爆特攻(r1全体3ダメ/自爆5ダメ/∞)'
 };
 
 const ABILITY_TIPS = {
@@ -1644,7 +1661,8 @@ const JOB_DATA = {
     sentai_hero: { name: '戦隊レッド', abilities: { drop_rock: 999, shatter: 5, dash: 5, fire_burst: 5, aqua_beam: 5, gaia_smash: 5, holy_light: 5, dark_revenge: 5, tacit_agreement: 5 }, hp: 30, ap: 2 },
     sennin: { name: '仙人', abilities: { drop_rock: 999, shatter: 5, unzan_angya: 5, fundo_gekkoh: 5, kako_tosen: 5, kyoshin_tankai: 5, meikyo_shisui: 5, banzai_jiai: 5, seisei_ruten: 5 }, hp: 30, ap: 2, senninUnit: true },
     pixie:  { name: 'ピクシー', abilities: { drop_rock: 999, shatter: 3, flutter: 5, gremlin_trick: 5, gnome_hammer: 5, greenman_arrow: 5, redcap_scythe: 5, siren_song: 5, pixie_illusion: 5 }, hp: 30, ap: 2, flying: true },
-    hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true }
+    hitokiri_musha: { name: '人斬り武者', abilities: { drop_rock: 999, shatter: 10, gouka_shingun: 5, jigoku_giri: 5, shura_ranbu: 5, gouka_sangeki: 5, onnen_kaeshi: 5, oni_giri: 5, iai: 5, abikyokan: 5 }, hp: 30, ap: 2, hitokiriUnit: true },
+    guru: { name: '教祖', abilities: { drop_rock: 999, shatter: 5, kourin: 10, sabaki_kaminari: 5, shintaku_daiko: 5, gyokuza_jishin: 5, fukuin_bofuu: 5, fujo_yukai: 5, tenkei_hoshiotoshi: 3, fushinkoh_fushoku: 5, tamashii_kiga: 5 }, hp: 30, ap: 2, guruUnit: true }
 };
 
 const ELEMENT_DATA = {
@@ -1663,6 +1681,7 @@ const JOB_ELEMENT = {
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light', hitokiri_musha: 'fire',
+    guru: 'light',
 };
 
 const NPC_ELEMENT = {
@@ -1707,6 +1726,10 @@ const ABILITY_ELEMENT = {
     banzai_jiai: 'water', meikyo_shisui: 'light', seisei_ruten: 'grass',
     gouka_shingun: 'fire', jigoku_giri: 'fire', shura_ranbu: 'fire', gouka_sangeki: 'fire',
     onnen_kaeshi: 'dark', oni_giri: 'dark', iai: 'fire', abikyokan: 'fire',
+    sabaki_kaminari: 'light', shintaku_daiko: 'water', fukuin_bofuu: 'grass',
+    fujo_yukai: 'fire', tenkei_hoshiotoshi: 'fire', fushinkoh_fushoku: 'dark',
+    gyokuza_jishin: 'none', tamashii_kiga: 'dark', kourin: 'light', jibaku_tokkoh: 'light',
+    skill_shumatsuron: 'light',
 };
 
 const STAGE_ELEMENT = {
@@ -1724,6 +1747,7 @@ const JOB_SKILL_ELEMENT = {
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'none', sennin: 'water', pixie: 'light', hitokiri_musha: 'dark',
+    guru: 'light',
 };
 
 const SKILL_MODE_ELEMENT = {
@@ -1761,6 +1785,7 @@ const JOB_SKILL_NAMES = {
     sentai_hero:   '合体必殺技',
     sennin:        '自然淘汰',
     hitokiri_musha: '冥府送り',
+    guru:           '終末論',
 };
 
 const JOB_GUIDE_META = {
@@ -1789,6 +1814,7 @@ const JOB_GUIDE_META = {
     sennin:        { emoji: '🧘', fullName: '仙人', note: '【仙人ゲージ】AP温存でゲージ増加。ゲージ消費技に必要。\n属性は草と水を1ターンごとに交替(奇数ターン=水/偶数ターン=草)。\n「雲水行脚」でAP+2。スキル不使用で終えるとゲージ+4、使用でゲージ+1。\n★スキル「自然淘汰」：ゲージ全消費→消費量で半径2~8/威2~8のAoE。AP-2+吹飛+4封印。使用後ゲージ+3。' },
     pixie:         { emoji: '🧚', fullName: 'ピクシー', note: '【イタズラ好きのトリックスター】光属性・飛行ユニット。\n技ごとに属性が変わる変幻自在の戦士。\n「グレムリンのイタズラ」：5T以降。グレムリン召喚中は敵の陣地突破勝利が無効化。\n「妖精の里」スキル：半径3マスに結界を張り6体の妖精を召喚。敵を封印・味方を守る。' },
     hitokiri_musha: { emoji: '⚔️', fullName: '人斬り武者', note: '【火炎×冥府の呪われ二刀剣士】毎ターン自傷1ダメ(10T後は2ダメ)・属性が炎/闇で交替。\nHP≤20で【修羅】化(1Tバリア+AP+1)、HP≤10で【阿修羅】化(1Tバリア+AP+2+ATK+1+全アビ+1)。\n敵を討ち取るとHP+2+4アビ+1。陣地突破勝利なし(撃破のみで勝利)。\n業火の呪い：技で付与、毎T1ダメ(3T持続)。\n「阿鼻叫喚」：前方に業火地獄マス展開・敵は毎T1ダメ。\n★スキル「冥府送り」：半径5の敵全員を相手陣地奥へ強制転送！' },
+    guru: { emoji: '⛪', fullName: '教祖', note: '【神ゲージ制・予知警告システム】毎ターン開始時に神ゲージ+1・属性が光/水で交替(奇数=光/偶数=水)。\n予知警告アビリティは発動ターンに警告マスを表示し、翌ターン開始時に効果発動。\n「降臨」ダッシュで信者(HP1/AP2/自爆特攻)を元の場所に召喚。ゲージ+1。ゲージ≥5なら1Tバリア。\n信者撃破時：教祖HP+1・ゲージ+1。\n★スキル「終末論」：ゲージ最大8消費→1Tバリア→消費数分の天罰技を同時即時発動！' },
 };
 
 const ENTITY_ICONS = {
@@ -1817,6 +1843,7 @@ const ENTITY_ICONS = {
     red_oni:          '👹',
     gladiator:        '⚔️',
     monk:             '🥋',
+    shinja:           '🙏',
     golem:            '🪨',
     slime:            '🟩',
     octopus:          '🐙',
@@ -2025,7 +2052,8 @@ function getGameState() {
         volcanoCraterRadius,
         volcanoSplatterTiles: JSON.parse(JSON.stringify(volcanoSplatterTiles)),
         volcanoAshMistSet: [...volcanoAshMistSet],
-        mafiaTerritory: mafiaTerritory ? JSON.parse(JSON.stringify(mafiaTerritory)) : null
+        mafiaTerritory: mafiaTerritory ? JSON.parse(JSON.stringify(mafiaTerritory)) : null,
+        guruPlagueTiles: JSON.parse(JSON.stringify(guruPlagueTiles))
     };
 }
 
@@ -2071,6 +2099,7 @@ function applyGameState(state) {
     if (state.volcanoSplatterTiles) volcanoSplatterTiles = state.volcanoSplatterTiles;
     if (state.volcanoAshMistSet) volcanoAshMistSet = new Set(state.volcanoAshMistSet);
     if (state.mafiaTerritory !== undefined) mafiaTerritory = state.mafiaTerritory;
+    if (state.guruPlagueTiles) guruPlagueTiles = state.guruPlagueTiles;
     selectedEntity = null;
     usedAbilities = {};
 }
@@ -3484,7 +3513,7 @@ function getLoS(a, targetPos) {
     return dist;
 }
 
-const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha'];
+const ALL_JOBS = ['king','knight','assassin','infantry','mage','thief','beastmaster','macho','cyborg','alien','mandrake','ryujin','shark_warrior','clown','necromancer','angel','world_manager','onmyoji','devil','mafia','dwarf','sentai_hero','sennin','pixie','hitokiri_musha','guru'];
 const ALL_STAGES = ['plains','forest','desert','demon','castle','bigriver','mountain','graveyard','nighttown','skyfort','chaos','dungeon','underwater','lavaland','misty_lake','colosseum','factory','volcano_summit'];
 
 function resolveJob(job) {
@@ -4136,8 +4165,8 @@ function initEntities(pJob, difficulty = "1") {
     entities = [];
     let cJob = ALL_JOBS[Math.floor(Math.random() * ALL_JOBS.length)];
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -4180,6 +4209,7 @@ function initEntities(pJob, difficulty = "1") {
     pentagramZones = [];
     darknessFields = [];
     hellGroundTiles = [];
+    guruPlagueTiles = [];
     copperForcedMines = new Set();
     dungeonGoggles = 0;
     // Reset new stage globals
@@ -4276,8 +4306,8 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     const pJob = myPlayerIndex === 0 ? myJob : opponentJob;
     const cJob = myPlayerIndex === 0 ? opponentJob : myJob;
 
-    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
-    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
+    entities.push({ id: 'p1', type: pJob, name: JOB_DATA[pJob].name, team: 'player', r: 20, c: 10, hp: JOB_DATA[pJob].hp, maxHp: JOB_DATA[pJob].hp, ap: JOB_DATA[pJob].ap, maxAp: JOB_DATA[pJob].ap, abilities: {...JOB_DATA[pJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[pJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[pJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[pJob].waterGauge||10, maxWaterGauge:JOB_DATA[pJob].maxWaterGauge||30} : {}), ...(JOB_DATA[pJob].flying ? {flying:true} : {}), ...(pJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[pJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[pJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[pJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[pJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[pJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), element: JOB_ELEMENT[pJob] ?? 'none' });
+    entities.push({ id: 'c1', type: cJob, name: JOB_DATA[cJob].name, team: 'cpu', r: 0, c: 10, hp: JOB_DATA[cJob].hp, maxHp: JOB_DATA[cJob].hp, ap: 2, maxAp: 2, abilities: {...JOB_DATA[cJob].abilities}, skillUsed: false, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, crossBonus: false, initialAbilities: {...JOB_DATA[cJob].abilities}, atkBonus: 0, shoesTimer: 0, ...(JOB_DATA[cJob].oceanUnit ? {oceanUnit:true, waterGauge:JOB_DATA[cJob].waterGauge||10, maxWaterGauge:JOB_DATA[cJob].maxWaterGauge||30} : {}), ...(JOB_DATA[cJob].flying ? {flying:true} : {}), ...(cJob==='angel' ? {fallenGauge:0, fallen:false} : {}), ...(JOB_DATA[cJob].mafiaUnit ? {mafiaGauge:0} : {}), ...(JOB_DATA[cJob].dwarfUnit ? {junkPoint:0} : {}), ...(JOB_DATA[cJob].senninUnit ? {senninGauge:0} : {}), ...(JOB_DATA[cJob].hitokiriUnit ? {hitokiriUnit:true, _shuraFirst:false, _asuraFirst:false} : {}), ...(JOB_DATA[cJob].guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}), element: JOB_ELEMENT[cJob] ?? 'none' });
     // 戦隊ヒーロー: sentaiMembers初期化
     ['p1','c1'].forEach(_sid => {
         const _se = entities.find(x=>x.id===_sid);
@@ -4318,7 +4348,7 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     trapOwnerMap = {};
     rollRockPending = null; rollRockWarnTiles = [];
     cursedAbilities = {}; lightBarrierZones = []; pentagramZones = [];
-    darknessFields = []; hellGroundTiles = []; copperForcedMines = new Set();
+    darknessFields = []; hellGroundTiles = []; guruPlagueTiles = []; copperForcedMines = new Set();
     dungeonGoggles = 0; fallenSkyfortBridges = [];
     worldManagerHitFromAfar = false; pendingEarthquake = null;
     mistyLakeWindTimer = 0; mistyLakeFogCleared = false;
@@ -4417,6 +4447,7 @@ function addExtraEnemies(difficulty) {
             ...(jd.mafiaUnit ? {mafiaGauge:0} : {}),
             ...(jd.dwarfUnit ? {junkPoint:0} : {}),
             ...(jd.senninUnit ? {senninGauge:0} : {}),
+            ...(jd.guruUnit ? {shinGauge:0, _pendingGuruAbils:[]} : {}),
             element: JOB_ELEMENT[t] ?? 'none',
         });
     }
@@ -4566,6 +4597,16 @@ function processTurnStartEffects(e) {
             });
         }
     }
+    // 教祖: 属性交替(奇数ターン=光/偶数ターン=水) + 神ゲージ+1 + 予知アビリティ実行
+    if (e.type === 'guru') {
+        e.element = (turn % 2 === 1) ? 'light' : 'water';
+        e.shinGauge = (e.shinGauge||0) + 1;
+        if (e.team === myTeam()) msg(`⛪ ${e.name}の神ゲージ+1(${e.shinGauge})！属性:${e.element==='light'?'光':'水'}`, true);
+        if (e._pendingGuruAbils && e._pendingGuruAbils.length > 0) {
+            e._pendingGuruAbils.forEach(pa => executeGuruPendingAbil(e, pa));
+            e._pendingGuruAbils = [];
+        }
+    }
     if (e.type === 'world_manager') {
         e._managerDmgCountPrev = e._managerDmgCount || 0;
         e._managerDmgCount = 0;
@@ -4660,6 +4701,11 @@ function processTurnStartEffects(e) {
     if (e.type === 'kobun') {
         if ((e.kobunFreezeUntil||0) > turn) { e.ap = 0; }
         else if ((e.kobunFreezeUntil||0) > 0 && (e.kobunFreezeUntil||0) <= turn && e.ap === 0) { e.ap = e.maxAp||2; e.kobunFreezeUntil = 0; }
+    }
+    // 信者の凍結管理
+    if (e.type === 'shinja') {
+        if ((e.shinjaFreezeUntil||0) > turn) { e.ap = 0; }
+        else if ((e.shinjaFreezeUntil||0) > 0 && (e.shinjaFreezeUntil||0) <= turn && e.ap === 0) { e.ap = e.maxAp||2; e.shinjaFreezeUntil = 0; }
     }
     // コウモリ変換タイマー：1T後にヴァンパイア化して味方に
     if ((e.batConvertTimer || 0) > 0) {
@@ -5063,6 +5109,8 @@ function processTurnStartEffects(e) {
         }
         // 業火地獄マスのクリーンアップ
         hellGroundTiles = hellGroundTiles.filter(t => t.expireAt >= turn);
+        // 疫病マスのクリーンアップ
+        guruPlagueTiles = guruPlagueTiles.filter(t => t.expireAt >= turn);
     }
     // 業火の呪いダメージ
     if ((e.goukaCurseTimer||0) > 0) {
@@ -5074,7 +5122,13 @@ function processTurnStartEffects(e) {
         let _hgTile = hellGroundTiles.find(t => t.r === e.r && t.c === e.c && t.expireAt >= turn && t.ownerTeam !== e.team);
         if (_hgTile && !e.invin) { e.hp -= 1; msg(`🔥 ${e.name}は業火地獄マスで1ダメ！`, true); }
     }
+    // 疫病マスダメージ
+    if (guruPlagueTiles.length > 0) {
+        let _pgTile = guruPlagueTiles.find(t => t.r === e.r && t.c === e.c && t.expireAt >= turn && t.ownerTeam !== e.team);
+        if (_pgTile && !e.invin) { e.hp -= 1; msg(`☣️ ${e.name}は疫病マスで1ダメ！`, true); }
+    }
     reapNecroSouls();
+    reapShinjaDeath();
 }
 
 function tryKobunShield(target, dmg) {
@@ -6640,6 +6694,17 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'oni_giri') return r === se.r && c === se.c; // 自マス選択でAoE
     if (mode === 'iai') return r === se.r && c === se.c;
     if (mode === 'abikyokan') return r === se.r && c === se.c;
+    // 教祖
+    if (mode === 'jibaku_tokkoh') return maxDist <= 1 && target && target.team !== se.team;
+    if (mode === 'kourin') return dist >= 1 && dist <= 5+(se.rangeBonus||0) && isWalkable(r,c) && !entities.some(e=>e.hp>0&&e.r===r&&e.c===c);
+    if (mode === 'sabaki_kaminari') return maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
+    if (mode === 'fujo_yukai') return maxDist <= 3+(se.rangeBonus||0) && target && target.team !== se.team;
+    if (mode === 'shintaku_daiko') return r === se.r && c === se.c;
+    if (mode === 'gyokuza_jishin') return r === se.r && c === se.c;
+    if (mode === 'fukuin_bofuu') return r === se.r && c === se.c;
+    if (mode === 'tenkei_hoshiotoshi') return r === se.r && c === se.c;
+    if (mode === 'fushinkoh_fushoku') return r === se.r && c === se.c;
+    if (mode === 'tamashii_kiga') return r === se.r && c === se.c;
     if (mode === 'skill_meifu') {
         // 冥府送り: r1基本、修羅r2、阿修羅r3の範囲内の敵1体に斬撃
         let _mfR = se.hp <= 10 ? 3 : se.hp <= 20 ? 2 : 1;
@@ -6692,6 +6757,20 @@ function render() {
             
             if (isNoRockZone(ar, c) && (board[ar][c] === 'plains' || board[ar][c] === 'desert')) d.classList.add('no-rock');
             if (hellGroundTiles.some(t => t.r === ar && t.c === c && t.expireAt >= turn)) d.classList.add('hell_ground');
+            if (guruPlagueTiles.some(t => t.r === ar && t.c === c && t.expireAt >= turn)) d.classList.add('guru-plague');
+            // 教祖 予知警告マス
+            {
+                let _guruWarn = false;
+                entities.forEach(gu => {
+                    if (gu.type !== 'guru' || gu.hp <= 0) return;
+                    if (!gu._pendingGuruAbils) return;
+                    gu._pendingGuruAbils.forEach(pa => {
+                        if (!pa.warnTiles) return;
+                        if (pa.warnTiles.some(w => w.r === ar && w.c === c)) _guruWarn = true;
+                    });
+                });
+                if (_guruWarn) d.classList.add('guru-warn');
+            }
             
             if ((activeStage === 'desert' || activeStage === 'chaos') && sandwormTarget) {
                 if (Math.max(Math.abs(ar - sandwormTarget.r), Math.abs(c - sandwormTarget.c)) <= 1) {
@@ -6899,8 +6978,9 @@ function showEntityInfo(e) {
     let mafiaGaugeStr = (e.mafiaGauge !== undefined) ? ` &nbsp; 🏴G${e.mafiaGauge}` : '';
     let junkPointStr = (e.junkPoint !== undefined || e.dwarfUnit || e.isDwarfRobot) ? ` &nbsp; ⚙️JP${e.junkPoint||0}` : '';
     let senninGaugeStr = (e.senninGauge !== undefined) ? ` &nbsp; 🧘G${e.senninGauge}` : '';
+    let shinGaugeStr = (e.shinGauge !== undefined) ? ` &nbsp; ⛪G${e.shinGauge}` : '';
     const entityIcon = ENTITY_ICONS[e.type] ? ENTITY_ICONS[e.type] + ' ' : '';
-    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
+    panel.innerHTML = `<div class="eip-name">${entityIcon}${e.name}</div><div class="eip-stat">❤️${e.hp}/${e.maxHp} &nbsp; ⚡${e.ap}/${e.maxAp}${e.invin?'&nbsp;🛡無敵':''}${skullShieldStr}${oxygenStr}${mafiaGaugeStr}${junkPointStr}${senninGaugeStr}${shinGaugeStr}</div>${abilityNames?`<div class="eip-ability">${abilityNames}</div>`:''}`;
     panel.style.display = 'block';
 }
 
@@ -10413,6 +10493,95 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['abikyokan'] !== 999) se.abilities['abikyokan']--;
         let _abState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
         msg(`🔥 阿鼻叫喚${_abState}！半径${_abRadius}に業火地獄1T展開！敵${_abEnemyHit}体にAP-1+4封印！NPC${_abSpawned}体召喚！`); used = true;
+    } else if (actionMode === 'jibaku_tokkoh') {
+        // 自爆特攻: 信者が隣接敵に自爆(信者HP=0, 敵に3ダメ+AP-1)
+        if (targetEntity && !targetEntity.invin) {
+            let _jtDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            targetEntity.hp -= _jtDmg;
+            targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1);
+            se.hp = 0;
+            msg(`🙏 信者が自爆特攻！${targetEntity.name}に${_jtDmg}ダメ＋AP-1！信者は果てた！`);
+        } else { msg('🙏 自爆特攻：無効！'); }
+        used = true;
+    } else if (actionMode === 'kourin') {
+        // 降臨: ダッシュ+信者召喚+shinGauge+1、shinGauge>=5なら1Tバリア(即時)
+        let _kDist = Math.max(Math.abs(r-se.r),Math.abs(c-se.c));
+        if (_kDist > 0) { se.r = r; se.c = c; }
+        se.shinGauge = (se.shinGauge||0) + 1;
+        // 足元に信者召喚
+        let _shinCands = [];
+        for (let _dr=-1;_dr<=1;_dr++) for (let _dc=-1;_dc<=1;_dc++) {
+            if (_dr===0&&_dc===0) continue;
+            let _sr=se.r+_dr,_sc=se.c+_dc;
+            if (_sr>=0&&_sr<SIZE&&_sc>=0&&_sc<SIZE&&isWalkable(_sr,_sc)&&!entities.some(e=>e.hp>0&&e.r===_sr&&e.c===_sc)) _shinCands.push({r:_sr,c:_sc});
+        }
+        if (_shinCands.length > 0) {
+            let _sp = _shinCands[Math.floor(Math.random()*_shinCands.length)];
+            entities.push({ id:`shinja_${Date.now()}`, type:'shinja', name:'信者', team:se.team, r:_sp.r, c:_sp.c, hp:1, maxHp:1, ap:2, maxAp:2, abilities:{jibaku_tokkoh:999}, initialAbilities:{jibaku_tokkoh:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, element:'light', shinjaFreezeUntil:0 });
+        }
+        if ((se.shinGauge||0) >= 5) { se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1); msg(`⛪ 降臨！移動＋信者召喚＋神ゲージ+1(${se.shinGauge})！【神の加護】1Tバリア発動！`); }
+        else { msg(`⛪ 降臨！移動＋信者召喚＋神ゲージ+1(${se.shinGauge})！`); }
+        if (se.abilities['kourin'] !== 999) se.abilities['kourin']--;
+        used = true;
+    } else if (actionMode === 'sabaki_kaminari') {
+        // 裁きの雷(予知): 即時AP-1、次Tに半径1四方4ダメ+AP-1
+        if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'sabaki_kaminari', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c});
+        if (se.abilities['sabaki_kaminari'] !== 999) se.abilities['sabaki_kaminari']--;
+        msg(`⚡ 裁きの雷(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
+    } else if (actionMode === 'fujo_yukai') {
+        // 不浄の融解(予知): 即時AP-1、次Tに半径1四方4ダメ+炎+燃焼
+        if (targetEntity && !targetEntity.invin) { targetEntity.ap = Math.max(0,(targetEntity.ap||0)-1); }
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'fujo_yukai', ownerTeam:se.team, targetR:r, targetC:c, casterR:se.r, casterC:se.c});
+        if (se.abilities['fujo_yukai'] !== 999) se.abilities['fujo_yukai']--;
+        msg(`🌋 不浄の融解(予知)！次ターン開始時に発動！対象にAP-1！`); used = true;
+    } else if (actionMode === 'shintaku_daiko') {
+        // 信託の大洪水(予知): G1消費
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'shintaku_daiko', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        if (se.abilities['shintaku_daiko'] !== 999) se.abilities['shintaku_daiko']--;
+        msg(`🌊 信託の大洪水(予知)！次ターン開始時に半径2四方の敵に4ダメ＋吹飛＋AP-1＋4封印！`); used = true;
+    } else if (actionMode === 'gyokuza_jishin') {
+        // 玉座の地鳴り(予知): G1消費
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'gyokuza_jishin', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        if (se.abilities['gyokuza_jishin'] !== 999) se.abilities['gyokuza_jishin']--;
+        msg(`🌍 玉座の地鳴り(予知)！次ターン開始時に半径4四方の敵に2ダメ＋AP-1！`); used = true;
+    } else if (actionMode === 'fukuin_bofuu') {
+        // 福音の暴風(予知): G1消費
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'fukuin_bofuu', ownerTeam:se.team, casterR:se.r, casterC:se.c, dir:turn%2===1?'up':'down'});
+        if (se.abilities['fukuin_bofuu'] !== 999) se.abilities['fukuin_bofuu']--;
+        msg(`🌪️ 福音の暴風(予知)！次ターン開始時に前方5×5の敵に2ダメ＋吹飛！`); used = true;
+    } else if (actionMode === 'tenkei_hoshiotoshi') {
+        // 天啓の星堕とし(予知): G2消費 + 即時全敵AP-1
+        se.shinGauge = Math.max(0,(se.shinGauge||0)-2);
+        entities.forEach(t => { if(t.hp>0&&t.team!==se.team&&!t.invin) t.ap=Math.max(0,(t.ap||0)-1); });
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'tenkei_hoshiotoshi', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        if (se.abilities['tenkei_hoshiotoshi'] !== 999) se.abilities['tenkei_hoshiotoshi']--;
+        msg(`🌠 天啓の星堕とし(予知)！全敵AP-1！次ターン：半径5の敵に4ダメ＋吹飛＋元位置に岩！`); used = true;
+    } else if (actionMode === 'fushinkoh_fushoku') {
+        // 不信仰の腐食(予知): G1消費
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'fushinkoh_fushoku', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        if (se.abilities['fushinkoh_fushoku'] !== 999) se.abilities['fushinkoh_fushoku']--;
+        msg(`☠️ 不信仰の腐食(予知)！次ターン：半径3に疫病マス2T展開！踏んだ敵2ダメ＋AP-1＋4封印！`); used = true;
+    } else if (actionMode === 'tamashii_kiga') {
+        // 魂の飢餓(予知): G1消費
+        if (se.shinGauge > 0) se.shinGauge--;
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        se._pendingGuruAbils.push({type:'tamashii_kiga', ownerTeam:se.team, casterR:se.r, casterC:se.c});
+        if (se.abilities['tamashii_kiga'] !== 999) se.abilities['tamashii_kiga']--;
+        msg(`🌵 魂の飢餓(予知)！次ターン：半径4の敵にAP-2＋1ダメ＋4封印！`); used = true;
     } else if (actionMode.startsWith('skill_') ||
                ['flutter','gremlin_trick','gnome_hammer','greenman_arrow','redcap_scythe','siren_song','pixie_illusion','swap_position'].includes(actionMode)) {
         executeRushSkill(se, r, c, actionMode);
@@ -10908,6 +11077,30 @@ function executeSkill(se) {
             fvSpawned++;
         });
         msg(`🧚 妖精の里！半径${fvRange}の味方${fvAllied}体に1T無敵バリア！敵${fvEnemyHit}体にAP-1+4封印！妖精${fvSpawned}体召喚！`);
+        checkWin(); render(); updateUI();
+        syncStateDebounced();
+        return true;
+    }
+    // ====== 教祖 スキル: 終末論 ======
+    if (se.type === 'guru') {
+        let _gmN = Math.min(se.shinGauge||0, 8);
+        if (_gmN < 1) { msg('⛪ 終末論: 神ゲージが足りない！(1以上必要)'); return false; }
+        se.shinGauge = (se.shinGauge||0) - _gmN;
+        se.invin = true; se.invinTimer = Math.max(se.invinTimer||0, 1);
+        // N種類の予知アビリティを即時発動(ランダム敵に適用)
+        const _gmAbils = ['sabaki_kaminari','shintaku_daiko','gyokuza_jishin','fukuin_bofuu','fujo_yukai','tenkei_hoshiotoshi','fushinkoh_fushoku','tamashii_kiga'];
+        let _gmSelected = _gmAbils.sort(()=>Math.random()-0.5).slice(0, _gmN);
+        let _enemies = entities.filter(t => t.hp>0 && t.team!==se.team);
+        se._pendingGuruAbils = se._pendingGuruAbils || [];
+        _gmSelected.forEach(abl => {
+            let _tgt = _enemies[Math.floor(Math.random()*_enemies.length)];
+            se._pendingGuruAbils.push({type:abl, ownerTeam:se.team, targetR:_tgt?_tgt.r:se.r, targetC:_tgt?_tgt.c:se.c, casterR:se.r, casterC:se.c, dir:'up'});
+        });
+        if (se.abilities['tenkei_hoshiotoshi'] !== 999 && _gmSelected.includes('tenkei_hoshiotoshi')) {
+            entities.forEach(t => { if(t.hp>0&&t.team!==se.team&&!t.invin) t.ap=Math.max(0,(t.ap||0)-1); });
+        }
+        se.skillUsed = true;
+        msg(`⛪✨ 終末論！G${_gmN}消費→1Tバリア＋${_gmN}種の審判が次ターン発動！`);
         checkWin(); render(); updateUI();
         syncStateDebounced();
         return true;
@@ -11755,6 +11948,128 @@ function checkColosseumKillScore() {
             msg(`⚔️ ${team==='player'?'あなた':'相手'}が10点！ステージ中央に旗が出現！踏めば勝利！`, true);
         }
     });
+}
+
+function reapShinjaDeath() {
+    let guru = entities.find(g => g.type === 'guru' && g.hp > 0);
+    if (!guru) return;
+    entities.forEach(e => {
+        if (e.type !== 'shinja' || e.hp > 0 || e.shinjaSoulCounted) return;
+        if (e.team !== guru.team) return;
+        e.shinjaSoulCounted = true;
+        guru.hp = Math.min(guru.hp + 1, guru.maxHp);
+        guru.shinGauge = (guru.shinGauge||0) + 1;
+        if (guru.team === myTeam()) msg(`🙏 信者が殉教！${guru.name}のHP+1＋神ゲージ+1(${guru.shinGauge})！`, true);
+    });
+}
+
+function executeGuruPendingAbil(guru, pa) {
+    const _et = pa.ownerTeam;
+    const cr = pa.casterR, cc = pa.casterC;
+    const tr = pa.targetR, tc = pa.targetC;
+    const t = pa.type;
+    if (t === 'sabaki_kaminari') {
+        // 裁きの雷: 対象中心半径1の4方向 4ダメ+AP-1
+        let hits = 0;
+        [[0,0],[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc]) => {
+            let ent = entities.find(e => e.hp>0 && e.team!==_et && e.r===tr+dr && e.c===tc+dc);
+            if (ent && !ent.invin) { ent.hp -= 4; ent.ap = Math.max(0,(ent.ap||0)-1); hits++; }
+        });
+        msg(`⚡ 裁きの雷(発動)！中心半径1・4ダメ＋AP-1(命中${hits}体)！`, true);
+    } else if (t === 'fujo_yukai') {
+        // 不浄の融解: 対象中心半径1 4ダメ+炎+燃焼
+        let hits = 0;
+        [[0,0],[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc]) => {
+            let ent = entities.find(e => e.hp>0 && e.team!==_et && e.r===tr+dr && e.c===tc+dc);
+            if (ent && !ent.invin) { ent.hp -= 4; ent.goukaCurseTimer = Math.max(ent.goukaCurseTimer||0, 2); ent.element = 'fire'; hits++; }
+        });
+        msg(`🌋 不浄の融解(発動)！中心半径1・炎4ダメ＋燃焼(命中${hits}体)！`, true);
+    } else if (t === 'shintaku_daiko') {
+        // 信託の大洪水: 教祖中心半径2 4ダメ+吹飛+AP-1+4封印
+        let hits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            if (Math.max(Math.abs(e.r-cr),Math.abs(e.c-cc)) > 2) return;
+            if (!e.invin) {
+                e.hp -= 4; e.ap = Math.max(0,(e.ap||0)-1);
+                knockback(e, 3, guru);
+                let ks = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]>0||e.abilities[k]===999));
+                if (ks.length > 0) sealAbilities(e, ks.sort(()=>Math.random()-0.5).slice(0,4), 1);
+                hits++;
+            }
+        });
+        msg(`🌊 信託の大洪水(発動)！半径2・水4ダメ＋吹飛＋AP-1＋4封印(命中${hits}体)！`, true);
+    } else if (t === 'gyokuza_jishin') {
+        // 玉座の地鳴り: 教祖中心半径4 2ダメ+AP-1
+        let hits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            if (Math.max(Math.abs(e.r-cr),Math.abs(e.c-cc)) > 4) return;
+            if (!e.invin) { e.hp -= 2; e.ap = Math.max(0,(e.ap||0)-1); hits++; }
+        });
+        msg(`🌍 玉座の地鳴り(発動)！半径4・地2ダメ＋AP-1(命中${hits}体)！`, true);
+    } else if (t === 'fukuin_bofuu') {
+        // 福音の暴風: 教祖前方5×5 2ダメ+吹飛
+        let hits = 0;
+        const stepR = guru.team === 'player' ? -1 : 1;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            let dr = (e.r - cr) * stepR;
+            let dc = e.c - cc;
+            if (dr < 1 || dr > 5 || Math.abs(dc) > 2) return;
+            if (!e.invin) { e.hp -= 2; knockback(e, 3, guru); hits++; }
+        });
+        msg(`🌪️ 福音の暴風(発動)！前方5×5・風2ダメ＋吹飛(命中${hits}体)！`, true);
+    } else if (t === 'tenkei_hoshiotoshi') {
+        // 天啓の星堕とし: 半径5全敵4ダメ+吹飛+元位置に岩
+        let hits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            if (Math.max(Math.abs(e.r-cr),Math.abs(e.c-cc)) > 5) return;
+            if (!e.invin) {
+                let origR = e.r, origC = e.c;
+                e.hp -= 4; knockback(e, 4, guru);
+                if (origR>=0&&origR<SIZE&&origC>=0&&origC<SIZE&&!entities.some(x=>x.hp>0&&x.r===origR&&x.c===origC)) board[origR][origC] = 'rock';
+                hits++;
+            }
+        });
+        msg(`🌠 天啓の星堕とし(発動)！半径5・火4ダメ＋吹飛＋元位置に岩(命中${hits}体)！`, true);
+    } else if (t === 'fushinkoh_fushoku') {
+        // 不信仰の腐食: 教祖中心半径3に疫病マス2T展開
+        for (let dr=-3;dr<=3;dr++) for (let dc=-3;dc<=3;dc++) {
+            if (Math.max(Math.abs(dr),Math.abs(dc))>3) continue;
+            let pr=cr+dr, pc=cc+dc;
+            if (pr>=0&&pr<SIZE&&pc>=0&&pc<SIZE) guruPlagueTiles.push({r:pr,c:pc,expireAt:turn+2,ownerTeam:_et});
+        }
+        // 現在そのマスにいる敵に即時2ダメ+AP-1+4封印
+        let hits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            if (Math.max(Math.abs(e.r-cr),Math.abs(e.c-cc)) > 3) return;
+            if (!e.invin) {
+                e.hp -= 2; e.ap = Math.max(0,(e.ap||0)-1);
+                let ks = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]>0||e.abilities[k]===999));
+                if (ks.length > 0) sealAbilities(e, ks.sort(()=>Math.random()-0.5).slice(0,4), 1);
+                hits++;
+            }
+        });
+        msg(`☠️ 不信仰の腐食(発動)！半径3に疫病マス2T展開！敵${hits}体に2ダメ＋AP-1＋4封印！`, true);
+    } else if (t === 'tamashii_kiga') {
+        // 魂の飢餓: 半径4の敵AP-2+1ダメ+4封印
+        let hits = 0;
+        entities.forEach(e => {
+            if (e.hp<=0||e.team===_et) return;
+            if (Math.max(Math.abs(e.r-cr),Math.abs(e.c-cc)) > 4) return;
+            if (!e.invin) {
+                e.hp -= 1; e.ap = Math.max(0,(e.ap||0)-2);
+                let ks = Object.keys(e.abilities||{}).filter(k=>k!=='drop_rock'&&(e.abilities[k]>0||e.abilities[k]===999));
+                if (ks.length > 0) sealAbilities(e, ks.sort(()=>Math.random()-0.5).slice(0,4), 1);
+                hits++;
+            }
+        });
+        msg(`🌵 魂の飢餓(発動)！半径4・闇1ダメ＋AP-2＋4封印(命中${hits}体)！`, true);
+    }
+    checkWin();
 }
 
 function reapNecroSouls() {
@@ -13404,6 +13719,8 @@ function isSkillConditionMet(se) {
     if (t === 'sennin') return true;
     // ピクシー: 常時使用可能
     if (t === 'pixie') return true;
+    // 教祖: 神ゲージ1以上
+    if (t === 'guru') return (se.shinGauge||0) >= 1;
     return false;
 }
 
