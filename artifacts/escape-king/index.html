@@ -1357,6 +1357,7 @@ let turnTimerId = null;
 let turnTimeLeft = 80;
 let savedTurnTimeLeft = null; // preserved across reconnect
 let isOpponentSuspended = false; // true while opponent is disconnected
+let pendingTurnStartArgs = null; // set when turnEnd arrives while opponent is suspended
 let reconnectAttempts = 0;
 let reconnecting = false;
 let intentionalClose = false;
@@ -2944,11 +2945,19 @@ function handleWsMessage(event) {
         isOpponentSuspended = false;
         hideSuspendOverlay();
         msg("✅ 相手が再接続しました！試合を再開します。");
-        // Resume whichever timer was running before the suspension.
-        if (canIAct()) {
-            startTurnTimer(turnTimeLeft > 0 ? turnTimeLeft : undefined);
+        // If a turnEnd arrived while the opponent was suspended, startTurn was deferred.
+        // Execute it now instead of resuming a stale timer.
+        if (pendingTurnStartArgs) {
+            const args = pendingTurnStartArgs;
+            pendingTurnStartArgs = null;
+            startTurn(...args);
         } else {
-            startOpponentTimer();
+            // Resume whichever timer was running before the suspension.
+            if (canIAct()) {
+                startTurnTimer(turnTimeLeft > 0 ? turnTimeLeft : undefined);
+            } else {
+                startOpponentTimer();
+            }
         }
         _syncDeltaBase = null; // force full board on next sync
         syncState('stateSync'); // sends full board since _syncDeltaBase was just reset
@@ -3011,10 +3020,12 @@ function handleWsMessage(event) {
         checkWin();
         updateOnlineInfo();
 
-        if (myPlayerIndex === 0) {
-            startTurn('npc');
+        const turnStartArgs = myPlayerIndex === 0 ? ['npc'] : ['cpu', true];
+        if (isOpponentSuspended) {
+            // Opponent is still disconnected — defer startTurn until they reconnect.
+            pendingTurnStartArgs = turnStartArgs;
         } else {
-            startTurn('cpu', true);
+            startTurn(...turnStartArgs);
         }
         return;
     }
