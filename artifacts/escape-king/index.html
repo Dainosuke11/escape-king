@@ -7168,7 +7168,7 @@ function checkTileEffects(entity) {
     if (board[r] && board[r][c] === 'magic_circle') {
         board[r][c] = 'plains';
         eventMsg = "魔法陣を踏み消した！";
-        if (tutorialMode && tutorialStep === 14 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 15 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'cable_board' && activeStage === 'mountain' && !entity.onCableCar) {
         entity.onCableCar = true;
         entity.ap = entity.maxAp + 2;
@@ -7651,7 +7651,7 @@ function checkEnemyTerritory(entity) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
         msg("✨ 敵陣初侵入ボーナス！全アビリティ回数+1！", true);
-        if (tutorialMode && tutorialStep === 16 && entity.team === 'player') advanceTutorial();
+        if (tutorialMode && tutorialStep === 17 && entity.team === 'player') advanceTutorial();
     } else if (cInEnemy && !entity.crossBonus) {
         entity.crossBonus = true;
         for (let k in entity.abilities) if (entity.abilities[k] !== 999) entity.abilities[k]++;
@@ -7858,7 +7858,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (se.abilities[actionMode] !== 999) se.abilities[actionMode]--;
             if (se.type === 'miner') { se.atkBonus = (se.atkBonus || 0) + 1; msg(`炭鉱夫が岩を砕いた！ツルハシ殴りの攻撃力が${se.atkBonus}に上昇！`); }
             if (se.dwarfUnit || se.isDwarfRobot) { se.junkPoint = (se.junkPoint||0) + 1; msg(`⚙️ 岩砕き！JP+1(計${se.junkPoint||1})！`, true); }
-            if (tutorialMode && tutorialStep === 12) advanceTutorial();
+            if (tutorialMode && tutorialStep === 13) advanceTutorial();
             used = true;
         }
     } else if (actionMode === 'drop_rock') {
@@ -7866,10 +7866,12 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (!targetEntity.invin && !necroShieldBlock(targetEntity)) targetEntity.hp -= 30 + (targetEntity.defDebuff||0);
             used = true; se.ap -= 1;
             msg(targetEntity.invin ? "真上から岩を落下！しかし無敵で防がれた！" : "真上から岩を落下！四方を岩に囲まれた敵に30ダメージ！(AP-1)");
+            if (tutorialMode && tutorialStep === 12 && !targetEntity.invin) setTimeout(() => advanceTutorial(), 1200);
         } else if (activeStage === 'lavaland' && board[r]?.[c] === 'lava') {
             board[r][c] = 'cooled_lava'; used = true; se.ap -= 1; msg("❄️ 岩を溶岩に落として冷却！岩に変化！(AP-1)");
         } else {
             board[r][c] = 'rock'; used = true; se.ap -= 1; msg("岩を配置しました！(AP-1)");
+            if (tutorialMode && tutorialStep === 11) setTimeout(() => advanceTutorial(), 700);
         }
     } else if (actionMode === 'aqua_dash') {
         if (se.abilities['aqua_dash'] !== 999) se.abilities['aqua_dash']--;
@@ -10871,7 +10873,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (_atkElem !== 'none' && _tgtElem !== 'none' && ELEMENT_DATA[_tgtElem]?.weakTo === _atkElem) {
             targetEntity.hp -= 1;
             msg(`${ELEMENT_DATA[_atkElem]?.label ?? _atkElem} 属性弱点！+1ダメ！`);
-            if (tutorialMode && tutorialStep === 17 && se.team === 'player') advanceTutorial();
+            if (tutorialMode && tutorialStep === 18 && se.team === 'player') advanceTutorial();
         }
         // 水属性攻撃で海洋コマのウォーターゲージ+5
         if (_atkElem === 'water' && targetEntity.oceanUnit && targetEntity.hp > 0) {
@@ -15071,32 +15073,58 @@ const TUTORIAL_STEPS = [
         highlight: 'btn-attack',
         advanceOn: null,
     },
-    {   // Step 11: 岩で進路妨害
-        msg: '🏔️ <b>岩で敵の進路を邪魔しよう！</b><br><br>岩落としは攻撃だけでなく<b>地形妨害</b>としても大活躍！<br><br>効果的な使い方：<br>🌉 <b>橋の手前</b>に岩を積む → 敵が渡れなくなり時間を稼げる<br>🏰 <b>通路・隘路</b>に岩を置く → 敵の進軍ルートを完全封鎖<br>🔴 <b>安全地帯（赤エリア）の出口</b>を塞ぐ → 敵が動けなくなる<br><br>💡 岩落としは<b>999回使い放題</b>なので惜しみなく使おう！<br>敵の動きを予測して先回りするのが上手い使い方です。<br><br>▶「次へ」で続きを見よう',
+    {   // Step 11: 岩で進路妨害（インタラクティブ）
+        msg: '🏔️ <b>岩で敵の進路を邪魔しよう！</b><br><br>岩落としは攻撃だけでなく<b>地形妨害</b>として大活躍！<br><br>🌉 橋の手前に岩を積む → 敵が渡れなくなる<br>🏰 通路に岩を置く → 敵の進軍ルートを封鎖<br><br>💡 岩落としは<b>999回使い放題</b>！<br>敵の動きを予測して先回りしよう。<br><br>▶「やってみよう！」を押して、どこかに岩を置いてみよう！',
         highlight: 'btn-attack',
-        advanceOn: null,
+        highlightAbility: 'drop_rock',
+        advanceOn: 'drop_rock_placed',
+        onShow() {
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) { _pe.ap = Math.max(_pe.ap, 2); selectedEntity = _pe; updateUI(); render(); }
+        },
     },
-    {   // Step 12: 岩砕き
+    {   // Step 12: 敵の頭上に岩落とし大技（インタラクティブ）
+        msg: '🪨 <b>敵の頭上に岩を落とそう！</b><br><br>敵コマの<b>上・下・左・右の4マス全てに岩がある</b>状態で<br>敵コマに向かって<b>「岩落とし」</b>を使うと…<br><br>💥 <b>頭上から岩崩れ！30ダメージ！</b><br><br>敵はすでに四方を岩で囲まれた状態！<br>▶ アビリティ → 岩落とし → <b>敵コマをタップ</b>して大技を決めよう！',
+        highlight: 'btn-attack',
+        highlightAbility: 'drop_rock',
+        advanceOn: 'avalanche_used',
+        onShow() {
+            const _enemy = entities.find(e => e.team === 'cpu' && e.hp > 0);
+            if (_enemy) {
+                const _er = 7, _ec = 10;
+                if (board[_er]?.[_ec] !== undefined) board[_er][_ec] = 'plains';
+                _enemy.r = _er; _enemy.c = _ec;
+                board[_er-1][_ec] = 'rock';
+                board[_er+1][_ec] = 'rock';
+                board[_er][_ec-1] = 'rock';
+                board[_er][_ec+1] = 'rock';
+            }
+            const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
+            if (_pe) { _pe.ap = Math.max(_pe.ap, 3); selectedEntity = _pe; updateUI(); }
+            render();
+        },
+    },
+    {   // Step 13: 岩砕き
         msg: '⛏️ <b>邪魔な岩は「岩砕き」で除去しよう！</b><br><br>自分の進路に岩が置かれてしまったら<b>「岩砕き」アビリティ</b>で破壊できます！<br><br>使い方：<br>① コマを選択<br>② アビリティボタン → <b>「岩砕き」</b>を選ぶ<br>③ <b>隣接する岩</b>をクリックすると破壊！<br><br>⚠️ 注意点：<br>・岩砕きには<b>使用回数制限</b>があります（ジョブによって異なる）<br>・使い切ると岩を破壊できなくなる → 四方を囲まれると<b>敗北！</b><br>・残数を常に確認しておこう<br><br>💡 岩砕きを節約したいなら、岩で囲まれにくいルートを選んで移動しよう。<br><br>▶ まず岩を1つ置いて(アビリティ→岩落とし)、それから岩砕きをやってみよう！',
         highlight: 'btn-attack',
         advanceOn: 'shatter_used',
     },
-    {   // Step 13: 紫コマNPC
+    {   // Step 14: 紫コマNPC
         msg: '👾 <b>紫コマ（NPCモンスター）を倒して強くなろう！</b><br><br>ボード上に出現する<b>紫色のコマ</b>はNPCモンスターです。<br>プレイヤーでもCPUでもなく、どちらも倒すことができます。<br><br>倒したときの報酬（ランダム）：<br>❤️ <b>HP回復</b>・アビリティの<b>使用回数+1</b><br>💰 <b>お宝アイテム</b>・<b>特殊強化</b>など<br><br>💡 強いNPCほど報酬も豪華！<br>相手（CPU）がNPCを倒す前に先取りしよう。<br>難易度を上げるほど強力なNPCが増えます。<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 14: 魔法陣（インタラクティブ）
+    {   // Step 15: 魔法陣（インタラクティブ）
         msg: '🔮 <b>魔法陣を踏んで消そう！</b><br><br>ボード上に現れる<b>紫のマス（魔法陣）</b>はコマで踏むと消えます。<br>放置すると相手に有利な効果が発動することも！<br><br>▶ コマを目の前の魔法陣のマスに移動して踏み消そう！',
         highlight: 'board',
         advanceOn: 'magic_circle_stepped',
     },
-    {   // Step 15: 鉱山
+    {   // Step 16: 鉱山
         msg: '⛏️ <b>鉱山（⛏️マス）を踏んで宝を集めよう！</b><br><br>ボード上に現れる<b>⛏️アイコンのマス</b>は鉱山です。<br>コマを移動してその上に乗るだけで宝が自動取得されます！<br><br>グレードアップシステム：<br>1回目：🥉 <b>銅</b> → 2回目：🥈 <b>銀</b> → 3回目：🥇 <b>金</b> → 4回目：💎 <b>白金</b><br>同じ鉱山を踏むたびに価値がアップします！<br><br>💡 戦略のコツ：<br>・序盤に鉱山を確保して先行リードを狙おう<br>・相手に踏まれると相手が強化されてしまう<br>・鉱山争奪戦が試合の流れを左右することも！<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 16: 中央突破ボーナス（インタラクティブ）
+    {   // Step 17: 中央突破ボーナス（インタラクティブ）
         msg: '🌉 <b>橋を渡って敵陣に侵入しよう！</b><br><br>川の手前にいるよ！橋を渡って<b>敵陣（上半分）に侵入</b>すると<b>突破ボーナス発動！</b><br><br>ボーナス内容：<br>⚔️ <b>全アビリティ使用回数+1</b><br><br>▶ コマを選んで橋を渡り、敵陣に踏み込もう！',
         highlight: 'board',
         advanceOn: 'cross_bonus',
@@ -15111,7 +15139,7 @@ const TUTORIAL_STEPS = [
             }
         },
     },
-    {   // Step 17: 弱点属性攻撃（インタラクティブ）
+    {   // Step 18: 弱点属性攻撃（インタラクティブ）
         msg: '💧 <b>弱点属性で攻撃してみよう！</b><br><br>属性の弱点関係：💧<b>水</b> → 🔥<b>火</b>（水は火に強い！）<br><br>今サメ戦士（💧水）として竜人族（🔥火）が目の前にいる。<br><b>水流切り(water_cutter)</b>で攻撃すると弱点ヒット+1ダメ！<br><br>▶ アビリティ → 水流切り → 竜人族を攻撃！',
         highlight: 'btn-attack',
         advanceOn: 'weakness_hit',
@@ -15141,12 +15169,12 @@ const TUTORIAL_STEPS = [
             render();
         },
     },
-    {   // Step 17: ステージとキャラの属性を合わせよう
+    {   // Step 19: ステージとキャラの属性を合わせよう
         msg: '🌟 <b>ステージとキャラの属性を合わせてボーナス！</b><br><br>実はステージ（マップ）にも属性があります。<br>自分のジョブの属性とステージ属性が<b>一致すると強化ボーナス</b>！<br><br>ボーナス内容：<br>❤️ <b>HP +5</b><br>⚔️ <b>アビリティ使用回数 +1</b><br><br>属性が合うステージの例：<br>🔥 炎ジョブ（炎魔法使いなど）→ 溶岩地帯<br>💧 水ジョブ（サメ戦士など）→ 海底神殿・大河<br>🌿 草ジョブ → 平原・森林<br>☀️ 光ジョブ → 天空要塞<br><br>⚠️ 逆に<b>弱点属性のステージ</b>ではデメリットも。<br>試合前にジョブ図鑑でジョブの属性を確認して選ぼう！<br><br>▶「次へ」で続きを見よう',
         highlight: null,
         advanceOn: null,
     },
-    {   // Step 18: 敵陣に辿り着いて勝利
+    {   // Step 20: 敵陣に辿り着いて勝利
         msg: '🏁 <b>敵陣に辿り着いて勝利しよう！</b><br><br>最終確認：このゲームの<b>勝利条件</b>まとめ<br><br>✅ <b>勝利条件（どれか1つで勝ち）：</b><br>① 自コマが<b>敵の陣地（反対側の端のマス）に到達</b><br>② 敵の<b>赤コマ（全コマ）を全滅</b>させる<br><br>❌ <b>敗北条件：</b><br>① 自コマが<b>四方を岩に囲まれ</b>、かつ<b>岩砕きが0</b>回<br>② 相手コマが自分の陣地の端に到達<br><br>⚠️ <b>例外：</b><br>人斬り武者は陣地到達では勝てない。<b>全滅のみ</b>で勝利。<br><br>💡 敵陣到達は最速ルートを狙え！<br>相手が強い場合は岩で時間を稼ぎながら隙を見て突破しよう。<br><br>▶「次へ」でチュートリアル完了！',
         highlight: null,
         advanceOn: null,
@@ -15273,6 +15301,11 @@ function hideTutorialAndWait() {
     if (_curStep?.advanceOn === 'ap_healed') {
         const _endBtn = document.getElementById('btn-end-turn');
         if (_endBtn) { _endBtn.classList.add('tutorial-highlight'); showTutorialArrow(_endBtn); }
+    }
+    // 岩落とし進路妨害/頭上岩落としステップ: アビリティボタンを光らせ矢印で誘導
+    if (_curStep?.advanceOn === 'drop_rock_placed' || _curStep?.advanceOn === 'avalanche_used') {
+        const _atkBtn = document.getElementById('btn-attack');
+        if (_atkBtn) { _atkBtn.classList.add('tutorial-highlight'); showTutorialArrow(_atkBtn); }
     }
     // 行動力を2補充してターンが終わらないようにする
     const _pe = entities.find(e => e.team === 'player' && e.hp > 0);
