@@ -118,6 +118,7 @@ router.get("/leaderboard", async (_req, res) => {
         rank: p.rank,
         rp: p.rp,
         profileIcon: p.profileIcon ?? "🎮",
+        unlockedJobsCount: Array.isArray(p.unlockedJobs) ? (p.unlockedJobs as string[]).length : 0,
       })),
     );
   } catch (e) {
@@ -132,11 +133,11 @@ router.get("/leaderboard/tiers", async (_req, res) => {
       .select()
       .from(ekPlayersTable)
       .orderBy(asc(ekPlayersTable.rank), desc(ekPlayersTable.rp));
-    const tiers: Record<number, { userId: string; playerName: string; rank: number; rp: number; profileIcon: string }[]> = {};
+    const tiers: Record<number, { userId: string; playerName: string; rank: number; rp: number; profileIcon: string; unlockedJobsCount: number }[]> = {};
     for (const p of rows) {
       if (!tiers[p.rank]) tiers[p.rank] = [];
       if (tiers[p.rank].length < 10) {
-        tiers[p.rank].push({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp, profileIcon: p.profileIcon ?? "🎮" });
+        tiers[p.rank].push({ userId: p.userId, playerName: p.playerName, rank: p.rank, rp: p.rp, profileIcon: p.profileIcon ?? "🎮", unlockedJobsCount: Array.isArray(p.unlockedJobs) ? (p.unlockedJobs as string[]).length : 0 });
       }
     }
     res.json(tiers);
@@ -172,6 +173,7 @@ router.get("/profile/:userId", async (req, res) => {
       draws: p.draws ?? 0,
       charUsage: (p.charUsage as Record<string, number>) ?? {},
       charWins: (p.charWins as Record<string, number>) ?? {},
+      unlockedJobsCount: Array.isArray(p.unlockedJobs) ? (p.unlockedJobs as string[]).length : 0,
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });

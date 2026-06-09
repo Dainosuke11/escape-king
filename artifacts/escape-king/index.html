@@ -412,6 +412,12 @@
             color:#f39c12; border-bottom:1px solid #3a3a50; margin-top:8px; }
         .lb-fav-btn { background:none; border:none; cursor:pointer; font-size:16px;
             flex-shrink:0; padding:0 4px; opacity:0.5; transition:opacity .15s; }
+        .lb-jobs-badge { font-size:11px; color:#2ecc71; background:rgba(46,204,113,0.12);
+            border:1px solid rgba(46,204,113,0.35); border-radius:10px;
+            padding:1px 7px; flex-shrink:0; white-space:nowrap; }
+        .pc-jobs-badge { display:inline-block; font-size:13px; color:#2ecc71;
+            background:rgba(46,204,113,0.12); border:1px solid rgba(46,204,113,0.35);
+            border-radius:12px; padding:3px 12px; }
         .lb-fav-btn:hover { opacity:1; }
         .lb-fav-btn.active { opacity:1; }
         .lb-fav-section { margin-top:8px; padding:8px; background:#1a1a28;
@@ -1154,6 +1160,7 @@
             <div class="pcs"><div class="pcs-label">お気に入り属性</div><div class="pcs-val" id="pc-element">—</div></div>
         </div>
         <div id="pc-chars" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
+        <div id="pc-jobs" style="margin-top:8px;"></div>
         <button onclick="document.getElementById('profile-card-modal').style.display='none'" style="margin-top:16px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
     </div>
 </div>
@@ -1523,6 +1530,7 @@ async function showOpponentProfile(userId) {
     document.getElementById('pc-wr').textContent = '—';
     document.getElementById('pc-element').textContent = '—';
     document.getElementById('pc-chars').textContent = '';
+    document.getElementById('pc-jobs').innerHTML = '';
     try {
         const res = await fetch(getApiBase() + '/profile/' + encodeURIComponent(userId));
         if (!res.ok) throw new Error();
@@ -1539,6 +1547,12 @@ async function showOpponentProfile(userId) {
         document.getElementById('pc-wr').textContent = wr;
         document.getElementById('pc-element').textContent = FAV_ELEMENT_LABELS[d.favoriteElement || 'none'] || '—';
         document.getElementById('pc-chars').textContent = tops.length ? 'よく使うキャラ: ' + tops.map(([j,c]) => { const cw = oppCharWins[j]||0; return `${j}×${c}戦${cw>0?` ${cw}勝`:''}`; }).join(' · ') : '';
+        const jc = typeof d.unlockedJobsCount === 'number' ? d.unlockedJobsCount : 0;
+        const total2 = ALL_JOBS.length;
+        const pct = Math.round(jc / total2 * 100);
+        document.getElementById('pc-jobs').innerHTML = jc > 0
+            ? `<span class="pc-jobs-badge">🗂️ ジョブ ${jc}/${total2} 解放 (${pct}%)</span>`
+            : '';
     } catch(e) {
         document.getElementById('pc-name').textContent = '読み込みに失敗しました';
     }
@@ -4026,10 +4040,13 @@ function _renderLbTiers(tiers) {
             const nameEl = isMine
                 ? `<span class="lb-name">${name} 👈</span>`
                 : `<button class="lb-name-btn lb-name" onclick="showOpponentProfile('${_esc(p.userId)}')" title="プロフィールを見る">${name}</button>`;
+            const jobsCount = typeof p.unlockedJobsCount === 'number' ? p.unlockedJobsCount : 0;
+            const jobsBadge = jobsCount > 0 ? `<span class="lb-jobs-badge">🗂️ ${jobsCount}/${ALL_JOBS.length}</span>` : '';
             html += `<div class="lb-row${isMine?' lb-mine':''}">
                 <span class="lb-pos">${i+1}</span>
                 <span class="lb-icon">${icon}</span>
                 ${nameEl}
+                ${jobsBadge}
                 <span class="lb-rp">${p.rp} RP</span>
                 ${favBtn}
             </div>`;
