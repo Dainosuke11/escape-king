@@ -268,6 +268,7 @@
         .ash-mist-warn::before { content: ""; position: absolute; inset: 0; background: rgba(255,180,0,0.18); border: 2px dashed rgba(255,160,0,0.7); pointer-events: none; z-index: 1; animation: ash-warn-pulse 0.9s ease-in-out infinite alternate; }
         .ash-mist-warn::after { content: "⚠️"; font-size: calc(var(--tile-size)*0.28); opacity: 0.75; position: absolute; pointer-events: none; z-index: 2; }
         @keyframes ash-warn-pulse { from { background: rgba(255,180,0,0.12); } to { background: rgba(255,100,0,0.28); } }
+        @keyframes hitFlash { 0% { opacity:0; } 15% { opacity:1; } 100% { opacity:0; } }
         .fairy-village-range { box-shadow: inset 0 0 6px rgba(100,220,60,0.7) !important; }
         .fairy-village-range::before { content: ""; position: absolute; inset: 0; background: rgba(80,210,40,0.28); pointer-events: none; z-index: 1; }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
@@ -12419,7 +12420,15 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.ap = Math.max(0, se.ap - 1);
         if (se.abilities['shura_ranbu'] !== 999) se.abilities['shura_ranbu']--;
         let _srState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
-        msg(`🔥 修羅乱舞${_srState}！半径1全体${_srBaseDmg}炎ダメ＋業火の呪い(${_srHits}体)＋自AP-1！`); used = true;
+        msg(`🔥 修羅乱舞${_srState}！乱舞開始！`);
+        render();
+        const _srHitsSnap = _srHits, _srDmgSnap = _srBaseDmg, _srStateSnap = _srState;
+        setTimeout(() => {
+            triggerHitFlash('rgba(220,60,0,0.5)');
+            msg(`🔥 修羅乱舞${_srStateSnap}！半径1全体${_srDmgSnap}炎ダメ＋業火の呪い(${_srHitsSnap}体)＋自AP-1！`);
+            reapNecroSouls(); checkColosseumKillScore(); checkWin(); render(); updateUI(); syncStateDebounced();
+        }, 300);
+        used = true;
     } else if (actionMode === 'gouka_sangeki') {
         // 業火斬撃: 直線炎ダメ+業火の呪い+自AP-1。修羅→5(射程5,接近1)、阿修羅→7(射程6,接近2)
         let _gsRange = se.hp <= 10 ? 6 : se.hp <= 20 ? 5 : 4;
@@ -12453,8 +12462,17 @@ function handleAbilityTarget(r, c, targetEntity) {
                 msg(`⚔️ 討ち取った！HP+2＋4アビ+1！`);
             }
             let _gsState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
-            msg(`🔥 業火斬撃${_gsState}！炎${_gsDmg}ダメ(射程${_gsRange})＋業火の呪い${_gsClose>0?`＋${_gsClose}マス接近`:''}＋自AP-1！`);
-        } else { msg('🔥 業火斬撃：命中なし！'); }
+            const _gsDmgSnap = _gsDmg, _gsRangeSnap = _gsRange, _gsCloseSnap = _gsClose, _gsStateSnap = _gsState;
+            msg(`🔥 業火斬撃${_gsStateSnap}！斬り込む！`);
+            render();
+            setTimeout(() => {
+                triggerHitFlash('rgba(255,50,0,0.55)');
+                msg(`🔥 業火斬撃${_gsStateSnap}！炎${_gsDmgSnap}ダメ(射程${_gsRangeSnap})＋業火の呪い${_gsCloseSnap>0?`＋${_gsCloseSnap}マス接近`:''}＋自AP-1！`);
+                reapNecroSouls(); checkColosseumKillScore(); checkWin(); render(); updateUI(); syncStateDebounced();
+            }, 300);
+        } else {
+            msg('🔥 業火斬撃：命中なし！');
+        }
         if (se.abilities['gouka_sangeki'] !== 999) se.abilities['gouka_sangeki']--;
         used = true;
     } else if (actionMode === 'oni_giri') {
@@ -12828,6 +12846,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             const _orTarget = targetEntity, _orSe = se;
             setTimeout(() => {
                 _orTarget.hp -= _orHit2;
+                triggerHitFlash('rgba(255,100,0,0.5)');
                 msg(`🪓 2撃目！${_orTarget.name}に${_orHit2}ダメ+AP-1！次ターン攻撃力-1！`);
                 _orTarget.ap = Math.max(0, (_orTarget.ap||0) - 1);
                 knockback(_orTarget, 1, _orSe);
@@ -14688,6 +14707,13 @@ function mergeSpirits() {
     }
 }
 
+function triggerHitFlash(color = 'rgba(255,90,0,0.45)') {
+    const _fl = document.createElement('div');
+    _fl.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:${color};pointer-events:none;z-index:9998;animation:hitFlash 0.35s ease-out forwards;`;
+    document.body.appendChild(_fl);
+    setTimeout(() => _fl.remove(), 400);
+}
+
 // Award +1 soul to every living necromancer for each newly-dead entity.
 function checkColosseumKillScore() {
     if (activeStage !== 'colosseum') return;
@@ -15814,6 +15840,7 @@ function cpuLogic() {
                         const _cpuOrTarget=_bp, _cpuOrAtk=cpu;
                         setTimeout(()=>{
                             _cpuOrTarget.hp-=_orH2;
+                            triggerHitFlash('rgba(255,100,0,0.5)');
                             msg(`🪓 2撃目！${_cpuOrTarget.name}に${_orH2}ダメ+AP-1！次T攻撃-1！`);
                             _cpuOrTarget.ap=Math.max(0,(_cpuOrTarget.ap||0)-1);
                             knockback(_cpuOrTarget,1,_cpuOrAtk);
