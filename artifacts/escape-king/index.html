@@ -577,14 +577,15 @@
             padding: 20px 24px; max-width: 480px; width: 90%; position: relative;
             box-shadow: 0 8px 32px rgba(0,0,0,0.8); font-size: 15px; line-height: 1.7;
             pointer-events: auto;
+            max-height: calc(85vh - 70px); display: flex; flex-direction: column;
         }
         .tutorial-bubble::after {
             content: ''; position: absolute; bottom: -13px; left: 50%;
             transform: translateX(-50%);
             border: 7px solid transparent; border-top-color: var(--accent);
         }
-        #tutorial-msg { color: #f0f0f0; margin-bottom: 14px; }
-        .tutorial-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+        #tutorial-msg { color: #f0f0f0; margin-bottom: 14px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+        .tutorial-btn-row { display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
         .tutorial-btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; }
         #tutorial-next-btn { background: var(--accent); color: #fff; }
         #tutorial-close-btn { background: #445; color: #aaa; }
