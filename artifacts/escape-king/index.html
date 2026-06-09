@@ -1660,6 +1660,7 @@ function syncPlayerToServer() {
             charUsage: getCharUsage(),
             charWins: getCharWins(),
             unlockedJobs: loadUnlockedJobs(),
+            jobUnlockHistory: loadJobUnlockHistory(),
         };
         fetch(getApiBase() + '/player', {
             method: 'POST',
@@ -1714,6 +1715,15 @@ async function loadPlayerFromServer() {
             const merged = Array.from(new Set([...localJobs, ...data.unlockedJobs]));
             if (merged.length > localJobs.length) {
                 saveUnlockedJobs(merged);
+            }
+        }
+        // jobUnlockHistory: merge (union by jobId — server entries fill in any missing local records)
+        if (Array.isArray(data.jobUnlockHistory) && data.jobUnlockHistory.length > 0) {
+            const localHistory = loadJobUnlockHistory();
+            const localIds = new Set(localHistory.map(h => h.jobId));
+            const newEntries = data.jobUnlockHistory.filter(h => h && h.jobId && !localIds.has(h.jobId));
+            if (newEntries.length > 0) {
+                saveJobUnlockHistory([...localHistory, ...newEntries]);
             }
         }
         refreshRankDisplay();

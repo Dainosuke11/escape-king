@@ -34,6 +34,7 @@ router.get("/player/:userId", async (req, res) => {
       charUsage: (p.charUsage as Record<string, number>) ?? {},
       charWins: (p.charWins as Record<string, number>) ?? {},
       unlockedJobs: (p.unlockedJobs as string[]) ?? [],
+      jobUnlockHistory: (p.jobUnlockHistory as { jobId: string; trigger: string; date: string; wins: number }[]) ?? [],
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });
@@ -43,7 +44,7 @@ router.get("/player/:userId", async (req, res) => {
 // POST /api/player — upsert player data
 router.post("/player", async (req, res) => {
   try {
-    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins, unlockedJobs } = req.body as Record<string, unknown>;
+    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins, unlockedJobs, jobUnlockHistory } = req.body as Record<string, unknown>;
     if (!userId || typeof userId !== "string" || userId.length > 64) {
       res.status(400).json({ error: "invalid userId" });
       return;
@@ -64,6 +65,18 @@ router.post("/player", async (req, res) => {
     const safeUnlockedJobs = (Array.isArray(unlockedJobs))
       ? unlockedJobs.filter((j): j is string => typeof j === "string").map((j) => j.slice(0, 32)).slice(0, 100)
       : [];
+    const safeJobUnlockHistory = (Array.isArray(jobUnlockHistory))
+      ? jobUnlockHistory
+          .filter((h): h is Record<string, unknown> => h !== null && typeof h === "object" && !Array.isArray(h))
+          .map((h) => ({
+            jobId: typeof h.jobId === "string" ? h.jobId.slice(0, 32) : "",
+            trigger: typeof h.trigger === "string" ? h.trigger.slice(0, 32) : "ranked",
+            date: typeof h.date === "string" ? h.date.slice(0, 16) : "",
+            wins: typeof h.wins === "number" ? Math.max(0, Math.floor(h.wins)) : 0,
+          }))
+          .filter((h) => h.jobId.length > 0)
+          .slice(0, 100)
+      : [];
 
     // Note: wins/losses/draws are NOT client-settable — only the server increments them via finishRanked().
     await db
@@ -80,6 +93,7 @@ router.post("/player", async (req, res) => {
         charUsage: safeCharUsage,
         charWins: safeCharWins,
         unlockedJobs: safeUnlockedJobs,
+        jobUnlockHistory: safeJobUnlockHistory,
       })
       .onConflictDoUpdate({
         target: ekPlayersTable.userId,
@@ -94,6 +108,7 @@ router.post("/player", async (req, res) => {
           charUsage: safeCharUsage,
           charWins: safeCharWins,
           unlockedJobs: safeUnlockedJobs,
+          jobUnlockHistory: safeJobUnlockHistory,
           updatedAt: new Date(),
         },
       });

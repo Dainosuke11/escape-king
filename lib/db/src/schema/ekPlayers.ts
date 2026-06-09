@@ -17,6 +17,7 @@ export const ekPlayersTable = pgTable("ek_players", {
   charUsage: jsonb("char_usage").default({}),
   charWins: jsonb("char_wins").default({}),
   unlockedJobs: jsonb("unlocked_jobs").default([]),
+  jobUnlockHistory: jsonb("job_unlock_history").default([]),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
