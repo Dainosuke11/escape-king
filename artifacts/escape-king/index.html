@@ -1781,7 +1781,8 @@ const ABILITY_NAMES = {
     tentacle_whip: '触手のムチ(半径2/威1)', water_spit: '水吐き(射程2/威1/味方海洋+ゲージ5+HP1)',
     tractor_beam: 'トラクタービーム(半径3/目の前引き寄せ/威1/AP-1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_spit: '卵吐き(半径2/隣接卵/威2)',
-    optical_camo: '光学迷彩(1T潜伏)', form_shift: '形態変化(戦闘形態→触手強化)',
+    optical_camo: '光学迷彩(1T潜伏/HP+1)', form_shift: '形態変化(戦闘形態→触手強化)',
+    ufo_bombing: 'UFO爆撃(半径3ランダム敵/2ダメ×2/闇)',
     branch_whip: '枝のムチ(半径2/植物LV威力変化)', plant_wall: '植物の壁(前方3マス種+1Tバリア)',
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
@@ -2048,7 +2049,8 @@ const ABILITY_TIPS = {
     tractor_beam: '半径3マスの敵に1ダメ・使用者の目の前に引き寄せ・AP-1。回数3。',
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_spit: '半径2マスの敵に2ダメ・着弾した敵の隣接1マスに宇宙卵を設置。2ターン後に孵化。回数3。',
-    optical_camo: '光学迷彩で1ターン潜伏状態になる。移動中でも隠れる。回数2。',
+    optical_camo: '光学迷彩で1ターン潜伏状態になる＋HP+1回復。移動中でも隠れる。回数3。',
+    ufo_bombing: '半径3マス以内のランダムな敵1体に2ダメを2回繰り返す。闇属性。回数5。',
     form_shift: '戦闘形態に変化。HP+5・変身ターンのみAP+2・射程+1。触手のムチが威力5に。再使用で戻る(全アビリティ+1)。回数1。',
     branch_whip: '半径2マスの敵に植物LVで威力変化(LV1-9:1/LV10-19:3/LV20+:5)。吹き飛ばし。回数5。',
     plant_wall: 'マンドレイクの目の前幅3マスに種を植え・1ターンバリア。回数3。',
@@ -2236,7 +2238,7 @@ const JOB_DATA = {
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, mountain_dash: 5, wolf_bite: 5, tame: 5, falcon_assault: 5, punch: 5, healing_flute: 5, snake_throw: 5, beast_fuse: 5, howl: 5 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 5, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 3, tsusembo: 3, golem_create: 3 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
-    alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 3, egg_spit: 3, optical_camo: 2, form_shift: 1 }, hp: 30, ap: 2 },
+    alien:    { name: 'エイリアン', abilities: { drop_rock: 999, shatter: 5, dash: 5, tentacle_whip: 10, tractor_beam: 3, abduction: 3, egg_spit: 3, optical_camo: 3, form_shift: 1, ufo_bombing: 5 }, hp: 30, ap: 2 },
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, plant_wall: 3, fusion: 3, seed_bazooka: 5, root_spread: 3, roar: 5 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, punch: 10, flying_kick: 5, wave_shot: 5, rapid_strikes: 5, throw_enemy: 5, tail_swing: 5, counter: 3, ryujin_transform: 2, afterimage: 3 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 3, bite: 5, throw_net: 3, whirlpool_atk: 3, octopus_summon: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
@@ -2271,7 +2273,7 @@ const ELEMENT_DATA = {
 const JOB_ELEMENT = {
     king: 'light', knight: 'light', assassin: 'dark', infantry: 'none',
     mage: 'none', thief: 'none', beastmaster: 'grass', macho: 'none',
-    cyborg: 'none', alien: 'none', mandrake: 'grass', ryujin: 'fire',
+    cyborg: 'none', alien: 'dark', mandrake: 'grass', ryujin: 'fire',
     shark_warrior: 'water', clown: 'none', necromancer: 'dark',
     angel: 'light', world_manager: 'light', onmyoji: 'dark',
     devil: 'dark', mafia: 'none', dwarf: 'none', sentai_hero: 'fire', sennin: 'grass', pixie: 'light', hitokiri_musha: 'fire',
@@ -2318,6 +2320,7 @@ const ABILITY_ELEMENT = {
     light_whip: 'light', bind_arrow: 'light', light_bind: 'light',
     light_barrier: 'light', royal_dignity: 'light', scales: 'light',
     balance_adjust: 'light', mediation_judgment: 'light', harmonious_prayer: 'light',
+    tentacle_whip: 'dark', tractor_beam: 'dark', abduction: 'dark', egg_spit: 'dark', ufo_bombing: 'dark',
     dark_magic: 'dark', swamp_magic: 'dark', soul_absorb: 'dark',
     bone_armor: 'dark', skull_head: 'dark', necro_bind: 'dark',
     necro_summon: 'dark', undead_party: 'dark', corpse_fusion: 'dark',
@@ -8063,6 +8066,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'abduction') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'egg_spit') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'optical_camo') return true;
+    if (mode === 'ufo_bombing') return true;
     if (mode === 'form_shift') return true;
     if (mode === 'skill_mind_control') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     // Mandrake
@@ -10497,7 +10501,18 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'optical_camo') {
         se.abilities['optical_camo']--;
         se.stealth = true; se.stealthTimer = 1;
-        msg('💨 光学迷彩！1ターン潜伏状態！'); used = true;
+        se.hp = Math.min(se.hp + 1, se.maxHp);
+        msg('💨 光学迷彩！1ターン潜伏状態＋HP+1！'); used = true;
+    } else if (actionMode === 'ufo_bombing') {
+        se.abilities['ufo_bombing']--;
+        let ufoBombHit = 0;
+        for (let shot = 0; shot < 2; shot++) {
+            let enemies = entities.filter(e => e.hp > 0 && e.team !== se.team && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 3);
+            if (enemies.length === 0) break;
+            let tgt = enemies[Math.floor(Math.random() * enemies.length)];
+            if (!tgt.invin && !necroShieldBlock(tgt)) { tgt.hp -= 2; ufoBombHit++; }
+        }
+        msg(`🛸 UFO爆撃！半径3マス内のランダム敵に2ダメ×${ufoBombHit}回！`); used = true;
     } else if (actionMode === 'form_shift') {
         se.abilities['form_shift']--;
         if (!se.formShifted) {
