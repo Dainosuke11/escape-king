@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { ekPlayersTable } from "@workspace/db/schema";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -15,10 +15,19 @@ router.get("/player/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {}, unlockedJobs: [] });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {}, unlockedJobs: [], referralBonusStages: [] });
       return;
     }
     const p = rows[0]!;
+    // referral_bonus_stages is added via ALTER TABLE in referral.ts — fetch via raw SQL
+    let referralBonusStages: string[] = [];
+    try {
+      const refResult = await db.execute(sql`SELECT referral_bonus_stages FROM ek_players WHERE user_id = ${userId} LIMIT 1`);
+      if (refResult.rows?.[0]) {
+        const raw = (refResult.rows[0] as Record<string, unknown>)["referral_bonus_stages"];
+        if (Array.isArray(raw)) referralBonusStages = raw as string[];
+      }
+    } catch { /* column may not exist yet */ }
     res.json({
       userId: p.userId,
       playerName: p.playerName,
@@ -36,6 +45,7 @@ router.get("/player/:userId", async (req, res) => {
       unlockedJobs: (p.unlockedJobs as string[]) ?? [],
       jobUnlockHistory: (p.jobUnlockHistory as { jobId: string; trigger: string; date: string; wins: number }[]) ?? [],
       isDonor: p.isDonor ?? false,
+      referralBonusStages,
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });
