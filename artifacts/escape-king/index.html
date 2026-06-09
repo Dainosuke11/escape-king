@@ -881,6 +881,35 @@
             <button onclick="document.getElementById('job-unlock-history-modal').style.display='none'" style="margin-top:16px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
         </div>
     </div>
+
+    <!-- Ko-fi 寄付特典モーダル -->
+    <div id="donation-unlock-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:#1a1a2e;border:2px solid #FF5E5B;border-radius:14px;padding:22px 24px;max-width:420px;width:92%;box-sizing:border-box;">
+            <div style="font-size:22px;text-align:center;margin-bottom:6px;">☕ Ko-fi 寄付特典</div>
+            <div style="font-size:14px;color:#ddd;text-align:center;margin-bottom:14px;line-height:1.6;">
+                Ko-fi で <strong style="color:#FF5E5B;">1円以上寄付</strong> すると、<br>
+                <strong>全ステージ・全キャラクター</strong> が即アンロックされます！
+            </div>
+            <a href="https://ko-fi.com/dainosukegame" target="_blank" rel="noopener"
+               style="display:block;background:#FF5E5B;color:#fff;text-decoration:none;font-size:15px;font-weight:bold;padding:11px;border-radius:8px;text-align:center;margin-bottom:12px;">
+                ☕ Ko-fi で応援する（1円〜）
+            </a>
+            <div id="donation-claim-area">
+                <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:8px;">すでに寄付した方はメールアドレスを入力して特典を受け取れます</div>
+                <input id="donation-email-input" type="email" placeholder="Ko-fiに登録したメールアドレス"
+                    style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:14px;margin-bottom:8px;" />
+                <button onclick="claimDonorUnlock()" id="donation-claim-btn"
+                    style="width:100%;padding:10px;background:#27ae60;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:bold;">
+                    🎁 特典を受け取る
+                </button>
+                <div id="donation-claim-msg" style="font-size:13px;text-align:center;margin-top:8px;min-height:18px;"></div>
+            </div>
+            <button onclick="document.getElementById('donation-unlock-modal').style.display='none'"
+                style="margin-top:14px;width:100%;padding:9px;background:#2c2c3e;color:#aaa;border:1px solid #444;border-radius:7px;cursor:pointer;font-size:14px;">
+                閉じる
+            </button>
+        </div>
+    </div>
     <div id="job-unlock-progress" style="margin:-4px 0 10px;padding:0 2px;">
         <div style="display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:3px;">
             <span>🔓 解放ジョブ</span><span id="job-unlock-count">1 / 30</span>
@@ -1762,6 +1791,10 @@ async function loadPlayerFromServer() {
             if (newEntries.length > 0) {
                 saveJobUnlockHistory([...localHistory, ...newEntries]);
             }
+        }
+        // isDonor: server is authoritative — apply full unlock if server says donor
+        if (data.isDonor && !isDonorUnlocked()) {
+            applyDonorUnlock();
         }
         refreshRankDisplay();
         refreshAllJobSelects();
@@ -4440,6 +4473,7 @@ function updateOnlineInfo() {
 //  EVENT LISTENERS
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+    if (isDonorUnlocked()) applyDonorUnlock();
     refreshAllJobSelects();
     refreshAllStageSelects();
     loadPlayerFromServer();
@@ -4663,8 +4697,69 @@ function setTutorialDone() { localStorage.setItem('ek_tutorial_done', '1'); }
 function getMaxCpuLvBeaten() { return parseInt(localStorage.getItem('ek_max_cpu_lv') || '0', 10); }
 function setMaxCpuLvBeaten(lv) { if (lv > getMaxCpuLvBeaten()) localStorage.setItem('ek_max_cpu_lv', String(lv)); }
 
+function isDonorUnlocked() { return localStorage.getItem('ek_is_donor') === '1'; }
+function setDonorUnlocked() { localStorage.setItem('ek_is_donor', '1'); }
+
+function applyDonorUnlock() {
+    setDonorUnlocked();
+    localStorage.setItem('ek_tutorial_done', '1');
+    localStorage.setItem('ek_max_cpu_lv', '99');
+    saveUnlockedJobs([...ALL_JOBS]);
+    try { refreshAllJobSelects(); } catch(e) {}
+    try { refreshAllStageSelects(); } catch(e) {}
+}
+
+function showDonationUnlockPopup() {
+    const modal = document.getElementById('donation-unlock-modal');
+    if (!modal) return;
+    const msgEl = document.getElementById('donation-claim-msg');
+    if (msgEl) msgEl.textContent = '';
+    const inputEl = document.getElementById('donation-email-input');
+    if (inputEl) inputEl.value = '';
+    const claimArea = document.getElementById('donation-claim-area');
+    if (claimArea) claimArea.style.display = isDonorUnlocked() ? 'none' : 'block';
+    modal.style.display = 'flex';
+}
+
+async function claimDonorUnlock() {
+    const emailEl = document.getElementById('donation-email-input');
+    const msgEl = document.getElementById('donation-claim-msg');
+    const btn = document.getElementById('donation-claim-btn');
+    const email = emailEl ? emailEl.value.trim() : '';
+    if (!email) {
+        if (msgEl) msgEl.textContent = '⚠ メールアドレスを入力してください';
+        return;
+    }
+    if (btn) btn.disabled = true;
+    if (msgEl) { msgEl.textContent = '確認中...'; msgEl.style.color = '#aaa'; }
+    try {
+        const res = await fetch(getApiBase() + '/kofi/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: getUserId(), email })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            applyDonorUnlock();
+            if (msgEl) { msgEl.textContent = '🎉 特典が解放されました！全ステージ・全キャラクターが使えます！'; msgEl.style.color = '#2ecc71'; }
+            const claimArea = document.getElementById('donation-claim-area');
+            if (claimArea) claimArea.style.display = 'none';
+        } else if (data.error === 'not_found') {
+            if (msgEl) { msgEl.textContent = '❌ このメールアドレスの寄付記録が見つかりません。Ko-fiに登録したメールをご確認ください。'; msgEl.style.color = '#e74c3c'; }
+            if (btn) btn.disabled = false;
+        } else {
+            if (msgEl) { msgEl.textContent = '⚠ エラーが発生しました。しばらくしてから再試行してください。'; msgEl.style.color = '#e74c3c'; }
+            if (btn) btn.disabled = false;
+        }
+    } catch(e) {
+        if (msgEl) { msgEl.textContent = '⚠ 通信エラーが発生しました。'; msgEl.style.color = '#e74c3c'; }
+        if (btn) btn.disabled = false;
+    }
+}
+
 function isStageUnlocked(stage) {
     if (!stage || stage === 'random') return true;
+    if (isDonorUnlocked()) return true;
     const req = STAGE_UNLOCK_REQUIREMENTS[stage];
     if (req === undefined || req === -1) return true; // plains: always unlocked
     if (req === 0) return isTutorialDone();
@@ -4740,7 +4835,7 @@ function checkStageUnlocked(stage, errElId) {
     }
     const el = errElId ? document.getElementById(errElId) : null;
     if (el) el.textContent = errMsg;
-    else alert(errMsg);
+    showDonationUnlockPopup();
     return false;
 }
 // ===================================================
@@ -4785,6 +4880,7 @@ function saveUnlockedJobs(list) { localStorage.setItem('etk_unlocked_jobs', JSON
 
 function isJobUnlocked(job) {
     if (!job || job === 'random') return true;
+    if (isDonorUnlocked()) return true;
     return loadUnlockedJobs().includes(job);
 }
 
@@ -4919,12 +5015,10 @@ function refreshAllJobSelects() {
 function checkJobUnlocked(job, errElId) {
     if (!job || job === 'random' || isJobUnlocked(job)) return true;
     const label = (JOB_LABELS[job] || job).split('(')[0].trim();
-    const unlocked = loadUnlockedJobs();
-    const remaining = UNLOCK_ORDER.length - unlocked.filter(j => UNLOCK_ORDER.includes(j)).length;
     const errMsg = `🔒 ${label}はまだ解放されていません（ランクマッチで1勝するたびに次のジョブが解放されます）`;
     const el = errElId ? document.getElementById(errElId) : null;
     if (el) el.textContent = errMsg;
-    else alert(errMsg);
+    showDonationUnlockPopup();
     return false;
 }
 // ===================================================
@@ -18627,6 +18721,17 @@ function closeTutorial() {
         letter-spacing: 0.03em;
         transition: background 0.2s;
     " onmouseover="this.style.background='#e04f4c'" onmouseout="this.style.background='#FF5E5B'">Ko-fi で応援する</a>
+    <button onclick="showDonationUnlockPopup()" style="
+        display: inline-block;
+        background: transparent;
+        color: #aaa;
+        border: 1px solid #555;
+        font-size: 12px;
+        padding: 5px 13px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: border-color 0.2s, color 0.2s;
+    " onmouseover="this.style.color='#fff';this.style.borderColor='#FF5E5B'" onmouseout="this.style.color='#aaa';this.style.borderColor='#555'">🎁 寄付特典を受け取る</button>
 </div>
 
 </body>

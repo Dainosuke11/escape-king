@@ -35,6 +35,7 @@ router.get("/player/:userId", async (req, res) => {
       charWins: (p.charWins as Record<string, number>) ?? {},
       unlockedJobs: (p.unlockedJobs as string[]) ?? [],
       jobUnlockHistory: (p.jobUnlockHistory as { jobId: string; trigger: string; date: string; wins: number }[]) ?? [],
+      isDonor: p.isDonor ?? false,
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });

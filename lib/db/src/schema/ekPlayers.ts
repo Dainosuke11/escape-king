@@ -1,4 +1,4 @@
-import { pgTable, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,6 +18,7 @@ export const ekPlayersTable = pgTable("ek_players", {
   charWins: jsonb("char_wins").default({}),
   unlockedJobs: jsonb("unlocked_jobs").default([]),
   jobUnlockHistory: jsonb("job_unlock_history").default([]),
+  isDonor: boolean("is_donor").notNull().default(false),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
