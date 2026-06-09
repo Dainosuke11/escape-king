@@ -1782,7 +1782,7 @@ const ABILITY_NAMES = {
     tractor_beam: 'トラクタービーム(半径3/目の前引き寄せ/威1/AP-1)',
     abduction: 'アブダクション(半径3/1T誘拐/威2)', egg_spit: '卵吐き(半径2/隣接卵/威2)',
     optical_camo: '光学迷彩(1T潜伏/HP+1)', form_shift: '形態変化(戦闘形態→触手強化)',
-    ufo_bombing: 'UFO爆撃(半径3ランダム敵/2ダメ×2/闇)',
+    ufo_bombing: 'UFO爆撃(半径3ランダム敵/1ダメ×4/目潰し/闇)',
     branch_whip: '枝のムチ(半径2/植物LV威力変化)', plant_wall: '植物の壁(前方3マス種+1Tバリア)',
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
@@ -2050,7 +2050,7 @@ const ABILITY_TIPS = {
     abduction: '半径3マスの敵に2ダメ＋1ターン異空間に誘拐。次のターン開始時に帰還。回数1。',
     egg_spit: '半径2マスの敵に2ダメ・着弾した敵の隣接1マスに宇宙卵を設置。2ターン後に孵化。回数3。',
     optical_camo: '光学迷彩で1ターン潜伏状態になる＋HP+1回復。移動中でも隠れる。回数3。',
-    ufo_bombing: '半径3マス以内のランダムな敵1体に2ダメを2回繰り返す。闇属性。回数5。',
+    ufo_bombing: '半径3マス以内のランダムな敵1体に1ダメを4回繰り返す。命中した敵に1T目潰し付与。闇属性。回数5。',
     form_shift: '戦闘形態に変化。HP+5・変身ターンのみAP+2・射程+1。触手のムチが威力5に。再使用で戻る(全アビリティ+1)。回数1。',
     branch_whip: '半径2マスの敵に植物LVで威力変化(LV1-9:1/LV10-19:3/LV20+:5)。吹き飛ばし。回数5。',
     plant_wall: 'マンドレイクの目の前幅3マスに種を植え・1ターンバリア。回数3。',
@@ -2423,7 +2423,7 @@ const JOB_GUIDE_META = {
     beastmaster:   { emoji: '🐾', fullName: '獣使い', note: '【草属性・召喚獣3種・制圧型】\n「オオカミの噛みつき」r1/2ダメ→敵隣にオオカミ召喚(HP2/AP3)。回数5\n「ハヤブサ突撃」直線3/2ダメ→敵隣にハヤブサ召喚(HP3/AP2/飛行)。回数5\n「ヘビ投げ」r2/1ダメ→敵隣に毒蛇召喚(HP1/AP2/毒噛み2ダメ+毒+目潰し)。回数5\n「癒しの笛」r8味方全HP+1＋1Tバリア。回数5\n「テイム」r3の敵モンスターを永久味方化(5T後)。回数5\n「獣融合」隣の味方吸収1T/HP/AP/ATK+1。回数5\n「遠吠え」射程(2+近隣味方数)内ATK+1・敵AP-1+3封印。回数5' },
     macho:         { emoji: '💪', fullName: 'マッチョ', note: '【岩操作・高火力近接型】\n「岩ダッシュ」岩を踏み台に2マス移動。「岩雪崩」r3/2ダメ+周囲に岩3個落下(回数5)。\n「岩投げ」直線投擲/威2。「岩落とし強」r2/威2/AP-1+岩設置。「石拳」r1/威2。\n「岩隠れ」1T無敵バリア→破られたら後退+岩設置。「通せんぼ」前方3マス幅に岩設置(次T消滅)。\n「ゴーレム制作」r1の全岩消費→ゴーレム召喚(HP=岩数×2)。5T後から可。' },
     cyborg:        { emoji: '⚙️', fullName: '機械兵', note: '【電力管理・全距離対応型】\n「電力補給」AP-1/HP+5(回5)。「ジェットブースト」r2飛行移動/AP-1/HP-1(回5)。\n「レーザーブレード」r1/威3/HP-1/AP-1(回5)。「薙ぎ払い」r2弧/威2/吹飛(回5)。\n「レーザースナイプ」直線5/威4(回5)。「レーザーバズーカ」r1爆風/威3(回5)。\n「焼却砲」直線3/威5/燃焼2T(回5)。「偵察ドローン」情報収集(回2)。「EMPフィールド」r3全敵AP-2/封印(回5)。' },
-    alien:         { emoji: '👽', fullName: 'エイリアン', note: '【闇属性・異能妨害型】\n「触手のムチ」r2/威1/吹飛(∞)。「トラクタービーム」r3/威1/引き寄せ/AP-1(回3)。\n「アブダクション」r3/威2/1T誘拐(回3)。「卵吐き」r2/威2+宇宙卵設置(回3)。\n「光学迷彩」1T潜伏+HP+1(回3)。「UFO爆撃」r3ランダム敵/2ダメ×2(回5/闇)。\n「形態変化」戦闘形態→HP+5/AP+2/射程+1/触手強化。解除で全アビ+1(回1)。' },
+    alien:         { emoji: '👽', fullName: 'エイリアン', note: '【闇属性・異能妨害型】\n「触手のムチ」r2/威1/吹飛(∞)。「トラクタービーム」r3/威1/引き寄せ/AP-1(回3)。\n「アブダクション」r3/威2/1T誘拐(回3)。「卵吐き」r2/威2+宇宙卵設置(回3)。\n「光学迷彩」1T潜伏+HP+1(回3)。「UFO爆撃」r3ランダム敵/1ダメ×4+目潰し(回5/闇)。\n「形態変化」戦闘形態→HP+5/AP+2/射程+1/触手強化。解除で全アビ+1(回1)。' },
     mandrake:      { emoji: '🌿', fullName: 'マンドレイク', note: '【草属性・植物育成型・植物LVで強化】\n植物LVは種→若芽→ベビーマンドレイク育成や融合で上昇。技射程・威力がLVに連動。\n「枝のムチ」r2/LV1:1/LV10:3/LV20:5ダメ/吹飛(回5)。「植物の壁」前方3マス種+1Tバリア(回3)。\n「融合」r1植物全吸収/LV+/HP/アビ増加(回3)。「種バズーカ」直線3/1ダメ+種まき(回5)。\n「根を張る」AP-2/r8味方HP+1/全アビ+1/LV+/種成長(回3)。「咆哮」r1全敵1ダメ/AP-1/1封印(回5)。' },
     ryujin:        { emoji: '🐲', fullName: '竜人族', note: '【格闘特化・変身強化型】\n「飛び蹴り」直線2移動+着地敵2ダメ(AP消費なし/回5)。「波動弾」直線3/威3(回5)。\n「連続打撃」r1/弱→強の3連撃(回5)。「敵投げ」r2/投げ飛ばし+連鎖(回5)。\n「尻尾振り」r2AoE/1ダメ+AP-1(回5)。「カウンター」被弾反撃(回3)。\n「龍人変身」竜形態→全能力強化(回2)。「残像」分身残置+移動(回3)。' },
     shark_warrior: { emoji: '🦈', fullName: 'サメ戦士', note: '【水属性・ウォーターゲージ制】ゲージ15~で変身・20~でバフ獲得。\n「水中ダッシュ」水マスで射程延長+AP+1(回5)。「モリ打ち」直線3/威変化(∞)。\n「水流カッター」水/r2切り裂き(回3)。「水柱噴射」水/r2爆発+遮断(回3)。\n「噛みつき」隣接/威変化(回5)。「網投げ」r2/AP-2+封印(回3)。「渦潮攻撃」r3渦潮生成(回3)。「タコ召喚」HP3/AP2の海洋コマ(回3)。' },
@@ -10506,13 +10506,14 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'ufo_bombing') {
         se.abilities['ufo_bombing']--;
         let ufoBombHit = 0;
-        for (let shot = 0; shot < 2; shot++) {
+        let ufoBombBlinded = new Set();
+        for (let shot = 0; shot < 4; shot++) {
             let enemies = entities.filter(e => e.hp > 0 && e.team !== se.team && Math.max(Math.abs(e.r-se.r), Math.abs(e.c-se.c)) <= 3);
             if (enemies.length === 0) break;
             let tgt = enemies[Math.floor(Math.random() * enemies.length)];
-            if (!tgt.invin && !necroShieldBlock(tgt)) { tgt.hp -= 2; ufoBombHit++; }
+            if (!tgt.invin && !necroShieldBlock(tgt)) { tgt.hp -= 1; ufoBombHit++; applyBlind(tgt); ufoBombBlinded.add(tgt.id); }
         }
-        msg(`🛸 UFO爆撃！半径3マス内のランダム敵に2ダメ×${ufoBombHit}回！`); used = true;
+        msg(`🛸 UFO爆撃！半径3マス内のランダム敵に1ダメ×${ufoBombHit}回＋目潰し！`); used = true;
     } else if (actionMode === 'form_shift') {
         se.abilities['form_shift']--;
         if (!se.formShifted) {
