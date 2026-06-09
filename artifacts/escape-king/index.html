@@ -1025,14 +1025,13 @@
                 <div id="profile-icon-display" onclick="openIconPicker()" title="クリックして変更">🎮</div>
             </div>
             <div style="flex:1; min-width:0;">
-                <div style="font-size:11px;color:#aaa;margin-bottom:4px;">お気に入り属性</div>
-                <select id="fav-element-select" onchange="saveFavElement()" style="width:100%;padding:6px;background:#1a1a20;color:#fff;border:1px solid #444;border-radius:4px;font-size:13px;">
+                <div style="font-size:11px;color:#aaa;margin-bottom:4px;">好きな戦法</div>
+                <select id="fav-strategy-select" onchange="saveFavStrategy()" style="width:100%;padding:6px;background:#1a1a20;color:#fff;border:1px solid #444;border-radius:4px;font-size:13px;">
                     <option value="none">— なし —</option>
-                    <option value="fire">🔥 炎</option>
-                    <option value="water">💧 水</option>
-                    <option value="grass">🌿 草</option>
-                    <option value="light">✨ 光</option>
-                    <option value="dark">🌑 闇</option>
+                    <option value="rush">⚡ 最速ゴール</option>
+                    <option value="brawl">👊 殴り合い</option>
+                    <option value="steady">🧘 じっくり攻める</option>
+                    <option value="rock">🪨 岩で潰す</option>
                 </select>
                 <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">お気に入りステージ</div>
                 <select id="fav-stage-select" onchange="saveFavStage()" style="width:100%;padding:6px;background:#1a1a20;color:#fff;border:1px solid #444;border-radius:4px;font-size:13px;">
@@ -1246,7 +1245,7 @@
             <div class="pcs"><div class="pcs-label">勝利</div><div class="pcs-val" id="pc-wins">—</div></div>
             <div class="pcs"><div class="pcs-label">敗北</div><div class="pcs-val" id="pc-losses">—</div></div>
             <div class="pcs"><div class="pcs-label">勝率</div><div class="pcs-val" id="pc-wr">—</div></div>
-            <div class="pcs"><div class="pcs-label">お気に入り属性</div><div class="pcs-val" id="pc-element">—</div></div>
+            <div class="pcs"><div class="pcs-label">好きな戦法</div><div class="pcs-val" id="pc-element">—</div></div>
         </div>
         <div id="pc-chars" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
         <div id="pc-jobs" style="margin-top:8px;"></div>
@@ -1516,15 +1515,15 @@ const PROFILE_ICONS = [
     '💧','❄️','⚡','🌀','🌑','🪨','🌾','🌲','🏜️','👿','🏯','🚣','⛰️','🪦','🌃','☁️',
     '🗝️','🐲','🦁','🐺','🦅','🐢','🌙','🌈','🎆','🎭','🎵','💫','🍀','🎋','🗻','🌊',
 ];
-const FAV_ELEMENT_LABELS = {
-    'none':'— なし', 'fire':'🔥 炎', 'water':'💧 水', 'grass':'🌿 草',
-    'light':'✨ 光', 'dark':'🌑 闇',
+const FAV_STRATEGY_LABELS = {
+    'none':'— なし', 'rush':'⚡ 最速ゴール', 'brawl':'👊 殴り合い',
+    'steady':'🧘 じっくり攻める', 'rock':'🪨 岩で潰す',
 };
 
 function getProfileIcon() { return localStorage.getItem('ek_profile_icon') || '🎮'; }
 function setProfileIcon(icon) { localStorage.setItem('ek_profile_icon', icon); }
-function getFavElement() { return localStorage.getItem('ek_fav_element') || 'none'; }
-function setFavElement(el) { localStorage.setItem('ek_fav_element', el); }
+function getFavStrategy() { return localStorage.getItem('ek_fav_strategy') || 'none'; }
+function setFavStrategy(s) { localStorage.setItem('ek_fav_strategy', s); }
 function getFavStage() { return localStorage.getItem('ek_fav_stage') || ''; }
 function setFavStage(s) { localStorage.setItem('ek_fav_stage', s); }
 function getWins() { return parseInt(localStorage.getItem('ek_ranked_wins') || '0', 10); }
@@ -1573,9 +1572,9 @@ function selectIcon(icon) {
     refreshProfileUI();
     syncPlayerToServer();
 }
-function saveFavElement() {
-    const sel = document.getElementById('fav-element-select');
-    if (sel) setFavElement(sel.value);
+function saveFavStrategy() {
+    const sel = document.getElementById('fav-strategy-select');
+    if (sel) setFavStrategy(sel.value);
     syncPlayerToServer();
 }
 function saveFavStage() {
@@ -1586,8 +1585,8 @@ function saveFavStage() {
 function refreshProfileUI() {
     const disp = document.getElementById('profile-icon-display');
     if (disp) disp.textContent = getProfileIcon();
-    const sel = document.getElementById('fav-element-select');
-    if (sel) sel.value = getFavElement();
+    const sel = document.getElementById('fav-strategy-select');
+    if (sel) sel.value = getFavStrategy();
     const stageSel = document.getElementById('fav-stage-select');
     if (stageSel) stageSel.value = getFavStage();
     const statsDiv = document.getElementById('profile-stats-display');
@@ -1638,7 +1637,7 @@ async function showOpponentProfile(userId) {
         document.getElementById('pc-wins').textContent = w;
         document.getElementById('pc-losses').textContent = l + (dr > 0 ? ` / 引分${dr}` : '');
         document.getElementById('pc-wr').textContent = wr;
-        document.getElementById('pc-element').textContent = FAV_ELEMENT_LABELS[d.favoriteElement || 'none'] || '—';
+        document.getElementById('pc-element').textContent = FAV_STRATEGY_LABELS[d.favoriteStrategy || 'none'] || '—';
         document.getElementById('pc-chars').textContent = tops.length ? 'よく使うキャラ: ' + tops.map(([j,c]) => { const cw = oppCharWins[j]||0; return `${j}×${c}戦${cw>0?` ${cw}勝`:''}`; }).join(' · ') : '';
         const opponentUnlocked = Array.isArray(d.unlockedJobs) ? d.unlockedJobs : [];
         const jc = opponentUnlocked.length > 0 ? opponentUnlocked.length : (typeof d.unlockedJobsCount === 'number' ? d.unlockedJobsCount : 0);
@@ -1770,7 +1769,7 @@ function syncPlayerToServer() {
             rp: getRP(),
             spWins: parseInt(localStorage.getItem('ek_spwins') || '0', 10),
             profileIcon: getProfileIcon(),
-            favoriteElement: getFavElement(),
+            favoriteStrategy: getFavStrategy(),
             favoriteStage: getFavStage(),
             charUsage: getCharUsage(),
             charWins: getCharWins(),
@@ -1802,7 +1801,7 @@ async function loadPlayerFromServer() {
         }
         // Profile preferences: server wins if local is still default
         if (data.profileIcon && data.profileIcon !== '🎮' && getProfileIcon() === '🎮') setProfileIcon(data.profileIcon);
-        if (data.favoriteElement && data.favoriteElement !== 'none' && getFavElement() === 'none') setFavElement(data.favoriteElement);
+        if (data.favoriteStrategy && data.favoriteStrategy !== 'none' && getFavStrategy() === 'none') setFavStrategy(data.favoriteStrategy);
         if (data.favoriteStage && data.favoriteStage !== '' && getFavStage() === '') setFavStage(data.favoriteStage);
         // Wins/losses/draws: server is authoritative — always overwrite with server values
         localStorage.setItem('ek_ranked_wins', String(data.wins || 0));
@@ -3063,10 +3062,10 @@ function handleWsMessage(event) {
                         const wr = total > 0 ? Math.round(w / total * 100) + '%' : '—';
                         const tops = Object.entries(d.charUsage || {}).sort((a,b) => b[1]-a[1]).slice(0,2).map(([j]) => j);
                         const topStr = tops.length ? tops.join(' / ') : '—';
-                        const elemStr = FAV_ELEMENT_LABELS[d.favoriteElement || 'none'] || '—';
+                        const stratStr = FAV_STRATEGY_LABELS[d.favoriteStrategy || 'none'] || '—';
                         const recordStr = `${w}勝${l}敗${dr > 0 ? dr + '分' : ''}（勝率${wr}）`;
                         const profBtn = `<button onclick="showOpponentProfile('${_esc(oppUserId)}')" style="margin-top:6px;padding:3px 12px;background:#2980b9;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">📋 詳細</button>`;
-                        toast.innerHTML = `<span style="font-size:36px;">${oppIco}</span><br>⚔️ マッチング成功！<br>vs <b>${oppName}</b>（ランク${oppRankDisp}）<br><span style="color:#aaa;font-size:12px;">${recordStr} | よく使う: ${topStr} | 属性: ${elemStr}</span><br>${profBtn}`;
+                        toast.innerHTML = `<span style="font-size:36px;">${oppIco}</span><br>⚔️ マッチング成功！<br>vs <b>${oppName}</b>（ランク${oppRankDisp}）<br><span style="color:#aaa;font-size:12px;">${recordStr} | よく使う: ${topStr} | 戦法: ${stratStr}</span><br>${profBtn}`;
                     }).catch(() => {});
             }
             setTimeout(() => { toast.style.display = 'none'; }, 6000);

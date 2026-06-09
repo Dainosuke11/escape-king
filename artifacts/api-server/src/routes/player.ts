@@ -15,7 +15,7 @@ router.get("/player/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {}, unlockedJobs: [], referralBonusStages: [] });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteStrategy: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {}, unlockedJobs: [], referralBonusStages: [] });
       return;
     }
     const p = rows[0]!;
@@ -35,7 +35,7 @@ router.get("/player/:userId", async (req, res) => {
       rp: p.rp,
       spWins: p.spWins,
       profileIcon: p.profileIcon ?? "🎮",
-      favoriteElement: p.favoriteElement ?? "none",
+      favoriteStrategy: p.favoriteElement ?? "none",
       favoriteStage: p.favoriteStage ?? "",
       wins: p.wins ?? 0,
       losses: p.losses ?? 0,
@@ -55,7 +55,7 @@ router.get("/player/:userId", async (req, res) => {
 // POST /api/player — upsert player data
 router.post("/player", async (req, res) => {
   try {
-    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins, unlockedJobs, jobUnlockHistory } = req.body as Record<string, unknown>;
+    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteStrategy, favoriteStage, charUsage, charWins, unlockedJobs, jobUnlockHistory } = req.body as Record<string, unknown>;
     if (!userId || typeof userId !== "string" || userId.length > 64) {
       res.status(400).json({ error: "invalid userId" });
       return;
@@ -65,7 +65,7 @@ router.post("/player", async (req, res) => {
     const safeWins = typeof spWins === "number" ? Math.max(0, Math.floor(spWins)) : 0;
     const safeName = typeof playerName === "string" ? playerName.slice(0, 64) : "プレイヤー";
     const safeIcon = typeof profileIcon === "string" ? profileIcon.slice(0, 8) : "🎮";
-    const safeElement = typeof favoriteElement === "string" ? favoriteElement.slice(0, 16) : "none";
+    const safeElement = typeof favoriteStrategy === "string" ? favoriteStrategy.slice(0, 16) : "none";
     const safeStage = typeof favoriteStage === "string" ? favoriteStage.slice(0, 32) : "";
     const safeCharUsage = (charUsage && typeof charUsage === "object" && !Array.isArray(charUsage))
       ? Object.fromEntries(Object.entries(charUsage as Record<string, unknown>).slice(0, 50).map(([k, v]) => [k.slice(0, 32), Math.max(0, Math.floor(Number(v) || 0))]))
@@ -182,7 +182,7 @@ router.get("/profile/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {} });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, profileIcon: "🎮", favoriteStrategy: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {} });
       return;
     }
     const p = rows[0]!;
@@ -192,7 +192,7 @@ router.get("/profile/:userId", async (req, res) => {
       rank: p.rank,
       rp: p.rp,
       profileIcon: p.profileIcon ?? "🎮",
-      favoriteElement: p.favoriteElement ?? "none",
+      favoriteStrategy: p.favoriteElement ?? "none",
       favoriteStage: p.favoriteStage ?? "",
       wins: p.wins ?? 0,
       losses: p.losses ?? 0,
