@@ -1822,7 +1822,7 @@ const ABILITY_NAMES = {
     roll_rock: '岩転がし(幅3/斜面/威2)',
     purify: '浄化(魂消化→HP/回数回復)', bite: '噛み付き', possess: 'とりつき(AP-1)',
     decoy: 'デコイ人形',
-    smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪',
+    smokescreen: '煙幕(範囲/AP-1/潜伏)', miner_call: '炭鉱夫呼び(5T~)', steal: '強奪', theft: '窃盗(r1/威2/闇/1Tアビ封印+一時使用)',
     wolf_bite: 'オオカミの噛みつき(半径1/威2+オオカミ召喚)', tame: 'テイム(半径3)', falcon_assault: 'ハヤブサ突撃(直線3/威2+ハヤブサ召喚)',
     healing_flute: '癒しの笛(HP+1/1Tバリア)', snake_throw: 'ヘビ投げ(半径2/威1+毒蛇召喚)', howl: '遠吠え(味方ATK+1/敵AP-1+3封印)', snake_summon: '毒蛇召喚', constrict: '締め上げる(AP-1)', dig: '地面掘り', hole_move: '穴移動',
     rock_avalanche: '岩雪崩(半径3/威2)', drop_rock_heavy: '岩落とし強(半径2/威2)',
@@ -2069,6 +2069,7 @@ const ABILITY_TIPS = {
     smokescreen: '半径2マスの敵にAP-1と後方吹き飛ばし。1ターン泥棒は潜伏する。',
     miner_call: '炭鉱夫(HP3/AP2)を呼ぶ。岩砕き∞・地面掘り∞・ツルハシ殴り。開始5T経過後に使用可能。',
     steal: '隣接した敵の残り使用回数があるアビリティ(岩砕き除く)から1種をランダムに奪う(1回ぶん)。',
+    theft: '隣接した敵に2ダメ(闇属性)。敵のランダムなアビリティ1種を1ターン封印し、そのアビリティをこのターン1回だけ自分が使用可能にする。使用した場合、相手のそのアビリティ使用回数が-1される。翌ターン開始時に盗んだアビリティは消滅する。回数5。',
     wolf_bite: '半径1マスの敵に2ダメ。命中した敵の隣接マスにオオカミ(HP2/AP3/噛みつき∞)を1体召喚。回数5。',
     tame: '半径3マスの敵モンスター/召喚獣(ジョブコマ以外)を1体、永久に味方化。開始5T経過後。回数5。',
     falcon_assault: '同じ行か列の直線3マス内の敵に2ダメ。命中した敵の隣接マスにハヤブサ(HP3/AP2/つつき∞/飛行)を1体召喚。回数5。',
@@ -2293,7 +2294,7 @@ const JOB_DATA = {
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, ninja_walk: 5, trap: 3, bow: 5, dagger: 10, decoy: 3, curved_shot: 5, rapid_shot: 5, long_snipe: 5 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, patrol_walk: 5, bow: 3, sword: 10, fortify: 5, charge_formation: 3, coordinated_atk: 3, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 5, meditation: 1, summon_magic: 3, barrier_magic: 3 }, hp: 30, ap: 2 },
-    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, bomb_cracker: 5, shatter: 3, smokescreen: 3, miner_call: 3, skill_jack: 5, acrobat: 5 }, hp: 30, ap: 2 },
+    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, bomb_cracker: 5, shatter: 3, smokescreen: 3, miner_call: 3, theft: 5, skill_jack: 5, acrobat: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, mountain_dash: 5, wolf_bite: 5, tame: 5, falcon_assault: 5, punch: 5, healing_flute: 5, snake_throw: 5, beast_fuse: 5, howl: 5 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 5, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 3, tsusembo: 3, golem_create: 3 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
@@ -2402,6 +2403,7 @@ const ABILITY_ELEMENT = {
     ryuen: 'fire', shinkou: 'light',
     skill_ryujin_korin: 'light',
     orca_bite: 'dark', anchor_throw: 'dark', skill_jack: 'water', mugging: 'dark', hide_steal: 'dark', pirate_flag: 'dark', orca_cannon: 'dark',
+    theft: 'dark',
     chimatsuri_giri: 'dark', ono_renbu: 'fire', kaiten_giri: 'fire', ono_nage: 'grass',
     red_paint: 'fire', blue_paint: 'water', green_paint: 'grass', white_paint: 'light', black_paint: 'dark',
 };
@@ -2478,7 +2480,7 @@ const JOB_GUIDE_META = {
     assassin:      { emoji: '🗡️', fullName: '暗殺者', note: '【闇属性・潜伏&遠距離特化】\n「忍び足」2マス移動+罠設置+弓系ダメ+1。「デコイ人形」隣に囮(HP1)→潜伏状態に(回数3)。\n「曲射」r3岩越し/威1/吹飛(回数5)。「速射」直線5/威2×2(回数5)。「遠距離狙撃」直線8/威4/AP-1(回数5)。\n★スキル「隠伏天誅」：2T潜伏+AP+1。永続的に武器が毒武器化(以降の全攻撃に毒付与)。' },
     infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「哨戒歩き」2マス移動後r5敵アビ-1＋全罠解除(回5)。「築城」正面3岩+足元大砲(1T)。「突撃陣形」r1の空きマスを2か所選んで槍兵→弓兵を召喚(次T開始時消滅)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP8/AP2)を召喚。5T生存でスキル解放。' },
     mage:          { emoji: '🔮', fullName: '魔法使い', note: '【中〜遠距離魔法型・多属性】\n「魔法弾」r3/威2(回数7)。「風魔法」r2吹飛/威1(回3)。「氷魔法」水/r2凍結(回3)。\n「雷魔法」光属性/r2半径1AoE/威2/AP-2/目潰し(回数5)。「召喚魔法」r1モンスター召喚(回3)。「障壁魔法」r5味方全バリア。「瞑想」AP-2→全アビ+1(回1)。\n★スキル「大火球魔法」：半径5の敵に6ダメ+AP-1+吹飛(火属性)。着弾隣接の敵にも2ダメ+目潢し。' },
-    thief:         { emoji: '🎩', fullName: '泥棒', note: '【逃げ足と妨害特化】\n「逃げダッシュ」10回。「煙幕」r2AP-1+吹飛+潜伏。「炭鉱夫呼び」5T後/HP3の助っ人召喚。\n「爆弾クラッカー」r2投/半径1爆発/威2+潜伏(回5)。「スキルジャック」r3全敵2アビ-1+1T封印/自2アビ+1(回5)。「アクロバット」1T行動力+1(回数5)。\n★スキル「コピー」：半径2の敵1体のスキルをコピー→そのターンから使用可能。コピーされた敵はスキル使用不可。' },
+    thief:         { emoji: '🎩', fullName: '泥棒', note: '【逃げ足と妨害特化】\n「逃げダッシュ」10回。「煙幕」r2AP-1+吹飛+潜伏。「炭鉱夫呼び」5T後/HP3の助っ人召喚。\n「爆弾クラッカー」r2投/半径1爆発/威2+潜伏(回5)。「窃盗」r1/威2/闇/敵アビ1種封印+1T借用(使用で相手回数-1)(回5)。「スキルジャック」r3全敵2アビ-1+1T封印/自2アビ+1(回5)。「アクロバット」1T行動力+1(回数5)。\n★スキル「コピー」：半径2の敵1体のスキルをコピー→そのターンから使用可能。コピーされた敵はスキル使用不可。' },
     beastmaster:   { emoji: '🐾', fullName: '獣使い', note: '【草属性・召喚獣3種・制圧型】\n「オオカミの噛みつき」r1/2ダメ→敵隣にオオカミ召喚(HP2/AP3)。回数5\n「ハヤブサ突撃」直線3/2ダメ→敵隣にハヤブサ召喚(HP3/AP2/飛行)。回数5\n「ヘビ投げ」r2/1ダメ→敵隣に毒蛇召喚(HP1/AP2/毒噛み2ダメ+毒+目潰し)。回数5\n「癒しの笛」r8味方全HP+1＋1Tバリア。回数5\n「テイム」r3の敵モンスターを永久味方化(5T後)。回数5\n「獣融合」隣の味方吸収1T/HP/AP/ATK+1。回数5\n「遠吠え」射程(2+近隣味方数)内ATK+1・敵AP-1+3封印。回数5\n★スキル「ドラゴン召喚」：5T以降。半径2の空きマスに竜(HP7/AP2/飛行/火炎ブレス∞/噛みつき∞/ヘルブレス1)を召喚(火属性)。' },
     macho:         { emoji: '💪', fullName: 'マッチョ', note: '【岩操作・高火力近接型】\n「岩ダッシュ」岩を踏み台に2マス移動。「岩雪崩」r3/2ダメ+周囲に岩3個落下(回数5)。\n「岩投げ」直線投擲/威2。「岩落とし強」r2/威2/AP-1+岩設置。「石拳」r1/威2。\n「岩隠れ」1T無敵バリア→破られたら後退+岩設置。「通せんぼ」前方3マス幅に岩設置(次T消滅)。\n「ゴーレム制作」r1の全岩消費→ゴーレム召喚(HP=岩数×2)。5T後から可。\n★スキル「ドーピング」：2T間AP+1・ATK+1・射程+1・全アビ+1。終了後次Tにペナルティあり。' },
     cyborg:        { emoji: '⚙️', fullName: '機械兵', note: '【電力管理・全距離対応型】\n「電力補給」AP-1/HP+5(回5)。「ジェットブースト」r2飛行移動/AP-1/HP-1(回5)。\n「レーザーブレード」r1/威3/HP-1/AP-1(回5)。「薙ぎ払い」r2弧/威2/吹飛(回5)。\n「レーザースナイプ」直線5/威4(回5)。「レーザーバズーカ」r1爆風/威3(回5)。\n「焼却砲」直線3/威5/燃焼2T(回5)。「偵察ドローン」情報収集(回2)。「EMPフィールド」r3全敵AP-2/封印(回5)。\n★スキル「リミッター解除」：2T目以降使用可。HP+10・AP+1・全アビ+1・射程+2。2T継続・毎ターン3自傷。' },
@@ -6384,6 +6386,14 @@ function processTurnStartEffects(e) {
     if (e.stolenLock) {
         for (let k of Object.keys(e.stolenLock)) { if (e.stolenLock[k] <= turn) delete e.stolenLock[k]; }
     }
+    // 窃盗で借りたアビリティを翌ターン開始時に削除
+    if (e.theftStolen && e.theftStolen.expires <= turn) {
+        if (e.abilities[e.theftStolen.key] !== undefined) {
+            if (e.abilities[e.theftStolen.key] <= 1 || e.abilities[e.theftStolen.key] === 999) delete e.abilities[e.theftStolen.key];
+            else e.abilities[e.theftStolen.key]--;
+        }
+        delete e.theftStolen;
+    }
     // Mountain cable car: AP+2 bonus while stopped on cable tile/board (applied last so no buff-expiry override)
     if (activeStage === 'mountain' && ['cable_tile','cable_board'].includes(board[e.r]?.[e.c])) {
         e.ap = e.maxAp + 2;
@@ -8103,6 +8113,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'healing_flute') return maxDist === 0;
     if (mode === 'howl') return maxDist === 0;
     if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
+    if (mode === 'theft') return maxDist === 1 && target && target.team !== se.team && target.hp > 0;
     if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'bite') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'throw_net') return maxDist <= 2 + (se.rangeBonus||0) && target && target.team !== se.team;
@@ -9961,6 +9972,31 @@ function handleAbilityTarget(r, c, targetEntity) {
             stealMsgs.push(`「${ABILITY_NAMES[k]||k}」奪取`);
         }
         msg(`強奪！${stealMsgs.length>0 ? stealMsgs.join('・')+'！' : 'しかし奪えるものが無かった…'}`); used = true;
+    } else if (actionMode === 'theft') {
+        se.abilities['theft']--;
+        // 2ダメ（闇属性）
+        let _theftDmg = 2 + (se.atkBonus||0);
+        if (!targetEntity.invin) {
+            targetEntity.hp -= _theftDmg;
+            msg(`🔪 窃盗！${targetEntity.name}に${_theftDmg}ダメ！`);
+        } else {
+            msg(`🔪 窃盗！${targetEntity.name}はバリアで防いだ！`);
+        }
+        // 封印＆一時借用するアビリティを選ぶ
+        let _theftPool = Object.keys(targetEntity.abilities||{}).filter(k => k !== 'drop_rock' && (targetEntity.abilities[k]||0) > 0 && targetEntity.abilities[k] !== 999);
+        if (_theftPool.length > 0) {
+            let _theftKey = _theftPool[Math.floor(Math.random() * _theftPool.length)];
+            if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
+            targetEntity.stolenLock[_theftKey] = turn + 1;
+            // 自分のアビリティに一時追加（既存があれば上書きしない、ただし回数1で追加）
+            if (!se.abilities[_theftKey] || se.abilities[_theftKey] === 0) se.abilities[_theftKey] = 1;
+            else se.abilities[_theftKey] = (se.abilities[_theftKey] === 999 ? 999 : se.abilities[_theftKey] + 1);
+            se.theftStolen = { key: _theftKey, fromId: targetEntity.id, expires: turn + 1 };
+            msg(`🔓 「${ABILITY_NAMES[_theftKey]||_theftKey}」を封印＆一時借用！このターン1回使用可（使用で相手の回数-1）`, true);
+        } else {
+            msg(`しかし封印できるアビリティが無かった…`, true);
+        }
+        used = true;
     } else if (actionMode === 'miner_call') {
         se.abilities['miner_call']--;
         entities.push({ id: 'miner'+Date.now(), type: 'miner', name: '炭鉱', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { shatter: 999, dig: 999, punch: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, atkBonus: 0, turnBorn: turn });
@@ -13294,6 +13330,18 @@ function handleAbilityTarget(r, c, targetEntity) {
             });
         if (_iaiHits > 0) msg(`⚔️ ${targetEntity.name}の居合カウンター！半径3の敵${_iaiHits}体に${_iaiDmg}ダメ！`, true);
         checkWin();
+    }
+    // 窃盗で借りたアビリティを使用した場合、相手の使用回数を-1し借用を終了
+    if (se.theftStolen && used && se.theftStolen.key === actionMode) {
+        let _theftSrcE = entities.find(e => e.id === se.theftStolen.fromId);
+        if (_theftSrcE && _theftSrcE.abilities[se.theftStolen.key] !== undefined && _theftSrcE.abilities[se.theftStolen.key] !== 999) {
+            _theftSrcE.abilities[se.theftStolen.key] = Math.max(0, _theftSrcE.abilities[se.theftStolen.key] - 1);
+        }
+        // 借用アビリティを自分のリストから削除
+        if (se.abilities[se.theftStolen.key] !== undefined && se.abilities[se.theftStolen.key] !== 999) {
+            if (se.abilities[se.theftStolen.key] <= 0) delete se.abilities[se.theftStolen.key];
+        }
+        delete se.theftStolen;
     }
     if (used) {
         { const _ts = tutorialStep;
