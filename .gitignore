@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# DB backups (contain personal data — do not commit)
+backups/
