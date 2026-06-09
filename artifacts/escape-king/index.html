@@ -1636,9 +1636,18 @@ function applyRpDelta(delta) {
 function getRankWinStreak() { return parseInt(localStorage.getItem('rankWinStreak') || '0', 10); }
 function setRankWinStreak(n) { localStorage.setItem('rankWinStreak', String(Math.max(0, n))); }
 function resetMatchStats() {
-    matchStats = { totalDamageDealt: 0, abilityUseCount: 0, skillUsed: false, tookDamage: false, wasNearDeath: false, reachedEnemyTerritory: false };
+    matchStats = { totalDamageDealt: 0, abilityUseCount: 0, skillUsed: false, tookDamage: false, wasNearDeath: false, reachedEnemyTerritory: false, minesCollected: 0, initialMineCount: 0, itemsCollected: 0, initialItemCount: 0 };
     _rankEnemyHpSnapshot = 0;
     _rankMyJobHpPrev = null;
+}
+function snapshotInitialCounts() {
+    let mines = 0, items = 0;
+    for (let r2 = 0; r2 < SIZE; r2++) for (let c2 = 0; c2 < SIZE; c2++) {
+        if (board[r2][c2] === 'mine') mines++;
+        if (board[r2][c2] === 'item_tile') items++;
+    }
+    matchStats.initialMineCount = mines;
+    matchStats.initialItemCount = items;
 }
 function computeLocalBonuses(won, stats) {
     const bonuses = [];
@@ -1649,6 +1658,8 @@ function computeLocalBonuses(won, stats) {
         if ((stats.turnCount || 999) <= 8) bonuses.push({ label: '⚡ 早期決着', rp: 2 });
         if ((stats.abilityUseCount || 999) <= 1) bonuses.push({ label: '🎯 アビリティ節約', rp: 1 });
         if (!stats.skillUsed) bonuses.push({ label: '🔒 スキル温存', rp: 1 });
+        if ((stats.initialMineCount || 0) > 0 && (stats.minesCollected || 0) >= stats.initialMineCount) bonuses.push({ label: '⛏️ 鉱山全採掘', rp: 2 });
+        if ((stats.initialItemCount || 0) > 0 && (stats.itemsCollected || 0) >= stats.initialItemCount) bonuses.push({ label: '🎁 アイテム全回収', rp: 2 });
         const streak = stats.winStreak || 0;
         if (streak >= 5) bonuses.push({ label: `🔥 ${streak}連勝`, rp: 3 });
         else if (streak >= 3) bonuses.push({ label: `🔥 ${streak}連勝`, rp: 2 });
@@ -4006,6 +4017,7 @@ function startCpuRankedMatch() {
 
     initBoard(activeStage);
     initEntities(job, String(diff));
+    snapshotInitialCounts();
     // Trim excess extra CPU entities so total CPU count matches cpuCount
     // (addExtraEnemies spawns diff-1 extras; we want cpuCount-1 extras)
     {
@@ -4940,6 +4952,7 @@ function startGame() {
         
         initBoard(activeStage);
         initEntities(job, difficulty);
+        snapshotInitialCounts();
         showVictoryCondition(job);
         
         document.getElementById('home-screen').style.display = 'none';
@@ -8799,7 +8812,7 @@ function setMode(mode) {
             if(nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
             let mgTile = board[nr]?.[nc];
             if(['rock','mine','volcano','gravestone'].includes(mgTile)) {
-                if(mgTile==='mine') breakMine(nr,nc);
+                if(mgTile==='mine') breakMine(nr,nc,se.team);
                 if(mgTile==='volcano') breakVolcano();
                 if(mgTile==='gravestone') spawnAt('spirit',nr,nc);
                 board[nr][nc]=defaultGround(); rockCount++;
@@ -8924,6 +8937,7 @@ function checkTileEffects(entity) {
         board[r][c] = defaultGround();
         delete itemTileMap[`${r},${c}`];
         eventMsg = applyItem(entity, item);
+        if (entity.team === 'player') matchStats.itemsCollected = (matchStats.itemsCollected || 0) + 1;
         if (tutorialMode && tutorialStep === 15 && entity.team === 'player') advanceTutorial();
     } else if (board[r] && board[r][c] === 'dungeon_chest') {
         board[r][c] = 'dungeon_ground';
@@ -9204,7 +9218,7 @@ function handleTileClick(vr, c) {
                 if (isInvinKing) {
                     let t = board[r]?.[c];
                     if (['rock', 'mine', 'volcano'].includes(t)) {
-                        if (t === 'mine') breakMine(r, c);
+                        if (t === 'mine') breakMine(r, c, selectedEntity.team);
                         board[r][c] = 'plains';
                         msg("👑 無敵の王が岩を砕いて突き進んだ！");
                     } else {
@@ -9268,7 +9282,7 @@ function handleTileClick(vr, c) {
                             msg("険しい斜面に足を取られ、行動力が追加で1減少した！（ケーブルカーが有利）");
                         }
                     }
-                    if (board[r] && board[r][c] === 'mine') { board[r][c] = defaultGround(); breakMine(r, c); }
+                    if (board[r] && board[r][c] === 'mine') { board[r][c] = defaultGround(); breakMine(r, c, selectedEntity.team); }
                     else if (board[r] && board[r][c] === 'trap') {
                         let tKey = `${r},${c}`;
                         if (!selectedEntity.flying && trapOwnerMap[tKey] !== selectedEntity.team) {
@@ -9562,9 +9576,9 @@ function handleAbilityTarget(r, c, targetEntity) {
             let wasCoralReef = board[r][c] === 'coral_reef';
             let wasMine = board[r][c] === 'mine';
             let wasVolcano = board[r][c] === 'volcano';
-            if (board[r][c] === 'mine') breakMine(r, c);
+            if (board[r][c] === 'mine') breakMine(r, c, entity.team);
             if (board[r][c] === 'volcano') breakVolcano();
-            if (wasGoldenCoral) breakMine();
+            if (wasGoldenCoral) breakMine(undefined, undefined, entity.team);
             let wasCar = board[r][c] === 'car_tile';
             let wasGravestone = board[r][c] === 'gravestone';
             board[r][c] = defaultGround();
@@ -14462,7 +14476,8 @@ function executeRushSkill(se, targetR, targetC, mode) {
     });
 }
 
-function breakMine(mineR, mineC) {
+function breakMine(mineR, mineC, callerTeam) {
+    if (callerTeam === 'player') matchStats.minesCollected = (matchStats.minesCollected || 0) + 1;
     let posKey = (mineR !== undefined && mineC !== undefined) ? `${mineR},${mineC}` : null;
     let t;
     if (posKey && copperForcedMines.has(posKey)) {
