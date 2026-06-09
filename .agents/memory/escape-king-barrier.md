@@ -6,16 +6,18 @@ description: How invin/barrier works — absorbs 1 hit then breaks; if not hit e
 ## Rule
 Barrier (`invin=true`) absorbs exactly 1 attack hit, then disappears immediately. If never hit, it expires at the START of the next turn (via `invinTimer` decrement in `processTurnStartEffects`).
 
-**Why:** Old behavior let barrier survive the full turn regardless of hits — too strong per design intent.
+**Exception**: `invinTimer === 999` = permanent invincibility (e.g. train NPC). Never break these.
+
+**Why:** Design intent — every barrier, including counter (王/竜人族), should absorb exactly one hit.
 
 ## How to apply
 - Setting a barrier: `e.invin = true; e.invinTimer = Math.max(e.invinTimer||0, 1);`
-- Breaking on hit: at the END of `handleAbilityTarget`, AFTER the ability handler runs (which already blocked damage via `if (!e.invin)`), there is a post-attack hook:
-  ```js
-  if (targetEntity && targetEntity.team !== se.team && targetEntity.invin && attackModes.includes(actionMode)) {
-      targetEntity.invin = false; targetEntity.invinTimer = 0;
-  }
-  ```
-- Iai counter also breaks barriers on hits it delivers to each entity.
-- AoE ability barrier breaks are NOT automatically handled by the post-hook (only direct `targetEntity` hits). AoE-specific barrier break must be added per-ability if needed.
+- Helper function `breakBarrierOnHit(t, se, dmg)` (defined just before `applyCounterReflect`):
+  - If `t.counterBarrierActive`: calls `applyCounterReflect(se, t, dmg, 0)` which reflects damage AND breaks invin
+  - Else: sets `invin=false, invinTimer=0` and shows message
+  - Guard: returns early if `!t.invin || t.invinTimer === 999`
+- Single-target: post-attack hook in `handleAbilityTarget` calls `breakBarrierOnHit(targetEntity, se, 0)` when `targetEntity.team !== se.team && targetEntity.invin && invinTimer !== 999`
+- AoE loops: every `if (!t.invin) { damage }` in handleAbilityTarget AND in cpuTurn has `else { breakBarrierOnHit(t, se, dmg); }` added
+- Counter barrier (`counterBarrierActive`): `applyCounterReflect` is also called explicitly per-ability for the reflect effect; `breakBarrierOnHit` handles AoE cases that don't call it explicitly
+- Iai counter also breaks barriers via its own forEach (line ~13220)
 - `invinTimer` expiry at turn start handles the "not hit" case — no code change needed there.

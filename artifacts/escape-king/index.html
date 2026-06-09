@@ -9481,6 +9481,16 @@ function sentaiProcessDamage(se, prevHp) {
     se._prevTurnHp = se.hp;
 }
 
+function breakBarrierOnHit(t, se, dmg) {
+    if (!t || !t.invin || t.invinTimer === 999) return;
+    if (t.counterBarrierActive) {
+        applyCounterReflect(se, t, dmg||0, 0);
+    } else {
+        t.invin = false; t.invinTimer = 0;
+        msg(`🛡️ ${t.name}のバリアが攻撃を受けて消滅！`, true);
+    }
+}
+
 function applyCounterReflect(attacker, defender, dmg, apLost, burnStacks) {
     if (!defender || !defender.counterBarrierActive || attacker.invin) return;
     if (dmg > 0) attacker.hp = Math.max(0, attacker.hp - dmg);
@@ -9833,6 +9843,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (e !== se && e.team !== se.team && e.hp > 0 && !e.stealth) {
                 if (Math.max(Math.abs(se.r - e.r), Math.abs(se.c - e.c)) <= 1) {
                     if (!e.invin) { e.hp -= 2; e.ap--; knockback(e, 1, se); }
+                    else { breakBarrierOnHit(e, se, 2); }
                 }
             }
         });
@@ -10057,6 +10068,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) <= 3) {
                 if (!t.invin) { t.hp -= 3; t.ap = Math.max(0,t.ap-1); knockback(t,1,se); hbHit++; }
+                else { breakBarrierOnHit(t, se, 3); }
             }
         });
         msg(`🔥 ヘルブレス！半径3マスの敵${hbHit}体に3ダメ・AP-1・吹き飛ばし！`); used = true;
@@ -10066,6 +10078,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c)) <= 1) {
                 if (!t.invin) { t.hp -= 2; t.ap = Math.max(0,t.ap-2); applyBlind(t); tmHit++; }
+                else { breakBarrierOnHit(t, se, 2); }
             }
         });
         lightCastEffect(r, c);
@@ -10276,6 +10289,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=2) {
                 if (!t.invin) { t.hp -= 2; knockback(t,1,se); applyBlind(t); swpHit++; }
+                else { breakBarrierOnHit(t, se, 2); }
             }
         });
         msg(`⚔️ 薙ぎ払い！反動2ダメ・半径2マスの敵${swpHit}体に2ダメ・吹き飛ばし・目潰し！`); used = true;
@@ -10296,6 +10310,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
                 if (!t.invin) { t.hp -= 3; knockback(t,1,se); applyBlind(t); pbHit++; }
+                else { breakBarrierOnHit(t, se, 3); }
             }
         });
         msg(`💥 レーザーバズーカ！反動2ダメ・ターゲット周囲の敵${pbHit}体に3ダメ・吹き飛ばし・目潰し！`); used = true;
@@ -10401,6 +10416,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (t) {
                 let dmg = (se.jugglingPower||1) + (se.atkBonus||0);
                 if (!t.invin) { t.hp -= dmg + (t.defDebuff||0); t.ap = Math.max(0,t.ap-1); }
+                else { breakBarrierOnHit(t, se, dmg); }
                 applyCounterReflect(se, t, dmg + (t.defDebuff||0), 1);
                 se.jugglingPower = (se.jugglingPower||1)+1;
                 if (se.abilities['knife_juggling']!==999) se.abilities['knife_juggling']++;
@@ -10441,6 +10457,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             let t=entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc&&e.team!==se.team);
             if (t) {
                 if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r:nr-dr,c:nc-dc}); }
+                else { breakBarrierOnHit(t, se, 2); }
                 applyCounterReflect(se, t, 2 + (t.defDebuff||0) + (se.atkBonus||0), 0);
                 msg(`🎡 玉乗り！${t.name}を蹴散らし！2ダメ・吹き飛ばし！`); hitEnemy=true;
                 if (isWalkable(nr,nc)&&!entities.some(e=>e.hp>0&&e.r===nr&&e.c===nc&&e!==t)) { se.r=nr; se.c=nc; moved=step; }
@@ -10488,6 +10505,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t=>{
             if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-r),Math.abs(t.c-c))<=1) {
                 if (!t.invin) { t.hp-=2+(t.defDebuff||0)+(se.atkBonus||0); knockback(t,1,{r,c}); applyBlind(t); hitCount++; }
+                else { breakBarrierOnHit(t, se, 2); }
                 applyCounterReflect(se, t, 2 + (t.defDebuff||0) + (se.atkBonus||0), 0);
             }
         });
@@ -10508,6 +10526,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t=>{
             if (t.hp>0&&t.team!==se.team&&Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
                 if (!t.invin) { t.hp-=1+(t.defDebuff||0); hitCount++; }
+                else { breakBarrierOnHit(t, se, 1); }
             }
         });
         msg(`🥁 シンバル騒音！周囲1マスの敵${hitCount}体に1ダメ！`); used = true;
@@ -10729,7 +10748,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                         t.sealedAbilities[k]=(t.sealedAbilities[k]||0)+1;
                         if(!(t.empSealTimer>0)) t.empSealTimer=1;
                     }
-                }
+                } else { breakBarrierOnHit(t, se, roarDmg); }
             }
         });
         msg(`🌿 咆哮！半径${rRange}マスの敵${rHit}体に${roarDmg}ダメ・AP-1・ランダム3アビ封印！`); used = true;
@@ -10765,6 +10784,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
                 if (!t.invin) { t.hp -= 2; knockback(t,1,se); rsHit++; }
+                else { breakBarrierOnHit(t, se, 2); }
                 applyCounterReflect(se, t, 2 + (t.defDebuff||0), 0);
             }
         });
@@ -10803,6 +10823,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                 let td = Math.sign(t.r-se.r), tc = Math.sign(t.c-se.c);
                 if (!(td===tsDr && tc===tsDc)) {
                     if (!t.invin) { t.hp -= 2; knockback(t,1,se); tsHit++; }
+                    else { breakBarrierOnHit(t, se, 2); }
                 }
             }
         });
@@ -11517,7 +11538,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                     let dsKs = Object.keys(t.abilities||{}).filter(k=>k!=='drop_rock'&&(t.abilities[k]>0||t.abilities[k]===999));
                     sealAbilities(t, dsKs.sort(()=>Math.random()-0.5).slice(0,5), 1);
                     t.skillUsed = true; dsHits++;
-                }
+                } else if (t.invin) { breakBarrierOnHit(t, se, dsDmg); }
             }
         });
         se.fallenGauge = (se.fallenGauge||0) + 1;
@@ -12246,6 +12267,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             if (Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) > 1) return;
             let _fgDmg = 4 + (se.atkBonus||0) + (t.defDebuff||0);
             if (!t.invin) { t.hp -= _fgDmg; knockback(t, 1, se); _fgHits++; }
+            else { breakBarrierOnHit(t, se, _fgDmg); }
         });
         msg(`🔥 憤怒激昂！半径1全体4ダメ+吹飛(命中${_fgHits}体)！ゲージ-1(残${se.senninGauge})！`); used = true;
     } else if (actionMode === 'kako_tosen') {
@@ -12269,7 +12291,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                         break;
                     }
                 }
-            }
+            } else { breakBarrierOnHit(t, se, _ktDmg); }
         });
         msg(`🌿 羽化登仙！半径2全体3ダメ(命中${_ktHits}体)！命中敵の隣に種植え！ゲージ-1(残${se.senninGauge})！`); used = true;
     } else if (actionMode === 'kyoshin_tankai') {
@@ -12415,7 +12437,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                     for (let _ki=0; _ki<4&&_ks2.length>0; _ki++) { let _kk=_ks2.splice(Math.floor(Math.random()*_ks2.length),1)[0]; se.abilities[_kk]++; }
                     msg(`⚔️ 討ち取った！HP+2＋4アビ+1！`);
                 }
-            }
+            } else { breakBarrierOnHit(t, se, _srBaseDmg); }
         });
         se.ap = Math.max(0, se.ap - 1);
         if (se.abilities['shura_ranbu'] !== 999) se.abilities['shura_ranbu']--;
@@ -12494,7 +12516,7 @@ function handleAbilityTarget(r, c, targetEntity) {
                     for (let _ki=0; _ki<4&&_ks4.length>0; _ki++) { let _kk=_ks4.splice(Math.floor(Math.random()*_ks4.length),1)[0]; se.abilities[_kk]++; }
                     msg(`⚔️ ${t.name}を討ち取った！HP+2＋4アビ+1！`);
                 }
-            }
+            } else { breakBarrierOnHit(t, se, _ogBaseDmg); }
         });
         let _ogState = se.hp <= 10 ? '【阿修羅】' : se.hp <= 20 ? '【修羅】' : '';
         msg(`👹 鬼斬り${_ogState}！半径${_ogRadius}の敵${_ogHits}体に闇${_ogBaseDmg}ダメ＋AP-2！`);
@@ -13197,10 +13219,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.fallenGauge = (se.fallenGauge||0) + 1;
     }
     // バリアブレイク: 攻撃でバリアを1ヒット破壊（ダメージ吸収→消滅）
-    if (targetEntity && targetEntity.team !== se.team && targetEntity.invin && attackModes.includes(actionMode)) {
-        targetEntity.invin = false;
-        targetEntity.invinTimer = 0;
-        msg(`🛡️ ${targetEntity.name}のバリアが攻撃を受けて消滅！`, true);
+    if (targetEntity && targetEntity.team !== se.team && targetEntity.invin && targetEntity.invinTimer !== 999) {
+        breakBarrierOnHit(targetEntity, se, 0);
     }
     // 居合カウンター: iai状態の人斬り武者が攻撃を受けた時に反撃
     if (targetEntity && targetEntity._iaiActive && targetEntity.team !== se.team && attackModes.includes(actionMode)) {
@@ -14064,6 +14084,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
                 entities.forEach(t => {
                     if (t.hp>0 && t.team!==se.team && t.r===wr && t.c===wc && !t.flying) {
                         if (!t.invin) { t.hp-=3; t.ap=Math.max(0,t.ap-2); t.poisonTimer=(t.poisonTimer||0)+3; rbHit++; }
+                        else { breakBarrierOnHit(t, se, 3); }
                     }
                 });
             }
@@ -14102,6 +14123,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
             entities.forEach(t => {
                 if (t.hp>0 && t.team!==se.team && t.r===cr && t.c===cc) {
                     if (!t.invin) { t.hp-=5; t.ap=Math.max(0,t.ap-1); knockback(t,1,se); drHit++; }
+                    else { breakBarrierOnHit(t, se, 5); }
                 }
             });
         }
@@ -16394,8 +16416,8 @@ function npcLogic() {
                     if (!t.invin) {
                         t.hp -= 1;
                         if (Math.random() < 0.5) t.ap = Math.max(0, t.ap - 1);
-                    }
-                    msg(`🐙 クラーケンの触手！${t.name}に1ダメージ${t.invin?'(無敵で軽減)':''}！`, true);
+                    } else { breakBarrierOnHit(t, n, 1); }
+                    msg(`🐙 クラーケンの触手！${t.name}に1ダメージ${t.invin?'(バリア消滅)':''}！`, true);
                 });
                 n.ap--;
             } else {
@@ -16552,9 +16574,11 @@ function npcLogic() {
                 let d = Math.max(Math.abs(n.r-t.r), Math.abs(n.c-t.c));
                 if (n.abilities.ice_throw && d <= 3) {
                     if (!t.invin) { t.hp -= 2; if (Math.random() < 0.5) { t.ap = Math.max(0, t.ap-1); msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ、AP-1！`, true); } else { msg(`❄️ イエティの氷投げ！${t.name}に2ダメージ！`, true); } knockback(t, 1, n); }
+                    else { breakBarrierOnHit(t, n, 2); }
                     n.ap--;
                 } else if (d <= 1) {
                     if (!t.invin) { t.hp -= 2; knockback(t, 1, n); }
+                    else { breakBarrierOnHit(t, n, 2); }
                     msg(`❄️ イエティの体当たり！${t.name}に2ダメージ！`, true);
                     n.ap--;
                 } else {
