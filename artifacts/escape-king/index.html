@@ -1274,6 +1274,7 @@ let selectedEntity = null;
 let actionMode = 'move';
 let turn = 1;
 let tempRocks = [];
+let orcaCannonWaterTurn = -1; // gang_orca_cannon使用ターン：このターン大砲命中で着地マス水化
 let waterHitsMap = {};      // "r,c" → extra hits to convert shallow_water → deep_water
 let vortexTiles = [];       // [{r,c,expireOnTurn}] temporary vortex tiles from 渦潮
 let rainbowTileMap = {};    // "r,c" -> {origTile, ownerTeam} rainbow tiles placed by painter
@@ -2019,6 +2020,7 @@ const ABILITY_NAMES = {
     hide_steal: '💣隠れて奪う(1T潜伏/直線3爆弾/2ダメ/吹飛/半径1スプラッシュ/全ゲージ譲渡/G+5)',
     pirate_flag: '🏴‍☠️海賊旗(r2内設置/5T~/敵-1/味方+1)',
     orca_cannon: '💣シャチ大砲(直線8/威4/吹飛/G+5)',
+    gang_orca_cannon: '🐳海洋大砲(r1オルカ召喚/大砲×2設置/着地水化/1T)',
     hashitte_neru: '🏃走って寝る(2マスダッシュ/HP+1/2アビ+1/被ダメ+1(1T))',
     chimatsuri_giri: '⚔️血祭り斬り(r1/威3+AP-1/闇/被ダメ+1(1T))',
     ono_renbu: '🪓斧連舞(r1/威3+2+AP-1/火/次T攻撃-1)',
@@ -2268,6 +2270,7 @@ const ABILITY_TIPS = {
     hide_steal: '死角から爆弾を投げつける。シャチは1ターン潜伏状態になる。直線3マス以内の敵に闇属性2ダメ＋後方吹き飛ばし。爆発の半径1マス内にいる別の敵にも1ダメージ。選ばれた敵の全ゲージ・攻撃ボーナス・レベル・所持アイテムをシャチに譲渡する。使用後ウォーターゲージ+5。回数5。',
     pirate_flag: '半径2マス以内の空きマスに海賊旗(HP1/AP0)を設置。旗の半径2マス内：敵はターン開始時にランダム1アビリティ-1＋HP-1、味方は同量+1。5ターン経過後に使用可能。回数5。',
     orca_cannon: '正面直線8マスの敵1体に4ダメ＋後方吹き飛ばし。長距離狙撃。使用後ウォーターゲージ+5。回数5。',
+    gang_orca_cannon: '半径1マスの空きマスにギャングオルカ(HP3/AP2)を召喚。シャチ自身の足元とギャングオルカの足元に大砲マスを設置する。大砲マスは翌ターン開始時に元のマスに戻る。このターン中に大砲で吹き飛ばされた敵の着地マスが浅瀬（shallow_water）に変わる。回数5。',
     hashitte_neru: '走って寝る：2マスダッシュ後HP+1・ランダム2アビ+1。デメリット：自分の被ダメ+1(1T)。',
     chimatsuri_giri: '血祭り斬り：隣接敵に3ダメ+AP-1(闇属性)。デメリット：自分の被ダメ+1(1T)。',
     ono_renbu: '斧連舞：隣接敵に3ダメ+2ダメの2段攻撃+AP-1(火属性)。デメリット：次Tの自分の攻撃力-1。',
@@ -2302,7 +2305,7 @@ const JOB_DATA = {
     mandrake: { name: 'マンドレイク', abilities: { drop_rock: 999, shatter: 5, dash: 5, branch_whip: 5, plant_wall: 3, fusion: 3, seed_bazooka: 5, root_spread: 3, roar: 5 }, hp: 30, ap: 2 },
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, punch: 10, flying_kick: 5, wave_shot: 5, rapid_strikes: 5, throw_enemy: 5, tail_swing: 5, counter: 3, ryujin_transform: 2, afterimage: 3 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 3, bite: 5, throw_net: 3, whirlpool_atk: 3, octopus_summon: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
-    orca_pirate: { name: 'シャチ海賊', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, orca_bite: 5, anchor_throw: 5, skill_jack: 5, mugging: 5, hide_steal: 5, pirate_flag: 5 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
+    orca_pirate: { name: 'シャチ海賊', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, orca_bite: 5, anchor_throw: 5, skill_jack: 5, mugging: 5, hide_steal: 5, pirate_flag: 5, gang_orca_cannon: 5 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 5, ball_ride: 5, acrobat: 5, aerial_trapeze: 5, bomb_cracker: 5, monkey_toy: 5 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 10, swamp_magic: 3, soul_absorb: 1, bone_armor: 3, skull_head: 1, necro_bind: 5, necro_summon: 5, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
@@ -2403,6 +2406,7 @@ const ABILITY_ELEMENT = {
     ryuen: 'fire', shinkou: 'light',
     skill_ryujin_korin: 'light',
     orca_bite: 'dark', anchor_throw: 'dark', skill_jack: 'water', mugging: 'dark', hide_steal: 'dark', pirate_flag: 'dark', orca_cannon: 'dark',
+    gang_orca_cannon: 'water',
     theft: 'dark',
     chimatsuri_giri: 'dark', ono_renbu: 'fire', kaiten_giri: 'fire', ono_nage: 'grass',
     red_paint: 'fire', blue_paint: 'water', green_paint: 'grass', white_paint: 'light', black_paint: 'dark',
@@ -2502,7 +2506,7 @@ const JOB_GUIDE_META = {
     hitokiri_musha: { emoji: '⚔️', fullName: '人斬り武者', note: '【火炎×冥府の呪われ二刀剣士】毎ターン自傷1ダメ(10T後は2ダメ)・属性が炎/闇で交替。\nHP≤20で【修羅】化(1Tバリア+AP+1)、HP≤10で【阿修羅】化(1Tバリア+AP+2+ATK+1+全アビ+1)。\n敵を討ち取るとHP+2+4アビ+1。陣地突破勝利なし(撃破のみで勝利)。\n業火の呪い：技で付与、毎T1ダメ(3T持続)。\n「阿鼻叫喚」：前方に業火地獄マス展開・敵は毎T1ダメ。\n★スキル「冥府送り」：半径5の敵全員を相手陣地奥へ強制転送！' },
     guru: { emoji: '⛪', fullName: '教祖', note: '【神ゲージ制・予知警告システム】毎ターン開始時に神ゲージ+1・属性が光/水で交替(奇数=光/偶数=水)。\n予知警告アビリティは発動ターンに警告マスを表示し、翌ターン開始時に効果発動。\n「降臨」ダッシュで信者(HP1/AP2/自爆特攻)を元の場所に召喚。ゲージ+1。ゲージ≥5なら1Tバリア。\n信者撃破時：教祖HP+1・ゲージ+1。\n★スキル「終末論」：ゲージ最大8消費→1Tバリア→消費数分の天罰技を同時即時発動！' },
     miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
-    orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
+    orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n「海洋大砲」r1にオルカ召喚＋自分とオルカ足元に大砲設置(1T)。このターン大砲被弾の着地が浅瀬に変化(回5)。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
     barbarian: { emoji: '🪓', fullName: 'バーバリアン', note: '【火闇草ランダム三属性・野生の戦士】毎ターン開始時に属性が火/闇/草からランダム変化。\n「走って寝る」：2マスダッシュ→HP+1+ランダム2アビ+1/被ダメ+1(1T)。\n「血祭り斬り(闇)」：r1 3ダメ+AP-1/被ダメ+1(1T)。「斧連舞(火)」：r1 3+2ダメ+AP-1/次T攻撃-1。\n「回転斬り(火)」：r1全敵3ダメ+後退/被ダメ+1(1T)。「嗅覚追跡」：1T潜伏+AP+1+r3敵2アビ封印。\n「斧投げ(草)」：直線4 4ダメ/次T攻撃-1。「群れで刈る」：前方クローン(HP1/1T)/被ダメ+1(1T)。\n「雄叫び」：r2全敵AP-1+2abi封印/r2味方1Tバリア。\n★スキル「野生の解放」：3T狂戦士(毎T HP-2/AP+1/ATK+1/被ダメ+1)。狂戦士中は三属性同時弱点判定！' },
     painter: { emoji: '🎨', fullName: '絵描き', note: '【イマジネーションゲージ・5色混合システム】毎ターン開始時IG+1＋属性がランダム2種に決定。\n各ターン選ばれた属性に対応する絵の具(赤=火/青=水/緑=草/白=光/黒=闇)のみ使用可能。\n「散歩」移動+IG+2+色回数+1+属性追加。「デッサン」IG+3+色回数+1+属性追加。\n「トリックアート」虹マス設置(IG1消費)。「額縁投げ」1T絵変換。「動く絵」お化け召喚(IG1消費)。\n単体色アビリティ選択後、別の色アビを選ぶと混色！X色混色でIG-X・効果X倍・ターゲット選択。\n★スキル「虹の大傑作」：IG5以上+5属性全部保有+全色アビ残量1以上が条件。半径7を虹マス化+全敵7ダメ！' },
 };
@@ -2937,7 +2941,7 @@ function handleWsMessage(event) {
         });
         showVictoryCondition(job);
 
-        turn = 1; tempRocks = [];
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
         isPlayerTurn = settings.p1First;
 
         document.getElementById('game-screen').style.display = 'flex';
@@ -4037,7 +4041,7 @@ function startCpuRankedMatch() {
 
     document.getElementById('online-lobby').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
-    turn = 1; tempRocks = [];
+    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
     isPlayerTurn = Math.random() < 0.5;
     _cpuWentFirst = !isPlayerTurn;
     render();
@@ -4465,7 +4469,7 @@ window.addEventListener('DOMContentLoaded', () => {
             initEntities(pJob, document.getElementById('difficulty-select').value);
         }
         showVictoryCondition(pJob);
-        turn = 1; tempRocks = [];
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
         isPlayerTurn = Math.random() < 0.5;
         _cpuWentFirst = !isPlayerTurn;
         startTurn(isPlayerTurn ? 'player' : 'cpu');
@@ -4960,7 +4964,7 @@ function startGame() {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
         
-        turn = 1; tempRocks = [];
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
         isPlayerTurn = Math.random() < 0.5;
         _cpuWentFirst = !isPlayerTurn;
         render();
@@ -8114,6 +8118,7 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'howl') return maxDist === 0;
     if (mode === 'steal') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'theft') return maxDist === 1 && target && target.team !== se.team && target.hp > 0;
+    if (mode === 'gang_orca_cannon') return maxDist === 1 && isWalkable(r, c) && !target;
     if (mode === 'peck') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'bite') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'throw_net') return maxDist <= 2 + (se.rangeBonus||0) && target && target.team !== se.team;
@@ -9904,7 +9909,13 @@ function handleAbilityTarget(r, c, targetEntity) {
         checkEnemyTerritory(se);
     } else if (actionMode === 'cannon') {
         usedCannonTiles.add(`${se.r},${se.c}`);
-        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) { targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se); }
+        if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
+            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
+            if (orcaCannonWaterTurn === turn && board[targetEntity.r]?.[targetEntity.c] && !isWaterTile(board[targetEntity.r][targetEntity.c])) {
+                board[targetEntity.r][targetEntity.c] = 'shallow_water';
+                msg(`🌊 海洋大砲効果！${targetEntity.name}の着地マスが浅瀬に！`, true);
+            }
+        }
         used = true;
         msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : `大砲発射！敵に${1+(se.atkBonus||0)}ダメージと吹き飛ばし！(休2T)`);
         board[se.r][se.c] = 'cannon_cd_2';
@@ -9972,6 +9983,26 @@ function handleAbilityTarget(r, c, targetEntity) {
             stealMsgs.push(`「${ABILITY_NAMES[k]||k}」奪取`);
         }
         msg(`強奪！${stealMsgs.length>0 ? stealMsgs.join('・')+'！' : 'しかし奪えるものが無かった…'}`); used = true;
+    } else if (actionMode === 'gang_orca_cannon') {
+        se.abilities['gang_orca_cannon']--;
+        // ギャングオルカを召喚
+        entities.push({ id: 'gang_orca'+Date.now(), type: 'gang_orca', name: 'ギャングオルカ', team: se.team, r, c, hp: 3, maxHp: 3, ap: 2, maxAp: 2, abilities: { mugging: 999, orca_bite: 999 }, skillUsed: true, stealth: false, stealthTimer: 0, invin: false, invinTimer: 0, poisonTimer: 0, turnBorn: turn, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 });
+        // シャチ足元に大砲を設置
+        const _gocOrig1 = board[se.r][se.c];
+        if (!isNoRockZone(se.r, se.c)) {
+            board[se.r][se.c] = 'cannon';
+            tempRocks.push({ r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: _gocOrig1 });
+        }
+        // ギャングオルカ足元に大砲を設置
+        const _gocOrig2 = board[r][c];
+        if (!isNoRockZone(r, c)) {
+            board[r][c] = 'cannon';
+            tempRocks.push({ r, c, expireOnTurn: turn + 1, restoreTile: _gocOrig2 });
+        }
+        // このターン大砲命中→着地マス水化フラグ
+        orcaCannonWaterTurn = turn;
+        msg(`🐳 海洋大砲！ギャングオルカ召喚＆大砲×2設置！このターン大砲被弾の着地マスが浅瀬に！`);
+        used = true;
     } else if (actionMode === 'theft') {
         se.abilities['theft']--;
         // 2ダメ（闇属性）
@@ -16216,8 +16247,9 @@ function cpuLogic() {
             // ====================================================
             if (!attacked) {
                 if (board[cpu.r]?.[cpu.c]==='cannon' && dist<=8) {
-                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;knockback(p,1,cpu);msg(`敵が大砲を使用！${p.name}に1ダメージ！`);}
-                    else{msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`);}
+                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;knockback(p,1,cpu);msg(`敵が大砲を使用！${p.name}に1ダメージ！`);
+                        if (orcaCannonWaterTurn === turn && board[p.r]?.[p.c] && !isWaterTile(board[p.r][p.c])) { board[p.r][p.c] = 'shallow_water'; msg(`🌊 海洋大砲効果！${p.name}の着地マスが浅瀬に！`, true); }
+                    } else{msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`);}
                     board[cpu.r][cpu.c]='cannon_cd_2';attacked=true;cpu.ap--;
                 } else if (cpu.abilities.poison_bow>0 && dist<=5 && getLoS(cpu,p)<99) {
                     cpu.abilities.poison_bow--;
@@ -16785,8 +16817,9 @@ function npcLogic() {
 
             if (!attacked) {
                 if (board[n.r][n.c] === 'cannon' && dist <= 8) { 
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; knockback(p, 1, n); msg(`${n.name}が大砲を発射！1ダメージ！`); }
-                    else { msg(`${n.name}が大砲を発射！しかし無敵で無効化！`); }
+                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; knockback(p, 1, n); msg(`${n.name}が大砲を発射！1ダメージ！`);
+                        if (orcaCannonWaterTurn === turn && board[p.r]?.[p.c] && !isWaterTile(board[p.r][p.c])) { board[p.r][p.c] = 'shallow_water'; msg(`🌊 海洋大砲効果！${p.name}の着地マスが浅瀬に！`, true); }
+                    } else { msg(`${n.name}が大砲を発射！しかし無敵で無効化！`); }
                     board[n.r][n.c] = 'cannon_cd_2';
                     attacked = true; n.ap--;
                 } else if (n.abilities.throwing_knife && dist <= 2) {
@@ -18347,7 +18380,7 @@ function startTutorial() {
     initBoard('plains');
     initEntities('knight', '1');
     showVictoryCondition('knight');
-    turn = 1; tempRocks = [];
+    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
     isPlayerTurn = true;
     _cpuWentFirst = false;
     // チュートリアル練習用ダミー敵（HP3、動かない、攻撃しない）
