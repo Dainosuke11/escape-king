@@ -68,6 +68,7 @@ interface QueueEntry {
   playerName: string;
   profileIcon: string;
   favorites: string[];
+  friends: string[]; // DB-verified friend IDs (both directions); used for rank-bypass matching
   ts: number;
   searchTimer: NodeJS.Timeout | null;
 }
@@ -118,8 +119,24 @@ function rankWindow(waitedMs: number): number {
 
 function tryMatch() {
   const now = Date.now();
-  // Pass 1: favorite-priority — if either player has the other in their favorites,
-  // allow up to rankWindow+2 rank difference for faster pairing.
+  // Pass 1: friend-priority — if either player has the other in their DB-verified friends list,
+  // skip rank-diff check entirely (rank-bypass). recentOpponents check still applies.
+  for (let i = 0; i < queue.length; i++) {
+    const a = queue[i];
+    if (!a || a.ws.readyState !== WebSocket.OPEN) continue;
+    for (let j = i + 1; j < queue.length; j++) {
+      const b = queue[j];
+      if (!b || b.ws.readyState !== WebSocket.OPEN) continue;
+      const isFriendPair = (a.friends || []).includes(b.userId) || (b.friends || []).includes(a.userId);
+      if (isFriendPair && !playedRecently(a.userId, b.userId)) {
+        startRankedMatch(a, b);
+        queue.splice(j, 1);
+        queue.splice(i, 1);
+        return tryMatch();
+      }
+    }
+  }
+  // Pass 2: favorite-priority — client-sent favorites list, allow rankWindow+2
   for (let i = 0; i < queue.length; i++) {
     const a = queue[i];
     if (!a || a.ws.readyState !== WebSocket.OPEN) continue;
@@ -138,7 +155,7 @@ function tryMatch() {
       }
     }
   }
-  // Pass 2: normal rank-window matching
+  // Pass 3: normal rank-window matching
   for (let i = 0; i < queue.length; i++) {
     const a = queue[i];
     if (!a || a.ws.readyState !== WebSocket.OPEN) continue;
@@ -520,6 +537,7 @@ wss.on("connection", (ws: WebSocket) => {
           playerName: String(msg.playerName || "プレイヤー"),
           profileIcon: typeof msg.profileIcon === "string" ? String(msg.profileIcon).slice(0, 8) : "🎮",
           favorites: Array.isArray(msg.favorites) ? (msg.favorites as unknown[]).map(String).slice(0, 100) : [],
+          friends: [],
           ts: Date.now(),
           searchTimer: null,
         };
@@ -533,6 +551,16 @@ wss.on("connection", (ws: WebSocket) => {
         queue.push(entry);
         safeSend(ws, { type: "searching" });
         entry.searchTimer = setInterval(tryMatch, 2000);
+        // Fetch DB-verified friends asynchronously (both directions: A→B and B→A).
+        // Runs after queue push so the 2-second interval gives it time to resolve.
+        const _uid = entry.userId;
+        db.execute(sql`
+          SELECT DISTINCT friend_user_id AS fid FROM ek_friends WHERE user_id = ${_uid}
+          UNION
+          SELECT DISTINCT user_id AS fid FROM ek_friends WHERE friend_user_id = ${_uid}
+        `).then((res) => {
+          entry.friends = (res.rows as Array<{ fid: string }>).map((r) => String(r.fid));
+        }).catch(() => { /* friends stays [] on error; falls back to normal matching */ });
         tryMatch();
       } else if (msg.type === "cancelRanked") {
         const idx = queue.findIndex((q) => q.ws === ws);
