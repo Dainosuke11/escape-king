@@ -1,6 +1,6 @@
-# [Project name]
+# Escape the King
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+将棋×囲碁ハイブリッドのオンライン対戦ストラテジーゲーム。
 
 ## Run & Operate
 
@@ -35,6 +35,29 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 ## User preferences
 
 _Populate as you build — explicit user instructions worth remembering across sessions._
+
+## GitHub Backup
+
+コードは以下のGitHubリポジトリにバックアップされています。
+
+- **リポジトリ**: https://github.com/Dainosuke11/escape-king
+- **ブランチ**: `main`
+- **連携方法**: ReplitのGitHubインテグレーション（Replit connectors SDK）
+
+### 今後のコミットをGitHubへpushする方法
+
+Replitは毎チェックポイントで `gitsafe-backup` リモートに自動保存しますが、GitHubへの同期は現在手動またはAPI経由です。
+
+**方法1: ReplitのGit連携UI（推奨）**
+- Replitの左サイドバー「Git」タブから「Connect to GitHub」を選択
+- リポジトリを選択するとPushボタンが使えるようになります
+
+**方法2: Replit GitHub Integrationを使った自動化**
+- 今後 `scripts/post-merge.sh` にpushステップを追加することで自動化可能（Task #177参照）
+
+### バックアップ済み確認（2026-06-09時点）
+- GitHub最新コミット: `6424af67` — `.env` を `.gitignore` に追加
+- 全ファイルがGitHub mainブランチに同期済み
 
 ## Gotchas
 
