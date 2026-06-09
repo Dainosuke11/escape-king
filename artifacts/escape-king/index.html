@@ -1885,7 +1885,7 @@ const ABILITY_NAMES = {
     torture_mafia: '拷問(半径1/威4+AP-2+全封印/ゲージ2消費)',
     extortion: '恐喝(半径2/返済付与+AP-2+バリア/ゲージ+5)',
     repayment: '返済(ターン開始時:封印3+AP-1→マフィア回復)',
-    territory_declaration: '縄張り宣言(ゲージ全消費/半径1+ゲージ分の縄張り1T)',
+    territory_declaration: '縄張り宣言(ゲージ全消費/半径1+ゲージ分の縄張り1T/縄張り内の敵の隣に子分召喚)',
     material_gather: '素材集め(半径1岩破壊→ダッシュ)',
     junk_wall: '寄せ集めの壁(前方幅3岩×3+バリア+JP+1)',
     ore_mine: '宝採掘(半径1鉱山×4)',
@@ -2429,7 +2429,7 @@ const JOB_GUIDE_META = {
     world_manager: { emoji: '⚖️', fullName: '世界の管理者' },
     onmyoji:       { emoji: '☯️', fullName: '陰陽師', note: '※各アビリティ使用後そのターン他アビリティ使用不可' },
     devil:         { emoji: '😈', fullName: 'デビル' },
-    mafia:         { emoji: '🤵', fullName: 'マフィア', note: '【マフィアゲージ】悪事で増加・消費系アビリティに必要\n【子分】HP1/AP2/拳銃∞。マフィアが攻撃を受けると代わりにランダムな子分が食らう。子分消滅でG+1\n【返済】敵に付与。ターン開始時(回数1以上):封印3+AP-1+自2ダメ→マフィアHP+2・全アビ+1・G+2' },
+    mafia:         { emoji: '🤵', fullName: 'マフィア', note: '【マフィアゲージ】悪事で増加・消費系アビリティに必要\n【子分】HP1/AP2/拳銃∞。マフィアが攻撃を受けると代わりにランダムな子分が食らう。子分消滅でG+1\n【返済】敵に付与。ターン開始時(回数1以上):封印3+AP-1+自2ダメ→マフィアHP+2・全アビ+1・G+2\n【縄張り宣言】縄張り内の敵それぞれの隣に子分を1体召喚し包囲する。空きマスがない敵はスキップ' },
     dwarf:         { emoji: '⚙️', fullName: 'ドワーフエンジニア', note: '【JP：ジャンクポイント】岩砕き/素材集めで増加。パーツ製造・タレット建設・キャノンで消費\n★スキル「合体」：全5パーツ∞が揃うと使用可能。半径1にドワーフロボ(HP25/AP2)召喚。撃破時JP+10・アビリティ初期化' },
     sentai_hero:   { emoji: '🦸', fullName: '戦隊ヒーロー', note: '【5人チーム】レッド🔴ブルー🔵グリーン🟢ホワイト⚪ブラック⚫\n各隊員HP6、合計HP30を共有。隊員が倒れると担当アビリティが封印される。\n「暗黙の了解」で死亡隊員を復活可。\n★スキル「合体必殺技」：生存隊員×2の威力で幅3×深さ7AoE発射！' },
     sennin:        { emoji: '🧘', fullName: '仙人', note: '【仙人ゲージ】AP温存でゲージ増加。ゲージ消費技に必要。\n属性は草と水を1ターンごとに交替(奇数ターン=水/偶数ターン=草)。\n「雲水行脚」でAP+2。スキル不使用で終えるとゲージ+4、使用でゲージ+1。\n★スキル「自然淘汰」：ゲージ全消費→消費量で半径2~8/威2~8のAoE。AP-2+吹飛+4封印。使用後ゲージ+3。' },
@@ -13396,9 +13396,26 @@ function executeSkill(se) {
                 affectedNames.push(t.name);
             }
         });
+        // 縄張り内の敵それぞれの隣に子分を1体召喚
+        let kobunSpawnMsgs = [];
+        entities.forEach(t => {
+            if(t.hp<=0||t.team===se.team) return;
+            if(!cells.some(cl=>cl.r===t.r&&cl.c===t.c)) return;
+            let dirs=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+            for(let [dr,dc] of dirs) {
+                let nr=t.r+dr, nc=t.c+dc;
+                if(nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+                if(!isWalkable(nr,nc)) continue;
+                if(entities.some(ev=>ev.hp>0&&ev.r===nr&&ev.c===nc)) continue;
+                const _kfz = turn < 5 ? turn + 5 : 0;
+                entities.push({id:'kobun_'+Date.now()+'_'+nr+'_'+nc,type:'kobun',name:'子分',team:se.team,r:nr,c:nc,hp:1,maxHp:1,ap:_kfz>0?0:2,maxAp:2,abilities:{pistol:999},skillUsed:true,stealth:false,stealthTimer:0,invin:false,invinTimer:0,poisonTimer:0,atkBonus:0,kobunFreezeUntil:_kfz});
+                kobunSpawnMsgs.push(`${t.name}の隣に子分を配置！`);
+                break;
+            }
+        });
         mafiaTerritory = { ownerTeam: se.team, cells, expireTurn: turn + 1 };
         se.mafiaGauge = 0;
-        msg(`🏴 縄張り宣言！ゲージ${g}消費→半径${radius}マス縄張り展開1T！${affectedNames.length>0?affectedNames.join('・')+'に返済付与！':''}`);
+        msg(`🏴 縄張り宣言！ゲージ${g}消費→半径${radius}マス縄張り展開1T！${affectedNames.length>0?affectedNames.join('・')+'に返済付与！':''}${kobunSpawnMsgs.length>0?kobunSpawnMsgs.join(''):''}`);
         return true;
     }
     // ====== ドワーフエンジニア スキル: 合体 ======
