@@ -4911,7 +4911,7 @@ function checkJobUnlocked(job, errElId) {
 
 function resolveJob(job, online) {
     if (job === 'random') {
-        const pool = ALL_JOBS.filter(j => isJobUnlocked(j));
+        const pool = online ? ALL_JOBS : ALL_JOBS.filter(j => isJobUnlocked(j));
         const avail = pool.length > 0 ? pool : ALL_JOBS;
         return avail[Math.floor(Math.random()*avail.length)];
     }
