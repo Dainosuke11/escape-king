@@ -16902,12 +16902,12 @@ function checkWin() {
             isEnd = true;
         }
     } else {
-        if (playerJobDead && !otherPlayerAlive) { title = "💀 Defeat... あなたの体力が尽きました。"; isEnd = true; }
+        if (pWin) { title = "🎉 Victory! 敵陣突破！"; isEnd = true; }
+        else if (cWin) { title = "💀 Defeat... 敵に突破されました。"; isEnd = true; }
+        else if (playerJobDead && !otherPlayerAlive) { title = "💀 Defeat... あなたの体力が尽きました。"; isEnd = true; }
         else if (cpuJobDead && !otherCpuAlive) { title = "🎉 Victory! 敵の体力を削りきりました！"; isEnd = true; }
         else if (playerJobDead && otherPlayerAlive) { /* 続行: 残コマ全滅待ち */ }
         else if (cpuJobDead && otherCpuAlive) { /* 続行: 残コマ全滅待ち */ }
-        else if (pWin) { title = "🎉 Victory! 敵陣突破！"; isEnd = true; }
-        else if (cWin) { title = "💀 Defeat... 敵に突破されました。"; isEnd = true; }
     }
 
     // チュートリアルモード：敵陣突破で勝利
