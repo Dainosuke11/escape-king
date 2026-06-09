@@ -531,6 +531,9 @@ wss.on("connection", (ws: WebSocket) => {
         });
         logger.info({ code }, "Room started");
       } else if (msg.type === "findRanked") {
+        // Clear any stale cancel token from a previous cancelRanked on this socket
+        // so that cancel → re-queue works on the very first retry.
+        cancelledFriendFetch.delete(ws);
         // Use async IIFE so we can await the DB friend fetch before the entry
         // becomes match-eligible. A 800 ms timeout prevents DB latency from
         // blocking queue entry; on timeout/error friends defaults to [].
