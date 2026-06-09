@@ -2014,12 +2014,12 @@ const ABILITY_NAMES = {
     mure_de_karu: '👥群れで刈る(前方クローン召喚/HP1/次T消滅/被ダメ+1(1T))',
     toki_no_sakebi: '📣雄叫び(r2全敵AP-1+2アビ封印/r2味方1Tバリア)',
     sanpo: '🚶散歩(2マス移動/IG+2/色+1/属性+1)',
-    dessin: '🎨デッサン(IG+5/色+1/属性+1/近敵封印+借用)',
+    dessin: '🎨デッサン(IG+3/色+1/属性+1/近敵封印+借用)',
     trick_art: '🎭トリックアート(r3/IG1消費/虹マス半径1化)',
     frame_throw: '🖼️額縁投げ(直線3/2ダメ/1T絵変換→次T解放+2ダメ)',
     moving_painting: '👻動く絵(隣接/IG1消費/絵お化け召喚)',
     red_paint: '🔴赤(火/IG消費/r2敵1ダメ+燃焼・混色でX倍)',
-    blue_paint: '🔵青(水/IG消費/直1貫通1ダメ+封印・混色でX倍)',
+    blue_paint: '🔵青(水/IG消費/直1貫通1ダメ+封印・混色でX倍/X種封印)',
     green_paint: '🟢緑(草/IG消費/r1敵2ダメ+吹飛・混色でX倍)',
     white_paint: '⚪白(光/IG消費/rX味方HP+X・敵AP-1・混色でX倍)',
     black_paint: '⚫黒(闇/IG消費/rX全敵Xダメ+毒・混色でX倍)'
@@ -2262,12 +2262,12 @@ const ABILITY_TIPS = {
     mure_de_karu: '群れで刈る：前方に分身クローン(HP1/ATK-1)を召喚。次T開始時消滅。デメリット：自分の被ダメ+1(1T)。',
     toki_no_sakebi: '雄叫び：半径2の全敵AP-1+ランダム2アビ1T封印。半径2の味方に1Tバリア付与。',
     sanpo: '創造的散歩。2マス以内の空きマスへ移動後、イマジネーション+2・色アビリティ全回数+1・このターンの使用可能属性をランダム1種追加。回数5。',
-    dessin: 'デッサン練習。使用後イマジネーション+5・色アビリティ全回数+1・属性1種追加。半径2以内に敵がいれば：そのランダム1アビリティを1T封印＋このターン絵描きが同アビを1回使用可能にする。回数5。',
+    dessin: 'デッサン練習。使用後イマジネーション+3・色アビリティ全回数+1・属性1種追加。半径2以内に敵がいれば：そのランダム1アビリティを1T封印＋このターン絵描きが同アビを1回使用可能にする。回数5。',
     trick_art: 'トリックアート。半径3以内の1マスを指定しイマジネーション1消費。そのマス中心の半径1全マスを虹マスに変える。味方が踏むとHP+1＋ランダム5アビリティ+1。敵が踏むと全属性2ダメ。踏後元のマスに戻る。回数5。',
     frame_throw: '癇癪投げ。正面直線3マスの敵1体に2ダメ＋「絵」状態(HP99/AP0/行動不能)に変換。次のターン開始時に解放されるが2ダメを追加受ける。回数5。',
     moving_painting: '絵のお化け召喚。隣接空きマスにイマジネーション1消費して召喚(HP1/AP2)。死亡時：絵描きの色アビリティ全+1＋IG+1＋次Tの属性に1種追加。回数5。',
     red_paint: '🔴炎の絵の具。単体時：半径2以内の敵に火属性1ダメ+燃焼2T。混色時(X色)：X+1範囲にX火ダメ+燃焼。その日の属性に「火」が必要。',
-    blue_paint: '🔵水の絵の具。単体時：正面直線1の敵に水属性1ダメ+ランダム1アビ1T封印。混色時(X色)：直線Xマス貫通Xダメ＋Xアビ封印。属性に「水」が必要。',
+    blue_paint: '🔵水の絵の具。単体時：正面直線1の敵に水属性1ダメ+ランダム1アビ1T封印。混色時(X色)：直線Xマス貫通Xダメ＋X種アビ1T封印(ランダム)。属性に「水」が必要。',
     green_paint: '🟢木の絵の具。単体時：隣接敵に草属性2ダメ+後方吹き飛ばし。混色時(X色)：X+1ダメ＋Xマス吹き飛ばし。属性に「草」が必要。',
     white_paint: '⚪光の絵の具。単体時：半径1の味方HP+1・範囲内の敵AP-1。混色時(X色)：半径X味方HP+X・敵AP-1。属性に「光」が必要。',
     black_paint: '⚫闇の絵の具。単体時：半径1全敵に闇属性1ダメ+毒1T。混色時(X色)：半径X全敵Xダメ+毒。属性に「闇」が必要。'
@@ -2488,7 +2488,7 @@ const JOB_GUIDE_META = {
     miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
     orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
     barbarian: { emoji: '🪓', fullName: 'バーバリアン', note: '【火闇草ランダム三属性・野生の戦士】毎ターン開始時に属性が火/闇/草からランダム変化。\n「走って寝る」：2マスダッシュ→HP+1+ランダム2アビ+1/被ダメ+1(1T)。\n「血祭り斬り(闇)」：r1 3ダメ+AP-1/被ダメ+1(1T)。「斧連舞(火)」：r1 3ダメ×2+AP-1/次T攻撃-1。\n「回転斬り(火)」：r1全敵3ダメ+後退/被ダメ+1(1T)。「嗅覚追跡」：1T潜伏+AP+1+r3敵2アビ封印。\n「斧投げ(草)」：直線4 4ダメ/次T攻撃-1。「群れで刈る」：前方クローン(HP1/1T)/被ダメ+1(1T)。\n「雄叫び」：r2全敵AP-1+2abi封印/r2味方1Tバリア。\n★スキル「野生の解放」：3T狂戦士(毎T HP-2/AP+1/ATK+1/被ダメ+1)。狂戦士中は三属性同時弱点判定！' },
-    painter: { emoji: '🎨', fullName: '絵描き', note: '【イマジネーションゲージ・5色混合システム】毎ターン開始時IG+1＋属性がランダム2種に決定。\n各ターン選ばれた属性に対応する絵の具(赤=火/青=水/緑=草/白=光/黒=闇)のみ使用可能。\n「散歩」移動+IG+2+色回数+1+属性追加。「デッサン」IG+5+色回数+1+属性追加。\n「トリックアート」虹マス設置(IG1消費)。「額縁投げ」1T絵変換。「動く絵」お化け召喚(IG1消費)。\n単体色アビリティ選択後、別の色アビを選ぶと混色！X色混色でIG-X・効果X倍・ターゲット選択。\n★スキル「虹の大傑作」：IG5以上+5属性全部保有+全色アビ残量1以上が条件。半径7を虹マス化+全敵7ダメ！' },
+    painter: { emoji: '🎨', fullName: '絵描き', note: '【イマジネーションゲージ・5色混合システム】毎ターン開始時IG+1＋属性がランダム2種に決定。\n各ターン選ばれた属性に対応する絵の具(赤=火/青=水/緑=草/白=光/黒=闇)のみ使用可能。\n「散歩」移動+IG+2+色回数+1+属性追加。「デッサン」IG+3+色回数+1+属性追加。\n「トリックアート」虹マス設置(IG1消費)。「額縁投げ」1T絵変換。「動く絵」お化け召喚(IG1消費)。\n単体色アビリティ選択後、別の色アビを選ぶと混色！X色混色でIG-X・効果X倍・ターゲット選択。\n★スキル「虹の大傑作」：IG5以上+5属性全部保有+全色アビ残量1以上が条件。半径7を虹マス化+全敵7ダメ！' },
 };
 
 const ENTITY_ICONS = {
@@ -8399,7 +8399,19 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'trick_art') return true;
     if (mode === 'frame_throw') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'moving_painting') return maxDist === 0;
-    if (mode === 'paint_combo') return maxDist>0 && maxDist<=3+(se.rangeBonus||0) && (target ? target.team!==se.team : true);
+    if (mode === 'paint_combo') {
+        const _pcSelV = se._activePaintColors || [];
+        const _pcXv = _pcSelV.length || 1;
+        let _maxRng = 1;
+        _pcSelV.forEach(pc => {
+            if (pc === 'red_paint') _maxRng = Math.max(_maxRng, _pcXv + 1);
+            else if (pc === 'blue_paint') _maxRng = Math.max(_maxRng, _pcXv);
+            else if (pc === 'green_paint') _maxRng = Math.max(_maxRng, 1);
+            else if (pc === 'white_paint') _maxRng = Math.max(_maxRng, _pcXv);
+            else if (pc === 'black_paint') _maxRng = Math.max(_maxRng, _pcXv);
+        });
+        return maxDist > 0 && maxDist <= _maxRng + (se.rangeBonus||0) && (target ? target.team !== se.team : true);
+    }
     if (mode === 'skill_painter') return maxDist === 0;
     return false;
 }
@@ -8749,7 +8761,14 @@ function setMode(mode) {
         _se._activePaintColors = _newColors;
         actionMode = 'paint_combo';
         const _colorLabels = _newColors.map(c=>ABILITY_NAMES[c]||c).join('＋');
-        msg(`🎨【${_colorLabels}】X=${_X}、IG-${_X}消費。さらに色を追加するか、ターゲットを選んでください！`);
+        const _comboNameSM = (() => {
+            if (_X === 3) return '風景画';
+            if (_X === 4) return '人物画';
+            if (_X === 5) return '抽象画';
+            const _cn2sm = { 'blue_paint,red_paint':'紫', 'black_paint,white_paint':'灰色', 'green_paint,red_paint':'橙色', 'blue_paint,green_paint':'翠', 'black_paint,blue_paint':'藍', 'black_paint,green_paint':'墨緑', 'black_paint,red_paint':'深紅', 'blue_paint,white_paint':'水色', 'green_paint,white_paint':'萌黄', 'red_paint,white_paint':'桃色' };
+            return _cn2sm[[..._newColors].sort().join(',')] || '混合色';
+        })();
+        msg(`🎨【${_colorLabels}】「${_comboNameSM}」X=${_X}、IG-${_X}消費。さらに色を追加するか、ターゲットを選んでください！`);
         showAbilityPreview('paint_combo');
         updateUI(); render();
         return;
@@ -12897,8 +12916,8 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['sanpo'] !== 999) se.abilities['sanpo']--;
         used = true;
     } else if (actionMode === 'dessin') {
-        // デッサン: IG+5 + 全色+1 + ランダム属性追加 / 隣接敵なら2アビ封印+1アビ借用
-        se.imaginationGauge = (se.imaginationGauge||0) + 5;
+        // デッサン: IG+3 + 全色+1 + ランダム属性追加 / 隣接敵なら2アビ封印+1アビ借用
+        se.imaginationGauge = (se.imaginationGauge||0) + 3;
         const _PAINT_COLORS_DS = ['red_paint','blue_paint','green_paint','white_paint','black_paint'];
         _PAINT_COLORS_DS.forEach(pc => { if ((se.abilities[pc]||0) > 0 && se.abilities[pc] !== 999) se.abilities[pc]++; });
         const _dsAllElems = ['fire','water','grass','light','dark'];
@@ -12907,7 +12926,7 @@ function handleAbilityTarget(r, c, targetEntity) {
             const _dsPick = _dsBonusElem[Math.floor(Math.random()*_dsBonusElem.length)];
             se._painterElements = [...(se._painterElements||[]), _dsPick];
         }
-        let _dsMsg = `🖋️ ${se.name}のデッサン！IG+5・全色+1！`;
+        let _dsMsg = `🖋️ ${se.name}のデッサン！IG+3・全色+1！`;
         if (targetEntity && targetEntity.team !== se.team) {
             const _dsKeys = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&(targetEntity.abilities[k]||0)>0&&targetEntity.abilities[k]!==999);
             _dsKeys.sort(()=>Math.random()-0.5);
@@ -13001,29 +13020,50 @@ function handleAbilityTarget(r, c, targetEntity) {
         });
         msg(`👻 ${se.name}の動く絵！お化けを召喚！${_mpBlind.length>0?`出現目潰し：${_mpBlind.join('・')}がAP-1+4封印！`:''}(IG-1)`); used = true;
     } else if (actionMode === 'paint_combo') {
-        // 色混合攻撃: X色 → X*2ダメ + 各色効果 + IG-X消費
+        // 色混合攻撃: 射程内色*2ダメ + 各色効果 + IG-X消費
         const _PAINT_ELEM_MAP_PC = { red_paint:'fire', blue_paint:'water', green_paint:'grass', white_paint:'light', black_paint:'dark' };
         const _pcColors = se._activePaintColors || [];
         const _pcX = _pcColors.length;
         if (_pcX === 0) { msg(`🎨 色が選択されていません！`); return; }
         if ((se.imaginationGauge||0) < _pcX) { msg(`🎨 イマジネーション不足！(必要:${_pcX})`); return; }
+        // コンボ名
+        const _pcComboName = (() => {
+            if (_pcX === 3) return '風景画';
+            if (_pcX === 4) return '人物画';
+            if (_pcX === 5) return '抽象画';
+            const _cn2 = { 'blue_paint,red_paint':'紫', 'black_paint,white_paint':'灰色', 'green_paint,red_paint':'橙色', 'blue_paint,green_paint':'翠', 'black_paint,blue_paint':'藍', 'black_paint,green_paint':'墨緑', 'black_paint,red_paint':'深紅', 'blue_paint,white_paint':'水色', 'green_paint,white_paint':'萌黄', 'red_paint,white_paint':'桃色' };
+            return _cn2[[..._pcColors].sort().join(',')] || '混合色';
+        })();
+        // 射程チェック: 各色の射程内かどうか判定
+        const _pcDr = Math.abs(r - se.r), _pcDc = Math.abs(c - se.c), _pcCheby = Math.max(_pcDr, _pcDc);
+        const _paintInRange = pc => {
+            if (pc === 'red_paint')   return _pcCheby <= _pcX + 1;
+            if (pc === 'blue_paint')  return (_pcDr === 0 || _pcDc === 0) && _pcCheby <= _pcX;
+            if (pc === 'green_paint') return _pcCheby <= 1;
+            if (pc === 'white_paint') return _pcCheby <= _pcX;
+            if (pc === 'black_paint') return _pcCheby <= _pcX;
+            return true;
+        };
+        const _colorsInRange  = _pcColors.filter(_paintInRange);
+        const _colorsOutRange = _pcColors.filter(pc => !_paintInRange(pc));
         se.imaginationGauge -= _pcX;
         _pcColors.forEach(pc => { if (se.abilities[pc] !== undefined && se.abilities[pc] !== 999) se.abilities[pc]--; });
-        let _pcDmg = _pcX * 2 + (se.atkBonus||0);
+        let _pcDmg = _colorsInRange.length * 2 + (se.atkBonus||0);
         let _pcEffects = [];
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
             // ダメージ計算(属性相性)
             const _pcElem = se._painterElements[0] || 'none';
             const _pcFinalDmg = Math.max(1, _pcDmg + elemBonus(_pcElem, targetEntity.element) + (targetEntity.defDebuff||0));
             targetEntity.hp -= _pcFinalDmg;
-            _pcColors.forEach(pc => {
+            _colorsInRange.forEach(pc => {
                 if (pc === 'red_paint') { targetEntity.burnTimer = (targetEntity.burnTimer||0) + 2; _pcEffects.push('炎上2T'); }
-                if (pc === 'blue_paint') { const _bpKeys=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&targetEntity.abilities[k]!==999); sealAbilities(targetEntity, _bpKeys, 1); _pcEffects.push('全アビ1T封印'); }
+                if (pc === 'blue_paint') { const _bpAll=Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock'&&targetEntity.abilities[k]!==999); const _bpSeal=_bpAll.sort(()=>Math.random()-0.5).slice(0,_pcX); sealAbilities(targetEntity, _bpSeal, 1); _pcEffects.push(`${_bpSeal.length}アビ1T封印`); }
                 if (pc === 'green_paint') { knockback(targetEntity, 2, se); _pcEffects.push('2後退'); }
                 if (pc === 'white_paint') { targetEntity.defDebuff = (targetEntity.defDebuff||0) + 1; targetEntity.defDebuffTimer = 2; applyBlind(targetEntity); _pcEffects.push('防御-1(2T)+目潰し'); }
                 if (pc === 'black_paint') { targetEntity.poisonTimer = (targetEntity.poisonTimer||0) + 3; applyBlind(targetEntity); _pcEffects.push('毒3T+目潰し'); }
             });
-            msg(`🎨 ${se.name}の色混合(${_pcX}色)！${_pcFinalDmg}ダメ！${_pcEffects.join('・')}！(IG-${_pcX})`);
+            const _outMsg = _colorsOutRange.length > 0 ? `(射程外:${_colorsOutRange.map(p=>ABILITY_NAMES[p]||p).join('・')})` : '';
+            msg(`🎨 ${se.name}の「${_pcComboName}」(${_pcX}色)！${_pcFinalDmg}ダメ！${_pcEffects.length?_pcEffects.join('・')+'！':''}(IG-${_pcX})${_outMsg}`);
             checkWin();
         } else if (!targetEntity) {
             // マス対象：虹マスを配置
