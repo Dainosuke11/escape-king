@@ -856,7 +856,14 @@
             <option value="painter">🎨 絵描き (色混合・イマジネーション・虹の大傑作)</option>
         </select>
     </div>
-    <div id="all-jobs-badge" style="display:none;text-align:center;font-size:13px;color:#f1c40f;background:#1a1a00;border:1px solid #f1c40f;border-radius:6px;padding:4px 10px;margin:-4px 0 8px;">全ジョブ解放済み 🏆</div>
+    <div id="all-jobs-badge" onclick="showJobUnlockHistoryModal()" style="display:none;text-align:center;font-size:13px;color:#f1c40f;background:#1a1a00;border:1px solid #f1c40f;border-radius:6px;padding:4px 10px;margin:-4px 0 8px;cursor:pointer;" title="クリックして解放履歴を見る">全ジョブ解放済み 🏆 ▶ 履歴を見る</div>
+    <div id="job-unlock-history-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#1a1a2e;border:2px solid #f1c40f;border-radius:12px;padding:20px 24px;max-width:460px;width:92%;max-height:80vh;overflow-y:auto;">
+            <div style="font-size:17px;font-weight:bold;color:#f1c40f;margin-bottom:14px;">🏆 ジョブ解放履歴</div>
+            <div id="job-unlock-history-list"></div>
+            <button onclick="document.getElementById('job-unlock-history-modal').style.display='none'" style="margin-top:16px;width:100%;padding:10px;background:#34495e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">閉じる</button>
+        </div>
+    </div>
     <div id="job-unlock-progress" style="margin:-4px 0 10px;padding:0 2px;">
         <div style="display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:3px;">
             <span>🔓 解放ジョブ</span><span id="job-unlock-count">1 / 30</span>
@@ -3097,7 +3104,8 @@ function handleRankResult(data) {
     setTimeout(() => { loadPlayerFromServer().then(() => refreshProfileUI()); }, 3000);
 
     if (data.won) {
-        const newJob = unlockNextJob();
+        const _winsAfterThisWin = getWins() + 1;
+        const newJob = unlockNextJob('ranked', _winsAfterThisWin);
         if (newJob) setTimeout(() => showUnlockPopup(newJob), 800);
     }
 
@@ -3734,8 +3742,14 @@ function buildGuideJobsContent() {
                 `<div class="guide-job-name">🔒 ${meta.fullName}</div>` +
                 `<div class="guide-job-desc" style="color:#666;">未解放 — ランクマッチで1勝するたびに1種ずつ順番に解放されます</div>`;
         } else {
+            const rec = getJobUnlockRecord(jobKey);
+            const triggerLabel = rec ? (rec.trigger === 'ranked' ? 'オンライン戦' : 'CPU戦') : '';
+            const winsLabel = rec && rec.wins != null ? `${rec.wins}勝目` : '';
+            const unlockBadge = rec
+                ? `<span style="font-size:11px;color:#2ecc71;background:#0d2a0d;border:1px solid #2ecc71;border-radius:4px;padding:1px 6px;margin-left:6px;">🔓 ${winsLabel}・${rec.date}(${triggerLabel})に解放</span>`
+                : '';
             card.innerHTML =
-                `<div class="guide-job-name">${meta.emoji} ${meta.fullName} (HP${jobData.hp}/AP${jobData.ap}${headerExtra})</div>` +
+                `<div class="guide-job-name">${meta.emoji} ${meta.fullName} (HP${jobData.hp}/AP${jobData.ap}${headerExtra})${unlockBadge}</div>` +
                 `<div class="guide-job-desc">${abilityList}<br>スキル:${skillName}${noteLines}</div>` +
                 (hasTips
                     ? `<button class="guide-detail-btn" onclick="(function(btn){var p=document.getElementById('${panelId}');var open=p.classList.toggle('open');btn.textContent=open?'▼ 詳細を閉じる':'▶ 詳細を見る';})(this)">▶ 詳細を見る</button>` +
@@ -4686,12 +4700,29 @@ function isJobUnlocked(job) {
     return loadUnlockedJobs().includes(job);
 }
 
-function unlockNextJob() {
+function loadJobUnlockHistory() {
+    try { return JSON.parse(localStorage.getItem('ek_job_unlock_history') || '[]'); } catch(e) { return []; }
+}
+function saveJobUnlockHistory(history) {
+    localStorage.setItem('ek_job_unlock_history', JSON.stringify(history));
+}
+function recordJobUnlock(jobId, trigger, winsAtUnlock) {
+    const history = loadJobUnlockHistory();
+    const date = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
+    history.push({ jobId, trigger: trigger || 'ranked', date, wins: winsAtUnlock });
+    saveJobUnlockHistory(history);
+}
+function getJobUnlockRecord(jobId) {
+    return loadJobUnlockHistory().find(h => h.jobId === jobId) || null;
+}
+
+function unlockNextJob(trigger, winsAtUnlock) {
     const unlocked = loadUnlockedJobs();
     const next = UNLOCK_ORDER.find(j => !unlocked.includes(j));
     if (!next) return null;
     unlocked.push(next);
     saveUnlockedJobs(unlocked);
+    recordJobUnlock(next, trigger || 'ranked', winsAtUnlock);
     syncPlayerToServer();
     return next;
 }
@@ -4714,6 +4745,32 @@ function showUnlockPopup(jobId) {
     }, 3500);
     refreshAllJobsBadge();
     refreshAllJobSelects();
+}
+
+function showJobUnlockHistoryModal() {
+    const modal = document.getElementById('job-unlock-history-modal');
+    const list = document.getElementById('job-unlock-history-list');
+    if (!modal || !list) return;
+    const history = loadJobUnlockHistory();
+    if (history.length === 0) {
+        list.innerHTML = '<div style="color:#aaa;font-size:14px;">解放履歴がありません。</div>';
+    } else {
+        list.innerHTML = history.map((rec, i) => {
+            const label = (JOB_LABELS[rec.jobId] || rec.jobId).split('(')[0].trim();
+            const meta = JOB_GUIDE_META ? (JOB_GUIDE_META[rec.jobId] || {}) : {};
+            const emoji = meta.emoji || '🔓';
+            const triggerLabel = rec.trigger === 'ranked' ? 'オンライン戦' : 'CPU戦';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #333;">
+                <span style="font-size:22px;min-width:28px;text-align:center;">${emoji}</span>
+                <div>
+                    <div style="font-size:14px;color:#fff;font-weight:bold;">${label}</div>
+                    <div style="font-size:12px;color:#aaa;">${rec.date} &nbsp;·&nbsp; ${rec.wins != null ? rec.wins + '勝目' : '—'} &nbsp;·&nbsp; ${triggerLabel}</div>
+                </div>
+                <span style="margin-left:auto;font-size:12px;color:#f1c40f;">#${i + 1}</span>
+            </div>`;
+        }).join('');
+    }
+    modal.style.display = 'flex';
 }
 
 function refreshAllJobsBadge() {
@@ -16616,7 +16673,8 @@ function checkWin() {
                     if (iWon) updateCharWins(window._lastCpuRankedJob);
                 }
                 if (iWon) {
-                    const _cpuRankedNewJob = unlockNextJob();
+                    const _cpuWinsAfter = getWins() + 1;
+                    const _cpuRankedNewJob = unlockNextJob('offline', _cpuWinsAfter);
                     if (_cpuRankedNewJob) {
                         title += `\n🔓 新ジョブ解放: ${(JOB_LABELS[_cpuRankedNewJob]||_cpuRankedNewJob).split('(')[0].trim()}`;
                         setTimeout(() => showUnlockPopup(_cpuRankedNewJob), 500);
