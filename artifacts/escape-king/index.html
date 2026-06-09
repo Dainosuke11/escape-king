@@ -1848,7 +1848,7 @@ const ABILITY_NAMES = {
     fusion: '融合(ベビーM吸収/植物LV↑)', seed_bazooka: '種バズーカ(直線3/威1/吹飛/種まき)',
     root_spread: '根を張る(AP-2/半径8回復/植物LV↑)', roar: '咆哮(半径1/威1/AP-1)',
     barrier_magic: '障壁魔法(半径5/味方バリア1T)',
-    flying_kick: '跳び蹴り(直線2/威2/AP-1)', rapid_strikes: '乱打(半径1全体/威2/吹飛)',
+    flying_kick: '跳び蹴り(直線2/威2/AP-1)', rapid_strikes: '連続斬り(半径1全体/初威1/毎T連続+1/非連続リセット)',
     wave_shot: '波動弾(直線3/威3)', aqua_dash: 'アクアダッシュ(2マス/AP+1/両水マスAP+2)',
     throw_enemy: '投げ飛ばし(半径1/威3/3マス吹飛)', tail_swing: 'テイルスイング(背後半円/威2/吹飛)',
     counter: 'カウンター(全ダメ無効+全効果反射)', ryujin_transform: '変身(竜形態/飛行)',
@@ -2125,7 +2125,7 @@ const ABILITY_TIPS = {
     flying_kick: '直線2マス移動。目的地に敵がいれば2ダメ・AP-1。AP消費なし。回数5。',
     wave_shot: '直線3マス以内の敵1体に3ダメ。回数3。',
     aqua_dash: '2マス移動(ダッシュと同じ移動)。発動時にAP+1。発動マスと着地マスの両方が水マスならAP+2。水マスに着地するとさらに前方2マス追加移動。回数5。',
-    rapid_strikes: '周囲半径1マスの全敵に2ダメ・吹き飛ばし。回数3。',
+    rapid_strikes: '半径1マスの全敵に【連続斬り攻撃力】分ダメ＋吹き飛ばし。毎ターン連続使用で攻撃力が+1ずつ上昇（1→2→3…）。1ターンでも使わなかった次のターンに攻撃力が1にリセット。回数5。',
     throw_enemy: '半径1マスの敵1体に3ダメ＋後方3マス吹き飛ばし。着地先に別の敵がいれば連鎖3ダメ。回数2。',
     tail_swing: '正面方向以外の半円エリア(半径2)の全敵に2ダメ・吹き飛ばし。回数3。',
     counter: '1ターン全ダメ・弱体化を無効化(バリア)＋被弾した攻撃のダメージ・AP減少・燃焼など全効果を攻撃者に反射する。回数3。',
@@ -2491,7 +2491,7 @@ const JOB_GUIDE_META = {
     cyborg:        { emoji: '⚙️', fullName: '機械兵', note: '【電力管理・全距離対応型】\n「電力補給」AP-1/HP+5(回5)。「ジェットブースト」r2飛行移動/AP-1/HP-1(回5)。\n「レーザーブレード」r1/威3/HP-1/AP-1(回5)。「薙ぎ払い」r2弧/威2/吹飛(回5)。\n「レーザースナイプ」直線5/威4(回5)。「レーザーバズーカ」r1爆風/威3(回5)。\n「焼却砲」直線3/威5/燃焼2T(回5)。「偵察ドローン」情報収集(回2)。「EMPフィールド」r3全敵AP-2/封印(回5)。\n★スキル「リミッター解除」：2T目以降使用可。HP+10・AP+1・全アビ+1・射程+2。2T継続・毎ターン3自傷。' },
     alien:         { emoji: '👽', fullName: 'エイリアン', note: '【闇属性・異能妨害型】\n「触手のムチ」r2/威1/吹飛(∞)。「トラクタービーム」r3/威1/引き寄せ/AP-1(回3)。\n「アブダクション」r3/威2/1T誘拐(回3)。「卵吐き」r2/威2+宇宙卵設置(回3)。\n「光学迷彩」1T潜伏+HP+1(回3)。「UFO爆撃」r3ランダム敵/1ダメ×4+目潰し(回5/闇)。\n「形態変化」戦闘形態→HP+5/AP+2/射程+1/触手強化。解除で全アビ+1(回1)。\n★スキル「マインドコントロール」：半径2の敵1体を1T支配。支配中はAP全回復+即行動可(闇属性)。' },
     mandrake:      { emoji: '🌿', fullName: 'マンドレイク', note: '【草属性・植物育成型・植物LVで強化】\n植物LVは種→若芽→ベビーマンドレイク育成や融合で上昇。技射程・威力がLVに連動。\n「枝のムチ」r2/LV1:1/LV10:3/LV20:5ダメ/吹飛(回5)。「植物の壁」前方3マス種+1Tバリア(回3)。\n「融合」r1植物全吸収/LV+/HP/アビ増加(回3)。「種バズーカ」直線3/1ダメ+種まき(回5)。\n「根を張る」AP-2/r8味方HP+1/全アビ+1/LV+/種成長(回3)。「咆哮」r1全敵1ダメ/AP-1/1封印(回5)。\n★スキル「根っこバインド」：直線5マス幅3に3ダメ+AP-2+3T毒+2Tトゲ設置(草属性)。植物LV10→ATK+1/LV20→ATK+2付与。' },
-    ryujin:        { emoji: '🐲', fullName: '竜人族', note: '【格闘特化・変身強化型】\n「飛び蹴り」直線2移動+着地敵2ダメ(AP消費なし/回5)。「波動弾」直線3/威3(回5)。\n「連続打撃」r1/弱→強の3連撃(回5)。「敵投げ」r2/投げ飛ばし+連鎖(回5)。\n「尻尾振り」r2AoE/1ダメ+AP-1(回5)。「カウンター」被弾反撃(回3)。\n「龍人変身」竜形態→全能力強化(回2)。「残像」分身残置+移動(回3)。\n★スキル「ドラゴンインパクト」：直線8マスの全敵に5ダメ+AP-1+吹飛(火属性)。' },
+    ryujin:        { emoji: '🐲', fullName: '竜人族', note: '【格闘特化・変身強化型】\n「飛び蹴り」直線2移動+着地敵2ダメ(AP消費なし/回5)。「波動弾」直線3/威3(回5)。\n「連続斬り」r1全敵AoE：毎T連続使用で威力+1(初威1→2→3…)。非連続ターンで威力1にリセット(回5)。\n「敵投げ」r2/投げ飛ばし+連鎖(回5)。「尻尾振り」r2AoE/1ダメ+AP-1(回5)。「カウンター」被弾反撃(回3)。\n「龍人変身」竜形態→全能力強化(回2)。「残像」分身残置+移動(回3)。\n★スキル「ドラゴンインパクト」：直線8マスの全敵に5ダメ+AP-1+吹飛(火属性)。' },
     shark_warrior: { emoji: '🦈', fullName: 'サメ戦士', note: '【水属性・ウォーターゲージ制】ゲージ15~で変身・20~でバフ獲得。\n「水中ダッシュ」水マスで射程延長+AP+1(回5)。「モリ打ち」直線3/威変化(∞)。\n「水流カッター」水/r2切り裂き(回3)。「水柱噴射」水/r2爆発+遮断(回3)。\n「噛みつき」隣接/威変化(回5)。「網投げ」r2/AP-2+封印(回3)。「渦潮攻撃」r3渦潮生成(回3)。「タコ召喚」HP3/AP2の海洋コマ(回3)。\n★スキル「ハイドロポンプ」：ゲージ全消費→量で強化(G≤5:直3/威3, G≤15:直5/威4, G≤25:直8幅3/威5, G>25:端まで幅3/威6)。AP-1・吹飛・通過マス浅瀬化。使用後G+5。' },
     clown:         { emoji: '🎪', fullName: 'ピエロ', note: '【混乱&封印の道化師】隣接敵が封じられると他コマに棺桶壊し(解放)が出現。\n「ナイフジャグリング」直線3/威1+命中で次回ダメ+1/回+1(回3)。「恐怖の笑顔」r2全敵AP-1+吹飛+2アビ2T封印(回5)。\n「玉乗り」直線2前進/威2/吹飛(回5)。「アクロバット」1T行動力+1(回5)。\n「空中ブランコ」隣接を直線5投げ/威2(回5)。「爆弾クラッカー」r2投/半径1爆発/威2+潜伏(回5)。「サル召喚」HP1/AP2のサル(回5)。\n★スキル「棺桶ナイフ」：半径2の敵1体を3T棺桶状態(行動不能+毎T2ダメ)。隣接コマが棺桶壊しで解放可。' },
     necromancer:   { emoji: '💀', fullName: '死霊術師', note: '【闇属性・ソウル錬成型】ソウルを集めて強力な召喚・技を解放。\n「闇魔法」r2/1ダメ+毒(回10)。「ネクロバインド」魂1消費/r3AP-1+5封印+ゾンビ召喚(回5)。\n「ネクロサモン」r1/5T後/ソウルで上位召喚(回5)。「アンデッドパーティ」魂3/r2に7体同時召喚(回1)。\n★スキル「霊魂放出」ソウル数で規模拡大AoE：≤5→幅2/深3, ≤10→幅3/深6, ≤20→幅6/深15, ≤40→幅9/深24。' },
@@ -5974,6 +5974,10 @@ function processTurnStartEffects(e) {
         delete e.abilities['ryuen'];
         delete e.abilities['shinkou'];
         e._kamioroshiActive = 0;
+    }
+    // 連続斬り：前ターンに使っていなければ攻撃力を1にリセット
+    if (e.rapidStrikesLastTurn !== undefined && e.rapidStrikesLastTurn !== turn - 1) {
+        e.rapidStrikesAtk = 1;
     }
     // rock_hide無敵切れ→後退+岩設置
     if (e.rockHideActive && !e.invin) {
@@ -10909,15 +10913,19 @@ function handleAbilityTarget(r, c, targetEntity) {
         used = true;
     } else if (actionMode === 'rapid_strikes') {
         se.abilities['rapid_strikes']--;
+        if (!se.rapidStrikesAtk) se.rapidStrikesAtk = 1;
+        const rsAtk = se.rapidStrikesAtk;
         let rsHit = 0;
         entities.forEach(t => {
             if (t.hp>0 && t.team!==se.team && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c))<=1) {
-                if (!t.invin) { t.hp -= 2; knockback(t,1,se); rsHit++; }
-                else { breakBarrierOnHit(t, se, 2); }
-                applyCounterReflect(se, t, 2 + (t.defDebuff||0), 0);
+                if (!t.invin) { t.hp -= rsAtk + (se.atkBonus||0) + (t.defDebuff||0); knockback(t,1,se); rsHit++; }
+                else { breakBarrierOnHit(t, se, rsAtk); }
+                applyCounterReflect(se, t, rsAtk + (t.defDebuff||0), 0);
             }
         });
-        msg(`👊 乱打！半径1マスの敵${rsHit}体に2ダメ・吹き飛ばし！`); used = true;
+        se.rapidStrikesAtk++;
+        se.rapidStrikesLastTurn = turn;
+        msg(`👊 連続斬り！半径1マスの敵${rsHit}体に${rsAtk}ダメ・吹き飛ばし！(次T連続で威力↑)`); used = true;
     } else if (actionMode === 'throw_enemy') {
         se.abilities['throw_enemy']--;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
