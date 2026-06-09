@@ -189,6 +189,7 @@ router.get("/profile/:userId", async (req, res) => {
       charUsage: (p.charUsage as Record<string, number>) ?? {},
       charWins: (p.charWins as Record<string, number>) ?? {},
       unlockedJobsCount: Array.isArray(p.unlockedJobs) ? (p.unlockedJobs as string[]).length : 0,
+      unlockedJobs: (p.unlockedJobs as string[]) ?? [],
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });
