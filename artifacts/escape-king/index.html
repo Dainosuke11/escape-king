@@ -1284,6 +1284,7 @@ let duneTimer = 1;
 let sandwormTarget = null;
 let sandwormWarning = false;
 let trapOwnerMap = {};          // "r,c" -> team that placed the trap
+let trapOrigTileMap = {};       // "r,c" -> original tile before trap was placed
 let rollRockPending = null;     // {r, c, dir, cols} pending roll_rock action
 let rollRockWarnTiles = [];     // [{r,c}] tiles to show roll-rock warning
 let sandwormActive = false;
@@ -5282,11 +5283,12 @@ function initBoard(stageType) {
         placeGoggles(0,10);  // cpu start   (r=0, c=10)
 
         // === ランダム罠 10個 (NPC設置) ===
-        trapOwnerMap = {};
+        trapOwnerMap = {}; trapOrigTileMap = {};
         let dTrapPlaced=0, dTrapAtt=0;
         while (dTrapPlaced<10 && dTrapAtt<500) {
             let tr=2+Math.floor(Math.random()*17), tc=1+Math.floor(Math.random()*19);
             if (board[tr]?.[tc]==='dungeon_ground') {
+                trapOrigTileMap[`${tr},${tc}`] = board[tr][tc];
                 board[tr][tc]='trap'; trapOwnerMap[`${tr},${tc}`]='npc'; dTrapPlaced++;
             }
             dTrapAtt++;
@@ -5628,7 +5630,7 @@ function initEntities(pJob, difficulty = "1") {
     scatterRocks(14 + Math.floor(Math.random()*5), 10, 5);
     treasures = ['platinum', 'gold', 'silver', 'copper'];
     duneTimer = 1;
-    trapOwnerMap = {};
+    trapOwnerMap = {}; trapOrigTileMap = {};
     rollRockPending = null;
     rollRockWarnTiles = [];
     cursedAbilities = {};
@@ -5784,7 +5786,7 @@ function initEntitiesOnline(myJob, opponentJob, difficulty = "1") {
     mafiaTerritory = null;
     thornTileMap = {};
     // ---- stage-specific globals & entities (mirrors initEntities) ----
-    trapOwnerMap = {};
+    trapOwnerMap = {}; trapOrigTileMap = {};
     rollRockPending = null; rollRockWarnTiles = [];
     cursedAbilities = {}; lightBarrierZones = []; pentagramZones = [];
     darknessFields = []; hellGroundTiles = []; guruPlagueTiles = []; copperForcedMines = new Set();
@@ -6250,6 +6252,7 @@ function processTurnStartEffects(e) {
             let oldR = e.r, oldC = e.c;
             e.r = backR;
             if (['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground'].includes(board[oldR]?.[oldC])) {
+                trapOrigTileMap[`${oldR},${oldC}`] = board[oldR][oldC];
                 board[oldR][oldC] = 'trap'; trapOwnerMap[`${oldR},${oldC}`] = e.team;
                 msg(`🛡️ ${e.name}のバリアが解け、後退して罠を設置！`, true);
             } else {
@@ -6878,6 +6881,7 @@ function startTurn(team, skipEffects = false) {
                 });
                 const explosible = ['plains','desert','graveyard_ground','nighttown_ground','fortress_floor','mountain_tile','snow','summit','castle_tile','dungeon_ground','forest','shallow_water','volcano_summit_ground'];
                 if (explosible.includes(board[e.r]?.[e.c]) && !isNoRockZone(e.r,e.c)) {
+                    trapOrigTileMap[`${e.r},${e.c}`] = board[e.r][e.c];
                     board[e.r][e.c]='trap'; trapOwnerMap[`${e.r},${e.c}`]=e.team;
                 }
                 msg(`💥 偵察ドローン撃墜！爆発で周囲1マスにダメージ(${droneExpHits}体)＋罠設置！`, true);
@@ -9268,8 +9272,8 @@ function handleTileClick(vr, c) {
                     else if (board[r] && board[r][c] === 'trap') {
                         let tKey = `${r},${c}`;
                         if (!selectedEntity.flying && trapOwnerMap[tKey] !== selectedEntity.team) {
-                            board[r][c] = defaultGround();
-                            delete trapOwnerMap[tKey];
+                            board[r][c] = trapOrigTileMap[tKey] || defaultGround();
+                            delete trapOwnerMap[tKey]; delete trapOrigTileMap[tKey];
                             if (!selectedEntity.invin) {
                                 // 3×3 area effect: AP-2 + 1 damage to all enemies in range
                                 let trapHits = 0;
@@ -9644,6 +9648,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg("ダッシュで移動！" + (eventMsg ? " " + eventMsg : "")); 
         checkEnemyTerritory(se);
     } else if (actionMode === 'trap') {
+        trapOrigTileMap[`${r},${c}`] = board[r][c];
         board[r][c] = 'trap'; se.abilities['trap']--; trapOwnerMap[`${r},${c}`] = se.team; used = true;
     } else if (actionMode === 'bow') {
         se.abilities['bow']--; 
@@ -10149,9 +10154,12 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'bombardment') {
         se.abilities['bombardment']--;
         // Place a cannon tile at se's position and grant king atkBonus+1 for 1 turn
-        if (!isNoRockZone(se.r, se.c)) board[se.r][se.c] = 'cannon';
+        const _bombOrigTile = board[se.r][se.c];
+        if (!isNoRockZone(se.r, se.c)) {
+            board[se.r][se.c] = 'cannon';
+            tempRocks.push({r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: _bombOrigTile});
+        }
         se.atkBonus = (se.atkBonus||0) + 1;
-        tempRocks.push({r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: 'plains'});
         msg(`💣 砲撃指令！足元に大砲設置・このターン攻撃力+1！`); used = true;
     } else if (actionMode === 'curved_shot') {
         se.abilities['curved_shot']--;
@@ -10240,8 +10248,9 @@ function handleAbilityTarget(r, c, targetEntity) {
         [[se.r-1, se.c-1],[se.r-1, se.c],[se.r-1, se.c+1]].forEach(([fr, fc]) => {
             if (fr >= 0 && fr < SIZE && fc >= 0 && fc < SIZE && !isNoRockZone(fr, fc) &&
                 board[fr][fc] !== 'rock' && !entities.some(e => e.hp > 0 && e.r === fr && e.c === fc)) {
+                const _fOrigTile = board[fr][fc];
                 board[fr][fc] = 'rock';
-                tempRocks.push({r: fr, c: fc, expireOnTurn: turn + 1, restoreTile: 'plains'});
+                tempRocks.push({r: fr, c: fc, expireOnTurn: turn + 1, restoreTile: _fOrigTile});
                 rocksPlaced++;
             }
         });
@@ -11730,6 +11739,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.r = r; se.c = c;
         if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
         if (['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground'].includes(board[edOldR][edOldC])) {
+            trapOrigTileMap[`${edOldR},${edOldC}`] = board[edOldR][edOldC];
             board[edOldR][edOldC] = 'trap'; trapOwnerMap[`${edOldR},${edOldC}`] = se.team;
         }
         let edEvent = checkTileEffects(se);
@@ -11743,6 +11753,7 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.onWyvern) { let wy=entities.find(e=>e.id===se.onWyvern&&e.hp>0); if(wy){wy.r=r;wy.c=c;} }
         const nwTrapTiles = ['plains','desert','dungeon_ground','lava_ground','lake_ground','sky_ground','arena_floor','forest','graveyard_ground','nighttown_ground','fortress_floor','snow','mountain_tile','castle_tile','skyfort_bridge','volcano_summit_ground','factory_conveyor','factory_skip_1','factory_skip_2','swamp_tile'];
         if (nwTrapTiles.includes(board[nwOldR]?.[nwOldC])) {
+            trapOrigTileMap[`${nwOldR},${nwOldC}`] = board[nwOldR][nwOldC];
             board[nwOldR][nwOldC] = 'trap'; trapOwnerMap[`${nwOldR},${nwOldC}`] = se.team;
         }
         let nwEvent = checkTileEffects(se);
