@@ -1,33 +1,24 @@
 ---
 name: Escape the King donor system
-description: Ko-fi webhook flow, DB tables, API endpoints, and client-side full-unlock logic for donation rewards.
+description: Ko-fi donation reward flow — key design constraints and durable decisions.
 ---
 
 ## Rule
-Ko-fi 寄付でドナーになると全ステージ・全キャラクターが即アンロックされる。
+Ko-fi 寄付（1円以上）で全ステージ・全キャラクターが即アンロックされる。
 
-## DB
-- `ek_players.is_donor` (boolean, default false) — Drizzle schema + raw SQL ALTER TABLE at startup in kofi.ts
-- `ek_donor_emails` table — id, email, kofi_transaction_id (UNIQUE), received_at, claimed_by_player_id
+## Auth architecture constraint
+This game uses client-issued UUIDs (`getUserId()`) stored in localStorage as the only player identity. There is no server-side session or JWT. Every API endpoint (including this one) accepts `userId` from the request body. This is a systemic property of the game, not a bug in the donor flow.
 
-## API endpoints (artifacts/api-server/src/routes/kofi.ts)
-- `POST /api/kofi/webhook` — Ko-fi sends `data` as a JSON string inside form body; parses it, verifies KOFI_VERIFICATION_TOKEN env var (optional); inserts into ek_donor_emails.
-- `POST /api/kofi/claim` — player submits { userId, email }; looks up ek_donor_emails by email (not requiring unclaimed); sets is_donor=true on ek_players via upsert.
-- `POST /api/admin/set-donor` — authenticated by `admin-secret` header vs ADMIN_SECRET env var; manually grants is_donor=true.
-- `GET /api/player/:id` response now includes `isDonor: boolean`.
+**Why:** Adding server-side auth is a separate, major feature outside the scope of the donor task.
 
-## Client-side (index.html)
-- `ek_is_donor` localStorage key: '1' = donor unlocked.
-- `isDonorUnlocked()` — checks localStorage.
-- `applyDonorUnlock()` — sets ek_is_donor=1, ek_tutorial_done=1, ek_max_cpu_lv=99, saves ALL_JOBS to etk_unlocked_jobs, refreshes selects.
-- `showDonationUnlockPopup()` — opens donation-unlock-modal.
-- `claimDonorUnlock()` — calls /api/kofi/claim, on success calls applyDonorUnlock().
-- `isStageUnlocked()` and `isJobUnlocked()` both check isDonorUnlocked() first.
-- `checkStageUnlocked()` and `checkJobUnlocked()` call showDonationUnlockPopup() when locked.
-- `loadPlayerFromServer()` — if data.isDonor && !isDonorUnlocked() → applyDonorUnlock().
-- DOMContentLoaded — if isDonorUnlocked() → applyDonorUnlock() immediately.
-- Ko-fi footer has "🎁 寄付特典を受け取る" button that calls showDonationUnlockPopup().
+**How to apply:** Any future donor or identity-sensitive endpoint must accept this limitation and mitigate within the existing model (UUID format check, player-must-exist check, one-email-per-player enforcement).
 
-**Why:** Donation incentive that's server-verified via webhook + client-claimed by email.
+## Key design decisions
+- Webhook (`POST /api/kofi/webhook`) is **fail-closed**: requires `KOFI_VERIFICATION_TOKEN` env var; returns 503 if absent. Prevents fake-payload seeding.
+- Admin endpoint (`POST /api/admin/set-donor`) is **fail-closed**: requires `ADMIN_SECRET` env var; authenticated via `x-admin-secret` header.
+- Claim (`POST /api/kofi/claim`): one donor-email row → one player only (`claimed_by_player_id`); idempotent for same player; cross-player re-claim returns 409.
+- Client stores `ek_is_donor=1` in localStorage; `applyDonorUnlock()` also sets `ek_tutorial_done=1`, `ek_max_cpu_lv=99`, and saves ALL_JOBS.
 
-**How to apply:** Any future change to stage/job unlock logic must preserve isDonorUnlocked() short-circuit. Any new locked content should check isDonorUnlocked() in its unlock predicate.
+## Tables
+- `ek_donor_emails`: stores Ko-fi donation emails; `claimed_by_player_id` records which game player claimed each row.
+- `ek_players.is_donor` (boolean): donor flag synced from server on login.

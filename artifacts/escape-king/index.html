@@ -4775,40 +4775,27 @@ async function claimDonorUnlock() {
         return;
     }
     if (btn) btn.disabled = true;
-    if (msgEl) { msgEl.textContent = 'メールアドレスを確認中...'; msgEl.style.color = '#aaa'; }
+    if (msgEl) { msgEl.textContent = '確認中...'; msgEl.style.color = '#aaa'; }
     try {
-        // Phase 1: Verify email and get a server-minted single-use claim token
-        const claimRes = await fetch(getApiBase() + '/kofi/claim', {
+        const res = await fetch(getApiBase() + '/kofi/claim', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ userId: getUserId(), email })
         });
-        const claimData = await claimRes.json();
-        if (!claimData.ok) {
-            if (claimData.error === 'not_found') {
-                if (msgEl) { msgEl.textContent = '❌ このメールアドレスの寄付記録が見つかりません。Ko-fiに登録したメールをご確認ください。'; msgEl.style.color = '#e74c3c'; }
-            } else {
-                if (msgEl) { msgEl.textContent = '⚠ エラーが発生しました。しばらくしてから再試行してください。'; msgEl.style.color = '#e74c3c'; }
-            }
-            if (btn) btn.disabled = false;
-            return;
-        }
-
-        // Phase 2: Redeem the server-issued token to bind donor status to this player
-        if (msgEl) { msgEl.textContent = '特典を付与中...'; msgEl.style.color = '#aaa'; }
-        const redeemRes = await fetch(getApiBase() + '/kofi/redeem', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: getUserId(), claimToken: claimData.claimToken })
-        });
-        const redeemData = await redeemRes.json();
-        if (redeemData.ok) {
+        const data = await res.json();
+        if (data.ok) {
             applyDonorUnlock();
             showDonorUnlockCelebration();
             const claimArea = document.getElementById('donation-claim-area');
             if (claimArea) claimArea.style.display = 'none';
-        } else if (redeemData.error === 'token_expired') {
-            if (msgEl) { msgEl.textContent = '⚠ トークンの有効期限が切れました。もう一度お試しください。'; msgEl.style.color = '#e74c3c'; }
+        } else if (data.error === 'not_found') {
+            if (msgEl) { msgEl.textContent = '❌ このメールアドレスの寄付記録が見つかりません。Ko-fiに登録したメールをご確認ください。'; msgEl.style.color = '#e74c3c'; }
+            if (btn) btn.disabled = false;
+        } else if (data.error === 'player_not_found') {
+            if (msgEl) { msgEl.textContent = '⚠ プレイヤー登録が必要です。ゲームを一度プレイしてから再試行してください。'; msgEl.style.color = '#e74c3c'; }
+            if (btn) btn.disabled = false;
+        } else if (data.error === 'already_claimed') {
+            if (msgEl) { msgEl.textContent = '⚠ このメールアドレスはすでに別のプレイヤーにより使用されています。'; msgEl.style.color = '#e74c3c'; }
             if (btn) btn.disabled = false;
         } else {
             if (msgEl) { msgEl.textContent = '⚠ エラーが発生しました。しばらくしてから再試行してください。'; msgEl.style.color = '#e74c3c'; }
