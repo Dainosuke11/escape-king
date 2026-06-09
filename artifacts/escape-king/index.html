@@ -4488,6 +4488,7 @@ window.addEventListener('DOMContentLoaded', () => {
     refreshAllStageSelects();
     loadPlayerFromServer();
     refreshProfileUI();
+    checkLoginBonus();
     document.getElementById('btn-start').addEventListener('click', startGame);
     document.getElementById('btn-online').addEventListener('click', showOnlineLobby);
     document.getElementById('btn-move').addEventListener('click', () => setMode('move'));
@@ -4807,9 +4808,16 @@ async function claimDonorUnlock() {
     }
 }
 
+function loadBonusUnlockedStages() {
+    try { const s = localStorage.getItem('ek_bonus_unlocked_stages'); if (s) { const a = JSON.parse(s); if (Array.isArray(a)) return a; } } catch {}
+    return [];
+}
+function saveBonusUnlockedStages(list) { localStorage.setItem('ek_bonus_unlocked_stages', JSON.stringify(list)); }
+
 function isStageUnlocked(stage) {
     if (!stage || stage === 'random') return true;
     if (isDonorUnlocked()) return true;
+    if (loadBonusUnlockedStages().includes(stage)) return true;
     const req = STAGE_UNLOCK_REQUIREMENTS[stage];
     if (req === undefined || req === -1) return true; // plains: always unlocked
     if (req === 0) return isTutorialDone();
@@ -4980,6 +4988,91 @@ function showUnlockPopup(jobId) {
     refreshAllJobsBadge();
     refreshAllJobSelects();
 }
+
+// ========== ログインボーナスシステム ==========
+function getLockedJobPool() {
+    const unlocked = loadUnlockedJobs();
+    return UNLOCK_ORDER.filter(j => !unlocked.includes(j));
+}
+
+function getLockedStagePool() {
+    if (!isTutorialDone()) return [];
+    const bonus = loadBonusUnlockedStages();
+    return ALL_STAGES.filter(stage => {
+        const req = STAGE_UNLOCK_REQUIREMENTS[stage];
+        if (req === undefined || req === -1) return false;
+        if (bonus.includes(stage)) return false;
+        if (req === 0) return false;
+        return getMaxCpuLvBeaten() < req;
+    });
+}
+
+function checkLoginBonus() {
+    if (isDonorUnlocked()) return;
+    const today = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
+    const last = localStorage.getItem('ek_last_login_bonus');
+    if (last === today) return;
+
+    const jobPool = getLockedJobPool();
+    const stagePool = getLockedStagePool();
+    const pool = [
+        ...jobPool.map(id => ({ type:'job', id })),
+        ...stagePool.map(id => ({ type:'stage', id }))
+    ];
+    if (pool.length === 0) return;
+
+    localStorage.setItem('ek_last_login_bonus', today);
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    if (chosen.type === 'job') {
+        const unlocked = loadUnlockedJobs();
+        if (!unlocked.includes(chosen.id)) {
+            unlocked.push(chosen.id);
+            saveUnlockedJobs(unlocked);
+            recordJobUnlock(chosen.id, 'login_bonus', null);
+            try { refreshAllJobSelects(); refreshAllJobsBadge(); } catch(e) {}
+        }
+    } else {
+        const bonus = loadBonusUnlockedStages();
+        if (!bonus.includes(chosen.id)) {
+            bonus.push(chosen.id);
+            saveBonusUnlockedStages(bonus);
+            try { refreshAllStageSelects(); } catch(e) {}
+        }
+    }
+
+    setTimeout(() => showLoginBonusPopup(chosen.type, chosen.id), 800);
+}
+
+function showLoginBonusPopup(type, itemId) {
+    const existing = document.getElementById('login-bonus-popup');
+    if (existing) existing.remove();
+    let label, icon;
+    if (type === 'job') {
+        const raw = JOB_LABELS[itemId] || itemId;
+        label = raw.split('(')[0].trim();
+        icon = '🎭';
+    } else {
+        const raw = STAGE_LABELS[itemId] || itemId;
+        label = raw.split('(')[0].trim();
+        icon = '🗺️';
+    }
+    const div = document.createElement('div');
+    div.id = 'login-bonus-popup';
+    div.style.cssText = 'position:fixed;top:-120px;left:50%;transform:translateX(-50%);background:#1a1a2e;border:2px solid #f1c40f;border-radius:14px;padding:16px 30px;font-size:16px;font-weight:bold;color:#f1c40f;z-index:9999;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,0.9);transition:top 0.45s cubic-bezier(0.34,1.56,0.64,1);text-align:center;min-width:260px;';
+    div.innerHTML = `<div style="font-size:13px;color:#aaa;margin-bottom:4px;">🎁 本日のログインボーナス</div>` +
+        `<div>${icon} <span style="color:#fff;">${label}</span> が解放されました！</div>` +
+        `<button onclick="this.parentNode.remove()" style="margin-top:10px;background:none;border:1px solid #f1c40f55;border-radius:6px;color:#aaa;font-size:12px;padding:3px 12px;cursor:pointer;">閉じる</button>`;
+    document.body.appendChild(div);
+    requestAnimationFrame(() => requestAnimationFrame(() => { div.style.top = '24px'; }));
+    setTimeout(() => {
+        div.style.transition = 'top 0.4s ease, opacity 0.5s ease';
+        div.style.opacity = '0';
+        div.style.top = '-120px';
+        setTimeout(() => { if (div.parentNode) div.remove(); }, 500);
+    }, 5000);
+}
+// ===================================================
 
 function showJobUnlockHistoryModal() {
     const modal = document.getElementById('job-unlock-history-modal');
