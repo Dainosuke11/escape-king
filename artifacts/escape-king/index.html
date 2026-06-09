@@ -10504,14 +10504,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         se.abilities['tractor_beam']--;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
             targetEntity.hp -= 1 + (targetEntity.defDebuff||0);
-            // 使用者の目の前(1マス隣)に引き寄せ
-            let pr = se.r + Math.sign(targetEntity.r - se.r);
-            let pc = se.c + Math.sign(targetEntity.c - se.c);
-            if (isWalkable(pr,pc) && !entities.some(e=>e.hp>0&&e.r===pr&&e.c===pc)) { targetEntity.r=pr; targetEntity.c=pc; }
-            else { targetEntity.r=se.r+Math.sign(targetEntity.r-se.r); targetEntity.c=se.c+Math.sign(targetEntity.c-se.c); }
+            // 使用者の目の前1マスに強制移動
+            let _tbDr = Math.sign(targetEntity.r - se.r);
+            let _tbDc = Math.sign(targetEntity.c - se.c);
+            let _tbDest = entities.find(e => e.hp>0 && e!==targetEntity && e.r===se.r+_tbDr && e.c===se.c+_tbDc);
+            if (!_tbDest) { targetEntity.r = se.r + _tbDr; targetEntity.c = se.c + _tbDc; }
             targetEntity.ap = Math.max(0, targetEntity.ap - 1);
         }
-        msg(targetEntity?.invin ? '🛸 トラクタービーム！しかし無敵で防がれた！' : '🛸 トラクタービーム！1ダメ・目の前に引き寄せ・AP-1！'); used = true;
+        msg(targetEntity?.invin ? '🛸 トラクタービーム！しかし無敵で防がれた！' : '🛸 トラクタービーム！1ダメ・目の前1マスに引き寄せ・AP-1！'); used = true;
     } else if (actionMode === 'abduction') {
         se.abilities['abduction']--;
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
