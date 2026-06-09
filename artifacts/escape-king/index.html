@@ -406,6 +406,7 @@
         .or-bonus-section { background:#12121a; border-radius:8px; padding:10px 14px; margin:10px 0; text-align:left; font-size:13px; color:#ccc; line-height:1.8; }
         .or-bonus-label { color:#aaa; }
         .or-bonus-divider { border:none; border-top:1px solid #333; margin:4px 0; }
+        .or-unlock-section { margin-top:10px; padding:8px 14px; border-radius:8px; background:#0d2a0d; border:1px solid #2ecc71; color:#2ecc71; font-size:13px; font-weight:bold; text-align:left; }
         .or-ok-btn { margin-top:16px; width:100%; padding:12px; border:none; background:#8e44ad; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; font-weight:bold; transition:background .15s; }
         .or-ok-btn:hover { background:#9b59b6; }
         .lb-tier-header { padding:8px 6px 4px; font-size:13px; font-weight:bold;
@@ -1179,6 +1180,7 @@
         <div class="or-rp-main" id="or-rp-main"></div>
         <div class="or-rank-info" id="or-rank-info"></div>
         <div class="or-bonus-section" id="or-bonus-section" style="display:none;"></div>
+        <div class="or-unlock-section" id="or-unlock-section" style="display:none;"></div>
         <button class="or-ok-btn" onclick="closeOnlineResultModal()">OK</button>
     </div>
 </div>
@@ -3150,16 +3152,17 @@ function handleRankResult(data) {
     syncPlayerToServer();
     setTimeout(() => { loadPlayerFromServer().then(() => refreshProfileUI()); }, 3000);
 
+    let _onlineNewJob = null;
     if (data.won) {
         const _winsAfterThisWin = getWins() + 1;
-        const newJob = unlockNextJob('ranked', _winsAfterThisWin);
-        if (newJob) setTimeout(() => showUnlockPopup(newJob), 800);
+        _onlineNewJob = unlockNextJob('ranked', _winsAfterThisWin);
+        if (_onlineNewJob) setTimeout(() => showUnlockPopup(_onlineNewJob), 800);
     }
 
-    _showOnlineResultModal({ won: data.won, rpDelta: data.rpDelta, before, after, bonuses: data.bonuses || [], baseRpDelta: data.baseRpDelta, friendMatch: false });
+    _showOnlineResultModal({ won: data.won, rpDelta: data.rpDelta, before, after, bonuses: data.bonuses || [], baseRpDelta: data.baseRpDelta, friendMatch: false, newJob: _onlineNewJob });
 }
 
-function _showOnlineResultModal({ won, rpDelta, before, after, bonuses, baseRpDelta, friendMatch }) {
+function _showOnlineResultModal({ won, rpDelta, before, after, bonuses, baseRpDelta, friendMatch, newJob }) {
     const modal = document.getElementById('online-result-modal');
     if (!modal) return;
 
@@ -3202,6 +3205,16 @@ function _showOnlineResultModal({ won, rpDelta, before, after, bonuses, baseRpDe
         bonusEl.style.display = 'block';
     } else {
         bonusEl.style.display = 'none';
+    }
+
+    const unlockEl = document.getElementById('or-unlock-section');
+    if (newJob && unlockEl) {
+        const _njLabel = (JOB_LABELS[newJob] || newJob).split('(')[0].trim();
+        const _njMeta = JOB_GUIDE_META[newJob];
+        unlockEl.innerHTML = `🔓 新キャラ解放！ ${_njMeta ? _njMeta.emoji : ''} <b>${_njLabel}</b> が使用可能になりました！`;
+        unlockEl.style.display = 'block';
+    } else if (unlockEl) {
+        unlockEl.style.display = 'none';
     }
 
     modal.style.display = 'flex';
@@ -16802,8 +16815,25 @@ function checkWin() {
                     const _cpuWinsAfter = getWins() + 1;
                     const _cpuRankedNewJob = unlockNextJob('offline', _cpuWinsAfter);
                     if (_cpuRankedNewJob) {
-                        title += `\n🔓 新ジョブ解放: ${(JOB_LABELS[_cpuRankedNewJob]||_cpuRankedNewJob).split('(')[0].trim()}`;
+                        const _crjLabel = (JOB_LABELS[_cpuRankedNewJob]||_cpuRankedNewJob).split('(')[0].trim();
+                        const _crjMeta = JOB_GUIDE_META[_cpuRankedNewJob];
+                        title += `\n🔓 新キャラ解放！ ${_crjMeta ? _crjMeta.emoji : ''} ${_crjLabel} が使用可能になりました！`;
                         setTimeout(() => showUnlockPopup(_cpuRankedNewJob), 500);
+                    }
+                    // CPUランク戦でもステージ解放チェック
+                    const _crDiff = parseInt(document.getElementById('ol-difficulty-select')?.value || '1');
+                    const _crPrevMax = getMaxCpuLvBeaten();
+                    if (_crDiff > _crPrevMax) {
+                        setMaxCpuLvBeaten(_crDiff);
+                        const _crNewStages = ALL_STAGES.filter(s => {
+                            const req = STAGE_UNLOCK_REQUIREMENTS[s] ?? 0;
+                            return req > 0 && req > _crPrevMax && req <= _crDiff;
+                        });
+                        if (_crNewStages.length > 0) {
+                            const _crStageNames = _crNewStages.map(s => (STAGE_LABELS[s] || s).split('(')[0].trim()).join('、');
+                            title += `\n🗺️ 新ステージ解放！ ${_crStageNames} が使用可能になりました！`;
+                            refreshAllStageSelects();
+                        }
                     }
                 }
                 syncPlayerToServer();
@@ -16851,7 +16881,7 @@ function checkWin() {
                     });
                     if (newStages.length > 0) {
                         const stageNames = newStages.map(s => (STAGE_LABELS[s] || s).split('(')[0].trim()).join('、');
-                        title += `\n🗺️ 新ステージ解放: ${stageNames}`;
+                        title += `\n🗺️ 新ステージ解放！ ${stageNames} が使用可能になりました！`;
                         refreshAllStageSelects();
                     }
                 }
