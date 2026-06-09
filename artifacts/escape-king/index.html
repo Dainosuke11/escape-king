@@ -1908,7 +1908,7 @@ const ABILITY_NAMES = {
     shikigami_summon: '式神召喚(5T~/狐火+大鬼/全アビ使用不可)',
     charge: '突撃(半径1/威1+残AP分追加ダメ/全AP消費)',
     poison_bite: '毒噛み(半径1/威1/毒付与3T)',
-    combo_slash: '連続斬り(半径1/威1/次T連続斬り+1/50%回数+1)',
+    combo_slash: '連続斬り(半径1斜込/威1/次T連続斬り+1/50%回数+1)',
     retreat: '撤退',
     escape_dash: '逃げ足(移動+元の場所に罠)',
     rock_dash: '退路を断ち走る(移動+元の場所に岩)',
@@ -2168,7 +2168,7 @@ const ABILITY_TIPS = {
     sin_mark: '半径2(堕天ゲージ30以上→5)の敵にAP-2・5封印・罪の呪い(遠ざかるたびに1ダメ)を付与。堕天ゲージ+1。回数3。',
     death_scythe: '足元中心、半径1(ゲージ30→3)の全敵に2ダメ(ゲージ30→3)・吹飛・AP-1・5封印。堕天ゲージ+1。回数∞。',
     balance_break: '直線5(ゲージ30→半径8+転送)の敵に自1ダメの代償で2ダメ(ゲージ30→4)・吹飛・AP-2・5封印。堕天ゲージ+1。回数3。',
-    combo_slash: '半径1マスの敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
+    combo_slash: '半径1マス(斜め含む)の敵に1ダメ。使用するたびに次の連続斬りの攻撃力+1。50%確率で使用回数+1。回数2。',
     retreat: '自分に1Tバリアを付与。バリアが解けた次のターン開始時に後方1マスへ自動後退し、元の場所に罠を設置する。回数3。',
     escape_dash: '2マス以内のマスへ高速移動。元いた場所に罠を設置する。回数10。',
     ninja_walk: '2マス以内のマスへ忍び足で移動。元いた場所に罠を設置する。弓・曲射・速射・遠距離狙撃の基礎ダメージ+1(暗殺者専用)。回数5。',
@@ -2276,8 +2276,8 @@ const ABILITY_TIPS = {
 };
 
 const JOB_DATA = {
-    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 3, summon_archer: 3, counter: 3, graceful_rest: 1, royal_dignity: 3, bombardment: 3, combo_slash: 2 }, hp: 30, ap: 2 },
-    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, spin_slash: 5, smash_slash: 3, summon_lancer: 3, unwavering_stance: 1, duel: 3, heavy_armor: 3, mount_horse: 3, combo_slash: 2 }, hp: 30, ap: 2 },
+    king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, combo_slash: 2, spin_slash: 5, smash_slash: 3, summon_archer: 3, counter: 3, graceful_rest: 1, royal_dignity: 3, bombardment: 3 }, hp: 30, ap: 2 },
+    knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, combo_slash: 2, spin_slash: 5, smash_slash: 3, summon_lancer: 3, unwavering_stance: 1, duel: 3, heavy_armor: 3, mount_horse: 3 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, ninja_walk: 5, trap: 3, bow: 5, dagger: 10, decoy: 3, curved_shot: 5, rapid_shot: 5, long_snipe: 5 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 3, coordinated_atk: 3, scouting: 3, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 5, meditation: 1, summon_magic: 3, barrier_magic: 3 }, hp: 30, ap: 2 },
@@ -2461,8 +2461,8 @@ const JOB_SKILL_NAMES = {
 };
 
 const JOB_GUIDE_META = {
-    king:          { emoji: '👑', fullName: '王', note: '【光属性・近〜中距離の全能型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「弓兵召喚」r1に弓兵。「カウンター」被弾時反撃。\n「優雅な休息」ランダム4アビ+1/HP+1。「王の威厳」r3全敵AP-1+5封印。「砲撃」足元に大砲マス→味方全ATK+1。「コンボ斬り」r1 2段攻撃。\n★スキル「王の威光」：正面に弓兵(HP2/AP2)・槍兵(HP2/AP2)・分隊(HP5/AP2)を召喚(2T後消滅)。半径8の全味方にAP+1付与。' },
-    knight:        { emoji: '⚔️', fullName: '騎士', note: '【光属性・近接防御型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「槍兵召喚」r1に槍兵。「不動の構え」1T完全無敵。\n「決闘」r2/互いにATK+1+AP+1。「重装化」1T被ダメ-1+岩砕き∞。「馬に乗る」1T AP+1+移動後r1敵1ダメ。「コンボ斬り」r1 2段攻撃。\n★スキル「騎士の突進」：直線5マス内を突進。軌道上の敵に貫通5ダメ+吹飛。経路周辺1マスの敵にかまいたち2ダメ。岩・川等の地形で停止。' },
+    king:          { emoji: '👑', fullName: '王', note: '【光属性・近〜中距離の全能型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「弓兵召喚」r1に弓兵。「カウンター」被弾時反撃。\n「優雅な休息」ランダム4アビ+1/HP+1。「王の威厳」r3全敵AP-1+5封印。「砲撃」足元に大砲マス→味方全ATK+1。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「王の威光」：正面に弓兵(HP2/AP2)・槍兵(HP2/AP2)・分隊(HP5/AP2)を召喚(2T後消滅)。半径8の全味方にAP+1付与。' },
+    knight:        { emoji: '⚔️', fullName: '騎士', note: '【光属性・近接防御型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「槍兵召喚」r1に槍兵。「不動の構え」1T完全無敵。\n「決闘」r2/互いにATK+1+AP+1。「重装化」1T被ダメ-1+岩砕き∞。「馬に乗る」1T AP+1+移動後r1敵1ダメ。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「騎士の突進」：直線5マス内を突進。軌道上の敵に貫通5ダメ+吹飛。経路周辺1マスの敵にかまいたち2ダメ。岩・川等の地形で停止。' },
     assassin:      { emoji: '🗡️', fullName: '暗殺者', note: '【闇属性・潜伏&遠距離特化】\n「忍び足」2マス移動+罠設置+弓系ダメ+1。「デコイ人形」隣に囮(HP1)→潜伏状態に(回数3)。\n「曲射」r3岩越し/威1/吹飛(回数5)。「速射」直線5/威2×2(回数5)。「遠距離狙撃」直線8/威4/AP-1(回数5)。\n★スキル「隠伏天誅」：2T潜伏+AP+1。永続的に武器が毒武器化(以降の全攻撃に毒付与)。' },
     infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「罠」設置系妨害。「要塞化」1T被ダメ-2。「突撃陣形」r1に槍兵+弓兵召喚(1T)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「斥候偵察」直線8封印+潜伏。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP5/AP2)を召喚。5T生存でスキル解放。' },
     mage:          { emoji: '🔮', fullName: '魔法使い', note: '【中〜遠距離魔法型・多属性】\n「魔法弾」r3/威2(回数7)。「風魔法」r2吹飛/威1(回3)。「氷魔法」水/r2凍結(回3)。\n「雷魔法」光属性/r2半径1AoE/威2/AP-2/目潰し(回数5)。「召喚魔法」r1モンスター召喚(回3)。「障壁魔法」r5味方全バリア。「瞑想」AP-2→全アビ+1(回1)。\n★スキル「大火球魔法」：半径5の敵に6ダメ+AP-1+吹飛(火属性)。着弾隣接の敵にも2ダメ+目潢し。' },
@@ -8040,7 +8040,7 @@ function isValidTarget(se, r, c, mode) {
     }
     // 潜伏中の敵は近接以外では補足できない（AoEは別処理で当たる）
     if (dist > 1 && target && target.team !== se.team && (target.stealth || board[target.r]?.[target.c] === 'forest')) return false;
-    if (mode === 'combo_slash') return dist === 1 && target && target.team !== se.team;
+    if (mode === 'combo_slash') return maxDist === 1 && target && target.team !== se.team;
     if (mode === 'claw_slash') return dist === 1 && target && target.team !== se.team;
     if (mode === 'sweet_honey') return maxDist > 0 && maxDist <= 2 && target && target.team !== se.team;
     if (mode === 'activation_curse') return maxDist > 0 && maxDist <= 3 && target && target.team !== se.team;
