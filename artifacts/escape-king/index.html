@@ -12821,12 +12821,19 @@ function handleAbilityTarget(r, c, targetEntity) {
             let _orBonus = (se.atkBonus||0) + (targetEntity.defDebuff||0);
             let _orHit1 = 3 + _orBonus;
             let _orHit2 = 1 + _orBonus;
+            // --- 1撃目: ダメージ適用 (属性弱点・バリア・居合カウンターは直後の共通処理で自動実行) ---
             targetEntity.hp -= _orHit1;
             msg(`🪓 ${se.name}の斧連舞！1撃目！${targetEntity.name}に${_orHit1}ダメ！`);
-            targetEntity.hp -= _orHit2;
-            msg(`🪓 2撃目！${targetEntity.name}に${_orHit2}ダメ+AP-1！次ターン攻撃力-1！`);
-            targetEntity.ap = Math.max(0, (targetEntity.ap||0) - 1);
-            knockback(targetEntity, 1, se);
+            // --- 300ms後に2撃目 (APダメージ・ノックバックを含む) ---
+            const _orTarget = targetEntity, _orSe = se;
+            setTimeout(() => {
+                _orTarget.hp -= _orHit2;
+                msg(`🪓 2撃目！${_orTarget.name}に${_orHit2}ダメ+AP-1！次ターン攻撃力-1！`);
+                _orTarget.ap = Math.max(0, (_orTarget.ap||0) - 1);
+                knockback(_orTarget, 1, _orSe);
+                reapNecroSouls(); checkColosseumKillScore();
+                checkWin(); render(); updateUI(); syncStateDebounced();
+            }, 300);
         } else {
             msg(`🪓 ${se.name}の斧連舞！次ターン攻撃力-1！`);
         }
@@ -15799,11 +15806,19 @@ function cpuLogic() {
                     let _orBonus=(cpu.atkBonus||0)+(_bp.defDebuff||0);
                     if(!_bp.invin&&!necroShieldBlock(_bp)){
                         let _orH1=3+_orBonus, _orH2=1+_orBonus;
+                        // --- 1撃目 ---
                         _bp.hp-=_orH1;
                         msg(`🪓 敵バーバリアンの斧連舞！1撃目！${_bp.name}に${_orH1}ダメ！`);
-                        _bp.hp-=_orH2;
-                        msg(`🪓 2撃目！${_bp.name}に${_orH2}ダメ+AP-1！次T攻撃-1！`);
-                        _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);
+                        render();
+                        // --- 200ms後に2撃目 ---
+                        const _cpuOrTarget=_bp, _cpuOrAtk=cpu;
+                        setTimeout(()=>{
+                            _cpuOrTarget.hp-=_orH2;
+                            msg(`🪓 2撃目！${_cpuOrTarget.name}に${_orH2}ダメ+AP-1！次T攻撃-1！`);
+                            _cpuOrTarget.ap=Math.max(0,(_cpuOrTarget.ap||0)-1);
+                            knockback(_cpuOrTarget,1,_cpuOrAtk);
+                            checkWin(); render(); syncStateDebounced();
+                        }, 200);
                     } else {
                         msg(`🪓 敵バーバリアンの斧連舞！次T攻撃-1！`);
                     }
