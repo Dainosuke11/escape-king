@@ -13968,6 +13968,7 @@ function executeRushSkill(se, targetR, targetC, mode) {
     if (mode === 'skill_infantry_squad') {
         let cl = {...se, id: 'cl'+Date.now(), name: '分隊', r: targetR, c: targetC, hp: 8, maxHp: 8, ap: 2, maxAp: 2, abilities: {...(se.initialAbilities||se.abilities)}, poisonTimer: 0, skillUsed: false, turnBorn: turn};
         delete cl.skillRecoverTurn;
+        delete cl.abilities['trap'];
         entities.push(cl);
         se.skillUsed = true;
         actionMode = 'move';
