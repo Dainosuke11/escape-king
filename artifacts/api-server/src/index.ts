@@ -528,40 +528,54 @@ wss.on("connection", (ws: WebSocket) => {
         });
         logger.info({ code }, "Room started");
       } else if (msg.type === "findRanked") {
-        const entry: QueueEntry = {
-          ws,
-          sessionId: randomUUID(),
-          userId: String(msg.userId || "anon"),
-          rank: Number(msg.rank || 1),
-          job: String(msg.job || "king"),
-          playerName: String(msg.playerName || "プレイヤー"),
-          profileIcon: typeof msg.profileIcon === "string" ? String(msg.profileIcon).slice(0, 8) : "🎮",
-          favorites: Array.isArray(msg.favorites) ? (msg.favorites as unknown[]).map(String).slice(0, 100) : [],
-          friends: [],
-          ts: Date.now(),
-          searchTimer: null,
-        };
-        // Avoid duplicate queue entries for the same socket; clear its timer.
-        const existing = queue.findIndex((q) => q.ws === ws);
-        if (existing >= 0) {
-          if (queue[existing]?.searchTimer)
-            clearInterval(queue[existing]!.searchTimer!);
-          queue.splice(existing, 1);
-        }
-        queue.push(entry);
-        safeSend(ws, { type: "searching" });
-        entry.searchTimer = setInterval(tryMatch, 2000);
-        // Fetch DB-verified friends asynchronously (both directions: A→B and B→A).
-        // Runs after queue push so the 2-second interval gives it time to resolve.
-        const _uid = entry.userId;
-        db.execute(sql`
-          SELECT DISTINCT friend_user_id AS fid FROM ek_friends WHERE user_id = ${_uid}
-          UNION
-          SELECT DISTINCT user_id AS fid FROM ek_friends WHERE friend_user_id = ${_uid}
-        `).then((res) => {
-          entry.friends = (res.rows as Array<{ fid: string }>).map((r) => String(r.fid));
-        }).catch(() => { /* friends stays [] on error; falls back to normal matching */ });
-        tryMatch();
+        // Use async IIFE so we can await the DB friend fetch before the entry
+        // becomes match-eligible. A 800 ms timeout prevents DB latency from
+        // blocking queue entry; on timeout/error friends defaults to [].
+        (async () => {
+          const _uid = String(msg.userId || "anon");
+          let _friends: string[] = [];
+          try {
+            const _res = await Promise.race([
+              db.execute(sql`
+                SELECT DISTINCT friend_user_id AS fid FROM ek_friends WHERE user_id = ${_uid}
+                UNION
+                SELECT DISTINCT user_id AS fid FROM ek_friends WHERE friend_user_id = ${_uid}
+              `),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error("friend-fetch timeout")), 800)
+              ),
+            ]);
+            _friends = (_res.rows as Array<{ fid: string }>).map((r) => String(r.fid));
+          } catch {
+            // timeout or DB error → friends = [], falls back to normal matching
+          }
+          const entry: QueueEntry = {
+            ws,
+            sessionId: randomUUID(),
+            userId: _uid,
+            rank: Number(msg.rank || 1),
+            job: String(msg.job || "king"),
+            playerName: String(msg.playerName || "プレイヤー"),
+            profileIcon: typeof msg.profileIcon === "string" ? String(msg.profileIcon).slice(0, 8) : "🎮",
+            favorites: Array.isArray(msg.favorites) ? (msg.favorites as unknown[]).map(String).slice(0, 100) : [],
+            friends: _friends,
+            ts: Date.now(),
+            searchTimer: null,
+          };
+          // Avoid duplicate queue entries for the same socket; clear its timer.
+          const existing = queue.findIndex((q) => q.ws === ws);
+          if (existing >= 0) {
+            if (queue[existing]?.searchTimer)
+              clearInterval(queue[existing]!.searchTimer!);
+            queue.splice(existing, 1);
+          }
+          // Only enqueue if socket is still open (player may have disconnected during fetch)
+          if (ws.readyState !== WebSocket.OPEN) return;
+          queue.push(entry);
+          safeSend(ws, { type: "searching" });
+          entry.searchTimer = setInterval(tryMatch, 2000);
+          tryMatch();
+        })().catch(console.error);
       } else if (msg.type === "cancelRanked") {
         const idx = queue.findIndex((q) => q.ws === ws);
         if (idx >= 0) {
