@@ -9,3 +9,4 @@
 - [Escape the King emote system](escape-king-emote.md) — online emote: 4 presets, 3/turn cap, wsSend({type:'emote'}), relay added to api-server; showEmoteBubble uses entities array.
 - [Escape the King friend system](escape-king-friend.md) — ek_friends table via raw SQL in friends.ts route; GET/POST/DELETE /api/friends; max 10 per user.
 - [Escape the King barrier system](escape-king-barrier.md) — invin absorbs 1 hit then breaks (post-attack hook in handleAbilityTarget); if not hit, expires at turn start via invinTimer. Iai counter also breaks barriers on hit.
+- [Escape the King guide update rule](escape-king-guide-update-rule.md) — user preference: always update 図鑑 alongside ability changes.

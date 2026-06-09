@@ -2417,7 +2417,7 @@ const JOB_GUIDE_META = {
     infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵' },
     mage:          { emoji: '🔮', fullName: '魔法使い' },
     thief:         { emoji: '🎩', fullName: '泥棒' },
-    beastmaster:   { emoji: '🐾', fullName: '獣使い' },
+    beastmaster:   { emoji: '🐾', fullName: '獣使い', note: '【オオカミの噛みつき】半径1/2ダメ→敵隣にオオカミ召喚(HP2/AP3)。回数5\n【ハヤブサ突撃】直線3/2ダメ→敵隣にハヤブサ召喚(HP3/AP2/飛行)。回数5\n【テイム】半径3の敵モンスターを永久味方化。5T後使用可。回数5\n【追い風の笛】半径8の味方全員AP+1(1T)。回数5\n【獣融合】隣の味方を1T吸収。HP/AP/ATK+1・アビリティ引き継ぎ。回数5\n【遠吠え】射程(2+近隣味方数)内の味方ATK+1・敵AP-1+3封印。回数5' },
     macho:         { emoji: '💪', fullName: 'マッチョ' },
     cyborg:        { emoji: '⚙️', fullName: '機械兵' },
     alien:         { emoji: '👽', fullName: 'エイリアン' },
@@ -3363,7 +3363,7 @@ const NPC_DATA = [
         flying: false, oceanUnit: false, lavaWalker: false,
         abilities: { bite: 999 },
         stage: '',
-        note: '素早く移動・吸血攻撃。獣使いに召喚・テイム可能。'
+        note: '素早く移動・吸血攻撃。獣使いの「オオカミの噛みつき」で敵の隣に召喚される。テイムで永続味方化も可能。'
     },
     {
         key: 'spirit',
@@ -3615,7 +3615,7 @@ const NPC_DATA = [
         flying: true, oceanUnit: false, lavaWalker: false,
         abilities: { peck: 999 },
         stage: '',
-        note: '獣使いが「ハヤブサ召喚」で呼び出す飛行ユニット。つつき攻撃でAP-1の追加効果あり。開始5T後に召喚可能。'
+        note: '獣使いの「ハヤブサ突撃」で敵の隣に召喚される飛行ユニット。つつき攻撃でAP-1＋目潰し付与。'
     },
     {
         key: 'snake',
