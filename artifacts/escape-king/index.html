@@ -1884,7 +1884,7 @@ const ABILITY_NAMES = {
     long_snipe: '遠距離狙撃(直線8/威4/吹飛/AP-1)',
     charge_formation: '突撃陣形(半径1に槍兵+弓兵召喚/次T消滅)',
     coordinated_atk: '連携攻撃(半径2味方全員AP+1/ATK+1×1T)',
-    scouting: '偵察(直線8/敵AP-1/5アビリティ封印/1T潜伏)',
+    patrol_walk: '哨戒歩き(2マス移動/r5敵アビ-1/全罠解除)',
     dark_magic: '闇魔法(半径2/威1/毒付与)',
     swamp_magic: '沼魔法(半径2/威2/範囲毒沼1T)',
     soul_absorb: '魂吸収(半径1味方全破壊/HP+魂+5+ランダム4アビ×体数)',
@@ -2160,7 +2160,7 @@ const ABILITY_TIPS = {
     long_snipe: '一撃必殺の狙撃。直線8マス。攻撃力4・後方吹き飛ばし。AP-1消費が必要。回数5。',
     charge_formation: '半径1マスの空きマスを2か所選び、1か所目に槍兵・2か所目に弓兵を召喚する。召喚されたコマは次のターン開始時に自動消滅する。回数3。',
     coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
-    scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。',
+    patrol_walk: '2マス移動後、半径5マス以内の敵1体のランダムなアビリティ使用回数を-1する。さらにボード上の全罠（敵・味方・NPC問わず）を解除する。回数5。',
     dark_magic: '半径2マス内の敵1体に1ダメ＋毒を付与する遠距離攻撃。回数10。',
     swamp_magic: '半径2マス内の敵1体に2ダメ・目潰し。命中した敵の周囲半径1マスに1Tの毒沼(毒+AP-1)を生成。回数1。',
     soul_absorb: '半径1マス内の味方コマを全て破壊。破壊数ぶん繰り返し：HP+1・魂+5・ランダム4アビリティ(岩落とし/岩砕き除く)+1。回数1。',
@@ -2291,7 +2291,7 @@ const JOB_DATA = {
     king:     { name: '王',   abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, combo_slash: 2, spin_slash: 5, smash_slash: 3, summon_archer: 3, counter: 3, graceful_rest: 1, royal_dignity: 3, bombardment: 3 }, hp: 30, ap: 2 },
     knight:   { name: '騎士', abilities: { drop_rock: 999, shatter: 5, dash: 5, sword: 10, combo_slash: 2, spin_slash: 5, smash_slash: 3, summon_lancer: 3, unwavering_stance: 1, duel: 3, heavy_armor: 3, mount_horse: 3 }, hp: 30, ap: 2 },
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, ninja_walk: 5, trap: 3, bow: 5, dagger: 10, decoy: 3, curved_shot: 5, rapid_shot: 5, long_snipe: 5 }, hp: 30, ap: 2 },
-    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, bow: 3, sword: 10, fortify: 2, charge_formation: 3, coordinated_atk: 3, scouting: 3, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
+    infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, patrol_walk: 5, bow: 3, sword: 10, fortify: 2, charge_formation: 3, coordinated_atk: 3, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 5, meditation: 1, summon_magic: 3, barrier_magic: 3 }, hp: 30, ap: 2 },
     thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 3, steal: 5, acrobat: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, mountain_dash: 5, wolf_bite: 5, tame: 5, falcon_assault: 5, punch: 5, healing_flute: 5, snake_throw: 5, beast_fuse: 5, howl: 5 }, hp: 30, ap: 2 },
@@ -2476,7 +2476,7 @@ const JOB_GUIDE_META = {
     king:          { emoji: '👑', fullName: '王', note: '【光属性・近〜中距離の全能型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「弓兵召喚」r1に弓兵。「カウンター」被弾時反撃。\n「優雅な休息」ランダム4アビ+1/HP+1。「王の威厳」r3全敵AP-1+5封印。「砲撃」足元に大砲マス→味方全ATK+1。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「王の威光」：正面に弓兵(HP2/AP2)・槍兵(HP2/AP2)・分隊(HP5/AP2)を召喚(2T後消滅)。半径8の全味方にAP+1付与。' },
     knight:        { emoji: '⚔️', fullName: '騎士', note: '【光属性・近接防御型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「槍兵召喚」r1に槍兵。「不動の構え」1T完全無敵。\n「決闘」r2/互いにATK+1+AP+1。「重装化」1T被ダメ-1+岩砕き∞。「馬に乗る」1T AP+1+移動後r1敵1ダメ。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「騎士の突進」：直線5マス内を突進。軌道上の敵に貫通5ダメ+吹飛。経路周辺1マスの敵にかまいたち2ダメ。岩・川等の地形で停止。' },
     assassin:      { emoji: '🗡️', fullName: '暗殺者', note: '【闇属性・潜伏&遠距離特化】\n「忍び足」2マス移動+罠設置+弓系ダメ+1。「デコイ人形」隣に囮(HP1)→潜伏状態に(回数3)。\n「曲射」r3岩越し/威1/吹飛(回数5)。「速射」直線5/威2×2(回数5)。「遠距離狙撃」直線8/威4/AP-1(回数5)。\n★スキル「隠伏天誅」：2T潜伏+AP+1。永続的に武器が毒武器化(以降の全攻撃に毒付与)。' },
-    infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「築城」正面3岩+足元大砲(1T)。「突撃陣形」r1の空きマスを2か所選んで槍兵→弓兵を召喚(次T開始時消滅)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「斥候偵察」直線8封印+潜伏。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP8/AP2)を召喚。5T生存でスキル解放。' },
+    infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「哨戒歩き」2マス移動後r5敵アビ-1＋全罠解除(回5)。「築城」正面3岩+足元大砲(1T)。「突撃陣形」r1の空きマスを2か所選んで槍兵→弓兵を召喚(次T開始時消滅)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP8/AP2)を召喚。5T生存でスキル解放。' },
     mage:          { emoji: '🔮', fullName: '魔法使い', note: '【中〜遠距離魔法型・多属性】\n「魔法弾」r3/威2(回数7)。「風魔法」r2吹飛/威1(回3)。「氷魔法」水/r2凍結(回3)。\n「雷魔法」光属性/r2半径1AoE/威2/AP-2/目潰し(回数5)。「召喚魔法」r1モンスター召喚(回3)。「障壁魔法」r5味方全バリア。「瞑想」AP-2→全アビ+1(回1)。\n★スキル「大火球魔法」：半径5の敵に6ダメ+AP-1+吹飛(火属性)。着弾隣接の敵にも2ダメ+目潢し。' },
     thief:         { emoji: '🎩', fullName: '泥棒', note: '【逃げ足と妨害特化】\n「逃げダッシュ」10回。「煙幕」r2AP-1+吹飛+潜伏。「炭鉱夫呼び」5T後/HP3の助っ人召喚。\n「強奪」隣接敵のアビリティ回数1を奪う(回5)。「アクロバット」1T行動力+1(回数5)。\n★スキル「コピー」：半径2の敵1体のスキルをコピー→そのターンから使用可能。コピーされた敵はスキル使用不可。' },
     beastmaster:   { emoji: '🐾', fullName: '獣使い', note: '【草属性・召喚獣3種・制圧型】\n「オオカミの噛みつき」r1/2ダメ→敵隣にオオカミ召喚(HP2/AP3)。回数5\n「ハヤブサ突撃」直線3/2ダメ→敵隣にハヤブサ召喚(HP3/AP2/飛行)。回数5\n「ヘビ投げ」r2/1ダメ→敵隣に毒蛇召喚(HP1/AP2/毒噛み2ダメ+毒+目潰し)。回数5\n「癒しの笛」r8味方全HP+1＋1Tバリア。回数5\n「テイム」r3の敵モンスターを永久味方化(5T後)。回数5\n「獣融合」隣の味方吸収1T/HP/AP/ATK+1。回数5\n「遠吠え」射程(2+近隣味方数)内ATK+1・敵AP-1+3封印。回数5\n★スキル「ドラゴン召喚」：5T以降。半径2の空きマスに竜(HP7/AP2/飛行/火炎ブレス∞/噛みつき∞/ヘルブレス1)を召喚(火属性)。' },
@@ -8181,7 +8181,24 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'charge_formation') return maxDist===1 && isWalkable(r,c) && !target;
     if (mode === 'charge_formation_2') return maxDist===1 && isWalkable(r,c) && !target;
     if (mode === 'coordinated_atk') return r===se.r && c===se.c;
-    if (mode === 'scouting') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
+    if (mode === 'patrol_walk') {
+        let canPhase = se.flying || se.invin || se.onBoat || isOceanUnit(se);
+        if (canPhase) return dist > 0 && dist <= 2 && isWalkable(r, c, true);
+        if (dist === 0 || dist > 2) return false;
+        if (!isWalkable(r, c)) return false;
+        let srcTile = board[se.r]?.[se.c];
+        if (srcTile === 'sky_void' || srcTile === 'fallen_floor') return false;
+        let rawDrPW = r - se.r, rawDcPW = c - se.c;
+        if (rawDrPW !== 0 && rawDcPW === 0 && Math.abs(rawDrPW) === 2) {
+            let midR = se.r + Math.sign(rawDrPW), midC = se.c;
+            if (!isWalkable(midR, midC) || entities.some(e => e.hp > 0 && e.r === midR && e.c === midC)) return false;
+        }
+        if (rawDrPW === 0 && rawDcPW !== 0 && Math.abs(rawDcPW) === 2) {
+            let midR = se.r, midC = se.c + Math.sign(rawDcPW);
+            if (!isWalkable(midR, midC) || entities.some(e => e.hp > 0 && e.r === midR && e.c === midC)) return false;
+        }
+        return true;
+    }
     if (mode === 'throw_enemy') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'tail_swing') return maxDist>0 && maxDist<=2+(se.rangeBonus||0) && target && target.team!==se.team;
     if (mode === 'counter') return true;
@@ -10231,18 +10248,43 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         msg(`🪖 連携攻撃！半径2マスの味方${boosted}体にAP+1・ATK+1×1T！`); used = true;
-    } else if (actionMode === 'scouting') {
-        se.abilities['scouting']--;
-        // Seal 5 random abilities, AP-1
-        if (targetEntity.hp > 0) {
-            targetEntity.ap = Math.max(0, targetEntity.ap - 1);
-            let ks = Object.keys(targetEntity.abilities||{}).filter(k=>k!=='drop_rock').sort(()=>Math.random()-0.5).slice(0,5);
-            if (!targetEntity.stolenLock) targetEntity.stolenLock = {};
-            ks.forEach(k => { targetEntity.stolenLock[k] = turn + 1; });
+    } else if (actionMode === 'patrol_walk') {
+        if (se.abilities['patrol_walk'] !== 999) se.abilities['patrol_walk']--;
+        if (se.onBoat && !['river','whirlpool'].includes(board[r]?.[c])) se.onBoat = null;
+        if (Math.abs(r-se.r)+Math.abs(c-se.c) === 2) {
+            let _pwMidR = se.r + Math.sign(r-se.r), _pwMidC = se.c + Math.sign(c-se.c);
+            let _pwSaveR = se.r, _pwSaveC = se.c;
+            se.r = _pwMidR; se.c = _pwMidC; checkTileEffects(se); se.r = _pwSaveR; se.c = _pwSaveC;
         }
-        // This turn: stealth
-        se.stealth = true; se.stealthTimer = 1;
-        msg(`🕵️ 偵察！敵AP-1・5アビリティ封印・このターン潜伏！`); used = true;
+        se.r = r; se.c = c;
+        let _pwEventMsg = checkTileEffects(se);
+        if (board[r]?.[c] === 'forest') _pwEventMsg = (_pwEventMsg ? _pwEventMsg + ' ' : '') + '森の木々に身を隠した！';
+        checkEnemyTerritory(se);
+        // 半径5マス以内の敵のランダムアビリティ -1
+        let _pwEnemies = entities.filter(e => e.hp > 0 && e.team !== se.team && Math.max(Math.abs(e.r-r), Math.abs(e.c-c)) <= 5);
+        _pwEnemies.sort(() => Math.random() - 0.5);
+        let _pwAffected = '';
+        for (let _pwE of _pwEnemies) {
+            let _pwKeys = Object.keys(_pwE.abilities || {}).filter(k => k !== 'drop_rock' && (_pwE.abilities[k]||0) > 0 && _pwE.abilities[k] !== 999);
+            if (_pwKeys.length > 0) {
+                let _pwK = _pwKeys[Math.floor(Math.random() * _pwKeys.length)];
+                _pwE.abilities[_pwK] = Math.max(0, _pwE.abilities[_pwK] - 1);
+                _pwAffected = `${_pwE.name}の「${ABILITY_NAMES[_pwK]||_pwK}」-1`;
+                break;
+            }
+        }
+        // 全罠解除
+        let _pwTrapKeys = Object.keys(trapOwnerMap);
+        _pwTrapKeys.forEach(key => {
+            let [_tr, _tc] = key.split(',').map(Number);
+            if (_tr >= 0 && _tr < SIZE && _tc >= 0 && _tc < SIZE) board[_tr][_tc] = trapOrigTileMap[key] || defaultGround();
+            delete trapOwnerMap[key]; delete trapOrigTileMap[key];
+        });
+        let _pwParts = ['🪖 哨戒歩き！2マス移動'];
+        if (_pwAffected) _pwParts.push(_pwAffected + '！');
+        if (_pwTrapKeys.length > 0) _pwParts.push(`罠${_pwTrapKeys.length}個解除！`);
+        msg(_pwParts.join(' / ') + (_pwEventMsg ? ' ' + _pwEventMsg : ''));
+        used = true;
     } else if (actionMode === 'retreat') {
         if (se.abilities['retreat'] !== 999) se.abilities['retreat']--;
         se.invin = true; se.invinTimer = 1;
