@@ -2158,7 +2158,7 @@ const ABILITY_TIPS = {
     curved_shot: '岩の裏にいる敵でも射抜く。射程半径3マス。ダメージ1・後方吹き飛ばし。直線射程不要で岩越し可能。回数5。',
     rapid_shot: '弓の2連撃。直線5マスの敵に2ダメ・吹き飛ばしを2回(合計4ダメ)。毒武器化中は1撃目で毒・2撃目で猛毒になる。回数5。',
     long_snipe: '一撃必殺の狙撃。直線8マス。攻撃力4・後方吹き飛ばし。AP-1消費が必要。回数5。',
-    charge_formation: '半径1マスに槍兵と弓兵を召喚する。召喚されたコマは次のターンに自動消滅する。回数1。',
+    charge_formation: '半径1マスの空きマスを2か所選び、1か所目に槍兵・2か所目に弓兵を召喚する。召喚されたコマは次のターン開始時に自動消滅する。回数3。',
     coordinated_atk: '1ターン間、半径2マス以内の味方コマの攻撃力とAPを+1する。回数1。',
     scouting: '斥候偵察。直線8マスの敵のAP-1・1ターン間ランダム5アビリティを封印。このアビリティを使用したターンのみ潜伏状態になる。回数1。',
     dark_magic: '半径2マス内の敵1体に1ダメ＋毒を付与する遠距離攻撃。回数10。',
@@ -2476,7 +2476,7 @@ const JOB_GUIDE_META = {
     king:          { emoji: '👑', fullName: '王', note: '【光属性・近〜中距離の全能型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「弓兵召喚」r1に弓兵。「カウンター」被弾時反撃。\n「優雅な休息」ランダム4アビ+1/HP+1。「王の威厳」r3全敵AP-1+5封印。「砲撃」足元に大砲マス→味方全ATK+1。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「王の威光」：正面に弓兵(HP2/AP2)・槍兵(HP2/AP2)・分隊(HP5/AP2)を召喚(2T後消滅)。半径8の全味方にAP+1付与。' },
     knight:        { emoji: '⚔️', fullName: '騎士', note: '【光属性・近接防御型】\n「回転斬り」r2/威2×5。「粉砕斬り」r1/威3/AP-1。「槍兵召喚」r1に槍兵。「不動の構え」1T完全無敵。\n「決闘」r2/互いにATK+1+AP+1。「重装化」1T被ダメ-1+岩砕き∞。「馬に乗る」1T AP+1+移動後r1敵1ダメ。「コンボ斬り」r1(斜め含む) 2段攻撃。\n★スキル「騎士の突進」：直線5マス内を突進。軌道上の敵に貫通5ダメ+吹飛。経路周辺1マスの敵にかまいたち2ダメ。岩・川等の地形で停止。' },
     assassin:      { emoji: '🗡️', fullName: '暗殺者', note: '【闇属性・潜伏&遠距離特化】\n「忍び足」2マス移動+罠設置+弓系ダメ+1。「デコイ人形」隣に囮(HP1)→潜伏状態に(回数3)。\n「曲射」r3岩越し/威1/吹飛(回数5)。「速射」直線5/威2×2(回数5)。「遠距離狙撃」直線8/威4/AP-1(回数5)。\n★スキル「隠伏天誅」：2T潜伏+AP+1。永続的に武器が毒武器化(以降の全攻撃に毒付与)。' },
-    infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「築城」正面3岩+足元大砲(1T)。「突撃陣形」r1に槍兵+弓兵召喚(1T)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「斥候偵察」直線8封印+潜伏。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP8/AP2)を召喚。5T生存でスキル解放。' },
+    infantry:      { emoji: '🧑‍🤝‍🧑', fullName: '歩兵', note: '【汎用近〜中距離・統率型】\n「築城」正面3岩+足元大砲(1T)。「突撃陣形」r1の空きマスを2か所選んで槍兵→弓兵を召喚(次T開始時消滅)。\n「連携攻撃」r2味方ATK/AP+1(1T)。「斥候偵察」直線8封印+潜伏。「後退」自分を後方退避。「コンボ斬り」r1 2段攻撃。\n★スキル「分隊召喚」：半径1の空きマスに自身のコピー分隊(HP8/AP2)を召喚。5T生存でスキル解放。' },
     mage:          { emoji: '🔮', fullName: '魔法使い', note: '【中〜遠距離魔法型・多属性】\n「魔法弾」r3/威2(回数7)。「風魔法」r2吹飛/威1(回3)。「氷魔法」水/r2凍結(回3)。\n「雷魔法」光属性/r2半径1AoE/威2/AP-2/目潰し(回数5)。「召喚魔法」r1モンスター召喚(回3)。「障壁魔法」r5味方全バリア。「瞑想」AP-2→全アビ+1(回1)。\n★スキル「大火球魔法」：半径5の敵に6ダメ+AP-1+吹飛(火属性)。着弾隣接の敵にも2ダメ+目潢し。' },
     thief:         { emoji: '🎩', fullName: '泥棒', note: '【逃げ足と妨害特化】\n「逃げダッシュ」10回。「煙幕」r2AP-1+吹飛+潜伏。「炭鉱夫呼び」5T後/HP3の助っ人召喚。\n「強奪」隣接敵のアビリティ回数1を奪う(回5)。「アクロバット」1T行動力+1(回数5)。\n★スキル「コピー」：半径2の敵1体のスキルをコピー→そのターンから使用可能。コピーされた敵はスキル使用不可。' },
     beastmaster:   { emoji: '🐾', fullName: '獣使い', note: '【草属性・召喚獣3種・制圧型】\n「オオカミの噛みつき」r1/2ダメ→敵隣にオオカミ召喚(HP2/AP3)。回数5\n「ハヤブサ突撃」直線3/2ダメ→敵隣にハヤブサ召喚(HP3/AP2/飛行)。回数5\n「ヘビ投げ」r2/1ダメ→敵隣に毒蛇召喚(HP1/AP2/毒噛み2ダメ+毒+目潰し)。回数5\n「癒しの笛」r8味方全HP+1＋1Tバリア。回数5\n「テイム」r3の敵モンスターを永久味方化(5T後)。回数5\n「獣融合」隣の味方吸収1T/HP/AP/ATK+1。回数5\n「遠吠え」射程(2+近隣味方数)内ATK+1・敵AP-1+3封印。回数5\n★スキル「ドラゴン召喚」：5T以降。半径2の空きマスに竜(HP7/AP2/飛行/火炎ブレス∞/噛みつき∞/ヘルブレス1)を召喚(火属性)。' },
@@ -8178,7 +8178,8 @@ function isValidTarget(se, r, c, mode) {
     if (mode === 'curved_shot') return maxDist>0 && maxDist<=3 && target && target.team!==se.team;
     if (mode === 'rapid_shot') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=5 && target && target.team!==se.team;
     if (mode === 'long_snipe') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
-    if (mode === 'charge_formation') return r===se.r && c===se.c;
+    if (mode === 'charge_formation') return maxDist===1 && isWalkable(r,c) && !target;
+    if (mode === 'charge_formation_2') return maxDist===1 && isWalkable(r,c) && !target;
     if (mode === 'coordinated_atk') return r===se.r && c===se.c;
     if (mode === 'scouting') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=8 && target && target.team!==se.team;
     if (mode === 'throw_enemy') return maxDist>0 && maxDist<=1+(se.rangeBonus||0) && target && target.team!==se.team;
@@ -10208,23 +10209,16 @@ function handleAbilityTarget(r, c, targetEntity) {
         msg(targetEntity.invin ? "遠距離狙撃！無敵で防がれた！" : `🎯 遠距離狙撃！AP-1消費！威力4・大吹飛！${se.poisonWeapon?'・毒':''}`); used = true;
     } else if (actionMode === 'charge_formation') {
         se.abilities['charge_formation']--;
-        // Summon a lancer and an archer adjacent to se
-        let spawned = 0;
-        const dirs = [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
-        const summonTypes = [
-            {type:'lancer',name:'槍兵',abils:{spear:5,drop_rock:999}},
-            {type:'archer',name:'弓兵',abils:{bow:5,drop_rock:999}}
-        ];
-        for (let {type:st, name:sn, abils:sa} of summonTypes) {
-            for (let {dr,dc} of dirs) {
-                let nr=se.r+dr, nc=se.c+dc;
-                if (isWalkable(nr,nc) && !entities.find(e=>e.hp>0&&e.r===nr&&e.c===nc)) {
-                    entities.push({id:st+Date.now(), type:st, name:sn, team:se.team, r:nr, c:nc, hp:5, maxHp:5, ap:2, maxAp:2, abilities:{...sa}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+2});
-                    spawned++; break;
-                }
-            }
-        }
-        msg(`🪖 突撃陣形！${spawned}体召喚（次ターン消滅）！`); used = true;
+        entities.push({id:'lancer'+Date.now(), type:'lancer', name:'槍兵', team:se.team, r, c, hp:5, maxHp:5, ap:2, maxAp:2, abilities:{spear:5,drop_rock:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+1});
+        actionMode = 'charge_formation_2';
+        msg('🪖 槍兵を配置！次に弓兵の位置を選んでください（半径1マス）');
+        render(); updateUI(); syncStateDebounced();
+    } else if (actionMode === 'charge_formation_2') {
+        entities.push({id:'archer'+Date.now(), type:'archer', name:'弓兵', team:se.team, r, c, hp:5, maxHp:5, ap:2, maxAp:2, abilities:{bow:5,drop_rock:999}, skillUsed:true, stealth:false, stealthTimer:0, invin:false, invinTimer:0, poisonTimer:0, despawnOnTurn:turn+1});
+        actionMode = 'move';
+        msg('🪖 突撃陣形！槍兵＋弓兵召喚（次ターン消滅）！');
+        checkWin(); render(); updateUI(); syncStateDebounced();
+        return;
     } else if (actionMode === 'coordinated_atk') {
         se.abilities['coordinated_atk']--;
         let boosted = 0;
