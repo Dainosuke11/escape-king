@@ -1275,6 +1275,7 @@ let actionMode = 'move';
 let turn = 1;
 let tempRocks = [];
 let orcaCannonWaterTurn = -1; // gang_orca_cannon使用ターン：このターン大砲命中で着地マス水化
+let orcaCannonTileSet = new Set(); // gang_orca_cannon設置の大砲マス座標 → ダメージ2
 let waterHitsMap = {};      // "r,c" → extra hits to convert shallow_water → deep_water
 let vortexTiles = [];       // [{r,c,expireOnTurn}] temporary vortex tiles from 渦潮
 let rainbowTileMap = {};    // "r,c" -> {origTile, ownerTeam} rainbow tiles placed by painter
@@ -2941,7 +2942,7 @@ function handleWsMessage(event) {
         });
         showVictoryCondition(job);
 
-        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1; orcaCannonTileSet = new Set();
         isPlayerTurn = settings.p1First;
 
         document.getElementById('game-screen').style.display = 'flex';
@@ -4041,7 +4042,7 @@ function startCpuRankedMatch() {
 
     document.getElementById('online-lobby').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
-    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
+    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1; orcaCannonTileSet = new Set();
     isPlayerTurn = Math.random() < 0.5;
     _cpuWentFirst = !isPlayerTurn;
     render();
@@ -4469,7 +4470,7 @@ window.addEventListener('DOMContentLoaded', () => {
             initEntities(pJob, document.getElementById('difficulty-select').value);
         }
         showVictoryCondition(pJob);
-        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1; orcaCannonTileSet = new Set();
         isPlayerTurn = Math.random() < 0.5;
         _cpuWentFirst = !isPlayerTurn;
         startTurn(isPlayerTurn ? 'player' : 'cpu');
@@ -4964,7 +4965,7 @@ function startGame() {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
         
-        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
+        turn = 1; tempRocks = []; orcaCannonWaterTurn = -1; orcaCannonTileSet = new Set();
         isPlayerTurn = Math.random() < 0.5;
         _cpuWentFirst = !isPlayerTurn;
         render();
@@ -9909,15 +9910,16 @@ function handleAbilityTarget(r, c, targetEntity) {
         checkEnemyTerritory(se);
     } else if (actionMode === 'cannon') {
         usedCannonTiles.add(`${se.r},${se.c}`);
+        const _cannonDmg = orcaCannonTileSet.has(`${se.r},${se.c}`) ? 2 : 1;
         if (!targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            targetEntity.hp -= 1 + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
+            targetEntity.hp -= _cannonDmg + (se.atkBonus||0) + (targetEntity.defDebuff||0); knockback(targetEntity, 1, se);
             if (orcaCannonWaterTurn === turn && board[targetEntity.r]?.[targetEntity.c] && !isWaterTile(board[targetEntity.r][targetEntity.c])) {
                 board[targetEntity.r][targetEntity.c] = 'shallow_water';
                 msg(`🌊 海洋大砲効果！${targetEntity.name}の着地マスが浅瀬に！`, true);
             }
         }
         used = true;
-        msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : `大砲発射！敵に${1+(se.atkBonus||0)}ダメージと吹き飛ばし！(休2T)`);
+        msg(targetEntity.invin ? "大砲発射！しかし無敵で無効化！" : `大砲発射！敵に${_cannonDmg+(se.atkBonus||0)}ダメージと吹き飛ばし！(休2T)`);
         board[se.r][se.c] = 'cannon_cd_2';
     } else if (actionMode === 'spear') {
         if (se.abilities['spear'] !== 999) se.abilities['spear']--;
@@ -9992,12 +9994,14 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (!isNoRockZone(se.r, se.c)) {
             board[se.r][se.c] = 'cannon';
             tempRocks.push({ r: se.r, c: se.c, expireOnTurn: turn + 1, restoreTile: _gocOrig1 });
+            orcaCannonTileSet.add(`${se.r},${se.c}`);
         }
         // ギャングオルカ足元に大砲を設置
         const _gocOrig2 = board[r][c];
         if (!isNoRockZone(r, c)) {
             board[r][c] = 'cannon';
             tempRocks.push({ r, c, expireOnTurn: turn + 1, restoreTile: _gocOrig2 });
+            orcaCannonTileSet.add(`${r},${c}`);
         }
         // このターン大砲命中→着地マス水化フラグ
         orcaCannonWaterTurn = turn;
@@ -16247,7 +16251,8 @@ function cpuLogic() {
             // ====================================================
             if (!attacked) {
                 if (board[cpu.r]?.[cpu.c]==='cannon' && dist<=8) {
-                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=1;knockback(p,1,cpu);msg(`敵が大砲を使用！${p.name}に1ダメージ！`);
+                    const _cpuCannonDmg = orcaCannonTileSet.has(`${cpu.r},${cpu.c}`) ? 2 : 1;
+                    if (!p.invin&&!necroShieldBlock(p)){p.hp-=_cpuCannonDmg;knockback(p,1,cpu);msg(`敵が大砲を使用！${p.name}に${_cpuCannonDmg}ダメージ！`);
                         if (orcaCannonWaterTurn === turn && board[p.r]?.[p.c] && !isWaterTile(board[p.r][p.c])) { board[p.r][p.c] = 'shallow_water'; msg(`🌊 海洋大砲効果！${p.name}の着地マスが浅瀬に！`, true); }
                     } else{msg(`敵が大砲を使用！しかし${p.name}は無敵で無効化！`);}
                     board[cpu.r][cpu.c]='cannon_cd_2';attacked=true;cpu.ap--;
@@ -16817,7 +16822,8 @@ function npcLogic() {
 
             if (!attacked) {
                 if (board[n.r][n.c] === 'cannon' && dist <= 8) { 
-                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= 1; knockback(p, 1, n); msg(`${n.name}が大砲を発射！1ダメージ！`);
+                    const _npcCannonDmg = orcaCannonTileSet.has(`${n.r},${n.c}`) ? 2 : 1;
+                    if (!p.invin && !necroShieldBlock(p)) { p.hp -= _npcCannonDmg; knockback(p, 1, n); msg(`${n.name}が大砲を発射！${_npcCannonDmg}ダメージ！`);
                         if (orcaCannonWaterTurn === turn && board[p.r]?.[p.c] && !isWaterTile(board[p.r][p.c])) { board[p.r][p.c] = 'shallow_water'; msg(`🌊 海洋大砲効果！${p.name}の着地マスが浅瀬に！`, true); }
                     } else { msg(`${n.name}が大砲を発射！しかし無敵で無効化！`); }
                     board[n.r][n.c] = 'cannon_cd_2';
@@ -18380,7 +18386,7 @@ function startTutorial() {
     initBoard('plains');
     initEntities('knight', '1');
     showVictoryCondition('knight');
-    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1;
+    turn = 1; tempRocks = []; orcaCannonWaterTurn = -1; orcaCannonTileSet = new Set();
     isPlayerTurn = true;
     _cpuWentFirst = false;
     // チュートリアル練習用ダミー敵（HP3、動かない、攻撃しない）
