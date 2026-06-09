@@ -1994,7 +1994,7 @@ const ABILITY_NAMES = {
     kagami_no_ma: '🪞鏡の間(r1鏡設置/巫女潜伏+射程+1)',
     joka_hiya: '🏹浄化の火矢(直線5火3ダメ+燃焼/次TターンAP-1/G1消費→直線7・5ダメ)',
     reibu_kekkai: '🔯霊符結界(r2光マス1T+敵AP-1+4封印+バリア/次TターンAP-1)',
-    oharae: '🔥大祓え(r2全敵3ダメ+吹飛+燃焼+4封印/次TターンAP-2)',
+    oharae: '🔥大祓え(r2全敵4ダメ+吹飛+燃焼+4封印/次TターンAP-2)',
     kamioroshi: '🐉神降し(1T龍神技使用可+流々舞+1/次TターンAP-2)',
     ryuen: '🔥龍炎(直線5全敵4ダメ+燃焼/炎属性)',
     shinkou: '✨神光(r3全敵2ダメ+AP-1/光属性)',
@@ -2007,7 +2007,7 @@ const ABILITY_NAMES = {
     orca_cannon: '💣シャチ大砲(直線8/威4/吹飛/G+5)',
     hashitte_neru: '🏃走って寝る(2マスダッシュ/HP+1/2アビ+1/被ダメ+1(1T))',
     chimatsuri_giri: '⚔️血祭り斬り(r1/威3+AP-1/闇/被ダメ+1(1T))',
-    ono_renbu: '🪓斧連舞(r1/威3×2+AP-1/火/次T攻撃-1)',
+    ono_renbu: '🪓斧連舞(r1/威3+2+AP-1/火/次T攻撃-1)',
     kaiten_giri: '🌀回転斬り(r1全敵3ダメ+後退/火/被ダメ+1(1T))',
     kyukaku_tsuiseki: '👃嗅覚追跡(1T潜伏+AP+1+r3敵2アビ1T封印)',
     ono_nage: '🪓斧投げ(直線4/威4/草/次T攻撃-1)',
@@ -2255,7 +2255,7 @@ const ABILITY_TIPS = {
     orca_cannon: '正面直線8マスの敵1体に4ダメ＋後方吹き飛ばし。長距離狙撃。使用後ウォーターゲージ+5。回数5。',
     hashitte_neru: '走って寝る：2マスダッシュ後HP+1・ランダム2アビ+1。デメリット：自分の被ダメ+1(1T)。',
     chimatsuri_giri: '血祭り斬り：隣接敵に3ダメ+AP-1(闇属性)。デメリット：自分の被ダメ+1(1T)。',
-    ono_renbu: '斧連舞：隣接敵に3ダメを2回+AP-1(火属性)。デメリット：次Tの自分の攻撃力-1。',
+    ono_renbu: '斧連舞：隣接敵に3ダメ+2ダメの2段攻撃+AP-1(火属性)。デメリット：次Tの自分の攻撃力-1。',
     kaiten_giri: '回転斬り：半径1の全敵に3ダメ+後退(火属性)。デメリット：自分の被ダメ+1(1T)。',
     kyukaku_tsuiseki: '嗅覚追跡：1Tステルス+AP+1。半径3の敵1体のランダム2アビを1T封印。',
     ono_nage: '斧投げ：直線4マスに4ダメ(草属性)。デメリット：次Tの自分の攻撃力-1。',
@@ -2487,7 +2487,7 @@ const JOB_GUIDE_META = {
     guru: { emoji: '⛪', fullName: '教祖', note: '【神ゲージ制・予知警告システム】毎ターン開始時に神ゲージ+1・属性が光/水で交替(奇数=光/偶数=水)。\n予知警告アビリティは発動ターンに警告マスを表示し、翌ターン開始時に効果発動。\n「降臨」ダッシュで信者(HP1/AP2/自爆特攻)を元の場所に召喚。ゲージ+1。ゲージ≥5なら1Tバリア。\n信者撃破時：教祖HP+1・ゲージ+1。\n★スキル「終末論」：ゲージ最大8消費→1Tバリア→消費数分の天罰技を同時即時発動！' },
     miko: { emoji: '⛩️', fullName: '巫女', note: '【巫女ゲージ制・光火複合】毎ターン開始時ゲージ+1・属性が光/火で交替(奇数=光/偶数=火)。\n「流々舞/斬り斬り舞/神降し」はAP=0でも使用可(追加効果発動)。\n「神楽」前進+G+3+バリア+HP回復。「鏡の間」鏡設置→巫女を潜伏+射程+1。\n「神降し」1T龍神技使用可。\n★スキル「龍神降臨」：5T経過後・G5消費→龍神(HP30/AP3/飛行)召喚。毎TG5消費で継続。' },
     orca_pirate: { emoji: '🐋', fullName: 'シャチ海賊', note: '【水闇複合・略奪海賊】毎ターン開始時に水↔闇属性が交替(奇数=水/偶数=闇)。ウォーターゲージで強化。\n「噛みつき奪い」で与ダメ分HP吸収。「碇投げ」直線攻撃+自AP+1。\n「スキルジャック」で敵のアビリティを封印し奪う。「追い剥ぎ」で被ダメバフ付与。\n「隠れて奪う」で潜伏+ゲージ奪取。「海賊旗」でエリア支配。\n★スキル「海の支配者」：ウォーターゲージ5消費→半径3渦潮化+3ダメ+AP-1+ギャングオルカ召喚！' },
-    barbarian: { emoji: '🪓', fullName: 'バーバリアン', note: '【火闇草ランダム三属性・野生の戦士】毎ターン開始時に属性が火/闇/草からランダム変化。\n「走って寝る」：2マスダッシュ→HP+1+ランダム2アビ+1/被ダメ+1(1T)。\n「血祭り斬り(闇)」：r1 3ダメ+AP-1/被ダメ+1(1T)。「斧連舞(火)」：r1 3ダメ×2+AP-1/次T攻撃-1。\n「回転斬り(火)」：r1全敵3ダメ+後退/被ダメ+1(1T)。「嗅覚追跡」：1T潜伏+AP+1+r3敵2アビ封印。\n「斧投げ(草)」：直線4 4ダメ/次T攻撃-1。「群れで刈る」：前方クローン(HP1/1T)/被ダメ+1(1T)。\n「雄叫び」：r2全敵AP-1+2abi封印/r2味方1Tバリア。\n★スキル「野生の解放」：3T狂戦士(毎T HP-2/AP+1/ATK+1/被ダメ+1)。狂戦士中は三属性同時弱点判定！' },
+    barbarian: { emoji: '🪓', fullName: 'バーバリアン', note: '【火闇草ランダム三属性・野生の戦士】毎ターン開始時に属性が火/闇/草からランダム変化。\n「走って寝る」：2マスダッシュ→HP+1+ランダム2アビ+1/被ダメ+1(1T)。\n「血祭り斬り(闇)」：r1 3ダメ+AP-1/被ダメ+1(1T)。「斧連舞(火)」：r1 3+2ダメ+AP-1/次T攻撃-1。\n「回転斬り(火)」：r1全敵3ダメ+後退/被ダメ+1(1T)。「嗅覚追跡」：1T潜伏+AP+1+r3敵2アビ封印。\n「斧投げ(草)」：直線4 4ダメ/次T攻撃-1。「群れで刈る」：前方クローン(HP1/1T)/被ダメ+1(1T)。\n「雄叫び」：r2全敵AP-1+2abi封印/r2味方1Tバリア。\n★スキル「野生の解放」：3T狂戦士(毎T HP-2/AP+1/ATK+1/被ダメ+1)。狂戦士中は三属性同時弱点判定！' },
     painter: { emoji: '🎨', fullName: '絵描き', note: '【イマジネーションゲージ・5色混合システム】毎ターン開始時IG+1＋属性がランダム2種に決定。\n各ターン選ばれた属性に対応する絵の具(赤=火/青=水/緑=草/白=光/黒=闇)のみ使用可能。\n「散歩」移動+IG+2+色回数+1+属性追加。「デッサン」IG+3+色回数+1+属性追加。\n「トリックアート」虹マス設置(IG1消費)。「額縁投げ」1T絵変換。「動く絵」お化け召喚(IG1消費)。\n単体色アビリティ選択後、別の色アビを選ぶと混色！X色混色でIG-X・効果X倍・ターゲット選択。\n★スキル「虹の大傑作」：IG5以上+5属性全部保有+全色アビ残量1以上が条件。半径7を虹マス化+全敵7ダメ！' },
 };
 
@@ -12747,18 +12747,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['reibu_kekkai'] !== 999) se.abilities['reibu_kekkai']--;
         msg(`🔯 ${se.name}の霊符結界！半径2の敵にAP-1+4封印+バリア獲得！次ターンAP-1`); used = true;
     } else if (actionMode === 'oharae') {
-        // 大祓え: 半径2全敵3ダメ+吹飛+燃焼+4封印。次TターンAP-2
+        // 大祓え: 半径2全敵4ダメ+吹飛+燃焼+4封印。次TターンAP-2
         entities.forEach(t => {
             if (t.team !== se.team && t.hp > 0 && Math.max(Math.abs(t.r-se.r),Math.abs(t.c-se.c)) <= 2 && !t.invin) {
-                t.hp -= 3; knockback(t, 1, se); t.burnTimer = (t.burnTimer||0) + 2;
+                t.hp -= 4; knockback(t, 1, se); t.burnTimer = (t.burnTimer||0) + 2;
                 let _oks = Object.keys(t.abilities||{}).filter(k=>t.abilities[k]>0&&t.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,4);
                 _oks.forEach(k => { cursedAbilities[t.id] = cursedAbilities[t.id]||{}; cursedAbilities[t.id][k] = (cursedAbilities[t.id][k]||0)+1; });
-                msg(`🔥 大祓え！${t.name}に3ダメ+吹飛+燃焼+4封印！`, true);
+                msg(`🔥 大祓え！${t.name}に4ダメ+吹飛+燃焼+4封印！`, true);
             }
         });
         se._nextTurnApCost = (se._nextTurnApCost||0) + 2;
         if (se.abilities['oharae'] !== 999) se.abilities['oharae']--;
-        msg(`🔥 ${se.name}の大祓え！半径2全敵に3ダメ+吹飛+燃焼+4封印！次ターンAP-2`); used = true;
+        msg(`🔥 ${se.name}の大祓え！半径2全敵に4ダメ+吹飛+燃焼+4封印！次ターンAP-2`); used = true;
     } else if (actionMode === 'kamioroshi') {
         // 神降し: 1T龍神技使用可+流々舞+1。次TターンAP-2
         se._kamioroshiActive = (turn + 1);
@@ -12816,16 +12816,18 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['chimatsuri_giri'] !== 999) se.abilities['chimatsuri_giri']--;
         msg(`⚔️ ${se.name}の血祭り斬り！3ダメ+AP-1！被ダメ+1(1T)！`); used = true;
     } else if (actionMode === 'ono_renbu') {
-        // 斧連舞: r1 3ダメ×2+AP-1(火属性) / デメリット: _atkPenalty
+        // 斧連舞: r1 (3ダメ+2ダメ)の2段攻撃+AP-1(火属性) / デメリット: _atkPenalty
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
-            let _orDmg = 3 + (se.atkBonus||0) + (targetEntity.defDebuff||0);
-            targetEntity.hp -= _orDmg * 2;
+            let _orBonus = (se.atkBonus||0) + (targetEntity.defDebuff||0);
+            let _orHit1 = 3 + _orBonus;
+            let _orHit2 = 2 + _orBonus;
+            targetEntity.hp -= _orHit1 + _orHit2;
             targetEntity.ap = Math.max(0, (targetEntity.ap||0) - 1);
             knockback(targetEntity, 1, se);
         }
         se._atkPenalty = true;
         if (se.abilities['ono_renbu'] !== 999) se.abilities['ono_renbu']--;
-        msg(`🪓 ${se.name}の斧連舞！3ダメ×2+AP-1！次ターン攻撃力-1！`); used = true;
+        msg(`🪓 ${se.name}の斧連舞！3+2ダメ+AP-1！次ターン攻撃力-1！`); used = true;
     } else if (actionMode === 'kaiten_giri') {
         // 回転斬り: r1全敵3ダメ+後退(火属性) / デメリット: defDebuff+1(1T)
         let _ktHits = 0;
@@ -15718,10 +15720,10 @@ function cpuLogic() {
                 }
                 // oharae: 半径2内に敵がいる
                 if (!attacked && _mkDist<=2 && (cpu.abilities.oharae||0)>0 && !(cursedAbilities[cpu.id]?.['oharae']>0)) {
-                    entities.forEach(t=>{if(t.team!=='cpu'&&t.hp>0&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2&&!t.invin){t.hp-=3;knockback(t,1,cpu);t.burnTimer=(t.burnTimer||0)+2;let _oks=Object.keys(t.abilities||{}).filter(k=>t.abilities[k]>0&&t.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,4);_oks.forEach(k=>{cursedAbilities[t.id]=cursedAbilities[t.id]||{};cursedAbilities[t.id][k]=(cursedAbilities[t.id][k]||0)+1;});}});
+                    entities.forEach(t=>{if(t.team!=='cpu'&&t.hp>0&&Math.max(Math.abs(t.r-cpu.r),Math.abs(t.c-cpu.c))<=2&&!t.invin){t.hp-=4;knockback(t,1,cpu);t.burnTimer=(t.burnTimer||0)+2;let _oks=Object.keys(t.abilities||{}).filter(k=>t.abilities[k]>0&&t.abilities[k]!==999).sort(()=>Math.random()-0.5).slice(0,4);_oks.forEach(k=>{cursedAbilities[t.id]=cursedAbilities[t.id]||{};cursedAbilities[t.id][k]=(cursedAbilities[t.id][k]||0)+1;});}});
                     cpu._nextTurnApCost=(cpu._nextTurnApCost||0)+2;
                     if(cpu.abilities.oharae!==999) cpu.abilities.oharae--;
-                    msg(`🔥 敵巫女の大祓え！半径2・3ダメ+吹飛+燃焼+封印！`); attacked=true; cpu.ap--;
+                    msg(`🔥 敵巫女の大祓え！半径2・4ダメ+吹飛+燃焼+封印！`); attacked=true; cpu.ap--;
                 }
                 // reibu_kekkai: 半径2内に敵
                 if (!attacked && _mkDist<=2 && (cpu.abilities.reibu_kekkai||0)>0 && !(cursedAbilities[cpu.id]?.['reibu_kekkai']>0)) {
@@ -15787,13 +15789,13 @@ function cpuLogic() {
                     if(cpu.abilities.kaiten_giri!==999) cpu.abilities.kaiten_giri--;
                     msg(`🌀 敵バーバリアンの回転斬り！${_kgHits}体に3ダメ+後退！被ダメ+1(1T)！`); attacked=true; cpu.ap--;
                 }
-                // 斧連舞: dist=1 で強力な単体攻撃(3ダメ×2)
+                // 斧連舞: dist=1 で強力な単体攻撃(3+2ダメ)
                 if (!attacked && _bDist<=1 && _bp && (cpu.abilities.ono_renbu||0)>0 && !(cursedAbilities[cpu.id]?.['ono_renbu']>0)) {
-                    let _orDmg=3+(cpu.atkBonus||0)+(_bp.defDebuff||0);
-                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=_orDmg*2; _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);}
+                    let _orBonus=(cpu.atkBonus||0)+(_bp.defDebuff||0);
+                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=(3+_orBonus)+(2+_orBonus); _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);}
                     cpu._atkPenalty=true;
                     if(cpu.abilities.ono_renbu!==999) cpu.abilities.ono_renbu--;
-                    msg(`🪓 敵バーバリアンの斧連舞！${_bp.name}に3ダメ×2+AP-1！次T攻撃-1！`); attacked=true; cpu.ap--;
+                    msg(`🪓 敵バーバリアンの斧連舞！${_bp.name}に3+2ダメ+AP-1！次T攻撃-1！`); attacked=true; cpu.ap--;
                 }
                 // 回転斬り: dist=1 の単体時もAoEとして使える
                 if (!attacked && _bDist<=1 && (cpu.abilities.kaiten_giri||0)>0 && !(cursedAbilities[cpu.id]?.['kaiten_giri']>0)) {
