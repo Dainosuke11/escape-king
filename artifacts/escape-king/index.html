@@ -1954,6 +1954,7 @@ const ABILITY_NAMES = {
     octopus_summon: 'タコ召喚(HP3/AP2/海洋/触手∞)',
     knife_juggling: 'ナイフジャグリング(直線3/威1+回数増)',
     scary_face: '恐怖の笑顔(半径2スタン/2技封印2T)',
+    tarai_drop: 'タライ落とし(半径2/威2/AP-1/1封印/目潰し/闇)',
     ball_ride: '玉乗り(直線2移動/威2/吹飛)',
     acrobat: 'アクロバット(1T行動力+1)',
     aerial_trapeze: '空中ブランコ(隣接投げ5マス/威2)',
@@ -2232,6 +2233,7 @@ const ABILITY_TIPS = {
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
     knife_juggling: '直線3マスにナイフを投げる。威力1。命中すると次の使用時ダメージ+1・回数+1（スタック蓄積）。回数3。',
     scary_face: '半径2マスの全敵にスタン：AP-1＋後方吹き飛ばし＋ランダム2アビリティを2T封印。回数5。',
+    tarai_drop: '自身周囲半径2マスの全敵に2ダメ・AP-1・ランダム1アビリティ1T封印・目潰し付与。闇属性。回数5。',
     ball_ride: '直線2マス前進。進路上の敵に2ダメ・吹き飛ばし。回数5。',
     acrobat: '1ターン間、行動力を+1する。効果終了後APは元に戻る。回数5。',
     aerial_trapeze: '隣接(1マス)の敵コマか岩を選択して直線5マス投げ飛ばす。2ダメ・AP-1。着地先にコマがいれば連鎖ダメージ。岩は破壊される。回数5。',
@@ -2396,7 +2398,7 @@ const JOB_DATA = {
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, punch: 10, flying_kick: 5, wave_shot: 5, rapid_strikes: 5, throw_enemy: 5, tail_swing: 5, counter: 3, ryujin_transform: 2, afterimage: 3 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 3, bite: 5, throw_net: 3, whirlpool_atk: 3, octopus_summon: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     orca_pirate: { name: 'シャチ海賊', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, orca_bite: 5, anchor_throw: 5, skill_jack: 5, mugging: 5, hide_steal: 5, pirate_flag: 5, gang_orca_cannon: 5 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
-    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 5, ball_ride: 5, acrobat: 5, aerial_trapeze: 5, bomb_cracker: 5, monkey_toy: 5 }, hp: 30, ap: 2 },
+    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 5, tarai_drop: 5, ball_ride: 5, acrobat: 5, aerial_trapeze: 5, bomb_cracker: 5, monkey_toy: 5 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 10, swamp_magic: 3, soul_absorb: 1, bone_armor: 3, skull_head: 1, necro_bind: 5, necro_summon: 5, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
     world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 1 }, hp: 30, ap: 2 },
@@ -2473,7 +2475,7 @@ const ABILITY_ELEMENT = {
     light_whip: 'light', bind_arrow: 'light', light_bind: 'light',
     light_barrier: 'light', royal_dignity: 'light', scales: 'light',
     balance_adjust: 'light', mediation_judgment: 'light', harmonious_prayer: 'light',
-    tentacle_whip: 'dark', tractor_beam: 'dark', abduction: 'dark', egg_spit: 'dark', ufo_bombing: 'dark',
+    tentacle_whip: 'dark', tractor_beam: 'dark', abduction: 'dark', egg_spit: 'dark', ufo_bombing: 'dark', tarai_drop: 'dark',
     dark_magic: 'dark', swamp_magic: 'dark', soul_absorb: 'dark',
     bone_armor: 'dark', skull_head: 'dark', necro_bind: 'dark',
     necro_summon: 'dark', undead_party: 'dark', corpse_fusion: 'dark',
@@ -2582,7 +2584,7 @@ const JOB_GUIDE_META = {
     mandrake:      { emoji: '🌿', fullName: 'マンドレイク', note: '【草属性・植物育成型・植物LVで強化】\n植物LVは種→若芽→ベビーマンドレイク育成や融合で上昇。技射程・威力がLVに連動。\n「枝のムチ」r2/LV1:1/LV10:3/LV20:5ダメ/吹飛(回5)。「植物の壁」前方3マス種+1Tバリア(回3)。\n「融合」r1植物全吸収/LV+/HP/アビ増加(回3)。「種バズーカ」直線3/1ダメ+種まき(回5)。\n「根を張る」AP-2/r8味方HP+1/全アビ+1/LV+/種成長(回3)。「咆哮」r1全敵1ダメ/AP-1/1封印(回5)。\n★スキル「根っこバインド」：直線5マス幅3に3ダメ+AP-2+3T毒+2Tトゲ設置(草属性)。植物LV10→ATK+1/LV20→ATK+2付与。' },
     ryujin:        { emoji: '🐲', fullName: '竜人族', note: '【格闘特化・変身強化型】\n「飛び蹴り」直線2移動+着地敵2ダメ(AP消費なし/回5)。「波動弾」直線3/威3(回5)。\n「連続斬り」r1全敵AoE：毎T連続使用で威力+1(初威1→2→3…)。非連続ターンで威力1にリセット(回5)。\n「敵投げ」r2/投げ飛ばし+連鎖(回5)。「尻尾振り」r2AoE/1ダメ+AP-1(回5)。「カウンター」被弾反撃(回3)。\n「龍人変身」竜形態→全能力強化(回2)。「残像」分身残置+移動(回3)。\n★スキル「ドラゴンインパクト」：直線8マスの全敵に5ダメ+AP-1+吹飛(火属性)。' },
     shark_warrior: { emoji: '🦈', fullName: 'サメ戦士', note: '【水属性・ウォーターゲージ制】ゲージ15~で変身・20~でバフ獲得。\n「水中ダッシュ」水マスで射程延長+AP+1(回5)。「モリ打ち」直線3/威変化(∞)。\n「水流カッター」水/r2切り裂き(回3)。「水柱噴射」水/r2爆発+遮断(回3)。\n「噛みつき」隣接/威変化(回5)。「網投げ」r2/AP-2+封印(回3)。「渦潮攻撃」r3渦潮生成(回3)。「タコ召喚」HP3/AP2の海洋コマ(回3)。\n★スキル「ハイドロポンプ」：ゲージ全消費→量で強化(G≤5:直3/威3, G≤15:直5/威4, G≤25:直8幅3/威5, G>25:端まで幅3/威6)。AP-1・吹飛・通過マス浅瀬化。使用後G+5。' },
-    clown:         { emoji: '🎪', fullName: 'ピエロ', note: '【混乱&封印の道化師】隣接敵が封じられると他コマに棺桶壊し(解放)が出現。\n「ナイフジャグリング」直線3/威1+命中で次回ダメ+1/回+1(回3)。「恐怖の笑顔」r2全敵AP-1+吹飛+2アビ2T封印(回5)。\n「玉乗り」直線2前進/威2/吹飛(回5)。「アクロバット」1T行動力+1(回5)。\n「空中ブランコ」隣接を直線5投げ/威2(回5)。「爆弾クラッカー」r2投/半径1爆発/威2+潜伏(回5)。「サル召喚」HP1/AP2のサル(回5)。\n★スキル「棺桶ナイフ」：半径2の敵1体を3T棺桶状態(行動不能+毎T2ダメ)。隣接コマが棺桶壊しで解放可。' },
+    clown:         { emoji: '🎪', fullName: 'ピエロ', note: '【混乱&封印の道化師】隣接敵が封じられると他コマに棺桶壊し(解放)が出現。\n「ナイフジャグリング」直線3/威1+命中で次回ダメ+1/回+1(回3)。「恐怖の笑顔」r2全敵AP-1+吹飛+2アビ2T封印(回5)。「タライ落とし」r2全敵に2ダメ+AP-1+1アビ1T封印+目潰し(闇/回5)。\n「玉乗り」直線2前進/威2/吹飛(回5)。「アクロバット」1T行動力+1(回5)。\n「空中ブランコ」隣接を直線5投げ/威2(回5)。「爆弾クラッカー」r2投/半径1爆発/威2+潜伏(回5)。「サル召喚」HP1/AP2のサル(回5)。\n★スキル「棺桶ナイフ」：半径2の敵1体を3T棺桶状態(行動不能+毎T2ダメ)。隣接コマが棺桶壊しで解放可。' },
     necromancer:   { emoji: '💀', fullName: '死霊術師', note: '【闇属性・ソウル錬成型】ソウルを集めて強力な召喚・技を解放。\n「闇魔法」r2/1ダメ+毒(回10)。「沼魔法」r2/2ダメ+毒沼1T(回3)。「魂吸収」r1味方全破壊/HP+魂+5+4アビ+1×体数(回1)。\n「ボーンアーマー」魂1+隣接味方破壊/1T無敵+ATK+1+射程+1+ぶん殴り(回3)。「スカルヘッド」魂1/ドクロ(HP1)召喚→代わりにダメ受け→HP0で爆発(回1)。\n「ネクロバインド」魂1/r3AP-1+5封印→ゾンビ(回5)。「ネクロサモン」r1/5T後/ソウルで上位召喚(回5)。「アンデッドパーティ」魂3/r2に7体召喚(回1)。「死体融合」魂3/r2味方全破壊→キメラ召喚(死体投げ∞)(回1)。\n★スキル「霊魂放出」ソウル数で規模拡大AoE：≤5→幅2/深3, ≤10→幅3/深6, ≤20→幅6/深15, ≤40→幅9/深24。' },
     angel:         { emoji: '👼', fullName: '天使', note: '【光属性・飛行ユニット・堕天システム】\nダメージを受けるたびに堕天ゲージ+1。ゲージMAXで堕天使に変化→追加技解放。\n堕天使追加技：罪の刻印3(AP-2/5封印/呪い) / デスサイズ∞(半径AoE) / 均衡崩し3(直線5か半径8+転送) / 怨みの打撃∞(r1/被弾・バフで+2ダメ)\n※飛行コマ：岩マス通過時AP-1追加。\n★スキル「堕天」：堕天ゲージ15以上で発動。堕天使に変身→闇属性・AP+2(発動T)・4技追加(罪の刻印/デスサイズ/均衡崩し/怨みの打撃)。変身後は毎T自HP-1。' },
     world_manager: { emoji: '⚖️', fullName: '世界の管理者', note: '【光属性・均衡の番人】アビリティ使用後、全アビリティ+1が条件達成で増加。\n「天秤」r3/属性弱点判定で威力変化。「均衡調整」HP・アビ差を是正。「調停の裁き」全敵AP-1+封印。\n「秩序の修正」混乱状態を解除+反射バリア。「不均衡の怒り」敵のアビ使用後条件達成→大ダメ。\n「等価交換」前ターン敵がアビ使用→全アビ+1+追加ダメ。「調和の祈り」HP+1/AP+1/全アビ+1(回1)。\n★スキル「世界の作り直し」：5T以降。半径5の敵を5マス後退+近傍岩落下。8マス以上遠距離に敵がいると全敵AP-2+1T封印+3ダメ+全アビ+1。次の相手ターン終了後に地震発動。' },
@@ -8665,6 +8667,7 @@ function isValidTarget(se, r, c, mode) {
     // ピエロ
     if (mode === 'knife_juggling') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=3;
     if (mode === 'scary_face') return true; // self-centered AoE
+    if (mode === 'tarai_drop') return true; // self-centered AoE
     if (mode === 'ball_ride') return (se.r===r||se.c===c) && maxDist>0 && maxDist<=2;
     if (mode === 'acrobat') return true;
     if (mode === 'aerial_trapeze') return maxDist===1 && (target || board[r]?.[c]==='rock');
@@ -10980,6 +10983,29 @@ function handleAbilityTarget(r, c, targetEntity) {
             }
         });
         msg(`😱 恐怖の笑顔！半径2マスの敵${hitCount}体AP-1・吹き飛ばし・2T2封印・目潰し4封印！`); used = true;
+    } else if (actionMode === 'tarai_drop') {
+        se.abilities['tarai_drop']--;
+        let tdHit = 0;
+        entities.forEach(t => {
+            if (t.hp > 0 && t.team !== se.team && Math.max(Math.abs(t.r - se.r), Math.abs(t.c - se.c)) <= 2) {
+                if (!t.invin) {
+                    t.hp -= 2;
+                    t.ap = Math.max(0, t.ap - 1);
+                    let abilityKeys = Object.keys(t.abilities || {}).filter(k => k !== 'drop_rock' && (t.abilities[k] || 0) > 0);
+                    if (abilityKeys.length > 0) {
+                        if (!t.stolenLock) t.stolenLock = {};
+                        let sealed = abilityKeys.sort(() => Math.random() - 0.5).slice(0, 1);
+                        sealed.forEach(k => { t.stolenLock[k] = turn + 1; });
+                    }
+                    applyBlind(t);
+                    tdHit++;
+                } else {
+                    breakBarrierOnHit(t, se, 2);
+                }
+                applyCounterReflect(se, t, 2, 0);
+            }
+        });
+        msg(`🪣 タライ落とし！半径2マスの敵${tdHit}体に2ダメ・AP-1・1封印・目潰し！(闇属性)`); used = true;
     } else if (actionMode === 'ball_ride') {
         se.abilities['ball_ride']--;
         let dr=r===se.r?0:Math.sign(r-se.r), dc=c===se.c?0:Math.sign(c-se.c);
