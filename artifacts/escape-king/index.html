@@ -1638,6 +1638,7 @@ function syncPlayerToServer() {
             favoriteStage: getFavStage(),
             charUsage: getCharUsage(),
             charWins: getCharWins(),
+            unlockedJobs: loadUnlockedJobs(),
         };
         fetch(getApiBase() + '/player', {
             method: 'POST',
@@ -1685,6 +1686,14 @@ async function loadPlayerFromServer() {
                 if ((v || 0) > (localW[k] || 0)) localW[k] = v;
             }
             localStorage.setItem('ek_char_wins', JSON.stringify(localW));
+        }
+        // unlockedJobs: merge (union of server and local — take whichever has more)
+        if (Array.isArray(data.unlockedJobs) && data.unlockedJobs.length > 0) {
+            const localJobs = loadUnlockedJobs();
+            const merged = Array.from(new Set([...localJobs, ...data.unlockedJobs]));
+            if (merged.length > localJobs.length) {
+                saveUnlockedJobs(merged);
+            }
         }
         refreshRankDisplay();
         refreshAllJobSelects();
@@ -4683,6 +4692,7 @@ function unlockNextJob() {
     if (!next) return null;
     unlocked.push(next);
     saveUnlockedJobs(unlocked);
+    syncPlayerToServer();
     return next;
 }
 

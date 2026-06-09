@@ -15,7 +15,7 @@ router.get("/player/:userId", async (req, res) => {
     }
     const rows = await db.select().from(ekPlayersTable).where(eq(ekPlayersTable.userId, userId));
     if (rows.length === 0) {
-      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {} });
+      res.json({ userId, playerName: "プレイヤー", rank: 1, rp: 0, spWins: 0, profileIcon: "🎮", favoriteElement: "none", favoriteStage: "", wins: 0, losses: 0, draws: 0, charUsage: {}, charWins: {}, unlockedJobs: [] });
       return;
     }
     const p = rows[0]!;
@@ -33,6 +33,7 @@ router.get("/player/:userId", async (req, res) => {
       draws: p.draws ?? 0,
       charUsage: (p.charUsage as Record<string, number>) ?? {},
       charWins: (p.charWins as Record<string, number>) ?? {},
+      unlockedJobs: (p.unlockedJobs as string[]) ?? [],
     });
   } catch (e) {
     res.status(500).json({ error: "db error" });
@@ -42,7 +43,7 @@ router.get("/player/:userId", async (req, res) => {
 // POST /api/player — upsert player data
 router.post("/player", async (req, res) => {
   try {
-    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins } = req.body as Record<string, unknown>;
+    const { userId, playerName, rank, rp, spWins, profileIcon, favoriteElement, favoriteStage, charUsage, charWins, unlockedJobs } = req.body as Record<string, unknown>;
     if (!userId || typeof userId !== "string" || userId.length > 64) {
       res.status(400).json({ error: "invalid userId" });
       return;
@@ -60,6 +61,9 @@ router.post("/player", async (req, res) => {
     const safeCharWins = (charWins && typeof charWins === "object" && !Array.isArray(charWins))
       ? Object.fromEntries(Object.entries(charWins as Record<string, unknown>).slice(0, 50).map(([k, v]) => [k.slice(0, 32), Math.max(0, Math.floor(Number(v) || 0))]))
       : {};
+    const safeUnlockedJobs = (Array.isArray(unlockedJobs))
+      ? unlockedJobs.filter((j): j is string => typeof j === "string").map((j) => j.slice(0, 32)).slice(0, 100)
+      : [];
 
     // Note: wins/losses/draws are NOT client-settable — only the server increments them via finishRanked().
     await db
@@ -75,6 +79,7 @@ router.post("/player", async (req, res) => {
         favoriteStage: safeStage,
         charUsage: safeCharUsage,
         charWins: safeCharWins,
+        unlockedJobs: safeUnlockedJobs,
       })
       .onConflictDoUpdate({
         target: ekPlayersTable.userId,
@@ -88,6 +93,7 @@ router.post("/player", async (req, res) => {
           favoriteStage: safeStage,
           charUsage: safeCharUsage,
           charWins: safeCharWins,
+          unlockedJobs: safeUnlockedJobs,
           updatedAt: new Date(),
         },
       });
