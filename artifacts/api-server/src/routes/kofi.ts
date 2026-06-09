@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { logger } from "../lib/logger";
 
 const kofiRouter = Router();
 
@@ -19,9 +20,28 @@ db.execute(sql`
   ALTER TABLE ek_players ADD COLUMN IF NOT EXISTS is_donor BOOLEAN NOT NULL DEFAULT FALSE
 `).catch(console.error);
 
-// POST /api/kofi/webhook — receive Ko-fi donation notifications
+// Check KOFI_VERIFICATION_TOKEN at startup and warn loudly if missing
+if (!process.env["KOFI_VERIFICATION_TOKEN"]) {
+  logger.warn(
+    "KOFI_VERIFICATION_TOKEN is not set — /api/kofi/webhook will reject all requests until the env var is configured"
+  );
+}
+
+// Loose UUID v4 format check
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// POST /api/kofi/webhook — receive Ko-fi donation notifications.
+// KOFI_VERIFICATION_TOKEN is REQUIRED (fail closed). Requests are rejected when the
+// env var is not configured to prevent fake-payload seeding of ek_donor_emails.
 kofiRouter.post("/kofi/webhook", async (req, res) => {
   try {
+    const token = process.env["KOFI_VERIFICATION_TOKEN"];
+    if (!token) {
+      logger.warn("kofi/webhook called but KOFI_VERIFICATION_TOKEN is not configured — rejecting");
+      res.status(503).json({ error: "webhook not configured" });
+      return;
+    }
+
     // Ko-fi sends the payload as form-encoded `data` field containing a JSON string
     const rawData = req.body?.data;
     if (!rawData) {
@@ -36,9 +56,7 @@ kofiRouter.post("/kofi/webhook", async (req, res) => {
       return;
     }
 
-    // Verify token — required if KOFI_VERIFICATION_TOKEN is configured
-    const token = process.env["KOFI_VERIFICATION_TOKEN"];
-    if (token && payload["verification_token"] !== token) {
+    if (payload["verification_token"] !== token) {
       res.status(403).json({ error: "invalid token" });
       return;
     }
@@ -64,13 +82,26 @@ kofiRouter.post("/kofi/webhook", async (req, res) => {
 });
 
 // POST /api/kofi/claim — player claims donor status by submitting their Ko-fi email.
-// One donation row can only be claimed by one player (claimed_by_player_id is set once).
-// Subsequent requests by the same player for the same email are idempotent.
+// Identity caveat: this game has no server-side session auth; userId is the client-issued UUID
+// from localStorage. Mitigations applied:
+//   - userId must match UUID v4 format
+//   - userId must already exist in ek_players (registered player)
+//   - one donation row can be claimed by at most one userId (prevents re-use by others)
+//   - idempotent for the same userId
 kofiRouter.post("/kofi/claim", async (req, res) => {
   try {
     const { userId, email } = req.body as Record<string, string>;
-    if (!userId || !email || userId.length > 64) {
-      res.status(400).json({ error: "userId and email required" });
+    if (!userId || !email || userId.length > 64 || !UUID_RE.test(userId)) {
+      res.status(400).json({ error: "invalid userId or email" });
+      return;
+    }
+
+    // Verify the player exists in ek_players (must be a registered player)
+    const playerCheck = await db.execute(sql`
+      SELECT user_id FROM ek_players WHERE user_id = ${userId} LIMIT 1
+    `);
+    if (!playerCheck.rows || playerCheck.rows.length === 0) {
+      res.status(403).json({ error: "player not found" });
       return;
     }
 
@@ -122,7 +153,6 @@ kofiRouter.post("/admin/set-donor", async (req, res) => {
   try {
     const adminSecret = process.env["ADMIN_SECRET"];
     if (!adminSecret) {
-      // Fail closed: do not allow access if the secret has not been configured
       res.status(503).json({ error: "admin endpoint not configured" });
       return;
     }

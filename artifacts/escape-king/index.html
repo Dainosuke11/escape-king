@@ -269,6 +269,10 @@
         .ash-mist-warn::after { content: "⚠️"; font-size: calc(var(--tile-size)*0.28); opacity: 0.75; position: absolute; pointer-events: none; z-index: 2; }
         @keyframes ash-warn-pulse { from { background: rgba(255,180,0,0.12); } to { background: rgba(255,100,0,0.28); } }
         @keyframes hitFlash { 0% { opacity:0; } 15% { opacity:1; } 100% { opacity:0; } }
+        @keyframes donorPop { 0% { transform:scale(0.6); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
+        @keyframes donorConfetti0 { 0% { transform:translate(0,0) rotate(0deg); opacity:1; } 100% { transform:translate(-60px,-120px) rotate(360deg); opacity:0; } }
+        @keyframes donorConfetti1 { 0% { transform:translate(0,0) rotate(0deg); opacity:1; } 100% { transform:translate(40px,-100px) rotate(-270deg); opacity:0; } }
+        @keyframes donorConfetti2 { 0% { transform:translate(0,0) rotate(0deg); opacity:1; } 100% { transform:translate(80px,-80px) rotate(180deg); opacity:0; } }
         .fairy-village-range { box-shadow: inset 0 0 6px rgba(100,220,60,0.7) !important; }
         .fairy-village-range::before { content: ""; position: absolute; inset: 0; background: rgba(80,210,40,0.28); pointer-events: none; z-index: 1; }
         .mafia-territory { box-shadow: inset 0 0 8px rgba(80,80,80,0.95) !important; background: rgba(50,50,50,0.55) !important; border: 1px solid #555 !important; }
@@ -4715,6 +4719,33 @@ function applyDonorUnlock() {
     try { refreshAllStageSelects(); } catch(e) {}
 }
 
+function showDonorUnlockCelebration() {
+    const modal = document.getElementById('donation-unlock-modal');
+    if (!modal) return;
+    const inner = modal.querySelector('div');
+    if (!inner) return;
+    // Flash border green and show big celebration message
+    inner.style.borderColor = '#2ecc71';
+    inner.style.transition = 'border-color 0.4s';
+    const celebEl = document.createElement('div');
+    celebEl.id = 'donor-celeb-msg';
+    celebEl.style.cssText = 'text-align:center;font-size:26px;font-weight:bold;color:#2ecc71;padding:18px 0 8px;animation:donorPop 0.5s ease-out;';
+    celebEl.innerHTML = '🎉 全解放完了！ 🎉<br><span style="font-size:14px;color:#ddd;">全ステージ・全キャラクターが使えます！</span>';
+    inner.insertBefore(celebEl, inner.firstChild);
+    // Confetti particles
+    for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        const colors = ['#FF5E5B','#f1c40f','#2ecc71','#3498db','#9b59b6','#e67e22'];
+        p.style.cssText = `position:fixed;width:10px;height:10px;border-radius:50%;background:${colors[i % colors.length]};pointer-events:none;z-index:10001;` +
+            `left:${20 + Math.random() * 60}%;top:${30 + Math.random() * 30}%;` +
+            `animation:donorConfetti${i % 3} ${0.6 + Math.random() * 0.6}s ease-out forwards;opacity:1;`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1400);
+    }
+    // Reset border color after 2s
+    setTimeout(() => { if (inner) inner.style.borderColor = '#FF5E5B'; }, 2000);
+}
+
 function showDonationUnlockPopup() {
     const modal = document.getElementById('donation-unlock-modal');
     if (!modal) return;
@@ -4754,11 +4785,14 @@ async function claimDonorUnlock() {
         const data = await res.json();
         if (data.ok) {
             applyDonorUnlock();
-            if (msgEl) { msgEl.textContent = '🎉 特典が解放されました！全ステージ・全キャラクターが使えます！'; msgEl.style.color = '#2ecc71'; }
+            showDonorUnlockCelebration();
             const claimArea = document.getElementById('donation-claim-area');
             if (claimArea) claimArea.style.display = 'none';
         } else if (data.error === 'not_found') {
             if (msgEl) { msgEl.textContent = '❌ このメールアドレスの寄付記録が見つかりません。Ko-fiに登録したメールをご確認ください。'; msgEl.style.color = '#e74c3c'; }
+            if (btn) btn.disabled = false;
+        } else if (data.error === 'player_not_found') {
+            if (msgEl) { msgEl.textContent = '⚠ プレイヤー登録が必要です。ゲームを一度起動してから再試行してください。'; msgEl.style.color = '#e74c3c'; }
             if (btn) btn.disabled = false;
         } else {
             if (msgEl) { msgEl.textContent = '⚠ エラーが発生しました。しばらくしてから再試行してください。'; msgEl.style.color = '#e74c3c'; }
