@@ -4831,8 +4831,7 @@ function buildStageOptions(forFav) {
     for (const stage of ALL_STAGES) {
         const label = STAGE_LABELS[stage] || stage;
         const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
-        // req=-1: 常時解放(草原)  req=0: チュートリアル完了  req>=1: CPU難易度Nクリア
-        const unlocked = req === -1 ? true : (req === 0 ? tutDone : (tutDone && maxLv >= req));
+        const unlocked = isStageUnlocked(stage);
         if (unlocked) {
             const dispLabel = forFav ? label.split('(')[0].trim() : label;
             html += `<option value="${stage}">${dispLabel}</option>`;
@@ -5025,11 +5024,12 @@ function checkLoginBonus() {
 
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     if (chosen.type === 'job') {
-        const unlocked = loadUnlockedJobs();
-        if (!unlocked.includes(chosen.id)) {
-            unlocked.push(chosen.id);
-            saveUnlockedJobs(unlocked);
+        const unlockedBefore = loadUnlockedJobs();
+        if (!unlockedBefore.includes(chosen.id)) {
+            const arr = [...unlockedBefore, chosen.id];
+            saveUnlockedJobs(arr);
             recordJobUnlock(chosen.id, 'login_bonus', null);
+            try { syncPlayerToServer(); } catch(e) {}
             try { refreshAllJobSelects(); refreshAllJobsBadge(); } catch(e) {}
         }
     } else {
@@ -5070,7 +5070,7 @@ function showLoginBonusPopup(type, itemId) {
         div.style.opacity = '0';
         div.style.top = '-120px';
         setTimeout(() => { if (div.parentNode) div.remove(); }, 500);
-    }, 5000);
+    }, 3000);
 }
 // ===================================================
 
