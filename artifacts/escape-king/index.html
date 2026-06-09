@@ -5956,9 +5956,11 @@ function processTurnStartEffects(e) {
         }
         return;
     }
-    // 仙人: 属性交替(奇数ターン=水/偶数ターン=草) + 雲水行脚ゲージボーナス + 生々流転召喚消滅
+    // 仙人: 属性交替(奇数ターン=水/偶数ターン=草) + 仙人ゲージ自動+1 + 雲水行脚ゲージボーナス + 生々流転召喚消滅
     if (e.type === 'sennin') {
         e.element = (turn % 2 === 1) ? 'water' : 'grass';
+        e.senninGauge = (e.senninGauge||0) + 1;
+        if (e.team === myTeam()) msg(`🧘 ${e.name}の仙人ゲージ+1(${e.senninGauge})！属性:${e.element==='water'?'水':'草'}`, true);
         if (e._unzanTurn !== undefined) delete e._unzanTurn;
         if (e._senninSummons && e._senninSummons.length > 0) {
             e._senninSummons = e._senninSummons.filter(s => {
@@ -5990,6 +5992,11 @@ function processTurnStartEffects(e) {
     if (e.type === 'world_manager') {
         e._managerDmgCountPrev = e._managerDmgCount || 0;
         e._managerDmgCount = 0;
+    }
+    // マフィア: マフィアゲージ自動+1(上限20)
+    if ((e.type === 'mafia' || e.mafiaUnit) && e.hp > 0) {
+        e.mafiaGauge = Math.min(20, (e.mafiaGauge||0) + 1);
+        if (e.team === myTeam()) msg(`🏴 ${e.name}のマフィアゲージ+1(${e.mafiaGauge})！`, true);
     }
     // 天使 / 堕天使: 堕天ゲージ管理・毎ターン自傷
     if (e.type === 'angel') {
