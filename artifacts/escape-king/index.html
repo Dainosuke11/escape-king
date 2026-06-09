@@ -4648,13 +4648,16 @@ function buildStageOptions(forFav) {
     for (const stage of ALL_STAGES) {
         const label = STAGE_LABELS[stage] || stage;
         const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
-        const unlocked = tutDone && (req === 0 || maxLv >= req);
+        // req=-1: 常時解放(草原)  req=0: チュートリアル完了  req>=1: CPU難易度Nクリア
+        const unlocked = req === -1 ? true : (req === 0 ? tutDone : (tutDone && maxLv >= req));
         if (unlocked) {
             const dispLabel = forFav ? label.split('(')[0].trim() : label;
             html += `<option value="${stage}">${dispLabel}</option>`;
         } else if (!forFav) {
-            if (!tutDone) {
+            if (req === 0) {
                 html += `<option value="${stage}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── チュートリアル完了で解放</option>`;
+            } else if (!tutDone) {
+                html += `<option value="${stage}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── チュートリアル完了後、CPUレベル${req}クリアで解放</option>`;
             } else {
                 const rem = req - maxLv;
                 html += `<option value="${stage}" disabled style="color:#555;">🔒⛧ ${label} ⛧ ── CPUレベル${req}クリアで解放（あと${rem}レベル）</option>`;
@@ -4697,9 +4700,14 @@ function checkStageUnlocked(stage, errElId) {
     if (!stage || stage === 'random' || isStageUnlocked(stage)) return true;
     const req = STAGE_UNLOCK_REQUIREMENTS[stage] ?? 0;
     const label = (STAGE_LABELS[stage] || stage).split('(')[0].trim();
-    const errMsg = req <= 0
-        ? `🔒 ${label}はチュートリアル完了で解放されます`
-        : `🔒 ${label}はCPUレベル${req}クリアで解放されます（現在${getMaxCpuLvBeaten()}レベル）`;
+    let errMsg;
+    if (req === 0) {
+        errMsg = `🔒 ${label}はチュートリアル完了で解放されます`;
+    } else if (!isTutorialDone()) {
+        errMsg = `🔒 ${label}はチュートリアル完了後、CPUレベル${req}クリアで解放されます`;
+    } else {
+        errMsg = `🔒 ${label}はCPUレベル${req}クリアで解放されます（現在${getMaxCpuLvBeaten()}レベル）`;
+    }
     const el = errElId ? document.getElementById(errElId) : null;
     if (el) el.textContent = errMsg;
     else alert(errMsg);
@@ -16754,7 +16762,9 @@ function checkWin() {
         window._tutorialResultShown = true;
         setTutorialDone();
         stopTurnTimer();
-        document.getElementById('result-title').innerText = "🎉 チュートリアルクリア！敵陣を突破しました！";
+        refreshAllStageSelects();
+        const _tutUnlockMsg = "🎉 チュートリアルクリア！敵陣を突破しました！\n🗺️ 新ステージ解放: 🌲 森林 が解放されました！";
+        document.getElementById('result-title').innerText = _tutUnlockMsg;
         document.getElementById('result-screen').style.display = 'flex';
         return;
     }
@@ -18200,7 +18210,7 @@ function showTutorialResult() {
     refreshAllStageSelects();
     // リザルト画面をチュートリアル用に設定
     document.getElementById('result-title').innerText =
-        '🎉 チュートリアル完了！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\n🔓 キャラをアンロックしよう！\nランクマッチで勝つとロックキャラが解放されます。\nCPUとのランクマッチ対戦でも解放できます！\n\nさあ、本番の試合に挑もう！';
+        '🎉 チュートリアル完了！\n\n🗺️ 新ステージ解放: 🌲 森林 が解放されました！\n\n🎖️ 称号獲得：\n🌱 ビギナー\n\n🔓 キャラをアンロックしよう！\nランクマッチで勝つとロックキャラが解放されます。\nCPUとのランクマッチ対戦でも解放できます！\n\nさあ、本番の試合に挑もう！';
     document.getElementById('btn-rematch').style.display = 'none';
     document.getElementById('btn-change').style.display = 'none';
     document.getElementById('btn-title').style.display = 'inline-block';
