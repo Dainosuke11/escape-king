@@ -895,14 +895,20 @@
                 ☕ Ko-fi で応援する（1円〜）
             </a>
             <div id="donation-claim-area">
-                <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:8px;">すでに寄付した方はメールアドレスを入力して特典を受け取れます</div>
-                <input id="donation-email-input" type="email" placeholder="Ko-fiに登録したメールアドレス"
-                    style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:14px;margin-bottom:8px;" />
-                <button onclick="claimDonorUnlock()" id="donation-claim-btn"
-                    style="width:100%;padding:10px;background:#27ae60;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:bold;">
-                    🎁 特典を受け取る
+                <button onclick="document.getElementById('donation-email-form').style.display='block';this.style.display='none';" id="donation-already-btn"
+                    style="width:100%;padding:9px;background:#2c2c3e;color:#bbb;border:1px solid #555;border-radius:7px;cursor:pointer;font-size:13px;margin-bottom:4px;">
+                    すでに寄付した方はこちら
                 </button>
-                <div id="donation-claim-msg" style="font-size:13px;text-align:center;margin-top:8px;min-height:18px;"></div>
+                <div id="donation-email-form" style="display:none;">
+                    <div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:8px;">Ko-fiに登録したメールアドレスを入力してください</div>
+                    <input id="donation-email-input" type="email" placeholder="例: yourname@email.com"
+                        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:14px;margin-bottom:8px;" />
+                    <button onclick="claimDonorUnlock()" id="donation-claim-btn"
+                        style="width:100%;padding:10px;background:#27ae60;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:bold;">
+                        🎁 特典を受け取る
+                    </button>
+                    <div id="donation-claim-msg" style="font-size:13px;text-align:center;margin-top:8px;min-height:18px;"></div>
+                </div>
             </div>
             <button onclick="document.getElementById('donation-unlock-modal').style.display='none'"
                 style="margin-top:14px;width:100%;padding:9px;background:#2c2c3e;color:#aaa;border:1px solid #444;border-radius:7px;cursor:pointer;font-size:14px;">
@@ -4716,8 +4722,15 @@ function showDonationUnlockPopup() {
     if (msgEl) msgEl.textContent = '';
     const inputEl = document.getElementById('donation-email-input');
     if (inputEl) inputEl.value = '';
+    const btn = document.getElementById('donation-claim-btn');
+    if (btn) btn.disabled = false;
     const claimArea = document.getElementById('donation-claim-area');
     if (claimArea) claimArea.style.display = isDonorUnlocked() ? 'none' : 'block';
+    // Reset the 2-step reveal: hide email form, show "すでに寄付した" button
+    const emailForm = document.getElementById('donation-email-form');
+    if (emailForm) emailForm.style.display = 'none';
+    const alreadyBtn = document.getElementById('donation-already-btn');
+    if (alreadyBtn) alreadyBtn.style.display = 'block';
     modal.style.display = 'flex';
 }
 

@@ -36,7 +36,7 @@ kofiRouter.post("/kofi/webhook", async (req, res) => {
       return;
     }
 
-    // Verify token if configured
+    // Verify token — required if KOFI_VERIFICATION_TOKEN is configured
     const token = process.env["KOFI_VERIFICATION_TOKEN"];
     if (token && payload["verification_token"] !== token) {
       res.status(403).json({ error: "invalid token" });
@@ -63,7 +63,9 @@ kofiRouter.post("/kofi/webhook", async (req, res) => {
   }
 });
 
-// POST /api/kofi/claim — player claims donor status by submitting their Ko-fi email
+// POST /api/kofi/claim — player claims donor status by submitting their Ko-fi email.
+// One donation row can only be claimed by one player (claimed_by_player_id is set once).
+// Subsequent requests by the same player for the same email are idempotent.
 kofiRouter.post("/kofi/claim", async (req, res) => {
   try {
     const { userId, email } = req.body as Record<string, string>;
@@ -74,9 +76,9 @@ kofiRouter.post("/kofi/claim", async (req, res) => {
 
     const normalized = email.toLowerCase().trim();
 
-    // Check for an unclaimed donation matching this email
+    // Find a donation row for this email
     const result = await db.execute(sql`
-      SELECT id FROM ek_donor_emails
+      SELECT id, claimed_by_player_id FROM ek_donor_emails
       WHERE email = ${normalized}
       LIMIT 1
     `);
@@ -86,14 +88,22 @@ kofiRouter.post("/kofi/claim", async (req, res) => {
       return;
     }
 
-    const rowId = (result.rows[0] as Record<string, unknown>)["id"];
+    const row = result.rows[0] as Record<string, unknown>;
+    const rowId = row["id"];
+    const claimedBy = row["claimed_by_player_id"];
 
-    // Mark the donation as claimed by this player
+    // If already claimed by a different player, reject
+    if (claimedBy !== null && claimedBy !== undefined && claimedBy !== userId) {
+      res.status(409).json({ error: "already_claimed" });
+      return;
+    }
+
+    // Set or confirm claim on this donation row
     await db.execute(sql`
       UPDATE ek_donor_emails SET claimed_by_player_id = ${userId} WHERE id = ${rowId}
     `);
 
-    // Set is_donor = true on the player record (upsert)
+    // Grant donor status on the player record (upsert)
     await db.execute(sql`
       INSERT INTO ek_players (user_id, player_name, is_donor)
       VALUES (${userId}, 'プレイヤー', TRUE)
@@ -106,11 +116,17 @@ kofiRouter.post("/kofi/claim", async (req, res) => {
   }
 });
 
-// POST /api/admin/set-donor — manually grant donor status (authenticated by ADMIN_SECRET header)
+// POST /api/admin/set-donor — manually grant donor status.
+// ADMIN_SECRET env var is REQUIRED; if not configured the endpoint is disabled (fail closed).
 kofiRouter.post("/admin/set-donor", async (req, res) => {
   try {
     const adminSecret = process.env["ADMIN_SECRET"];
-    if (adminSecret && req.headers["admin-secret"] !== adminSecret) {
+    if (!adminSecret) {
+      // Fail closed: do not allow access if the secret has not been configured
+      res.status(503).json({ error: "admin endpoint not configured" });
+      return;
+    }
+    if (req.headers["admin-secret"] !== adminSecret) {
       res.status(403).json({ error: "forbidden" });
       return;
     }
