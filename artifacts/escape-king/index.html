@@ -15167,7 +15167,7 @@ function cpuLogic() {
             if (t === 'trap') {
                 let tKey = `${nr},${nc}`;
                 if (!cpu.flying && trapOwnerMap[tKey] !== cpu.team) {
-                    board[nr][nc] = 'plains'; delete trapOwnerMap[tKey];
+                    board[nr][nc] = trapOrigTileMap[tKey] || defaultGround(); delete trapOwnerMap[tKey]; delete trapOrigTileMap[tKey];
                     if (!cpu.invin) {
                         let hits = 0;
                         entities.forEach(e => { if(e.hp>0&&e.team!==cpu.team&&Math.max(Math.abs(e.r-nr),Math.abs(e.c-nc))<=1&&!e.invin){e.hp-=1;e.ap=Math.max(0,e.ap-2);hits++;} });
@@ -15372,7 +15372,7 @@ function cpuLogic() {
             // ====================================================
             // 優先度3: 岩落とし封鎖 — 常にプレイヤー周囲を積極的に岩で囲む
             // ====================================================
-            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock') && playerMain) {
+            if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock') && playerMain && !(playerMain.stealth || board[playerMain.r]?.[playerMain.c] === 'forest')) {
                 // 上下左右→斜め順で囲む（岩砕き残数に関係なく常に実行）
                 let trapped = dropRockAround(playerMain,
                     [[-1,0],[0,1],[0,-1],[1,0],[-1,1],[-1,-1],[1,1],[1,-1]],
@@ -15981,7 +15981,7 @@ function cpuLogic() {
             // 優先度5: 中央越えプレイヤーを岩で阻止（既存ロジック維持）
             // ====================================================
             if (!attacked && cpu.ap>=1 && (cpu.abilities.drop_rock||0)>0 && !usedAbilities[cpu.id]?.has('drop_rock')) {
-                let crossedPlayers = entities.filter(e=>e.team==='player'&&e.hp>0&&e.r<=9);
+                let crossedPlayers = entities.filter(e=>e.team==='player'&&e.hp>0&&e.r<=9&&!(e.stealth||(board[e.r]?.[e.c]==='forest')));
                 outerBlock: for (let cp of crossedPlayers) {
                     let blocked = dropRockAround(cp,
                         [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
