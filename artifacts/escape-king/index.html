@@ -1804,7 +1804,7 @@ const ABILITY_NAMES = {
     knife_juggling: 'ナイフジャグリング(直線3/威1+回数増)',
     scary_face: '恐怖の笑顔(半径2スタン/2技封印2T)',
     ball_ride: '玉乗り(直線2移動/威2/吹飛)',
-    acrobat: 'アクロバット(1T飛行/AP+2)',
+    acrobat: 'アクロバット(1T行動力+1)',
     aerial_trapeze: '空中ブランコ(隣接投げ5マス/威2)',
     bomb_cracker: '爆弾クラッカー(範囲2投/半径1/威2/潜伏)',
     monkey_toy: 'サル召喚(HP1/AP2/シンバル∞/プレゼント∞)',
@@ -2077,12 +2077,12 @@ const ABILITY_TIPS = {
     whirlpool_atk: 'ウォーターゲージ3消費。半径3マス内の場所を中心に3×3が渦潮に。ダメ2＋AP-1。2T後浅瀬化。回数1。',
     octopus_summon: '隣接マスにタコ(HP3/AP2/触手攻撃∞/海洋コマ)を召喚する。回数1。',
     knife_juggling: '直線3マスにナイフを投げる。威力1。命中すると次の使用時ダメージ+1・回数+1（スタック蓄積）。回数3。',
-    scary_face: '半径2マスの全敵にスタン：AP-1＋後方吹き飛ばし＋ランダム2アビリティを2T封印。回数3。',
+    scary_face: '半径2マスの全敵にスタン：AP-1＋後方吹き飛ばし＋ランダム2アビリティを2T封印。回数5。',
     ball_ride: '直線2マス前進。進路上の敵に2ダメ・吹き飛ばし。回数5。',
-    acrobat: '1ターン間飛行状態になり現在のAPに+2する。効果終了後APは元に戻る。回数2。',
-    aerial_trapeze: '隣接(1マス)の敵コマか岩を選択して直線5マス投げ飛ばす。2ダメ・AP-1。着地先にコマがいれば連鎖ダメージ。岩は破壊される。回数2。',
-    bomb_cracker: '半径2マス以内の場所へ投擲し中心半径1マスで爆発。2ダメ・吹き飛ばし。ピエロは1T潜伏状態になる。回数1。',
-    monkey_toy: '隣接マスにおもちゃのサル(HP1/AP2)を召喚。シンバル騒音(半径1威1)とプレゼント設置を持つ。撃破時にプレゼントを落とす。回数1。',
+    acrobat: '1ターン間、行動力を+1する。効果終了後APは元に戻る。回数5。',
+    aerial_trapeze: '隣接(1マス)の敵コマか岩を選択して直線5マス投げ飛ばす。2ダメ・AP-1。着地先にコマがいれば連鎖ダメージ。岩は破壊される。回数5。',
+    bomb_cracker: '半径2マス以内の場所へ投擲し中心半径1マスで爆発。2ダメ・吹き飛ばし。ピエロは1T潜伏状態になる。回数5。',
+    monkey_toy: '隣接マスにおもちゃのサル(HP1/AP2)を召喚。シンバル騒音(半径1威1)とプレゼント設置を持つ。撃破時にプレゼントを落とす。回数5。',
     cymbal_noise: '周囲半径1マスの全敵に1ダメ。回数無制限。',
     monkey_present_set: '隣接マスにプレゼント箱を設置。敵が半径1マス以内に来ると爆発(威1/吹飛)。味方が踏むとランダムアイテム獲得。',
     coffin_break: '隣接1マスに棺桶に閉じ込められた味方コマがいれば解放する。',
@@ -2232,7 +2232,7 @@ const JOB_DATA = {
     assassin: { name: '暗殺', abilities: { drop_rock: 999, shatter: 5, ninja_walk: 5, trap: 3, bow: 5, dagger: 10, decoy: 1, curved_shot: 2, rapid_shot: 3, long_snipe: 3 }, hp: 30, ap: 2 },
     infantry: { name: '歩兵', abilities: { drop_rock: 999, shatter: 5, dash: 5, trap: 3, bow: 3, sword: 10, fortify: 2, charge_formation: 3, coordinated_atk: 3, scouting: 3, combo_slash: 2, retreat: 3 }, hp: 30, ap: 2 },
     mage:     { name: '魔法', abilities: { drop_rock: 999, shatter: 5, teleport: 5, magic_bullet: 7, wind_magic: 3, ice_magic: 3, thunder_magic: 5, meditation: 1, summon_magic: 3, barrier_magic: 3 }, hp: 30, ap: 2 },
-    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 3, steal: 5, acrobat: 1 }, hp: 30, ap: 2 },
+    thief:    { name: '泥棒', abilities: { drop_rock: 999, dagger: 10, escape_dash: 10, trap: 5, shatter: 3, smokescreen: 3, miner_call: 3, steal: 5, acrobat: 5 }, hp: 30, ap: 2 },
     beastmaster: { name: '獣使', abilities: { drop_rock: 999, shatter: 5, mountain_dash: 5, wolf_bite: 5, tame: 5, falcon_assault: 5, punch: 5, healing_flute: 5, snake_throw: 5, beast_fuse: 5, howl: 5 }, hp: 30, ap: 2 },
     macho:    { name: 'マッチョ', abilities: { drop_rock: 999, shatter: 10, rock_dash: 5, rock_avalanche: 1, rock_throw: 3, drop_rock_heavy: 3, stone_punch: 10, rock_hide: 3, tsusembo: 3, golem_create: 3 }, hp: 30, ap: 2 },
     cyborg:   { name: '機械兵', abilities: { drop_rock: 999, shatter: 5, power_charge: 5, jet_boost: 5, laser_blade: 5, sweep: 5, laser_snipe: 5, laser_bazooka: 5, incinerate: 5, recon_drone: 2, emp_field: 5 }, hp: 30, ap: 2 },
@@ -2241,7 +2241,7 @@ const JOB_DATA = {
     ryujin:   { name: '竜人族', abilities: { drop_rock: 999, shatter: 5, punch: 10, flying_kick: 5, wave_shot: 5, rapid_strikes: 5, throw_enemy: 5, tail_swing: 5, counter: 3, ryujin_transform: 2, afterimage: 3 }, hp: 30, ap: 2 },
     shark_warrior: { name: 'サメ戦士', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, harpoon: 10, water_cutter: 3, water_eruption: 3, bite: 5, throw_net: 3, whirlpool_atk: 3, octopus_summon: 3 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
     orca_pirate: { name: 'シャチ海賊', abilities: { drop_rock: 999, shatter: 5, aqua_dash: 5, orca_bite: 5, anchor_throw: 5, skill_jack: 5, mugging: 5, hide_steal: 5, pirate_flag: 5 }, hp: 30, ap: 2, oceanUnit: true, waterGauge: 10, maxWaterGauge: 30 },
-    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 3, ball_ride: 5, acrobat: 2, aerial_trapeze: 2, bomb_cracker: 3, monkey_toy: 3 }, hp: 30, ap: 2 },
+    clown: { name: 'ピエロ', abilities: { drop_rock: 999, shatter: 3, knife_juggling: 3, scary_face: 5, ball_ride: 5, acrobat: 5, aerial_trapeze: 5, bomb_cracker: 5, monkey_toy: 5 }, hp: 30, ap: 2 },
     necromancer: { name: '死霊術師', abilities: { drop_rock: 999, shatter: 3, teleport: 3, dark_magic: 5, swamp_magic: 3, soul_absorb: 1, bone_armor: 3, skull_head: 1, necro_bind: 3, necro_summon: 3, undead_party: 1, corpse_fusion: 1 }, hp: 30, ap: 2 },
     angel:       { name: '天使', abilities: { drop_rock: 999, shatter: 5, light_whip: 5, feather_dash: 5, bind_arrow: 3, light_bind: 3, light_barrier: 3 }, hp: 30, ap: 2, flying: true },
     world_manager: { name: '世界の管理者', abilities: { drop_rock: 999, shatter: 3, dash: 3, scales: 5, balance_adjust: 5, mediation_judgment: 5, order_correction: 5, inequality_anger: 5, equal_strike: 5, harmonious_prayer: 1 }, hp: 30, ap: 2 },
@@ -6322,7 +6322,6 @@ function processTurnStartEffects(e) {
     if ((e.acrobatTimer||0) > 0) {
         e.acrobatTimer--;
         if (e.acrobatTimer <= 0) {
-            e.flying = false;
             e.maxAp = e.preAcrobatMaxAp || 2;
             e.ap = Math.min(e.ap, e.maxAp);
             msg(`🤸 ${e.name}のアクロバット効果が切れた！AP通常に戻る`, true);
@@ -10371,10 +10370,9 @@ function handleAbilityTarget(r, c, targetEntity) {
     } else if (actionMode === 'acrobat') {
         se.abilities['acrobat']--;
         se.preAcrobatMaxAp = se.maxAp;
-        se.flying = true;
         se.acrobatTimer = 1;
-        se.maxAp = se.maxAp + 2; se.ap = Math.min(se.ap + 2, se.maxAp);
-        msg(`🤸 アクロバット！1ターン飛行状態・現在AP+2！`); used = true;
+        se.maxAp = se.maxAp + 1; se.ap = Math.min(se.ap + 1, se.maxAp);
+        msg(`🤸 アクロバット！1ターン行動力+1！`); used = true;
     } else if (actionMode === 'aerial_trapeze') {
         let adjTarget = entities.find(e=>e.hp>0&&e.r===r&&e.c===c&&Math.max(Math.abs(e.r-se.r),Math.abs(e.c-se.c))<=1);
         let isRock = (board[r]?.[c]==='rock');
