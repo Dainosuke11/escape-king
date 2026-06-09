@@ -77,6 +77,9 @@ const rooms = new Map<string, Room>();
 const queue: QueueEntry[] = [];
 // userId -> last opponents (most recent first), for anti-boosting
 const recentOpponents = new Map<string, string[]>();
+// Sockets that sent cancelRanked while a friend-fetch was still in flight.
+// Checked inside the async IIFE before queue.push to prevent stale enqueue.
+const cancelledFriendFetch = new Set<WebSocket>();
 const RECONNECT_GRACE_MS = 120000; // 2 minutes to reconnect before forfeit
 
 function generateRoomCode(): string {
@@ -128,7 +131,7 @@ function tryMatch() {
       const b = queue[j];
       if (!b || b.ws.readyState !== WebSocket.OPEN) continue;
       const isFriendPair = (a.friends || []).includes(b.userId) || (b.friends || []).includes(a.userId);
-      if (isFriendPair && !playedRecently(a.userId, b.userId)) {
+      if (isFriendPair) {
         startRankedMatch(a, b);
         queue.splice(j, 1);
         queue.splice(i, 1);
@@ -569,14 +572,16 @@ wss.on("connection", (ws: WebSocket) => {
               clearInterval(queue[existing]!.searchTimer!);
             queue.splice(existing, 1);
           }
-          // Only enqueue if socket is still open (player may have disconnected during fetch)
-          if (ws.readyState !== WebSocket.OPEN) return;
+          // Only enqueue if socket is still open and player hasn't cancelled during fetch
+          if (ws.readyState !== WebSocket.OPEN || cancelledFriendFetch.delete(ws)) return;
           queue.push(entry);
           safeSend(ws, { type: "searching" });
           entry.searchTimer = setInterval(tryMatch, 2000);
           tryMatch();
         })().catch(console.error);
       } else if (msg.type === "cancelRanked") {
+        // Mark as cancelled so any in-flight friend-fetch async IIFE won't enqueue
+        cancelledFriendFetch.add(ws);
         const idx = queue.findIndex((q) => q.ws === ws);
         if (idx >= 0) {
           if (queue[idx]?.searchTimer) clearInterval(queue[idx]!.searchTimer!);
@@ -683,6 +688,7 @@ wss.on("connection", (ws: WebSocket) => {
 
   ws.on("close", () => {
     // Remove from matchmaking queue if waiting.
+    cancelledFriendFetch.delete(ws); // clean up any pending fetch cancellation flag
     const qIdx = queue.findIndex((q) => q.ws === ws);
     if (qIdx >= 0) {
       if (queue[qIdx]?.searchTimer) clearInterval(queue[qIdx]!.searchTimer!);
