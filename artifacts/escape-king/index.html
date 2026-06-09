@@ -13970,7 +13970,9 @@ function executeRushSkill(se, targetR, targetC, mode) {
         delete cl.skillRecoverTurn;
         entities.push(cl);
         se.skillUsed = true;
+        actionMode = 'move';
         msg("歩兵の分隊！別動隊が出現！(HP8/AP2・5ターン生存でスキル解放)");
+        checkWin(); render(); updateUI(); syncStateDebounced();
         return;
     }
     if (mode === 'skill_hydro') {
