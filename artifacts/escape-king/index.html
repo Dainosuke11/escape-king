@@ -3783,12 +3783,7 @@ function buildGuideJobsContent() {
         const card = document.createElement('div');
         card.className = 'guide-job-card';
 
-        if (!isJobUnlocked(jobKey)) {
-            card.style.cssText = 'filter:grayscale(1);opacity:0.5;';
-            card.innerHTML =
-                `<div class="guide-job-name">🔒 ${meta.fullName}</div>` +
-                `<div class="guide-job-desc" style="color:#666;">未解放 — ランクマッチで1勝するたびに1種ずつ順番に解放されます</div>`;
-        } else {
+        {
             const rec = getJobUnlockRecord(jobKey);
             const triggerLabel = rec ? (rec.trigger === 'ranked' ? 'オンライン戦' : 'CPU戦') : '';
             const winsLabel = rec && rec.wins != null ? `${rec.wins}勝目` : '';
