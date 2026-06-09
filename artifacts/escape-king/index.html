@@ -5086,9 +5086,8 @@ function initBoard(stageType) {
         // Player side: boarding at (18,9) → straight up into summit (13,9)
         board[18][9]='cable_board';
         [[17,9],[16,9],[15,9],[14,9],[13,9]].forEach(([r2,c2])=>board[r2][c2]='cable_tile');
-        // Summit cannons 2 tiles from cable exits (rows 13 and 11)
-        if (board[11][9]==='cable_tile') board[13][9]='cannon';
-        if (board[13][9]==='cable_tile') board[11][9]='cannon';
+        // Central cannon at the exact board center
+        board[10][10] = 'cannon';
         // Extras at board edges
         placeRandom('mine', 2, 19, 20, true);
         placeRandom('volcano', 1, 19, 20, true);
