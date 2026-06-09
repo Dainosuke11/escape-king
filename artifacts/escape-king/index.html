@@ -12816,18 +12816,23 @@ function handleAbilityTarget(r, c, targetEntity) {
         if (se.abilities['chimatsuri_giri'] !== 999) se.abilities['chimatsuri_giri']--;
         msg(`⚔️ ${se.name}の血祭り斬り！3ダメ+AP-1！被ダメ+1(1T)！`); used = true;
     } else if (actionMode === 'ono_renbu') {
-        // 斧連舞: r1 (3ダメ+2ダメ)の2段攻撃+AP-1(火属性) / デメリット: _atkPenalty
+        // 斧連舞: r1 (3ダメ+1ダメ)の2段攻撃+AP-1(火属性) / デメリット: _atkPenalty
         if (targetEntity && !targetEntity.invin && !necroShieldBlock(targetEntity)) {
             let _orBonus = (se.atkBonus||0) + (targetEntity.defDebuff||0);
             let _orHit1 = 3 + _orBonus;
-            let _orHit2 = 2 + _orBonus;
-            targetEntity.hp -= _orHit1 + _orHit2;
+            let _orHit2 = 1 + _orBonus;
+            targetEntity.hp -= _orHit1;
+            msg(`🪓 ${se.name}の斧連舞！1撃目！${targetEntity.name}に${_orHit1}ダメ！`);
+            targetEntity.hp -= _orHit2;
+            msg(`🪓 2撃目！${targetEntity.name}に${_orHit2}ダメ+AP-1！次ターン攻撃力-1！`);
             targetEntity.ap = Math.max(0, (targetEntity.ap||0) - 1);
             knockback(targetEntity, 1, se);
+        } else {
+            msg(`🪓 ${se.name}の斧連舞！次ターン攻撃力-1！`);
         }
         se._atkPenalty = true;
         if (se.abilities['ono_renbu'] !== 999) se.abilities['ono_renbu']--;
-        msg(`🪓 ${se.name}の斧連舞！3+2ダメ+AP-1！次ターン攻撃力-1！`); used = true;
+        used = true;
     } else if (actionMode === 'kaiten_giri') {
         // 回転斬り: r1全敵3ダメ+後退(火属性) / デメリット: defDebuff+1(1T)
         let _ktHits = 0;
@@ -15789,13 +15794,22 @@ function cpuLogic() {
                     if(cpu.abilities.kaiten_giri!==999) cpu.abilities.kaiten_giri--;
                     msg(`🌀 敵バーバリアンの回転斬り！${_kgHits}体に3ダメ+後退！被ダメ+1(1T)！`); attacked=true; cpu.ap--;
                 }
-                // 斧連舞: dist=1 で強力な単体攻撃(3+2ダメ)
+                // 斧連舞: dist=1 で強力な単体攻撃(3+1ダメ)
                 if (!attacked && _bDist<=1 && _bp && (cpu.abilities.ono_renbu||0)>0 && !(cursedAbilities[cpu.id]?.['ono_renbu']>0)) {
                     let _orBonus=(cpu.atkBonus||0)+(_bp.defDebuff||0);
-                    if(!_bp.invin&&!necroShieldBlock(_bp)){_bp.hp-=(3+_orBonus)+(2+_orBonus); _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);}
+                    if(!_bp.invin&&!necroShieldBlock(_bp)){
+                        let _orH1=3+_orBonus, _orH2=1+_orBonus;
+                        _bp.hp-=_orH1;
+                        msg(`🪓 敵バーバリアンの斧連舞！1撃目！${_bp.name}に${_orH1}ダメ！`);
+                        _bp.hp-=_orH2;
+                        msg(`🪓 2撃目！${_bp.name}に${_orH2}ダメ+AP-1！次T攻撃-1！`);
+                        _bp.ap=Math.max(0,(_bp.ap||0)-1); knockback(_bp,1,cpu);
+                    } else {
+                        msg(`🪓 敵バーバリアンの斧連舞！次T攻撃-1！`);
+                    }
                     cpu._atkPenalty=true;
                     if(cpu.abilities.ono_renbu!==999) cpu.abilities.ono_renbu--;
-                    msg(`🪓 敵バーバリアンの斧連舞！${_bp.name}に3+2ダメ+AP-1！次T攻撃-1！`); attacked=true; cpu.ap--;
+                    attacked=true; cpu.ap--;
                 }
                 // 回転斬り: dist=1 の単体時もAoEとして使える
                 if (!attacked && _bDist<=1 && (cpu.abilities.kaiten_giri||0)>0 && !(cursedAbilities[cpu.id]?.['kaiten_giri']>0)) {
