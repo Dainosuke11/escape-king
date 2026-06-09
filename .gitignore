@@ -50,3 +50,8 @@ Thumbs.db
 
 # DB backups (contain personal data — do not commit)
 backups/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
